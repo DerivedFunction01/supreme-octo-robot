@@ -1,0 +1,41 @@
+# Example idle-plans config for the sweeper nudge checker
+# (ops/sweeper_nudge_idle.py), in the registry YAML
+# subset. The live file sits beside the sweeper templates
+# data file (untracked); this example ships with the repo.
+# Every plan, chat, and ruling below is fictional.
+#
+# The idle-work queue's first case: when a High-RAM venue
+# sits idle with no compute work waiting, an entry in
+# state unstarted with a commissioning record (kind
+# ruling or commission, a date, a one-line reference) is
+# pinged to its owning thread to begin in a worktree. An
+# unstarted entry with no commissioning record is never
+# begun — nothing builds from a wish — and escalates once
+# instead. The owning thread updates state (unstarted |
+# begun | dropped) as the plan's life changes; venue is
+# a hint (colab | local).
+version: 1
+plans:
+  alpha-import-rework:
+    title: "the alpha import rework"
+    owner_chat: "chat-alpha"
+    venue: colab
+    state: unstarted
+    commission:
+      kind: ruling
+      date: "2026-10-30"
+      ref: "owner ruling in the alpha planning thread"
+  beta-report-cleanup:
+    title: "the beta report cleanup"
+    owner_chat: "chat-beta"
+    venue: local
+    state: unstarted
+  gamma-cache-split:
+    title: "the gamma cache split"
+    owner_chat: "chat-alpha"
+    venue: colab
+    state: begun
+    commission:
+      kind: commission
+      date: "2026-11-02"
+      ref: "commissioned in the gamma build thread"

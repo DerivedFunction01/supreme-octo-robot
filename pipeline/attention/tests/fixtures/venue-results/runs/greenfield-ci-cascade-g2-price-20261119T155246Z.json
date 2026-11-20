@@ -1,0 +1,18 @@
+{
+  "run_id": "specimen-ci-rapids-g2-price-20261119T155246Z",
+  "job": "specimen-ci-rapids-g2-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T15:52:46.318041+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T15:52:46.318041+00:00",
+  "venue": "colab",
+  "session_pin": "brisk-dune-37",
+  "lease_action": "adopted",
+  "health_degraded": true,
+  "session": "brisk-dune-37",
+  "launch_phase": "uploading",
+  "error": "runner script upload: upload failed (rc 1): [colab] Upload failed: File or directory not found: /content/specimen-ci-rapids-g2-price-20261119T155246Z-cascade-g2-price-wrap.py",
+  "resumed_at": "2026-11-19T15:54:17.418329+00:00"
+}

@@ -1,0 +1,84 @@
+{
+  "run_id": "specimen-ci-ember-repro-20261119T105204Z",
+  "job": "specimen-ci-ember-repro",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:52:04.944609+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T11:09:50.541026+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-ember-repro-out-specimen-ci-ember-repro-20261119T105204Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:59:06.063657+00:00",
+  "launch_confirmed_at": "2026-11-19T10:59:33.571756+00:00",
+  "collector_at": "2026-11-19T11:10:01.745625+00:00",
+  "collector": "collector-sweep",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:59:33.571756+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.31 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "eqsep-repro.json",
+      "bytes": 14197,
+      "sha256": "cbf39f4187c3aa0976a78b6839a00b52357f6f34dc3224517679d38476f2a32a",
+      "route": "misplaced"
+    },
+    {
+      "path": "eqsep-repro-log.txt",
+      "bytes": 26145,
+      "sha256": "4c1fc43ae62c33a3fd6f2c415ac9b33b8173b6b52fd42c5f3e53d046c42e8b14",
+      "route": "misplaced"
+    },
+    {
+      "path": "eqsep-repro-result.json",
+      "bytes": 80,
+      "sha256": "b098b706003f7b914fc03a4aba29b3f1f410cc126dd2cfdab977ec15a88410bd",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "eqsep-repro.json",
+      "path": "/content/eqsep-repro.json",
+      "bytes": 14197,
+      "mtime": 1795085955.2837071,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "eqsep-repro-log.txt",
+      "path": "/content/eqsep-repro-log.txt",
+      "bytes": 26145,
+      "mtime": 1795085955.2847073,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "eqsep-repro-result.json",
+      "path": "/content/eqsep-repro-result.json",
+      "bytes": 80,
+      "mtime": 1795085955.2847073,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T11:10:44.750997+00:00",
+  "usage_after": "Current balance: 404.05 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T11:10:45.010121+00:00"
+}

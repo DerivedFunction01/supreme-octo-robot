@@ -1,0 +1,44 @@
+id: memory-index-watchdog
+title: Memory index watchdog
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: goal:memory-md-index-watchdog
+run:
+  argv:
+    - bash
+    - ${REPO}/ops/watches/memory_watchdog_check.sh
+timeout_secs: 300
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+escalate_body: bodies/memory-index-watchdog.md
+state_paths:
+  - ${WS}/memory-watch
+  - ${HOME}/MEMORY.md
+  - ${WS}/archive
+classification: scripted detection with agent remediation (the watchdog pattern) - the check compares MEMORY.md sha256+bytes against the baseline and exits 0 on match (silence), 3 on mismatch, 4 on baseline missing/unparseable, 5 on MEMORY.md unreadable, 6 on topic-file threshold overage (per-file 40960 bytes / set total 153600 bytes, added 2026-11-01 at the owner's direction); only a non-zero exit escalates, carrying the cleanup body transcribed from the cron. Timeout 300 assigned at seed - the cron set none.
+lifetime: permanent
+config:
+  version: 1
+  knobs:
+    topic_file_max_bytes:
+      label: Topic file cap
+      type: integer
+      unit: bytes
+      value: 40960
+      min: 1024
+      max: 1048576
+      env: SCHEDULER_TOPIC_FILE_MAX_BYTES
+    topic_per_file_bytes:
+      label: Topic set register — per-topic allowance
+      type: integer
+      unit: bytes
+      value: 12800
+      min: 128
+      max: 1048576
+      env: SCHEDULER_TOPIC_PER_FILE_BYTES

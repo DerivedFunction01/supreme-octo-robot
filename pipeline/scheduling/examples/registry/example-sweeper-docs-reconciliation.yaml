@@ -1,0 +1,25 @@
+# Example docs-reconciliation config for the sweeper
+# nudge checker (ops/sweeper_nudge_idle.py), in the
+# registry YAML subset. The live file sits beside the
+# sweeper templates data file (untracked); this example
+# ships with the repo. Every surface and chat below is
+# fictional.
+#
+# The idle-work queue's second case: when a High-RAM
+# venue sits idle with no compute work waiting and no
+# adopted-plan case fired, the stalest entry here —
+# last_reconciled null first, then the oldest date —
+# whose record is null or older than 14 days is pointed
+# at its owning thread to reconcile against the records.
+# The owning thread sets last_reconciled (an ISO date)
+# when a reconciliation lands.
+version: 1
+surfaces:
+  alpha-tracked-docs:
+    surface: "the alpha service tracked docs"
+    owner_chat: "chat-alpha"
+    last_reconciled: null
+  beta-runbook:
+    surface: "the beta worker runbook"
+    owner_chat: "chat-beta"
+    last_reconciled: "2026-10-20"

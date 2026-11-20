@@ -1,0 +1,1 @@
+{"name": "stalestray", "script": "adapters/colab/jobs/stalestray/payload.py", "args": [], "outputs": ["present.txt", "stray.txt"], "shape": "cpu-highram", "checkpoint_pull_seconds": 1, "timeout": 180}

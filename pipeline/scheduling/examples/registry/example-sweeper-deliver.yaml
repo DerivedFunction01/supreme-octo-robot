@@ -1,0 +1,38 @@
+id: example-sweeper-deliver
+title: Example sweeper deliver (scripted delivery of composed sends)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/sweeper_deliver.py
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+  report_patterns:
+    - ESCALATE
+escalate_body: bodies/example-sweeper-nudge-escalation.md
+state_paths:
+  - ${WS}/approval-sweeper/nudge-ledger.sqlite
+  - ${WS}/approval-sweeper/deliver-state.json
+classification: scripted transport over the nudge store; consumes the checker's recorded live send decisions, posts each composed text verbatim through the harness connector's bridged chat_send, and appends the scripted receipt to the same store in the same step; every outcome is enumerable - delivered, failed-retry-next, failed-escalated on the second failure, or in shadow mode agent-delivered versus would-deliver
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: work-tracking
+  setup:
+    state_dirs:
+      - ${WS}/approval-sweeper
+    files:
+      deliver-state:
+        target: ${WS}/approval-sweeper/deliver-state.json
+    registrations:
+      - "runs of this job consume the harness connector (scheduler server, /tools): the one caller for every sweeper leg is sweeper-venue (scopes read, write-state, send; minted with bin/sched connector-token) and its token is delivered through the secure route into the job environment (SWEEPER_CONNECTOR_TOKEN); the bridge scope stays with the fulfilling agent, never issued to this caller"

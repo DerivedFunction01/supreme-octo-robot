@@ -1,0 +1,19 @@
+id: bridge-drain
+title: Bridge drain executor — works the connector bridge queue under its per-item contract
+kind: agent
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: none
+owner_reason: 'Harness-connector platform machinery (F5 home, owner ruling 2026-11-11): the bridge serves every venue caller on the machine, so no single goal owns it. This entry is the drain permanent home the owner picked (registry-native agent drain) after the approval-sweeper-owned cron was removed as wrongly placed.'
+body: bodies/bridge-drain.md
+timeout_secs: 1800
+state_paths:
+  - ${REPO}/state/connector-bridge
+  - ${REPO}/state/outbox.json
+classification: 'agent by capability, not by judgment: the work is verbatim transport execution of queued bridge records (chat_send, chat_list, chat_tail, permissions_list) under bodies/bridge-wake-item.md, and only an agent holds the runtime tools those verbs execute through - the classification test fails on kind, not on discretion, since the body forbids judgment outright (never widen a send, never alter queued text, never approve or deny). The executing runtime matters as much as the kind: worker-class runtimes hold only the read half of the chat namespace (no send function even after the namespace loads), so the minter addresses the escalation ping to the drain home thread (the owners config drain mapping - a full agent surface whose send capability the F5 proof drain exercised), and a worker that encounters this ping leaves it for that surface. Wakes: primarily the bridge-wake minter episode escalation ping (job bridge-drain, planted once per non-empty queue episode); the hourly cadence is a backstop sweep for anything the escalation missed, and a backstop wake that finds an empty queue acks and ends. The executor acks the escalation ping only when its final poll finds the queue empty - that ack is the episode close the minter re-arms on.'
+lifetime: permanent
+migrated: true
+migrated_at: 2026-11-11

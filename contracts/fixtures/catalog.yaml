@@ -1,0 +1,145 @@
+# The classified schedule catalog — the index over this layer.
+# Every file in examples/registry/ is classified here exactly
+# once, on the shared axes (class, origin, generality,
+# use_case). Entry rows mirror the entry file's own catalog
+# block (the validator checks they agree); config-example rows
+# classify the data specimens that ride with one named entry's
+# adoption and are never adopted standalone. Classification is
+# descriptive, not activating: being listed here admits
+# nothing anywhere. Adoption is the `bin/sched adopt` verb.
+# Generality speaks beyond the standard adoption set (id,
+# title, owner, owner_reason, timezone): generalized =
+# nothing entry-specific to fill; parameterized = declared
+# parameters must be filled or defaulted; deployment-specific
+# = the file carries a deployment's own content and no copy
+# is offered.
+version: 1
+entries:
+  example-agent-review:
+    file: example-agent-review.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: demo
+  example-daily-report:
+    file: example-daily-report.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: demo
+  example-flaky-check:
+    file: example-flaky-check.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: demo
+  example-file-registry-check:
+    file: example-file-registry-check.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: file-survival
+  example-pulse:
+    file: example-pulse.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: demo
+  example-storage-watch:
+    file: example-storage-watch.yaml
+    class: entry
+    origin: hand
+    generality: parameterized
+    use_case: storage
+  example-sweeper-nudge-check:
+    file: example-sweeper-nudge-check.yaml
+    class: entry
+    origin: hand
+    generality: deployment-specific
+    use_case: work-tracking
+  example-sweeper-deliver:
+    file: example-sweeper-deliver.yaml
+    class: entry
+    origin: hand
+    generality: deployment-specific
+    use_case: work-tracking
+    companion_of: example-sweeper-nudge-check
+  example-vm-restart-detector:
+    file: example-vm-restart-detector.yaml
+    class: entry
+    origin: hand
+    generality: parameterized
+    use_case: boot
+  example-sweeper-docs-reconciliation:
+    file: example-sweeper-docs-reconciliation.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-git-repos:
+    file: example-sweeper-git-repos.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-idle-plans:
+    file: example-sweeper-idle-plans.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-profile-targets:
+    file: example-sweeper-profile-targets.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-templates:
+    file: example-sweeper-templates.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-thread-repos:
+    file: example-sweeper-thread-repos.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  example-sweeper-venue-exceptions:
+    file: example-sweeper-venue-exceptions.yaml
+    class: config-example
+    origin: hand
+    generality: deployment-specific
+    use_case: sweeper-config
+    companion_of: example-sweeper-nudge-check
+  colab-liveness-example-session-00:
+    file: example-colab-liveness.yaml
+    class: entry
+    origin: machine
+    generality: deployment-specific
+    use_case: fleet-health
+  example-local-test-watch:
+    file: example-local-test-watch.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: fleet-health
+  example-stale-mockup-cleanup:
+    file: example-stale-mockup-cleanup.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: artifact-hygiene
+  example-sweeper-derive:
+    file: example-sweeper-derive.yaml
+    class: entry
+    origin: hand
+    generality: deployment-specific
+    use_case: work-tracking

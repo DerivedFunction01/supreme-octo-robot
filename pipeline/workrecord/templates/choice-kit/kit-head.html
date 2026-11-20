@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Choice Kit</title>
+<style>
+  :root {
+    --ck-ink: #23211c;
+    --ck-paper: #faf8f3;
+    --ck-card: #ffffff;
+    --ck-line: #ddd6c7;
+    --ck-muted: #6f6a5c;
+    --ck-accent: #8a5a18;
+    --ck-accent-soft: #f3e8d2;
+    --ck-warn: #b45309;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--ck-paper);
+    color: var(--ck-ink);
+    font: 16px/1.55 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  body.ck-fb-on, body.ck-fb-on * { cursor: crosshair; }
+  body.ck-fb-on .ck-chrome, body.ck-fb-on .ck-chrome * { cursor: auto; }
+
+  /* --- sticky bar --- */
+  .ck-bar {
+    position: sticky; top: 0; z-index: 40;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 16px;
+    background: var(--ck-paper);
+    border-bottom: 1px solid var(--ck-line);
+  }
+  .ck-bar-title { font-weight: 700; font-size: 17px; margin-right: auto; }
+  .ck-bar a.ck-back {
+    font-size: 14px; text-decoration: none;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--ck-line); background: var(--ck-card);
+    color: var(--ck-ink);
+  }
+  .ck-bar button {
+    font: inherit; font-size: 14px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--ck-line); background: var(--ck-card);
+    color: var(--ck-ink); cursor: pointer;
+  }
+  .ck-bar button.ck-primary {
+    background: var(--ck-ink); color: var(--ck-paper); border-color: var(--ck-ink);
+    font-weight: 600;
+  }
+  .ck-bar button[aria-pressed="true"] {
+    background: var(--ck-warn); border-color: var(--ck-warn); color: #fff;
+  }
+  .ck-fb-count { font-size: 13px; color: var(--ck-muted); white-space: nowrap; }
+  .ck-fb-count strong { color: var(--ck-ink); }
+
+  /* --- feedback banner --- */
+  .ck-banner {
+    padding: 9px 16px; text-align: center;
+    background: var(--ck-warn); color: #fff;
+    font-size: 14px; font-weight: 600;
+  }
+  .ck-banner[hidden] { display: none; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 8px 16px 120px; }
+  .ck-intro { color: var(--ck-muted); margin: 14px 0 4px; }
+  .ck-intro p { margin: 8px 0; }
+
+  /* --- sections --- */
+  .ck-section {
+    background: var(--ck-card);
+    border: 1px solid var(--ck-line); border-radius: 12px;
+    padding: 18px 20px; margin: 18px 0;
+    scroll-margin-top: 76px;
+  }
+  .ck-section h2 { margin: 0 0 8px; font-size: 21px; }
+  .ck-section p { margin: 8px 0; }
+  .ck-section ul { margin: 8px 0; padding-left: 22px; }
+  .ck-section img {
+    display: block; max-width: 100%; height: auto;
+    border: 1px solid var(--ck-line); border-radius: 8px; margin: 12px 0;
+  }
+  .ck-section code, .ck-intro code {
+    background: var(--ck-accent-soft); border-radius: 4px;
+    padding: 0 4px; font-size: 0.92em;
+  }
+
+  /* --- choices --- */
+  .ck-choice {
+    border-top: 1px dashed var(--ck-line);
+    padding: 14px 0 6px; margin-top: 14px;
+    scroll-margin-top: 76px;
+  }
+  .ck-choice-label { font-weight: 650; font-size: 16px; }
+  .ck-help { color: var(--ck-muted); font-size: 14px; margin: 2px 0 10px; }
+  .ck-choice fieldset { border: 0; margin: 0; padding: 0; }
+  .ck-opt {
+    display: flex; align-items: center; gap: 9px;
+    padding: 7px 0; font-size: 15px; cursor: pointer;
+  }
+  .ck-opt input { width: 18px; height: 18px; accent-color: var(--ck-accent); flex: none; }
+  .ck-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--ck-accent);
+    background: var(--ck-accent-soft); border-radius: 999px; padding: 2px 8px;
+  }
+  .ck-switch { position: relative; display: inline-block; width: 52px; height: 30px; flex: none; }
+  .ck-switch input { opacity: 0; width: 0; height: 0; }
+  .ck-switch-track {
+    position: absolute; inset: 0; border-radius: 999px;
+    background: #c9c2b2; transition: background 0.15s;
+  }
+  .ck-switch-track::after {
+    content: ""; position: absolute; top: 3px; left: 3px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #fff; transition: transform 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .ck-switch input:checked + .ck-switch-track { background: var(--ck-accent); }
+  .ck-switch input:checked + .ck-switch-track::after { transform: translateX(22px); }
+  .ck-switch input:focus-visible + .ck-switch-track { outline: 2px solid var(--ck-accent); outline-offset: 2px; }
+  .ck-toggle-row { display: flex; align-items: center; gap: 12px; }
+  .ck-toggle-state { font-size: 14px; color: var(--ck-muted); }
+  .ck-slider-row { display: flex; align-items: center; gap: 14px; }
+  .ck-slider-row input[type="range"] { flex: 1; accent-color: var(--ck-accent); height: 30px; }
+  .ck-readout { font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ck-text-input {
+    font: inherit; width: 100%; max-width: 420px;
+    padding: 9px 11px; border: 1px solid var(--ck-line);
+    border-radius: 8px; background: #fff; color: var(--ck-ink);
+  }
+
+  /* --- summary --- */
+  .ck-summary { margin: 26px 0 0; }
+  .ck-summary h2, .ck-feedback h2 { font-size: 19px; margin: 0 0 6px; }
+  .ck-summary-sub { color: var(--ck-muted); font-size: 14px; margin: 0 0 8px; }
+  .ck-row {
+    background: var(--ck-card);
+    border: 1px solid var(--ck-line); border-radius: 12px;
+    padding: 14px 18px 10px; margin: 12px 0;
+  }
+  .ck-row-head {
+    display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  }
+  .ck-row-label { font-weight: 650; }
+  .ck-row-value { color: var(--ck-accent); font-weight: 600; margin-left: auto; text-align: right; }
+  .ck-jump {
+    font-size: 13px; color: var(--ck-accent); white-space: nowrap;
+    text-decoration: underline; cursor: pointer; background: none;
+    border: 0; padding: 0; font-family: inherit;
+  }
+  .ck-row .ck-choice { border-top: 0; margin-top: 4px; padding-top: 8px; }
+  .ck-row .ck-choice-label { display: none; }
+  .ck-flash { animation: ck-flash 1.2s ease-out; }
+  @keyframes ck-flash {
+    0%, 60% { background: var(--ck-accent-soft); }
+    100% { background: transparent; }
+  }
+
+  /* --- feedback --- */
+  .ck-selected { outline: 3px solid var(--ck-warn) !important; outline-offset: 2px; }
+  .ck-feedback { margin: 26px 0 0; }
+  .ck-feedback-empty { color: var(--ck-muted); font-size: 14px; }
+  .ck-fb-entry {
+    background: var(--ck-card);
+    border: 1px solid var(--ck-line); border-radius: 12px;
+    padding: 12px 16px; margin: 10px 0;
+  }
+  .ck-fb-entry-head { display: flex; gap: 10px; align-items: baseline; }
+  .ck-fb-target { font-weight: 650; font-size: 15px; }
+  .ck-fb-remove {
+    margin-left: auto; font-size: 13px; color: var(--ck-warn);
+    background: none; border: 0; cursor: pointer; text-decoration: underline;
+    padding: 0; font-family: inherit; white-space: nowrap;
+  }
+  .ck-fb-text { color: var(--ck-muted); font-size: 13px; margin: 3px 0 8px; }
+  .ck-fb-comment {
+    font: inherit; font-size: 14px; width: 100%;
+    border: 1px solid var(--ck-line); border-radius: 8px;
+    padding: 8px 10px; min-height: 38px; resize: vertical;
+    background: #fff; color: var(--ck-ink);
+  }
+
+  /* --- composer --- */
+  .ck-composer {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: 14px; z-index: 50;
+    width: min(720px, calc(100vw - 24px));
+    background: var(--ck-card);
+    border: 1px solid var(--ck-warn); border-radius: 12px;
+    box-shadow: 0 10px 34px rgba(35, 33, 28, 0.28);
+    padding: 14px 16px;
+  }
+  .ck-composer[hidden] { display: none; }
+  .ck-composer-target { font-weight: 650; font-size: 15px; }
+  .ck-composer-text { color: var(--ck-muted); font-size: 13px; margin: 2px 0 8px; }
+  .ck-composer textarea {
+    font: inherit; font-size: 14px; width: 100%;
+    border: 1px solid var(--ck-line); border-radius: 8px;
+    padding: 8px 10px; min-height: 54px; resize: vertical;
+  }
+  .ck-composer-actions { display: flex; gap: 8px; margin-top: 10px; justify-content: flex-end; }
+  .ck-composer-actions button {
+    font: inherit; font-size: 14px; padding: 7px 16px; border-radius: 999px;
+    border: 1px solid var(--ck-line); background: var(--ck-card); cursor: pointer;
+  }
+  .ck-composer-actions button.ck-primary {
+    background: var(--ck-warn); border-color: var(--ck-warn); color: #fff; font-weight: 600;
+  }
+
+  @media (max-width: 480px) {
+    main { padding: 4px 10px 130px; }
+    .ck-section { padding: 14px 14px; }
+    .ck-row { padding: 12px 12px 8px; }
+    .ck-bar { padding: 8px 10px; gap: 8px; }
+    .ck-bar-title { font-size: 15px; width: 100%; }
+    .ck-text-input { max-width: none; }
+    .ck-opt { padding: 10px 0; }
+    .ck-row-value { margin-left: 0; text-align: left; width: 100%; }
+  }
+</style>
+</head>
+<body>

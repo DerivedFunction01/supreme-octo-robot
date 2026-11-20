@@ -1,0 +1,1 @@
+{"capture_cap_bytes":65536,"connector":{"callers":{}},"default_timezone":"UTC","git_ssh_identity_file":null,"git_ssh_known_hosts_file":null,"home":null,"host":"127.0.0.1","ledger_retention_days":90,"outbox_ack_timeout_secs":3600,"port":8796,"tick_secs":20,"workbench_base_url":"http://127.0.0.1:8792","workspace_root":null}

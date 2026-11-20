@@ -1,0 +1,51 @@
+{
+  "run_id": "specimen-ci-ledger-cobalt-enum-20261119T085328Z",
+  "job": "specimen-ci-ledger-cobalt-enum",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T08:53:28.643766+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T10:09:27.363646+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launching",
+  "remote_out": "specimen-ci-ledger-cobalt-enum-out-specimen-ci-ledger-cobalt-enum-20261119T085328Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T08:56:56.832452+00:00",
+  "launch_unconfirmed_at": "2026-11-19T08:59:26.230158+00:00",
+  "last_poll_error": "checkpoint poll returned no readable state at 2026-11-19T09:17:03.024674+00:00",
+  "collector_at": "2026-11-19T10:10:06.937345+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "detached_launch": true,
+  "usage_before": "Current balance: 405.95 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "resumed_at": "2026-11-19T09:42:15.529412+00:00",
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "coci-enum-result.json",
+      "bytes": 13837,
+      "sha256": "d792b114d842630e27df9ee08cc551ec41508f25d9f3646d6960eccb1a7a7055",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "coci-enum-result.json",
+      "path": "/content/coci-enum-result.json",
+      "bytes": 13837,
+      "mtime": 1795078643.138302,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:10:50.232344+00:00",
+  "usage_after": "Current balance: 404.83 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:10:50.637699+00:00"
+}

@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "@hatch/space-sdk/styles.css";
+
+/* The kit themes are imported from main.tsx, not here:
+   as a stylesheet root of their own, the kit's fonts.css
+   url()s resolve against the kit's home (kit/assets/
+   fonts); inlined through this file's @import chain they
+   would resolve against this file's directory instead.
+   See INTEGRATION.md §4. */
+
+/* The kit's primitives live in the kit's home (repo-root
+   kit/), outside this client's tree — Tailwind's automatic
+   detection does not reach them, so name them as sources
+   explicitly (the kit README's @source rule: without these
+   lines, utilities used only inside kit components silently
+   never generate). The kit is consumed from its home —
+   never copied into the client. */
+@source "../../../kit/components";
+@source "../../../kit/lib";
+
+/* One-client base. The kit themes carry every token; the
+   document itself takes the canvas ground and the kit's
+   typeface (Inter, bundled by the kit's fonts.css — no
+   external fetch, ever). */
+html,
+body,
+[data-generated-space-root] {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--wb-surface-canvas);
+  color: var(--wb-content-primary);
+}
+
+/* The SDK shell wrapper (.hatch-space-root) paints its
+   background and default text colour from its --bg/--text
+   hooks, which the SDK flips only with the HOST colour
+   scheme (media query / host theme attributes) — never
+   with this client's chosen appearance. Bind both hooks
+   to the kit tokens: the wrapper is the page backdrop
+   and the inherited text colour for chrome that carries
+   no colour of its own (route titles, the Launcher
+   clock, section labels), so unbound it stayed on the
+   host scheme while every kit surface flipped — the
+   split rendering the 2026-11-16 critic confirmation
+   pass found as F-1. The binding is declarative over
+   the same data-attribute cascade the kit themes use,
+   so boot and runtime switch apply it identically by
+   construction. */
+.hatch-space-root[data-hatch-space-root] {
+  --bg: var(--wb-surface-canvas);
+  --text: var(--wb-content-primary);
+}
+
+/* Scroll ownership (owner defect D5, 2026-11-17): the
+   generated root is the SDK's designated scroller
+   (position: fixed; overflow: auto), but no route in
+   this client is built to scroll there — every route's
+   own content region owns the scroll. The SDK sizes
+   this wrapper with min-height: calc(100% + header +
+   bottom padding), so whenever the host supplies a
+   header height the wrapper outgrows the root by
+   exactly that height and the root becomes a second,
+   outer scroller: on routes whose content fits their
+   region it is the ONLY scroll (the whole page,
+   chrome included, shifts under the gesture), and
+   everywhere else it chains at the region's ends.
+   The wrapper's inline height: 100% already makes it
+   exactly the root's height, and its padding-top
+   still reserves the header inside that height — so
+   cap the min-height at the same 100% and the root
+   can never scroll. Measured before/after per route
+   in the D5 evidence (generated root scrollHeight ==
+   clientHeight on every route after this rule). */
+.hatch-space-root[data-hatch-space-root] {
+  min-height: 100%;
+}
+
+/* Native chrome (scrollbars, form controls) follows the
+   chosen mode, not the host scheme. System mode sets
+   neither attribute value, so the SDK's light-dark
+   default keeps governing there. */
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+/* Phone (the kit's one breakpoint): the kit PhoneShell's
+   navbar carries the screen title, so a view-level large
+   title carrying this class is suppressed — otherwise a
+   pushed phone screen shows the title twice (the workbench
+   original's .wb-largetitle seam, carried to the one
+   client). */
+@media (max-width: 480px) {
+  .wh-largetitle {
+    display: none;
+  }
+}

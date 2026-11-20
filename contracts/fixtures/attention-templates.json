@@ -1,0 +1,180 @@
+[
+  {
+    "audience": "chat",
+    "kind": "continue-settled",
+    "slots": [
+      "summary"
+    ],
+    "text": "Continue \u2014 settled under a standing rule: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "continue-standing-rule",
+    "slots": [
+      "summary"
+    ],
+    "text": "Continue under the standing rule: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "grant-program",
+    "slots": [
+      "summary",
+      "scope"
+    ],
+    "text": "Granted \u2014 program step inside the approved scope: {summary}. Scope restated: {scope}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "grant-followup",
+    "slots": [
+      "summary"
+    ],
+    "text": "Granted \u2014 build it in a worktree for accept / reject / modify: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "stall-nudge",
+    "slots": [
+      "summary",
+      "age_minutes"
+    ],
+    "text": "Stall check \u2014 no report in {age_minutes}m on: {summary}. Status?",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "status-request",
+    "slots": [
+      "summary"
+    ],
+    "text": "Status request \u2014 {summary}: reply with the status form (done / ongoing / blockers).",
+    "version": 1
+  },
+  {
+    "audience": "main",
+    "kind": "approval-surface",
+    "slots": [
+      "summary",
+      "handle"
+    ],
+    "text": "Approval waiting \u2014 {summary} ({handle}).",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "record-reconcile",
+    "slots": [
+      "summary"
+    ],
+    "text": "Reconcile the record: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "idleness-nudge",
+    "slots": [
+      "summary"
+    ],
+    "text": "Idle with work outstanding: {summary}. Continue, or report PARKED.",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "venue-question",
+    "slots": [
+      "summary"
+    ],
+    "text": "Venue question: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "venue-ping",
+    "slots": [
+      "summary"
+    ],
+    "text": "Venue check: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "verdict",
+    "slots": [
+      "summary",
+      "verb",
+      "note"
+    ],
+    "text": "Owner verdict \u2014 {verb}: {summary} {note}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "reply",
+    "slots": [
+      "summary",
+      "note"
+    ],
+    "text": "Owner reply on {summary} \u2014 {note}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "status-ping",
+    "slots": [
+      "summary"
+    ],
+    "text": "Status ping \u2014 the owner asks for a fresh status on: {summary}. Reply with the status form (done / ongoing / blockers).",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "continuation",
+    "slots": [
+      "summary",
+      "detail"
+    ],
+    "text": "Continue \u2014 {summary} {detail}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "status-ping-urgent",
+    "slots": [
+      "summary"
+    ],
+    "text": "Status ping (second) \u2014 still no fresh status on: {summary}. Reply now with the status form (done / ongoing / blockers).",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "parallelize",
+    "slots": [
+      "summary"
+    ],
+    "text": "Parallelize \u2014 the owner directs this work staffed across the live fleet now: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "commission",
+    "slots": [
+      "summary"
+    ],
+    "text": "Commission from the owner: {summary}",
+    "version": 1
+  },
+  {
+    "audience": "chat",
+    "kind": "decision-reply",
+    "slots": [
+      "summary"
+    ],
+    "text": "{summary}",
+    "version": 1
+  }
+]

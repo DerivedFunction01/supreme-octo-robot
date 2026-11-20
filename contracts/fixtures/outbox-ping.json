@@ -1,0 +1,17 @@
+{
+  "body_ref": "bodies/bridge-wake-item.md",
+  "coalesced_count": 1,
+  "created": "2026-11-12T15:52:00+00:00",
+  "detail": {
+    "caller": "attention-dispatch",
+    "request_id": "0123456789abcdef",
+    "target_chat": "chat-target-1",
+    "tool": "chat_send"
+  },
+  "due": "2026-11-12T15:52:00+00:00",
+  "id": "3d2de23f1bd9",
+  "job_id": "bridge-wake",
+  "kind": "agent-due",
+  "last_woken_at": null,
+  "state": "pending"
+}

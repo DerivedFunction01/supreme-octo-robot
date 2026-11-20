@@ -1,0 +1,25 @@
+id: example-pulse
+title: Example pulse (scripted interval job)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+owner: goal:example
+run:
+  argv:
+    - bash
+    - ${REPO}/examples/example_pulse.sh
+timeout_secs: 60
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+state_paths: []
+classification: fixed command; prints one line and exits 0; every outcome branches on the exit code alone
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: demo

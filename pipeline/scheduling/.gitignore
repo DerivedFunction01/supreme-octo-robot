@@ -1,0 +1,28 @@
+# Runtime state: ledger, outbox, next-due records, logs. Regenerable, never tracked.
+state/
+# The live config, created at install from config.example.json (may carry machine-local values).
+config.json
+# The client-side ops token home: raw tokens live client-side only, one file per caller.
+ops-tokens/
+# Optional local env file the supervisor unit reads (may carry machine-local values).
+scheduler.env
+# Plans are working state, not source.
+.plans/
+# Python runtime artefacts.
+__pycache__/
+*.pyc
+# Machine-written per-lease entries: the colab-runner lease core renders one
+# liveness entry per live lease and deletes it with the lease record; derived
+# state (the lease record is the record of truth), never tracked.
+jobs/colab-liveness-*.yaml
+# Live overlay: sweeper bodies, templates, and live configs. Tracked fictional
+# examples live beside them; the live files themselves are working state.
+bodies/
+
+# Workbench harness runtime state: the registry DB is derived,
+# regenerable state (the yaml is its source), never tracked.
+workbench/
+workbench.yaml
+
+# Live file-registry manifest — deployment data, untracked (tracked specimen: examples/file-registry/)
+registry/file-registry.yaml

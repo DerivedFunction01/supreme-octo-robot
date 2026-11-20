@@ -1,0 +1,53 @@
+# Example nudge templates — the format of record for the
+# approval sweeper's template data file. The live instance keeps
+# its full template set beside the live sweeper body (untracked);
+# this example ships the schema and four representative kinds.
+# Written in the registry's strict YAML subset so the repo's own
+# parser (server.registry.parse_yaml) reads it.
+#
+# Ledger: every send is recorded in the sweeper's nudge
+# store (SQLite, member state, untracked) through the ledger
+# CLI's verbs with fields: at, kind, template_version, source
+# (agent | scripted), target_chat, slots, trigger, outcome.
+version: 1
+kinds:
+  stall-nudge:
+    version: 2
+    audience: chat
+    slots:
+      - quiet_for
+      - outstanding
+      - diagnosis
+    text: "Status check: quiet for {quiet_for} with commissioned work outstanding: {outstanding}. Report what is done and what remains; if the pause is on something agent-clearable, continue now.{diagnosis}"
+  approval-surface:
+    version: 1
+    audience: main
+    slots:
+      - what
+      - blocks
+      - since
+    text: "Waiting on you: {what}. Blocks: {blocks}. Waiting since {since}."
+  record-reconcile:
+    version: 2
+    audience: chat
+    slots:
+      - record
+      - job
+      - state
+      - age
+    text: "Run record check: colab-run record {record} (job {job}) has been {state} for {age} with no reconcile evidence past its evidence bound — a frozen record is not running work. Reconcile it (colab-run --poll {record}) or close it out; do not treat it as still running."
+  venue-question:
+    version: 1
+    audience: chat
+    slots:
+      - session
+      - shape
+      - work
+      - high_ram
+    text: "Venue check: work is running on session {session} ({shape}), a low-end venue: {work}. High-RAM: {high_ram}. Standing rule: compute-bound work runs on High-RAM. State the justification for this venue, or move the work to High-RAM."
+  status-request:
+    version: 3
+    audience: chat
+    slots:
+      - codes
+    text: "Status request (machinery): reply with the code line — STATUS: <code>, one of {codes} — then the report in your state's form, one line per group your state carries and the rest omitted, never filled with none. WORKING or CONTINUE: done; ongoing; computed locally while High-RAM is up; serial that should be parallel; stalling and why, and what would speed it up; duplicate-intent consolidation; docs state. BLOCKED-OWNER or BLOCKED-HARD: done so far; the blocker — what blocks, why, the exact clearing act and whose it is. REVIEW: done with its gate evidence; docs state; what awaits the tap. DONE: done; docs state; the tail, one line per item with its owner (self or owner-tap). CLOSED: done in one summary line; docs state. PARKED: done so far; why parked; what resumes it. A code alone is not a report."

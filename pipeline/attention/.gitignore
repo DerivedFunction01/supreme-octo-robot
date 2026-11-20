@@ -1,0 +1,7 @@
+# Runtime state of the attention package: the package venv
+# (var/venv, built by init_venv.py) and any local state are
+# regenerable, never tracked — the original repo's rule
+# (runtime state lives under var/ and is never tracked).
+var/
+__pycache__/
+*.pyc

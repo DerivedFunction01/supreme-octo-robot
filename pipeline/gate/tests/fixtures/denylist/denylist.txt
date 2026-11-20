@@ -1,0 +1,8 @@
+# Fixture denylist for the gate package's denylist-leg
+# tests. The literal below is FICTIONAL — a made-up person
+# who does not exist — seeded here in plain form so a bare
+# clone's gate exercises the personal-literal leg end to
+# end without any real term. Never add a real literal to
+# this file: real literals live only in the untracked
+# per-deployment denylist.
+Zzq Testperson

@@ -1,0 +1,23 @@
+# Example thread-repo config for the sweeper nudge checker
+# (ops/sweeper_nudge_check.py), in the registry YAML subset.
+# The live file sits beside the sweeper templates data file
+# (untracked); this example ships with the repo. Every chat
+# and repo below is fictional.
+#
+# Convention: each watched chat maps to the repo its work
+# lives in, as a path relative to the workspace root (the
+# parent directory of the scheduler repo); the checker
+# joins it onto the workspace root it derives from its own
+# location. Attribution is repo-granular: two chats sharing
+# a repo cannot be told apart at the todo level, and the
+# unarmed-watch diagnosis names the repo, not the thread's
+# own work. A chat with no entry is undecidable and stays
+# silent.
+version: 1
+threads:
+  chat-alpha:
+    path: alpha-service
+  chat-beta:
+    path: beta-worker
+  chat-gamma:
+    path: beta-worker

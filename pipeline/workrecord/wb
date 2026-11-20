@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""wb — the workbench harness CLI.
+
+A thin caller over lib/: every verb is a lib/ mutation or
+read; wb holds no logic of its own and no SQL. The companion
+server calls the same lib/ functions — there is exactly one
+mutation path in the system. Every mutation verb regenerates
+the project's registry.json export (a pure fold; safe to
+repeat).
+
+Project selection (first match wins):
+  --db PATH         a registry DB directly (fixtures, repair)
+  --root PATH       a project root holding workbench.yaml
+  --project SLUG    resolved by sweeping the workspace
+  (none)            walk up from the cwd for workbench.yaml
+
+Run under the repo venv:  .venv/bin/python wb --help
+"""
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from lib.derived import active as active_mod  # noqa: E402
+from lib.writes import bundles as bundle_mod  # noqa: E402
+from lib import kit as kit_mod  # noqa: E402
+from lib import progress as progress_mod  # noqa: E402
+from lib.progress import attention as \
+    attention_mod  # noqa: E402
+from lib.progress import schedule as \
+    progress_schedule_mod  # noqa: E402
+from lib.registry import export as export_mod  # noqa: E402
+from lib.writes import files as files_mod  # noqa: E402
+from lib.writes import goals as goals_mod  # noqa: E402
+from lib import registry as reg  # noqa: E402
+from lib.plans import bundles as bundle_parser  # noqa: E402
+from lib.derived import staleness as stale_mod  # noqa: E402
+from lib import validators as val_mod  # noqa: E402
+from lib.discovery.manifest import load_manifest  # noqa: E402
+from lib.discovery.sweep import sweep  # noqa: E402
+from wbcli.artifacts import KIT_TEMPLATE_DIR  # noqa: E402,F401
+from wbcli.context import REPO_ROOT  # noqa: E402,F401
+from wbcli.context import WORKSPACE_ROOT  # noqa: E402,F401
+from wbcli.context import Ctx  # noqa: E402,F401
+from wbcli.context import PlansCtx  # noqa: E402,F401
+from wbcli.context import _doctor_mod  # noqa: E402,F401
+from wbcli.context import _latest_reviews  # noqa: E402,F401
+from wbcli.context import _print  # noqa: E402,F401
+from wbcli.context import _sweep_roots  # noqa: E402,F401
+from wbcli.parser import build_parser  # noqa: E402,F401
+from wbcli.artifacts import cmd_artifact_build  # noqa: E402,F401
+from wbcli.artifacts import cmd_artifact_new  # noqa: E402,F401
+from wbcli.artifacts import cmd_set_class  # noqa: E402,F401
+from wbcli.artifacts import cmd_set_owner  # noqa: E402,F401
+from wbcli.bundles import cmd_bundle_contract  # noqa: E402,F401
+from wbcli.bundles import cmd_bundle_new  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_file_list  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_file_set  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_import_db  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_migrate_names  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_new  # noqa: E402,F401
+from wbcli.drivers import cmd_activate  # noqa: E402,F401
+from wbcli.drivers import cmd_doctor  # noqa: E402,F401
+from wbcli.drivers import cmd_goal_check  # noqa: E402,F401
+from wbcli.drivers import cmd_print_schedule  # noqa: E402,F401
+from wbcli.drivers import cmd_progress  # noqa: E402,F401
+from wbcli.drivers import cmd_progress_check  # noqa: E402,F401
+from wbcli.entries import cmd_add  # noqa: E402,F401
+from wbcli.entries import cmd_archive  # noqa: E402,F401
+from wbcli.entries import cmd_export  # noqa: E402,F401
+from wbcli.entries import cmd_init  # noqa: E402,F401
+from wbcli.entries import cmd_list  # noqa: E402,F401
+from wbcli.entries import cmd_projects  # noqa: E402,F401
+from wbcli.entries import cmd_rebuild  # noqa: E402,F401
+from wbcli.entries import cmd_review  # noqa: E402,F401
+from wbcli.entries import cmd_set  # noqa: E402,F401
+from wbcli.entries import cmd_set_state  # noqa: E402,F401
+from wbcli.entries import cmd_set_state_schema  # noqa: E402,F401
+from wbcli.entries import cmd_set_status  # noqa: E402,F401
+from wbcli.entries import cmd_show  # noqa: E402,F401
+from wbcli.entries import cmd_stale  # noqa: E402,F401
+from wbcli.entries import cmd_supersede  # noqa: E402,F401
+from wbcli.entries import cmd_unarchive  # noqa: E402,F401
+from wbcli.entries import cmd_validate  # noqa: E402,F401
+from wbcli.entries import cmd_verify  # noqa: E402,F401
+
+def main(argv=None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        return args.fn(args)
+    except reg.RegistryError as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+    except kit_mod.KitError as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+    except bundle_mod.BundleError as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+    except active_mod.ActiveError as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+    except files_mod.FileError_ as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+    except goals_mod.GoalError as e:
+        print(f"wb: refused: {e}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

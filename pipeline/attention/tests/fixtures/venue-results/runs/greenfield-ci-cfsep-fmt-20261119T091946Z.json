@@ -1,0 +1,84 @@
+{
+  "run_id": "specimen-ci-fable-fmt-20261119T091946Z",
+  "job": "specimen-ci-fable-fmt",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T09:19:46.536805+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T09:31:56.330576+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-fmt-out-specimen-ci-fable-fmt-20261119T091946Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T09:29:50.146387+00:00",
+  "launch_confirmed_at": "2026-11-19T09:30:38.165432+00:00",
+  "collector_at": "2026-11-19T09:32:38.226120+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T09:30:38.165432+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 405.52 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cfsep-fmt-out.tar.gz",
+      "bytes": 23705,
+      "sha256": "eb10c60a6405a82e479c2b49fa77af75edd5d0d0c49d8a8eb7f700c799da081f",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-fmt-result.json",
+      "bytes": 2126,
+      "sha256": "a4b93f66a3cdccb46f393288f2b92996844367fc47510803a4eb0960b9202b6c",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-fmt-log.txt",
+      "bytes": 18868,
+      "sha256": "2271cc9985da6e1ce6f44de19bd3372bc5e59f9f444f91a9647a4ec97a47d8df",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cfsep-fmt-out.tar.gz",
+      "path": "/content/cfsep-fmt-out.tar.gz",
+      "bytes": 23705,
+      "mtime": 1795080600.289542,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-fmt-result.json",
+      "path": "/content/cfsep-fmt-result.json",
+      "bytes": 2126,
+      "mtime": 1795080600.2905421,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-fmt-log.txt",
+      "path": "/content/cfsep-fmt-log.txt",
+      "bytes": 18868,
+      "mtime": 1795080600.2905421,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T09:35:35.563153+00:00",
+  "usage_after": "Current balance: 405.30 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T09:35:36.028520+00:00"
+}

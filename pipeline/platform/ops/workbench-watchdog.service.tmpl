@@ -1,0 +1,35 @@
+# Template — render before installing: the render
+# substitutes @ROOT@ (the mega repo root) and @HOME@
+# for the host. The rendered unit is a machine-local
+# artefact, never tracked.
+#
+# The watchdog ladder's driver for the workbench unit:
+# a oneshot service started by workbench-watchdog.timer
+# every 60s, running the platform ladder (ops/watchdog.sh)
+# for its own unit. The driver is systemd itself, not a
+# job inside any watched unit — the scheduler-entry form
+# died with workhorse.service in the 2026-11-16 outage
+# and silenced every unit's ladder at once. No [Install]
+# section: the timer is the enablement (install-units.sh
+# records this entry enable:false), and the service is
+# only ever timer-started or started by hand.
+#
+# HOME is a render value for the same reason the fleet
+# units carry it: the ladder's installer step refuses
+# to run without one, and a supervisor-run ladder must
+# land in the owner's home, not the service's. The
+# ladder's speech appends to the unit's own log under
+# the platform state dir, the fleet units' log form —
+# the journal is not the record on this host.
+[Unit]
+Description=Workhorse watchdog ladder — workbench unit
+After=network.target
+
+[Service]
+Type=oneshot
+Environment=WORKHORSE_UNIT=workbench
+Environment=HOME=@HOME@
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=/usr/bin/bash @ROOT@/pipeline/platform/ops/watchdog.sh
+StandardOutput=append:@ROOT@/pipeline/platform/var/watchdog-workbench.log
+StandardError=append:@ROOT@/pipeline/platform/var/watchdog-workbench.log

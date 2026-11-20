@@ -1,0 +1,71 @@
+{
+  "run_id": "specimen-ci-ledger-cobalt-price-20261119T084117Z",
+  "job": "specimen-ci-ledger-cobalt-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T08:41:17.026243+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T10:32:27.014091+00:00",
+  "venue": "colab",
+  "session_pin": "brisk-dune-37",
+  "lease_action": "adopted",
+  "session": "brisk-dune-37",
+  "launch_phase": "uploading",
+  "remote_out": "specimen-ci-ledger-cobalt-price-out-specimen-ci-ledger-cobalt-price-20261119T084117Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T08:44:11.987290+00:00",
+  "launch_confirmed_at": "2026-11-19T08:44:38.144656+00:00",
+  "collector_at": "2026-11-19T10:33:22.847486+00:00",
+  "collector": "collector-sweep",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T08:44:38.144656+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 406.09 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "coci-pricing.json",
+      "path": "/content/coci-pricing.json",
+      "bytes": 466974,
+      "mtime": 1795077863.209481,
+      "fresh": true,
+      "collected": false
+    },
+    {
+      "name": "coci-price-log.txt",
+      "path": "/content/coci-price-log.txt",
+      "bytes": 10679,
+      "mtime": 1795077863.209481,
+      "fresh": true,
+      "collected": false
+    },
+    {
+      "name": "coci-price-result.json",
+      "path": "/content/coci-price-result.json",
+      "bytes": 70,
+      "mtime": 1795077863.209481,
+      "fresh": true,
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "coci-pricing.json",
+    "coci-price-log.txt",
+    "coci-price-result.json"
+  ],
+  "finished_at": "2026-11-19T10:34:32.472383+00:00",
+  "pulled": [],
+  "usage_after": "Current balance: 404.57 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "resumed_at": "2026-11-19T10:41:27.444635+00:00",
+  "error": "runner script upload: upload failed (rc 1): [colab] Upload failed: File or directory not found: /content/specimen-ci-ledger-cobalt-price-20261119T084117Z-wrap-price.py",
+  "health_degraded": true
+}

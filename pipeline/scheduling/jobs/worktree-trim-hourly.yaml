@@ -1,0 +1,26 @@
+id: worktree-trim-hourly
+title: Worktree trim (hourly, soft cap) — oldest lane worktrees that miss the cut are moved to the archive folder with their branches trimmed locally and on origin, and permanently removed 1 hour later
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: goal:workhorse-superapp-build-supreme-octo-robot
+run:
+  argv:
+    - bash
+    - ${REPO}/ops/worktree_trim.sh
+    - --tier
+    - soft
+timeout_secs: 1800
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/worktree-trim
+  - ${WS}/worktree-archive
+classification: 'fixed command sequence (two bash scripts: ops/worktree_trim.sh runs ops/worktree_archive_clean.sh first, then census, ranking, mv-archive, and branch trims per repo in one worker process per repo); every outcome branches on enumerable git/filesystem state or exit codes (cap math over last-activity stamps, mv success or failure, branch present or absent locally and on origin, origin reachable or queued for retry); speech is fully determined by those branches — silent when nothing was archived, purged, or failed, otherwise one structured line per act, with each ARCHIVED line naming the archive path and its 1-hour expiry as the owning lanes rescue window'
+lifetime: permanent

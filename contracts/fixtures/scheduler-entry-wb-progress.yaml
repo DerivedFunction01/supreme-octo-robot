@@ -1,0 +1,36 @@
+id: wb-progress-fixture-proj-t-01k8q00000000000000000000a
+title: 'Progress check - fixture-proj: Long work (t-01K8Q00000000000000000000A)'
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 30m
+owner: none
+owner_reason: 'Machine-written by the workbench harness for one armed todo; the todo file is the record of truth and this entry is its derived schedule.'
+run:
+  argv:
+    - ${WS}/workbench-viewer/.venv/bin/python
+    - ${WS}/workbench-viewer/wb
+    - --root
+    - ${WS}/fixture-proj
+    - progress-check
+    - t-01K8Q00000000000000000000A
+timeout_secs: 120
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+classification: 'fixed command (wb progress-check <todo-id>); exit 0 on track, disarmed, or gone, exit 3 stalled with the stall line as output; when it speaks is fully determined by the exit code, no content judgment'
+lifetime: until_complete
+self_removal: 'the harness deletes this entry in the same writer call that disarms the todo (a move to done or blocked, or the bundle''s archival); the workbench doctor flags any entry that outlives its todo'
+migrated: true
+migrated_at: 2026-11-01
+catalog:
+  origin: machine
+  generality: deployment-specific
+  use_case: work-tracking
+source:
+  writer: workbench-harness
+  project: fixture-proj
+  todo: t-01K8Q00000000000000000000A
+  source_class: project

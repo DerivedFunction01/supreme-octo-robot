@@ -1,0 +1,36 @@
+{"dropped": 128, "kind": "ledger_pruned", "ts": "2026-11-09T22:00:00+00:00"}
+{"errors": ["jobs/specimen.yaml: unknown fields: ['bogus']"], "kind": "registry_error", "ts": "2026-11-10T22:00:00+00:00"}
+{"error": "next_due.json has the wrong shape", "kind": "state_error", "ts": "2026-11-10T23:00:00+00:00"}
+{"job_id": "retired-specimen", "kind": "entry_removed", "ts": "2026-11-11T22:00:00+00:00"}
+{"collapsed": 0, "due": "2026-11-12T20:30:00+00:00", "error": null, "exit_code": 1, "job_id": "storage-watch", "kind": "run", "matched_pattern": null, "status": "failure", "stderr_tail": "df: /home: no space left on device", "stdout_tail": "", "ts": "2026-11-12T20:30:00+00:00"}
+{"collapsed": 0, "due": "2026-11-12T23:00:00+00:00", "error": null, "exit_code": 0, "job_id": "weekly-gmail-otp-cleanup", "kind": "run", "matched_pattern": null, "status": "ok", "stderr_tail": "", "stdout_tail": "0 threads matched", "ts": "2026-11-12T23:00:00+00:00"}
+{"collapsed": 1, "due": "2026-11-13T16:00:00+00:00", "job_id": "bridge-drain", "kind": "agent_due", "ts": "2026-11-13T16:00:00+00:00"}
+{"job_id": "bridge-drain", "kind": "ping_created", "ping_id": "f10000000008", "ping_kind": "agent-due", "ts": "2026-11-13T16:00:05+00:00"}
+{"job_id": "bridge-drain", "kind": "ping_woken", "ping_id": "f10000000008", "ping_kind": "agent-due", "ts": "2026-11-13T16:01:00+00:00"}
+{"job_id": "bridge-drain", "kind": "ping_acked", "ping_id": "f10000000008", "ping_kind": "agent-due", "ts": "2026-11-13T16:20:00+00:00"}
+{"collapsed": 4, "due": "2026-11-13T18:00:00+00:00", "job_id": "bridge-drain", "kind": "catchup", "ts": "2026-11-13T18:00:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T19:00:00+00:00", "error": null, "exit_code": 0, "job_id": "storage-watch", "kind": "run", "matched_pattern": null, "status": "ok", "stderr_tail": "", "stdout_tail": "tiers ok", "ts": "2026-11-13T19:00:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T20:00:00+00:00", "error": null, "exit_code": 0, "job_id": "flap-watch", "kind": "run", "matched_pattern": null, "status": "ok", "stderr_tail": "", "stdout_tail": "canary ok", "ts": "2026-11-13T20:00:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T20:00:00+00:00", "error": null, "exit_code": 2, "job_id": "storage-watch", "kind": "run", "matched_pattern": null, "status": "failure", "stderr_tail": "probe failed", "stdout_tail": "", "ts": "2026-11-13T20:00:00+00:00"}
+{"job_id": "storage-watch", "kind": "ping_created", "ping_id": "f10000000003", "ping_kind": "escalation", "ts": "2026-11-13T20:00:05+00:00"}
+{"job_id": "storage-watch", "kind": "ping_woken", "ping_id": "f10000000003", "ping_kind": "escalation", "ts": "2026-11-13T20:01:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T20:05:00+00:00", "error": "No such file or directory: 'python3'", "exit_code": null, "job_id": "flap-watch", "kind": "run", "matched_pattern": null, "status": "spawn_error", "stderr_tail": "", "stdout_tail": "", "ts": "2026-11-13T20:05:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T20:10:00+00:00", "error": null, "exit_code": null, "job_id": "flap-watch", "kind": "run", "matched_pattern": null, "status": "timeout", "stderr_tail": "", "stdout_tail": "", "ts": "2026-11-13T20:10:00+00:00"}
+{"job_id": "flap-watch", "kind": "ping_created", "ping_id": "f10000000006", "ping_kind": "escalation", "ts": "2026-11-13T20:10:05+00:00"}
+{"job_id": "flap-watch", "kind": "ping_woken", "ping_id": "f10000000006", "ping_kind": "escalation", "ts": "2026-11-13T20:11:00+00:00"}
+{"job_id": "flap-watch", "kind": "ping_acked", "ping_id": "f10000000006", "ping_kind": "escalation", "ts": "2026-11-13T20:30:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T21:00:00+00:00", "error": null, "exit_code": 1, "job_id": "storage-watch", "kind": "run", "matched_pattern": null, "status": "failure", "stderr_tail": "low tier crossed", "stdout_tail": "", "ts": "2026-11-13T21:00:00+00:00"}
+{"coalesced_count": 2, "job_id": "storage-watch", "kind": "ping_coalesced", "ping_id": "f10000000003", "ping_kind": "escalation", "ts": "2026-11-13T21:00:05+00:00"}
+{"caller": "sched-cli", "error": "denied", "exit_code": 4, "kind": "op", "op": "exec", "status": "error", "target": "bin/sched census", "ts": "2026-11-13T21:05:00+00:00"}
+{"caller": "sched-cli", "kind": "op", "op": "write", "status": "ok", "target": "jobs/flap-watch.yaml", "ts": "2026-11-13T21:10:00+00:00"}
+{"caller": "sched-ops", "job_id": "storage-watch", "kind": "op", "knob": "home_low_free_gb", "new": 55, "old": 50, "op": "config", "status": "ok", "target": "storage-watch", "ts": "2026-11-13T21:15:00+00:00"}
+{"collapsed": 1, "due": "2026-11-13T21:15:00+00:00", "job_id": "bridge-wake", "kind": "skipped_overlap", "ts": "2026-11-13T21:15:00+00:00"}
+{"caller": "home-bridge", "kind": "connector", "status": "ok", "tool": "ping_ack", "ts": "2026-11-13T21:20:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T21:40:00+00:00", "error": null, "exit_code": 3, "job_id": "flap-watch", "kind": "run", "matched_pattern": "write denied", "status": "ok", "stderr_tail": "", "stdout_tail": "canary denied", "ts": "2026-11-13T21:40:00+00:00"}
+{"collapsed": 2, "due": "2026-11-13T21:50:00+00:00", "job_id": "bridge-drain", "kind": "agent_due", "ts": "2026-11-13T21:50:00+00:00"}
+{"job_id": "bridge-drain", "kind": "ping_created", "ping_id": "f10000000001", "ping_kind": "agent-due", "ts": "2026-11-13T21:50:05+00:00"}
+{"job_id": "bridge-drain", "kind": "ping_woken", "ping_id": "f10000000001", "ping_kind": "agent-due", "ts": "2026-11-13T21:51:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T21:55:00+00:00", "error": null, "exit_code": 0, "job_id": "weekly-gmail-stale-jobs-cleanup", "kind": "run", "matched_pattern": null, "status": "ok", "stderr_tail": "", "stdout_tail": "2 threads matched the stale pattern", "ts": "2026-11-13T21:55:00+00:00"}
+{"job_id": "weekly-gmail-stale-jobs-cleanup", "kind": "ping_created", "ping_id": "f10000000004", "ping_kind": "report", "ts": "2026-11-13T21:55:05+00:00"}
+{"collapsed": 0, "due": "2026-11-13T21:58:00+00:00", "error": null, "exit_code": 0, "job_id": "bridge-wake", "kind": "run", "matched_pattern": "UNRESOLVED", "status": "ok", "stderr_tail": "", "stdout_tail": "WAKE chat-1", "ts": "2026-11-13T21:58:00+00:00"}
+{"collapsed": 0, "due": "2026-11-13T21:59:00+00:00", "error": null, "exit_code": 0, "job_id": "bridge-wake", "kind": "run", "matched_pattern": null, "status": "ok", "stderr_tail": "", "stdout_tail": "", "ts": "2026-11-13T21:59:00+00:00"}

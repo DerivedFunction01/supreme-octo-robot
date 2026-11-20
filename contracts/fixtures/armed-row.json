@@ -1,0 +1,18 @@
+{
+  "armed_at": "2026-11-01T11:30:00+00:00",
+  "bundle": "2026-11-01-work",
+  "cadence": "30m",
+  "cadence_minutes": 30,
+  "handle": "long-work",
+  "programme": "fixture-proj",
+  "project": "fixture-proj",
+  "source": {
+    "project": "fixture-proj",
+    "source_class": "project",
+    "todo": "long-work",
+    "writer": "workbench-harness"
+  },
+  "status": "doing",
+  "title": "Long work",
+  "todo": "long-work"
+}

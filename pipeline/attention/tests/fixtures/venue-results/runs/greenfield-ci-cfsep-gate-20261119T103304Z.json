@@ -1,0 +1,98 @@
+{
+  "run_id": "specimen-ci-fable-gate-20261119T103304Z",
+  "job": "specimen-ci-fable-gate",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:33:04.844612+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T10:38:12.961408+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-gate-out-specimen-ci-fable-gate-20261119T103304Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:34:28.390664+00:00",
+  "launch_confirmed_at": "2026-11-19T10:34:44.561248+00:00",
+  "collector_at": "2026-11-19T10:38:55.431991+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:34:44.561248+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.57 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cfsep-gate-out.json",
+      "bytes": 1080,
+      "sha256": "fc4b323fa7eb9c9b03733b32a45def0e7dae2b54d76086974d08e11cc85988fc",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-log.txt",
+      "bytes": 70165,
+      "sha256": "fb516229434146d16b8b226d72524b13de9a11b95705e598e003fd15c53f7f37",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-result.json",
+      "bytes": 2795,
+      "sha256": "444ea8b8490f50df2e2a0b2e7cbb7adc0da57198ebe13dce245c83c32f17469d",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-check.txt",
+      "bytes": 1617,
+      "sha256": "c2ebf268eba36d032ccab3bab8f2bbfc65a5b5db167ebb10930630cf9bd4179b",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cfsep-gate-out.json",
+      "path": "/content/cfsep-gate-out.json",
+      "bytes": 1080,
+      "mtime": 1795084558.741963,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-log.txt",
+      "path": "/content/cfsep-gate-log.txt",
+      "bytes": 70165,
+      "mtime": 1795084558.741963,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-result.json",
+      "path": "/content/cfsep-gate-result.json",
+      "bytes": 2795,
+      "mtime": 1795084558.741963,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-check.txt",
+      "path": "/content/cfsep-gate-check.txt",
+      "bytes": 1617,
+      "mtime": 1795084558.741963,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:40:49.971960+00:00",
+  "usage_after": "Current balance: 404.44 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:40:50.157193+00:00"
+}

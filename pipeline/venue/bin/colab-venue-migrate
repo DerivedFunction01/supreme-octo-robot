@@ -1,0 +1,31 @@
+#!/usr/bin/env python3
+"""The §10.3 venue-stamp migration, as an operator verb.
+
+    colab-venue-migrate --var <dir> --runs <dir> [--venue colab] [--dry-run]
+
+Stamps the legacy lease/run record stock with its venue key
+(plan §10.3, ruled: stamp once, no read-time default) and
+quarantines the hygiene remainder (unparseable run records,
+the record in a state outside the contract vocabulary) with
+bytes preserved. Prints the census as JSON. The mechanism is
+sync/venue_migrate.py; this wrapper is its CLI seam, in the
+bin/ pattern. S11's cutover runs this verb against the
+then-live store.
+"""
+import importlib.util as ilu
+import sys
+from pathlib import Path
+
+_paths_spec = ilu.spec_from_file_location(
+    "venue_paths", Path(__file__).resolve().parent.parent / "paths.py")
+_paths = ilu.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(_paths)
+
+REPO = _paths.REPO_RESOLVED
+
+_spec = ilu.spec_from_file_location("venue_migrate", REPO / "sync" / "venue_migrate.py")
+venue_migrate = ilu.module_from_spec(_spec)
+_spec.loader.exec_module(venue_migrate)
+
+if __name__ == "__main__":
+    raise SystemExit(venue_migrate.main(sys.argv[1:]))

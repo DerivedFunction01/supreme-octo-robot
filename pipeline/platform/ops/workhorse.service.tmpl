@@ -1,0 +1,53 @@
+# Template — render before installing: the freeze render
+# substitutes @ROOT@ (the mega repo root), @PYTHON@, @HOME@
+# and @ATTENTION_DATA@ (the migrated attention store's
+# explicit path) for the host. The rendered unit is a
+# machine-local artefact, never tracked.
+#
+# The coupled unit (owner ruling, 2026-11-14, refined
+# by coupling, 2026-11-15): the surfaces that stayed
+# coupled — scheduling (8796) and attention (8797) —
+# serve in this one process, the repo-root run.py serve
+# on the platform serving core, with the scheduler tick
+# and the surfaces' loops as supervised threads inside
+# it, because their shared state and tight loops are
+# expressed inside a process, never across one. The
+# workbench is NOT in this unit: its feeds assembly
+# saturation must not be able to starve these surfaces'
+# health, so it serves in its own process under
+# workbench.service.tmpl. The lease panel is NOT in
+# this unit either: its state reads shell out
+# synchronously to the lease core and it faces the
+# heaviest polling of the surfaces, so it serves in its
+# own process under venue.service.tmpl. Each split
+# surface carries its own unit and its own health
+# verdict, and no probe or shim joins the processes. A
+# worker fault exits this process non-zero, so the
+# Restart below is the supervision: the process comes
+# back loudly rather than serving with a dead engine.
+#
+# ATTENTION_DATA is a render value, not a default: if it
+# renders empty or names no file, run.py refuses to
+# start — the attention store binds explicitly or not
+# at all.
+[Unit]
+Description=Workhorse superapp — coupled process (scheduler + attention)
+After=network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+EnvironmentFile=-@ROOT@/workhorse.env
+Environment=HOME=@HOME@
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+Environment=ATTENTION_DATA=@ATTENTION_DATA@
+ExecStart=@PYTHON@ @ROOT@/run.py serve
+Restart=always
+RestartSec=2
+StandardOutput=append:@ROOT@/pipeline/platform/var/workhorse.log
+StandardError=append:@ROOT@/pipeline/platform/var/workhorse.log
+
+[Install]
+WantedBy=default.target

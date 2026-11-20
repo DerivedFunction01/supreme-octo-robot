@@ -1,0 +1,21 @@
+diff --git a/dist/d3-dsv.mjs b/dist/d3-dsv.mjs
+index 68966814da4095972b10dc4854b17513163a4797..0d4965b627c0213c08a5916168402d201eda2f44 100644
+--- a/dist/d3-dsv.mjs
++++ b/dist/d3-dsv.mjs
+@@ -6,9 +6,13 @@ var EOL = {},
+     RETURN = 13;
+ 
+ function objectConverter(columns) {
+-  return new Function("d", "return {" + columns.map(function(name, i) {
+-    return JSON.stringify(name) + ": d[" + i + "] || \"\"";
+-  }).join(",") + "}");
++  return function(d) {
++    var o = {};
++    for (var i = 0; i < columns.length; i++) {
++      o[columns[i]] = d[i] || "";
++    }
++    return o;
++  };
+ }
+ 
+ function customConverter(columns, f) {

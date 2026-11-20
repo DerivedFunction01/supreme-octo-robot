@@ -1,0 +1,14 @@
+{
+  "session": "standard",
+  "shape": "cpu",
+  "shape_spec": {
+    "gpu": null,
+    "tpu": null,
+    "high_mem": false
+  },
+  "rate_cu_per_hour": 0.08,
+  "acquired_at": "2026-11-01T10:00:00+00:00",
+  "deadline": "2026-11-01T20:00:00+00:00",
+  "last_used_at": "2026-11-01T10:00:00+00:00",
+  "jobs": []
+}

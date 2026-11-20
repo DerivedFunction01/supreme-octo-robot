@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-12 13:00:00+00:00",
+  "decision": "surfaced",
+  "handle": "@panel",
+  "id": "w0001",
+  "summary": "Lease expiring \u2014 renew or release",
+  "wait_class": "lease_renewal"
+}

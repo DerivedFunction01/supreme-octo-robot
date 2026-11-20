@@ -1,0 +1,76 @@
+{
+  "run_id": "specimen-ci-ledger-cobalt-price-20261119T110449Z",
+  "job": "specimen-ci-ledger-cobalt-price",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T11:04:49.177711+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T11:06:37.663586+00:00",
+  "venue": "colab",
+  "session_pin": "amber-cliff-23",
+  "lease_action": "adopted",
+  "session": "amber-cliff-23",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-ledger-cobalt-price-out-specimen-ci-ledger-cobalt-price-20261119T110449Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T11:05:42.734924+00:00",
+  "launch_confirmed_at": "2026-11-19T11:05:47.989076+00:00",
+  "collector_at": "2026-11-19T11:06:47.932055+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T11:05:47.989076+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.18 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "coci-pricing.json",
+      "path": "/content/coci-pricing.json",
+      "bytes": 2504197,
+      "mtime": 1795086351.3281374,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-ledger-cobalt-price-20261119T105847Z",
+      "collected": false
+    },
+    {
+      "name": "coci-price-log.txt",
+      "path": "/content/coci-price-log.txt",
+      "bytes": 27744,
+      "mtime": 1795086351.3291373,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-ledger-cobalt-price-20261119T105847Z",
+      "collected": false
+    },
+    {
+      "name": "coci-price-result.json",
+      "path": "/content/coci-price-result.json",
+      "bytes": 78,
+      "mtime": 1795086351.3291373,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-ledger-cobalt-price-20261119T105847Z",
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "coci-pricing.json",
+    "coci-price-log.txt",
+    "coci-price-result.json"
+  ],
+  "finished_at": "2026-11-19T11:07:12.432656+00:00",
+  "pulled": [],
+  "usage_after": "Current balance: 404.12 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T11:07:12.848757+00:00"
+}

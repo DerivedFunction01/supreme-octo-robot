@@ -1,0 +1,30 @@
+id: bridge-wake
+title: Bridge wake minter - one thread-addressed wake ping per queued connector bridge item
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1m
+timezone: America/New_York
+owner: none
+owner_reason: 'Harness-connector platform machinery (F5 home, owner ruling 2026-11-11): the bridge serves every venue caller on the machine, so no single goal owns it; the retired approval-sweeper stamp it carried was the wrong-place defect the same ruling removed from the drain cron.'
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/bridge/bridge_wake.py
+timeout_secs: 120
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+  report_patterns:
+    - UNRESOLVED
+  quiet_patterns:
+    - WAKE
+    - DRAIN
+state_paths:
+  - ${REPO}/state/connector-bridge
+  - ${REPO}/state/outbox.json
+  - ${REPO}/bodies/bridge-wake-owners.yaml
+classification: 'fixed command (one Python script): each pass reads the connector bridge queue from its record files and plants one wake ping per queued item in the scheduler outbox through the server own Outbox class - the per-item programmatic generation half of the bridge drain re-host (plan 2026-11-10). Wake addressing is derived, never judged: a chat_send wake targets the record own args.chat_id; a read tool (chat_list, chat_tail, permissions_list) targets the requesting caller owning thread from bodies/bridge-wake-owners.yaml. Every outcome is enumerable in advance: WAKE (a ping minted; quiet pattern), DRAIN (an episode escalation ping for the bridge-drain agent job minted; quiet pattern), silence (queue empty or every item already has a pending wake), or UNRESOLVED (an item with no resolvable target - left queued and reported, never guessed). Episode escalation (F5 home, 2026-11-11): a pass finding at least one resolvable queued item and no pending bridge-drain ping plants that ping once (detail: the resolvable count, plus target_chat from the owners config drain mapping when configured - the escalation is addressed to the drain home thread, a full agent surface carrying the chat send function, because worker-class runtimes hold only the read half of the chat namespace and an unaddressed drain ping claimed by one stalls every chat_send item; defect diagnosed 2026-11-12 after two such stalls); the executor acks it only when its final poll finds the queue empty, so a standing bridge-drain ping is the open episode and the first pass after its ack re-mints - no minter state, the outbox is the record. An unresolved-only queue never escalates. The ping detail carries the item identity and destination only, never its text; minting approves nothing and executes nothing - execution stays with the woken executor under the bridge contract (tools, never authority). Idempotence is the outbox itself: one pending ping per item job id, terminal records never re-minted, an acked-but-unfulfilled item re-minted on the next pass.'
+lifetime: permanent

@@ -1,0 +1,90 @@
+{
+  "run_id": "specimen-ci-fable-repro-20261119T113507Z",
+  "job": "specimen-ci-fable-repro",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T11:35:07.310325+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T11:39:27.705957+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-repro-out-specimen-ci-fable-repro-20261119T113507Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T11:38:10.561134+00:00",
+  "launch_confirmed_at": "2026-11-19T11:38:46.741595+00:00",
+  "collector_at": "2026-11-19T11:39:34.953330+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T11:38:46.741595+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.79 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "output_name_warnings": [
+    {
+      "name": "cfsep-repro-log.txt",
+      "shared_with": "specimen-ci-fable-repro-20261119T112937Z"
+    },
+    {
+      "name": "cfsep-repro-result.json",
+      "shared_with": "specimen-ci-fable-repro-20261119T112937Z"
+    },
+    {
+      "name": "cfsep-repro.json",
+      "shared_with": "specimen-ci-fable-repro-20261119T112937Z"
+    }
+  ],
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "cfsep-repro.json",
+      "path": "/content/cfsep-repro.json",
+      "bytes": 11838,
+      "mtime": 1795088296.906601,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-fable-repro-20261119T112937Z",
+      "collected": false
+    },
+    {
+      "name": "cfsep-repro-log.txt",
+      "path": "/content/cfsep-repro-log.txt",
+      "bytes": 104131,
+      "mtime": 1795088296.906601,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-fable-repro-20261119T112937Z",
+      "collected": false
+    },
+    {
+      "name": "cfsep-repro-result.json",
+      "path": "/content/cfsep-repro-result.json",
+      "bytes": 80,
+      "mtime": 1795088296.906601,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-fable-repro-20261119T112937Z",
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "cfsep-repro.json",
+    "cfsep-repro-log.txt",
+    "cfsep-repro-result.json"
+  ],
+  "finished_at": "2026-11-19T11:40:28.281153+00:00",
+  "pulled": [],
+  "usage_after": "Current balance: 403.66 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T11:40:28.551739+00:00"
+}

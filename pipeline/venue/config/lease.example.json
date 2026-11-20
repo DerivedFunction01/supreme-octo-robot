@@ -1,0 +1,78 @@
+{
+  "accounts": {
+    "colab": [
+      {
+        "id": "primary",
+        "label": "Primary account"
+      },
+      {
+        "id": "backup",
+        "label": "Second account (example)",
+        "token_file": "var/backup-account.token"
+      }
+    ]
+  },
+  "auto_acquire": {
+    "enabled": true
+  },
+  "budgets": {
+    "colab": {
+      "backup": {
+        "daily": null,
+        "monthly": null,
+        "standing_daily": null
+      }
+    }
+  },
+  "daily_cu_budget": 10,
+  "default_shape": "cpu-highram",
+  "enabled": true,
+  "extend_guard": {
+    "callers": {},
+    "default_mode": "active-or-first",
+    "enabled": true,
+    "idle_after_minutes": 60,
+    "max_extended_per_shape": 1,
+    "shapes": {
+      "a100-highram": "active-only"
+    },
+    "threshold_minutes": 120,
+    "window_hours": 8
+  },
+  "idle_shutdown_minutes": null,
+  "keepalive": {
+    "enabled": true,
+    "interval_seconds": 60,
+    "pulse_seconds": 600,
+    "stale_seconds": 600
+  },
+  "max_hours": 8,
+  "monthly_cu_budget": 100,
+  "rate_cu_per_hour": {
+    "high_mem": 0.26,
+    "standard": 0.08
+  },
+  "session_gate": {
+    "agent_classes": [
+      "high_ram"
+    ],
+    "bypass_actors": [
+      "panel",
+      "test"
+    ],
+    "enabled": true,
+    "infra_actor": "standing"
+  },
+  "standing": {
+    "caller": "standing",
+    "daily_cu_cap": 4,
+    "max_session_hours": 12,
+    "shape": "cpu",
+    "warm_on_renew": true
+  },
+  "sync_claim": {
+    "attach_window_minutes": 15,
+    "max_sync_seconds": 300,
+    "ttl_minutes": 60
+  }
+}

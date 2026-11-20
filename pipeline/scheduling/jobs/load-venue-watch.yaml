@@ -1,0 +1,30 @@
+id: load-venue-watch
+title: Load-venue watcher — on CPU overload, name the live High-RAM sessions to run compute on
+kind: scripted
+status: suspended
+suspend_reason: admission in progress: proof run pending
+suspended_on: 2026-11-15
+cadence:
+  type: interval
+  every: 1m
+timezone: America/New_York
+owner: none
+owner_reason: Venue-discipline instrumentation ordered by the owner 2026-11-15 (the pieces already existed — the local-test watch samples load as context and counts live fleet sessions without naming them; this watch assembles them). Findings serve every project on the machine, so no single goal owns the entry. Steady state is silent.
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/load_venue_watch.py
+timeout_secs: 60
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/load-venue-watch.json
+classification: 'fixed command (one Python script): every cycle samples the 1-minute load average and the CPU count from /proc and reads the live fleet sessions from the registry colab-liveness entries (the lease core renders one per live session and removes it at lease end), extracting each session name from the entry body run.argv session argument with the lease-run suffix stripped (filename parsing only as fallback). Outcomes branch on enumerable output alone: silence while load1 is at or below the CPU count; silence while no session is live (nothing to point at); exactly one LOAD-VENUE finding, naming every live session, on the first over-threshold sample of an episode (episode state in state/load-venue-watch.json; a continuing episode never re-speaks; the episode closes on a sample at/below threshold or with no session live, and a later rise speaks again as a new episode); exit 3 when /proc cannot be read. Speaking is fully determined by those branches; the watch reports facts and judges nothing beyond the mechanical threshold.'
+lifetime: permanent
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: fleet-health

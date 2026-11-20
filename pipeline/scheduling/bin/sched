@@ -1,0 +1,167 @@
+#!/usr/bin/env python3
+"""sched — the scheduler registry tool.
+
+  sched validate            every entry in jobs/ validates
+  sched census              the job table by kind and cadence,
+                            with the expected main-thread wake-ups
+  sched drift <cron-list>   registry vs a cron-list JSON file
+                            (or stdin with '-'): a job standing
+                            in the registry still holding a
+                            recurring cron, or a live recurring
+                            cron with no registry entry, is
+                            drift. Presence in the registry is
+                            admission (there is no migration
+                            flag), so a live cron beside a
+                            registry entry is the duplicate-run
+                            state, never an expected one.
+                            runonce, system, and heartbeat
+                            crons are out of scope.
+  sched ack <ping-id>       explicitly acknowledge an outbox
+                            ping after its work is done
+  sched logs stats          the log store at a glance (SQLite)
+  sched logs prune [--days N]
+                            cleanup: delete events past retention
+                            (default: the config's), vacuum, report
+  sched logs export (--job <id> | --all) [--out <path>]
+                            write events to disk as JSONL (the
+                            export format), print path + SHA-256
+  sched logs verify         integrity check on the log store
+  sched logs import-jsonl <path>
+                            one-time migration into an empty store,
+                            with the count + hash proof
+  sched adopt <example-id>  adopt a catalog entry into the live
+    [--param k=v]...        overlay: substitute the declared +
+    [--dry-run]             standard parameters, refuse machine
+                            literals, establish or verify the
+                            declared setup (state dirs, config
+                            files, stores, companions; manual
+                            registrations are surfaced), then the
+                            admission back half (validate, proof
+                            run in the server's context via the
+                            ops exec, admitting write). The entry
+                            stages at status: suspended while the
+                            back half runs — presence in the
+                            registry is admission, so the write
+                            that admits is the last one, at the
+                            rendered status, after the proof
+                            passes. Writes ride the ops endpoint
+                            like write/patch/exec.
+                            --dry-run prints the rendered entry
+                            and its setup plan, performs nothing.
+  sched catalog-drift       diff adopted live entries (source:
+                            stamp) against their catalog renders;
+                            unadopted classes are counted, not
+                            diffed — their writers own them.
+  sched connector-token     mint, re-issue, or revoke a token
+    <name> --scopes a,b     caller (one registry for /tools and
+    [--save-client]         /ops): prints the token once; the
+    | --revoke              server keeps only its SHA-256.
+                            --save-client also saves the token
+                            into this client's ops token home.
+  sched config-init         provision the live config.json
+                            from config.example.json (untracked;
+                            refuses to overwrite an existing
+                            live config). The server refuses to
+                            start without a live config.
+  Ops callers authenticate with the token in the ops token
+  home (one <caller>.token file per caller; the directory is
+  pipeline-local `ops-tokens/`, re-pointed by the
+  SCHED_OPS_TOKEN_DIR env var). /ops write/patch need the
+  write-state scope; exec needs the exec scope.
+  sched flap                the write-denial flap verdict from
+                            state/flap-state.json (kept by the
+                            write-denial-watch job): one line with
+                            the verdict, its age, and a STALE mark
+                            when the last sample is older than two
+                            job cadences. Exit 0 down, 3 up/mixed,
+                            4 unknown/stale/inconclusive — the
+                            probe's own contract, so a caller can
+                            branch on the code alone.
+  sched write <path>        write the file at <path> (content on
+    [--caller <name>]       stdin) — performed by the server
+                            process, not this one, so the write
+                            lands even while the write denial is
+                            denying this shell. Paths resolve
+                            inside the workspace.
+  sched patch <path>        replace the exact text in OLD-FILE
+    <old-file> <new-file>   with the text in NEW-FILE (exactly
+    [--caller <name>]       one match required), performed by
+                            the server like write.
+  sched exec [--cwd <dir>]  run a command in the server's process
+    [--timeout <secs>]      (after '--': the argv), print its
+    [--caller <name>] --    captured output, exit with its exit
+    <argv...>               code (124 on timeout). For commands
+                            whose work is writing, while the
+                            denial is up.
+  Caller names come from --caller or $SCHED_CALLER (default
+  "sched-cli") and are recorded in the ledger with every op.
+  Exit 4 from write/patch/exec means the server was unreachable
+  and nothing was performed — the client never writes directly.
+"""
+import importlib.util
+import os
+import sys
+
+_spec = importlib.util.spec_from_file_location(
+    "scheduling_paths",
+    os.path.normpath(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", "paths.py")))
+_paths = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_paths)
+ROOT = _paths.PACKAGE_ROOT
+sys.path.insert(0, ROOT)
+
+from cli.adopt import cmd_adopt, cmd_catalog_drift  # noqa: E402
+from cli.common import JOBS_DIR  # noqa: E402,F401
+from cli.config_init import cmd_config_init  # noqa: E402
+from cli.connector_token import cmd_connector_token  # noqa: E402
+from cli.flap import cmd_flap  # noqa: E402
+from cli.flap import flap_line  # noqa: E402,F401
+from cli.ops_cmds import cmd_exec, cmd_patch, cmd_write  # noqa: E402
+from cli.registry_cmds import cmd_census, cmd_drift, cmd_validate  # noqa: E402
+from cli.state_cmds import cmd_ack, cmd_logs  # noqa: E402
+
+
+def main(argv):
+    if len(argv) < 2:
+        print(__doc__)
+        return 2
+    cmd = argv[1]
+    if cmd == "validate":
+        return cmd_validate()
+    if cmd == "census":
+        return cmd_census()
+    if cmd == "drift":
+        if len(argv) < 3:
+            print("usage: sched drift <cron-list.json | ->")
+            return 2
+        return cmd_drift(argv[2])
+    if cmd == "ack":
+        if len(argv) < 3:
+            print("usage: sched ack <ping-id>")
+            return 2
+        return cmd_ack(argv[2])
+    if cmd == "adopt":
+        return cmd_adopt(argv[2:])
+    if cmd == "catalog-drift":
+        return cmd_catalog_drift()
+    if cmd == "logs":
+        return cmd_logs(argv[2:])
+    if cmd == "flap":
+        return cmd_flap()
+    if cmd == "write":
+        return cmd_write(argv[2:])
+    if cmd == "patch":
+        return cmd_patch(argv[2:])
+    if cmd == "exec":
+        return cmd_exec(argv[2:])
+    if cmd == "connector-token":
+        return cmd_connector_token(argv[2:])
+    if cmd == "config-init":
+        return cmd_config_init(argv[2:])
+    print(f"unknown command: {cmd}")
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

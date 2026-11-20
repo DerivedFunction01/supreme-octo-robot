@@ -1,0 +1,25 @@
+# Template — render before installing: this timer
+# carries no host values and renders unchanged. The
+# rendered unit is a machine-local artefact, never
+# tracked.
+#
+# The watchdog cadence for the workhorse unit: the
+# ladder runs 60s after boot and 60s after each
+# activation of its service. The bound this sets,
+# with the 5s accuracy window: a unit entering the
+# failed state is seen within ~65s, and the ladder's
+# failed-unit rung issues reset-failed + start in
+# that same run — recovery is actuated inside ~90s
+# of the failure, against the 2026-11-16 outage's
+# ~4 minutes of silence ended by a hand-issued act.
+[Unit]
+Description=Workhorse watchdog ladder timer — workhorse unit
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=60
+AccuracySec=5s
+Unit=workhorse-watchdog.service
+
+[Install]
+WantedBy=timers.target

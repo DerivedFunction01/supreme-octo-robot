@@ -1,0 +1,8 @@
+@import "./kit/themes/index.css";
+
+/* The kit's components live in the kit's home (consumed through
+   the @workhorse/kit alias); Tailwind must scan them there or
+   their utilities never generate. The workbench and runner
+   apps set the same @source lines. */
+@source "../../../../kit/components";
+@source "../../../../kit/lib";

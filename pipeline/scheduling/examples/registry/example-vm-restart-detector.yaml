@@ -1,0 +1,35 @@
+id: example-vm-restart-detector
+title: Example VM restart detector (scripted interval job)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+owner: goal:example
+run:
+  argv:
+    - bash
+    - ${REPO}/ops/server-care/vm_boot_check.sh
+timeout_secs: 60
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/vm-boot
+classification: fixed command (one bash script); every outcome branches on the boot-id comparison alone — silent baseline adoption, silent match, one RESTART line (plus any LOST probe lines) on change, exit 3 when the boot-id source is unreadable; speaking is fully determined by those branches
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: parameterized
+  use_case: boot
+  parameters:
+    cadence_every:
+      field: cadence.every
+      default: 5m
+      description: how often the boot id is compared
+  setup:
+    state_dirs:
+      - ${REPO}/state/vm-boot

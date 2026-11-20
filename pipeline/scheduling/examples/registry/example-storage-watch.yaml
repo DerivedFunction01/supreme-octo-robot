@@ -1,0 +1,60 @@
+id: example-storage-watch
+title: Example storage watch (scripted interval job)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/storage_watch.py
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/storage-watch
+classification: fixed command (one Python script); every outcome branches on two disk_usage reads against fixed thresholds — silent baseline adoption, silent healthy match, one report per threshold crossing (low, then critical), silent de-escalation and recovery, exit 3 when a filesystem is unreadable; speaking is fully determined by those branches and the recorded episode levels
+lifetime: permanent
+config:
+  version: 1
+  knobs:
+    home_low_free_gb:
+      label: Low tier — home free space below
+      type: integer
+      unit: GB
+      value: 50
+      min: 1
+      max: 500
+      env: STORAGE_WATCH_HOME_LOW_GB
+    home_critical_free_gb:
+      label: Critical tier — home free space below
+      type: integer
+      unit: GB
+      value: 45
+      min: 1
+      max: 500
+      env: STORAGE_WATCH_HOME_CRIT_GB
+  constraints:
+    critical_below_low:
+      kind: lt
+      left: home_critical_free_gb
+      right: home_low_free_gb
+      message: The critical tier must sit below the low tier.
+
+catalog:
+  origin: hand
+  generality: parameterized
+  use_case: storage
+  parameters:
+    cadence_every:
+      field: cadence.every
+      default: 15m
+      description: how often free space is read
+  setup:
+    state_dirs:
+      - ${REPO}/state/storage-watch

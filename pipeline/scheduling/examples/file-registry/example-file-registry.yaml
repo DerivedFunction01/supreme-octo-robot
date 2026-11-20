@@ -1,0 +1,47 @@
+# Tracked placeholder — a specimen file-registry manifest
+# under the file-registry contract (SPEC.md,
+# `file-registry: v1`). It is a placeholder, not a live
+# registry: seeding is an act — the deployment copies it
+# to the untracked manifest location
+# (registry/file-registry.yaml), fills the root anchors,
+# and registers entries under the seed-list ruling. This
+# file carries no deployment values, which is why it can
+# be tracked. The four entries below are one per restore
+# class, on fictional field-kit state. (It lives outside
+# examples/registry/ because that layer is the jobs
+# catalog, whose entry parser excludes the manifest's
+# list-of-maps shape by design.)
+roots:
+  workspace: <workspace_root>
+  kit-repo: <repo_checkout_root>
+files:
+  - path: spec/route-coverage.md
+    root: kit-repo
+    presence: non-empty
+    restore:
+      class: tracked
+    owner: <owning_thread>
+  - path: var/kit-readiness.json
+    root: kit-repo
+    presence: non-empty
+    restore:
+      class: generated
+      generator:
+        argv:
+          - python3
+          - tools/rebuild_readiness.py
+        root: kit-repo
+    owner: <owning_thread>
+  - path: var/operator-notes.md
+    root: workspace
+    presence: non-empty
+    restore:
+      class: backup
+      backup: <backup_path>
+    owner: <owning_thread>
+  - path: var/field-log.md
+    root: workspace
+    presence: exists
+    restore:
+      class: flag-only
+    owner: <owning_thread>

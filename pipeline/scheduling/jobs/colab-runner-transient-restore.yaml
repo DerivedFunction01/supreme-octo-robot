@@ -1,0 +1,39 @@
+# ## Goal contract — Colab runner
+#
+# - **Objective** — The leased Colab fleet never lapses under running work, and transient session state is restored after restarts, so venue compute is there when the programmes need it.
+# - **Complete when** — The lease records show zero leases lapsed with work in flight, and every restart in the run records is followed by a completed transient restore.
+# - **Blocked only when** — a named hard stop, a genuine owner-only decision, or a verified external blocker. The claim carries its cited basis, with its time, and a verification stamp; an uncited or unverified claim is void — the work resumes under its standing authorization and the claim is surfaced as a defect. Sequencing choices, agent-clearable waits, and matters already decided are never blocked states.
+# - **Work record** — The colab-runner repo's lease and run records, and the fleet liveness entries in this registry.
+# - **Cadence** — conforming progress-checkpoints every 15 minutes while doing; two missed intervals is a stall.
+# - **Continuation** — a step landing staffs the next in the same movement; a turn ends only with work in flight, a complete report, or a blocked report satisfying the Blocked only when clause. An acknowledgement does not clear a stall; measured movement does.
+#
+id: colab-runner-transient-restore
+title: colab-runner transient restore (5 min)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+timezone: America/New_York
+owner: none
+owner_reason: 'Venue-own machinery (fleet table: builtin, family venue): restores the venue app's transient session state after restarts; the fleet is the workhorse system's own, so no single goal owns it — attribution genericized 2026-11-15 under the presence-class ruling (the entry previously named an external programme's goal).'
+run:
+  argv:
+    - python3
+    - ${WS}/supreme-octo-robot/pipeline/venue/ops/mirror_transient.py
+    - restore
+timeout_secs: 600
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+  fail_patterns:
+    - verify-failed
+  report_patterns:
+    - released-deadline
+    - released-idle
+    - cleared-dead
+state_paths:
+  - ${WS}/supreme-octo-robot/pipeline/venue/state/transient/
+classification: fixed command (one Python script, the venue's own ops/mirror_transient.py, argv verb restore): restores transient session state after restarts and releases or clears dead leases; every outcome is an enumerated exit/result; speaking determined by failure or an actual lease release/clear. Timeout 600 assigned at seed - the cron set none.
+lifetime: permanent

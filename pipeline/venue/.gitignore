@@ -1,0 +1,69 @@
+# Transient mirror: restore state, never source. Contents are secrets-adjacent
+# (OAuth token, session state) and must never be committed.
+/state/transient/*
+!/state/transient/README.md
+
+# Local repo registry: which target repos this machine provisions is local
+# data, seeded from the tracked config/repos.example.json — never committed.
+/config/repos.json
+
+# Local workload profiles: which named profiles, sessions, default, and
+# measured rates this workspace uses are local data, seeded from the
+# tracked config/profiles.example.json — never committed.
+/config/profiles.json
+
+# Local caller registry: which named threads may claim caller identity
+# at the wrapper seams is local data, seeded from the tracked
+# config/callers.example.json — never committed.
+/config/callers.json
+
+# Local lease config: caps, gate policy, and the standing block are
+# operator state for this machine, seeded from the tracked
+# config/lease.example.json — never committed.
+/config/lease.json
+
+# Caller → chat routing for liveness escalation: chat ids are
+# operator state for this machine, seeded from the tracked
+# config/notify-routes.example.json — never committed.
+/config/notify-routes.json
+
+# Personal literals for the portability guard's denylist leg:
+# operator state for this machine, never committed — tracked code
+# names no personal literal, not even split into fragments.
+/config/denylist.txt
+
+# Job results: manifests are tracked under jobs/; payload bytes are not.
+/results/*
+!/results/.gitkeep
+
+# Thread-owned job manifests are local material: a consumer thread's
+# jobs/<name>/ directory lives on this machine only (its manifest
+# names that thread's callers and scripts). The repo's own job
+# manifests are already tracked and stay tracked — ignore rules
+# never untrack — and a new repo-owned job is added deliberately
+# with git add -f, once.
+/jobs/*/
+
+# Probe payloads and scratch
+/probes/results/*.bin
+/var/
+*.bundle
+__pycache__/
+.pytest_cache/
+
+# Working state is not tracked source (standing ruling, the sibling
+# repos' rule): plans and workbench bundle todos are harness working
+# documents — the harness runs on the files, not the git index.
+.plans/
+/workbench/
+
+# Probe run outputs are run records, not source.
+probes/results/*.json
+
+# Landed mockups are transient design material; the shipped UI and
+# the docs are the durable record.
+ui/mockups/
+
+# Icon PNGs are generated from the tracked SVG (ui/make-icon-png.sh);
+# regenerable data is not tracked.
+ui/static/colab-icon-*.png

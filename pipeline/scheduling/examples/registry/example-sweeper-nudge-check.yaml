@@ -1,0 +1,64 @@
+id: example-sweeper-nudge-check
+title: Example sweeper nudge check (scripted, escalates judgment cases)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/sweeper_nudge_check.py
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+  report_patterns:
+    - ESCALATE
+  quiet_patterns:
+    - DECISION
+    - 'TEXT:'
+escalate_body: bodies/example-sweeper-nudge-escalation.md
+state_paths:
+  - ${WS}/approval-sweeper/state.json
+  - ${WS}/approval-sweeper/nudge-check-state.json
+classification: scripted detection over files; every outcome is an enumerable decision line - record-complete, a templated send, or an escalate line; judgment cases reach an agent through the escalation body
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: work-tracking
+  setup:
+    state_dirs:
+      - ${WS}/approval-sweeper
+    stores:
+      nudge-ledger:
+        path: ${WS}/approval-sweeper/nudge-ledger.sqlite
+        init:
+          - python3
+          - ${REPO}/ops/nudge_ledger.py
+          - tail
+          - --n
+          - "1"
+    files:
+      templates:
+        target: bodies/approval-sweeper-templates.yaml
+      git-repos:
+        target: bodies/sweeper-git-repos.yaml
+      thread-repos:
+        target: bodies/sweeper-thread-repos.yaml
+      idle-plans:
+        target: bodies/sweeper-idle-plans.yaml
+      docs-reconciliation:
+        target: bodies/sweeper-docs-reconciliation.yaml
+      profile-targets:
+        target: bodies/sweeper-profile-targets.yaml
+      venue-exceptions:
+        target: bodies/sweeper-venue-exceptions.yaml
+    docs:
+      - example-sweeper-nudge-check.setup.md
+    registrations:
+      - "venue runs of this job consume the harness connector (scheduler server, /tools): a per-venue caller is minted with bin/sched connector-token and its token delivered through the secure route; the bridge scope stays home-side, never issued to a venue"

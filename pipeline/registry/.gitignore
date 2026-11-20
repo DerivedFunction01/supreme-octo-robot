@@ -1,0 +1,7 @@
+# Live registry state: the seeded store, the live config,
+# and the claims journal are untracked operator state
+# (contract 04's seed/example pattern) — seeded from the
+# tracked examples or the S1 capture, never committed.
+var/
+config.json
+__pycache__/

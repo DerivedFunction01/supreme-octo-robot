@@ -1,0 +1,126 @@
+{
+  "run_id": "specimen-ci-formtest-build-reproE-b-20261119T104647Z",
+  "job": "specimen-ci-formtest-build-reproE-b",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:46:47.569420+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T11:01:54.242579+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-formtest-build-reproE-b-out-specimen-ci-formtest-build-reproE-b-20261119T104647Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:48:08.337321+00:00",
+  "launch_confirmed_at": "2026-11-19T10:48:20.456644+00:00",
+  "collector_at": "2026-11-19T11:02:15.680059+00:00",
+  "collector": "collector-sweep",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:48:20.456644+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "testform-build-reproE-b-log.txt",
+      "bytes": 26922,
+      "sha256": "c470d57fd187199ca4e23d9a0f4fe3fc0106a30d1601e3b978da631764231ae6",
+      "route": "misplaced"
+    },
+    {
+      "path": "testform-build-reproE-b-result.json",
+      "bytes": 1887,
+      "sha256": "46d34784b94095b6cdc9cae2eead5bf3a6bb46e28f9186ee65e4a8bd7f420257",
+      "route": "misplaced"
+    },
+    {
+      "path": "repro-testformE-b.json",
+      "bytes": 1539,
+      "sha256": "4863dbbc36209643b08d3f2450041ac7861e9cfbff13711765166ea660a0812f",
+      "route": "misplaced"
+    },
+    {
+      "path": "repro-testform2E-b.json",
+      "bytes": 2270,
+      "sha256": "2060089fa94894f5a929e033780994313a280e7a7a3b01c15eaa8447ccf93107",
+      "route": "misplaced"
+    },
+    {
+      "path": "testform-reproE-summary-base-b.json",
+      "bytes": 2053,
+      "sha256": "6f13182956dff99a9d71a931d3c18874f5a66913d75597b276b823d24d458876",
+      "route": "misplaced"
+    },
+    {
+      "path": "testform-reproE-summary-build-b.json",
+      "bytes": 2056,
+      "sha256": "5ec0b03050345eb1d93be39284aea7e2885014758b57e7b4f061c001d83a7b69",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "testform-build-reproE-b-log.txt",
+      "path": "/content/testform-build-reproE-b-log.txt",
+      "bytes": 26922,
+      "mtime": 1795085933.9327264,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "testform-build-reproE-b-result.json",
+      "path": "/content/testform-build-reproE-b-result.json",
+      "bytes": 1887,
+      "mtime": 1795085933.9327264,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "repro-testformE-b.json",
+      "path": "/content/repro-testformE-b.json",
+      "bytes": 1539,
+      "mtime": 1795085933.9317265,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "repro-testform2E-b.json",
+      "path": "/content/repro-testform2E-b.json",
+      "bytes": 2270,
+      "mtime": 1795085933.7577267,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "testform-reproE-summary-base-b.json",
+      "path": "/content/testform-reproE-summary-base-b.json",
+      "bytes": 2053,
+      "mtime": 1795085605.9540215,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "testform-reproE-summary-build-b.json",
+      "path": "/content/testform-reproE-summary-build-b.json",
+      "bytes": 2056,
+      "mtime": 1795085933.6477268,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T11:03:41.109628+00:00",
+  "usage_after": "Current balance: 404.18 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T11:03:41.148657+00:00"
+}

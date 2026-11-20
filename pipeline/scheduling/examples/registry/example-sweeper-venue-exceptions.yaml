@@ -1,0 +1,21 @@
+# Example venue-exceptions config for the sweeper nudge
+# checker (ops/sweeper_nudge_check.py), in the registry YAML
+# subset. The live file sits beside the sweeper templates
+# data file (untracked); this example ships with the repo.
+# Every session and caller below is fictional.
+#
+# The venue-question rule questions any work running on a
+# non-High-RAM session. An entry excepts a session from the
+# question: it matches when every field it sets matches the
+# lease record — session (the session name), caller (the
+# lease's caller) — and at least one of the two must be set.
+# reason states why the low-end venue is justified; the
+# exception is the recorded justification.
+version: 1
+exceptions:
+  monitor-standard:
+    caller: "nightly-monitor"
+    reason: "the monitor service's reserved Standard session; its residents are venue-pinned by design"
+  capture-box:
+    session: "dune-07"
+    reason: "the capture harness runs beside the device under test and cannot move"

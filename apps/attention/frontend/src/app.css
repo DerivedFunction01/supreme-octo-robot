@@ -1,0 +1,394 @@
+/* Attention app presentation CSS: layout and the iOS
+   form-language group metrics from the storyboard, driven
+   entirely by Workhorse Kit token variables (--wb-*). The
+   shell (sidebar, top bar, phone form) is the kit's
+   AppShell, consumed from the kit; the kit primitives carry
+   their own styling too. This file carries only the
+   app-content layout the kit does not own. */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: var(--wb-font-ui);
+  background: #191b14; /* the preview sheet, behind the app */
+}
+.mono {
+  font-family: var(--wb-font-mono);
+  font-size: 0.92em;
+}
+
+.app-root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--wb-surface-canvas);
+  color: var(--wb-content-primary);
+}
+
+/* ---- preview harness strip (furniture, not app UI) ---- */
+.harness {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: #191b14;
+  color: #eceeda;
+}
+.harness-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #c9cdb2;
+}
+.harness-frames {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.harness-btn {
+  border: 1px solid #3a3e2e;
+  background: #21241b;
+  color: #c9cdb2;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.harness-btn.on {
+  background: #e3e7cf;
+  color: #22251a;
+  border-color: #e3e7cf;
+}
+.harness-badge {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, #f0854c, #d55e00);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.harness-badge-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 19px;
+  height: 19px;
+  border-radius: 10px;
+  background: #d55e00;
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+  border: 2px solid #191b14;
+}
+.harness-appearance {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* ---- stage + top-bar content ---- */
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+/* The crumb and back row rendered inside the kit TopBar. */
+.crumb {
+  font-size: 13.5px;
+  color: var(--wb-content-secondary);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.crumb b {
+  color: var(--wb-content-primary);
+  font-weight: 650;
+}
+.crumb-back {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 0;
+  background: transparent;
+  color: var(--wb-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  flex: 0 0 auto;
+}
+.presence-link {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+}
+.largetitle {
+  font-size: 27px;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px;
+}
+.subtitle {
+  color: var(--wb-content-secondary);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+/* ---- grouped list family (storyboard metrics) ---- */
+.glabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--wb-content-secondary);
+  margin: 20px 0 8px 2px;
+}
+.glabel:first-child {
+  margin-top: 0;
+}
+/* The card class is .wb-group, never .group: kit primitives
+   (the Toggle's <button>, the Chip, the Tooltip) carry
+   Tailwind's bare `group` marker class, and a `.group` rule
+   here dressed every one of them as a card — the pill that
+   cut through the Digest Include switches (2026-11-15). */
+.wb-group {
+  background: var(--wb-surface-2);
+  border: 1px solid var(--wb-border-default);
+  border-radius: var(--wb-radius-lg);
+  overflow: hidden;
+}
+.row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 11px 14px;
+  min-height: 47px;
+  width: 100%;
+}
+/* Long-text hardening: flex children may shrink; single-line
+   labels truncate with ellipsis; wrapping text breaks
+   anywhere rather than overflowing. Rows wrap (actions drop
+   to a second line) instead of clipping at narrow widths. */
+.row > * {
+  min-width: 0;
+}
+/* The decision row's title floor: outranks the blanket rule
+   above (two classes beat one) so the title's hypothetical
+   size counts in flex line-breaking — the action cluster
+   wraps to its own line before the title can be crushed
+   below readable width. */
+.row > .row-title {
+  min-width: 170px;
+}
+.row-actions {
+  min-width: auto;
+}
+.wb-group > .row + .row {
+  border-top: 1px solid var(--wb-border-default);
+}
+.row-button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.row .lab {
+  font-size: 14.5px;
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row .sub {
+  font-size: 12.5px;
+  color: var(--wb-content-secondary);
+  overflow-wrap: anywhere;
+}
+/* The two-line row form's sub: truncates on one line
+   instead of wrapping (the full text lives in the sheet).
+   Prose subs (rules, registry templates) keep the default
+   wrap above; only list-row subs opt in. */
+.row .sub-trunc {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+}
+.row .val {
+  font-size: 14px;
+  color: var(--wb-content-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex: 0 0 auto;
+  /* The cluster is one flex item in the row: capped at
+     the row's width and wrapping internally, a wide
+     cluster (Open / Approve / Approve + make rule /
+     Snooze) breaks onto a second line instead of
+     overrunning the row and clipping at the group edge. */
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---- programme cards ---- */
+.programme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 14px;
+}
+.programme-grid p {
+  overflow-wrap: anywhere;
+}
+
+/* ---- glance (ambient) ---- */
+.glance {
+  flex: 1;
+  display: flex;
+  gap: 34px;
+  padding: 38px 44px;
+  align-items: flex-start;
+  background: var(--wb-surface-canvas);
+  color: var(--wb-content-primary);
+  min-height: 100%;
+}
+.glance-left {
+  flex: 0 0 400px;
+}
+.glance-clock {
+  font-size: 104px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.glance-date {
+  font-size: 21px;
+  color: var(--wb-content-secondary);
+  margin-top: 8px;
+}
+.glance-count {
+  font-size: 44px;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  margin-top: 30px;
+}
+.glance-sub {
+  font-size: 17px;
+  color: var(--wb-content-secondary);
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+.glance-right {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Night ladder — the storyboard's night values (frame 6),
+   carried here because the extracted kit has no night token
+   scope yet (kit gap, see lane report). */
+.night-ladder {
+  --wb-surface-canvas: #101208;
+  --wb-surface-1: #171912;
+  --wb-surface-2: #21241b;
+  --wb-surface-3: #262a1e;
+  --wb-surface-sunken: #12140c;
+  --wb-content-primary: #eceeda;
+  --wb-content-secondary: #a9ad97;
+  --wb-content-muted: #82856f;
+  --wb-border-default: #3a3e2e;
+  --wb-border-strong: #4c5138;
+  --wb-accent-soft: #2a2e21;
+  background: #101208;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.night-ladder .glance {
+  opacity: 0.92;
+}
+
+/* ---- glance phone form, driven by the kit's one
+   responsive seam (useIsPhone, PHONE_MAX_WIDTH_PX = 480;
+   the 390px design width sits inside it). The shell's own
+   phone presentation is the kit AppShell's PhoneShell. ---- */
+.glance-phone {
+  flex-direction: column;
+  gap: 22px;
+  padding: 24px 18px;
+}
+.glance-phone .glance-left {
+  flex: none;
+  width: 100%;
+}
+.glance-phone .glance-right {
+  /* The desktop form's align-items: flex-start sizes this
+     column to its widest row; in the phone column that
+     pushed the cards past the right edge (right edge at
+     407px in a 390px viewport) whenever a title was long
+     (mobile critic pass, 2026-11-15). Take the column
+     width, like the left column above. */
+  flex: none;
+  width: 100%;
+}
+.glance-phone .glance-clock {
+  font-size: 64px;
+}
+.glance-phone .glance-count {
+  font-size: 34px;
+  margin-top: 20px;
+}
+
+/* The same 480px query (the seam's CSS equivalent) for the
+   preview furniture only — the app proper switches on the
+   hook above. */
+@media (max-width: 480px) {
+  /* PhoneShell already renders the large title on pushed
+     screens; the view-level heading would double it (Today /
+     Handlers / handler detail). Hide the view's own h2 at
+     phone width — the subtitle stays, under the shell title.
+     Desktop is unchanged. */
+  .at-largetitle {
+    display: none;
+  }
+  .harness-appearance {
+    margin-left: 0;
+  }
+}
+
+/* ---- mobile critic cures (2026-11-15) ----
+   The consumption-layer fixes that stood here (a dialog
+   width cap for the kit Sheet panel, a field-width rule
+   for the kit Field chrome) retired the same day: both
+   causes were cured in the kit — the Sheet panel is
+   w-[calc(100%-1rem)] max-w-[480px], and FIELD_CLASSES
+   carries w-full — so the app carries no override. */

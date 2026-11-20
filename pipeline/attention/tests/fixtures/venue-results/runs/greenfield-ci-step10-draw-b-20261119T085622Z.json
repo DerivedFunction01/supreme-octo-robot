@@ -1,0 +1,175 @@
+{
+  "run_id": "specimen-ci-phase10-draw-b-20261119T085622Z",
+  "job": "specimen-ci-phase10-draw-b",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T08:56:22.818427+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T09:53:44.974240+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-phase10-draw-b-out-specimen-ci-phase10-draw-b-20261119T085622Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T09:03:59.135681+00:00",
+  "launch_confirmed_at": "2026-11-19T09:05:17.452637+00:00",
+  "collector_at": "2026-11-19T09:57:30.230065+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T09:05:17.452637+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 405.88 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "last_checkpoint_pull_at": "2026-11-19T09:49:20.052091+00:00",
+  "pulled": [
+    {
+      "path": "step6-packets-b.jsonl",
+      "bytes": 154015360,
+      "sha256": "f9250bd4277e939a44433bb204faa548887ef2f2a8a76f2a470422e6d117815a",
+      "route": "single"
+    },
+    {
+      "path": "step6-returns-b.jsonl",
+      "bytes": 1961015,
+      "sha256": "57d0cd999ab9e02e8e709bf38398e4a0a2572a963c061e1073ce9b1c437009f0",
+      "route": "misplaced"
+    },
+    {
+      "path": "step6-assignments-b.jsonl",
+      "bytes": 5322097,
+      "sha256": "6055c7d756dd32aafc314b70301f88098cfd65eed11e17e7c587078407ae18a6",
+      "route": "misplaced"
+    },
+    {
+      "path": "step6-toc-b.jsonl",
+      "bytes": 3914209,
+      "sha256": "f87cfcf6d62e1b04192de6b5f2e2e450c4beb276fc900414326aa24ec608b499",
+      "route": "misplaced"
+    },
+    {
+      "path": "step6-sweep-b.jsonl",
+      "bytes": 1816784,
+      "sha256": "fa6151ee1f7c14dbee8fe2a17e96e2a37c7b5e407570726cb842f735db1dca84",
+      "route": "misplaced"
+    },
+    {
+      "path": "step6-sweep-key-b.jsonl",
+      "bytes": 68778,
+      "sha256": "47f8ed8767709c68dd158c14689c1344d97136a2759db571b20470f56c8ee1fb",
+      "route": "misplaced"
+    },
+    {
+      "path": "step6-collect-summary-b.json",
+      "bytes": 1436,
+      "sha256": "4156499f07f0a96289dc37ef1b2258c09b3d7b8d2ca57cd60cf986ac94d1648b",
+      "route": "misplaced"
+    },
+    {
+      "path": "build-summary-b.json",
+      "bytes": 143938,
+      "sha256": "c793bc8bbd55a0eecf808e8b4a63525cc3f0d81cb004c85d852a36c52dbaddd7",
+      "route": "misplaced"
+    },
+    {
+      "path": "draw-result-b.json",
+      "bytes": 152272,
+      "sha256": "a3d05458c98ec73ec0843cd7b4d9819e3d806337406219fce9322455a6a7bb68",
+      "route": "misplaced"
+    },
+    {
+      "path": "draw-log-b.txt",
+      "bytes": 64348,
+      "sha256": "4fd81749fd5174cbf1c7f6166f30f8de6b07bf0e2409aa440bdc9fbc0d5238c9",
+      "route": "misplaced"
+    }
+  ],
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "step6-returns-b.jsonl",
+      "path": "/content/step6-returns-b.jsonl",
+      "bytes": 1961015,
+      "mtime": 1795080426.0926983,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "step6-assignments-b.jsonl",
+      "path": "/content/step6-assignments-b.jsonl",
+      "bytes": 5322097,
+      "mtime": 1795080426.0976985,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "step6-toc-b.jsonl",
+      "path": "/content/step6-toc-b.jsonl",
+      "bytes": 3914209,
+      "mtime": 1795080426.1016984,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "step6-sweep-b.jsonl",
+      "path": "/content/step6-sweep-b.jsonl",
+      "bytes": 1816784,
+      "mtime": 1795080426.1036985,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "step6-sweep-key-b.jsonl",
+      "path": "/content/step6-sweep-key-b.jsonl",
+      "bytes": 68778,
+      "mtime": 1795080426.1036985,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "step6-collect-summary-b.json",
+      "path": "/content/step6-collect-summary-b.json",
+      "bytes": 1436,
+      "mtime": 1795080426.1036985,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "build-summary-b.json",
+      "path": "/content/build-summary-b.json",
+      "bytes": 143938,
+      "mtime": 1795080003.6810777,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "draw-result-b.json",
+      "path": "/content/draw-result-b.json",
+      "bytes": 152272,
+      "mtime": 1795080426.1056983,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "draw-log-b.txt",
+      "path": "/content/draw-log-b.txt",
+      "bytes": 64348,
+      "mtime": 1795080426.1056983,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:05:55.171820+00:00",
+  "usage_after": "Current balance: 404.90 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:05:55.884082+00:00"
+}

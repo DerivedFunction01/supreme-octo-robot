@@ -1,0 +1,326 @@
+{
+  "canonical": {
+    "hue": {
+      "$value": "{primitive.color.okabe.blue}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#005f94",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#56B4E9",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u25c6",
+      "$type": "string"
+    },
+    "$description": "Approved design intent - an exact spec"
+  },
+  "implemented": {
+    "hue": {
+      "$value": "{primitive.color.okabe.bluish-green}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#006e52",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#45c493",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u2713",
+      "$type": "string"
+    },
+    "$description": "Canonical, now in production"
+  },
+  "deferred": {
+    "hue": {
+      "$value": "var(--wb-content-secondary)",
+      "$type": "string"
+    },
+    "text": {
+      "light": {
+        "$value": "#5c604e",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#a9ad97",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u275a\u275a",
+      "$type": "string"
+    },
+    "$description": "Ruled: later"
+  },
+  "unexplored": {
+    "hue": {
+      "$value": "{primitive.color.okabe.reddish-purple}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#9c4580",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#d79bc0",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "?",
+      "$type": "string"
+    },
+    "$description": "Experiment, no ruling - not design intent"
+  },
+  "hard-gate": {
+    "hue": {
+      "$value": "{primitive.color.okabe.vermilion}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#a63f00",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#f0854c",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u2b22",
+      "$type": "string"
+    },
+    "$description": "Blocked on the named gate"
+  },
+  "abandoned": {
+    "hue": {
+      "$value": "{primitive.color.gray-olive.500}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#5f6252",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#9a9d8c",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u2715",
+      "$type": "string"
+    },
+    "$description": "Superseded or dead; dashed chip border, dimmed"
+  },
+  "stale": {
+    "hue": {
+      "$value": "{primitive.color.okabe.orange}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#7d5200",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#e8a33d",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "clock",
+      "$type": "string"
+    },
+    "$description": "Derived: stale - badge text carries reason + magnitude"
+  },
+  "needs-changes": {
+    "hue": {
+      "$value": "#D97706",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#96500a",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#f5a623",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u21a9",
+      "$type": "string"
+    },
+    "$description": "Review: needs changes - word + open-comment count"
+  },
+  "not-covered": {
+    "hue": {
+      "$value": "var(--wb-status-hard-gate)",
+      "$type": "string"
+    },
+    "text": {
+      "light": {
+        "$value": "var(--wb-status-hard-gate-text)",
+        "$type": "string"
+      },
+      "dark": {
+        "$value": "var(--wb-status-hard-gate-text)",
+        "$type": "string"
+      }
+    },
+    "glyph": {
+      "$value": "\u26a0",
+      "$type": "string"
+    },
+    "$description": "Derived: approval doesn't cover current state (vermilion / hard-gate tones)"
+  },
+  "approved": {
+    "hue": {
+      "$value": "var(--wb-status-implemented)",
+      "$type": "string"
+    },
+    "text": {
+      "light": {
+        "$value": "var(--wb-status-implemented-text)",
+        "$type": "string"
+      },
+      "dark": {
+        "$value": "var(--wb-status-implemented-text)",
+        "$type": "string"
+      }
+    },
+    "glyph": {
+      "$value": "\u2713",
+      "$type": "string"
+    },
+    "$description": "Review: approved for state (implemented green, filled chip)"
+  },
+  "in-triage": {
+    "hue": {
+      "$value": "var(--wb-status-canonical)",
+      "$type": "string"
+    },
+    "text": {
+      "light": {
+        "$value": "var(--wb-status-canonical-text)",
+        "$type": "string"
+      },
+      "dark": {
+        "$value": "var(--wb-status-canonical-text)",
+        "$type": "string"
+      }
+    },
+    "glyph": {
+      "$value": "inbox-tray",
+      "$type": "string"
+    },
+    "$description": "Review queue: awaiting a first disposition (canonical blue tones, outline form)"
+  },
+  "sent": {
+    "hue": {
+      "$value": "{primitive.color.okabe.sky-blue}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#005f94",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#56B4E9",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u2192",
+      "$type": "string"
+    },
+    "$description": "Message lifecycle: sent, awaiting pickup (spec \u00a712; hue = ratified sky blue, text = the blue family's house variants \u2014 canonical's pair)"
+  },
+  "acknowledged": {
+    "hue": {
+      "$value": "{primitive.color.okabe.orange}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#7d5200",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#E69F00",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u25d0",
+      "$type": "string"
+    },
+    "$description": "Message lifecycle: acknowledged at pickup (spec \u00a712; hue = ratified Okabe orange, light text = the orange family's house variant \u2014 stale's)"
+  },
+  "done": {
+    "hue": {
+      "$value": "{primitive.color.okabe.bluish-green}",
+      "$type": "color"
+    },
+    "text": {
+      "light": {
+        "$value": "#006e52",
+        "$type": "color"
+      },
+      "dark": {
+        "$value": "#45c493",
+        "$type": "color"
+      }
+    },
+    "glyph": {
+      "$value": "\u2713",
+      "$type": "string"
+    },
+    "$description": "Message lifecycle: done, explicit post-back (spec \u00a712; hue = ratified bluish green, text = the green family's house variants \u2014 implemented's pair)"
+  },
+  "chart": {
+    "1": {
+      "$value": "#0072B2",
+      "$type": "color"
+    },
+    "2": {
+      "$value": "#E69F00",
+      "$type": "color"
+    },
+    "3": {
+      "$value": "#009E73",
+      "$type": "color"
+    },
+    "4": {
+      "$value": "#D55E00",
+      "$type": "color"
+    },
+    "5": {
+      "$value": "#56B4E9",
+      "$type": "color"
+    },
+    "6": {
+      "$value": "#CC79A7",
+      "$type": "color"
+    },
+    "7": {
+      "$value": "#F0E442",
+      "$type": "color"
+    }
+  }
+}

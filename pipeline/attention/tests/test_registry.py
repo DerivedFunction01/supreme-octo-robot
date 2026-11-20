@@ -1,0 +1,227 @@
+"""Supervision registry pins (the superapp supervision
+plan, Step 1): every live programme's seeded row loads
+and validates, a missing or invalid field refuses
+loudly naming the field, the edgar row reproduces the
+2026-11-19 family-concurrency staffing contract
+verbatim as data, the sweep's measure classes are
+seeded per programme, the coordinator routes are
+wb-sent, and the drain tail carries the standing
+defaults plus each programme's baked-in extras.
+Fixture data only — the module's own seed, no live
+store or workspace reads.
+"""
+
+import copy
+import sys
+import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from attention.services.measure import registry  # noqa: E402
+
+# The edgar staffing contract as ruled (owner
+# enforcement ruling, 2026-11-19, in the
+# edgar-parallel-staffing reminder's measure section):
+# written out here from the ruling, so the seed is
+# checked against the source, not against itself.
+EXPECTED_EDGAR_CONTRACT = {
+    "unit": "table_family",
+    "evidence_window_minutes": 30,
+    "min_families_in_flight": 2,
+    "min_live_sessions": 2,
+    "min_sessions_carrying_work": 2,
+    "defect_conditions": [
+        "fewer_than_min_families_in_flight",
+        "all_compute_on_one_session_while_another_live_session_carries_none",
+        "prerequisite_due_family_unstaffed",
+    ],
+    "delegate_counts_toward_concurrency": False,
+    "no_parallel_work_claim": "void_unless_verified_family_by_family",
+    "clearing": "later_measure_only",
+    "non_response_after_consecutive_runs": 2,
+    "reminder_cadence_minutes": 30,
+}
+
+EXPECTED_SLUGS = {
+    "edgar-greenfield",
+    "edgar-sec",
+    "steampowernj",
+    "supreme-octo-robot",
+}
+
+
+class SeedLoads(unittest.TestCase):
+    def test_every_live_programme_row_loads(self):
+        rows = registry.declarations()
+        self.assertEqual({r["slug"] for r in rows}, EXPECTED_SLUGS)
+        for row in rows:
+            self.assertIs(registry.validate_declaration(row), row)
+
+    def test_active_declarations_exclude_the_retired_row(self):
+        active = {r["slug"] for r in registry.active_declarations()}
+        self.assertEqual(
+            active, {"edgar-greenfield", "steampowernj", "supreme-octo-robot"}
+        )
+
+    def test_returned_rows_are_copies(self):
+        row = registry.for_slug("edgar-greenfield")
+        row["cadence_minutes"] = 999
+        row["measure_classes"].append("register_seam")
+        fresh = registry.for_slug("edgar-greenfield")
+        self.assertEqual(fresh["cadence_minutes"], 15)
+        self.assertNotIn("register_seam", fresh["measure_classes"])
+
+
+class LoudRefusal(unittest.TestCase):
+    def _row(self):
+        return copy.deepcopy(registry.for_slug("supreme-octo-robot"))
+
+    def test_each_missing_field_refuses_loudly(self):
+        for field in registry.REQUIRED_FIELDS:
+            row = self._row()
+            del row[field]
+            with self.assertRaises(registry.RegistryError) as caught:
+                registry.validate_declaration(row)
+            self.assertIn(field, str(caught.exception))
+
+    def test_invalid_values_refuse(self):
+        bad = {
+            "venue": "moon",
+            "cadence_minutes": 0,
+            "escalation_hours": -1,
+            "staffing_band": {"min": 12, "max": 10},
+            "measure_classes": ["idle", "bogus"],
+            "drain_tail": [],
+            "retired": "no",
+        }
+        for field, value in bad.items():
+            row = self._row()
+            row[field] = value
+            with self.assertRaises(registry.RegistryError) as caught:
+                registry.validate_declaration(row)
+            self.assertIn(field, str(caught.exception))
+
+    def test_route_must_be_wb_sent(self):
+        row = self._row()
+        row["coordinator_route"] = {
+            "sender": "cron",
+            "kind": "chat",
+            "handle": "@workhorse",
+        }
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("coordinator_route", str(caught.exception))
+
+    def test_chat_route_requires_a_handle(self):
+        row = self._row()
+        row["coordinator_route"] = {"sender": "wb", "kind": "chat"}
+        with self.assertRaises(registry.RegistryError):
+            registry.validate_declaration(row)
+
+    def test_todo_route_requires_a_bundle(self):
+        row = self._row()
+        row["coordinator_route"] = {"sender": "wb", "kind": "todo"}
+        with self.assertRaises(registry.RegistryError):
+            registry.validate_declaration(row)
+        row["coordinator_route"] = {
+            "sender": "wb",
+            "kind": "todo",
+            "bundle": "2026-11-19-superapp-supervision-reminders",
+        }
+        self.assertIs(registry.validate_declaration(row), row)
+
+
+class EdgarContract(unittest.TestCase):
+    def test_edgar_row_reproduces_the_2026_11_19_contract_verbatim(self):
+        contract = registry.staffing_contract_for("edgar-greenfield")
+        self.assertEqual(contract, EXPECTED_EDGAR_CONTRACT)
+
+    def test_no_other_programme_carries_a_staffing_contract(self):
+        for slug in ("edgar-sec", "steampowernj", "supreme-octo-robot"):
+            self.assertIsNone(registry.staffing_contract_for(slug))
+
+
+class SweepClassesAndRoutes(unittest.TestCase):
+    def test_sweep_measure_classes_seeded_per_programme(self):
+        for slug in EXPECTED_SLUGS:
+            classes = registry.measure_classes_for(slug)
+            for core in ("idle", "serial", "stall", "orphan"):
+                self.assertIn(core, classes, f"{slug} missing {core}")
+
+    def test_register_seam_is_steam_powers_alone(self):
+        self.assertIn(
+            "register_seam", registry.measure_classes_for("steampowernj")
+        )
+        for slug in ("edgar-greenfield", "edgar-sec", "supreme-octo-robot"):
+            self.assertNotIn("register_seam", registry.measure_classes_for(slug))
+
+    def test_coordinator_routes_are_wb_sent_chat_routes(self):
+        for row in registry.declarations():
+            route = registry.coordinator_route_for(row["slug"])
+            self.assertEqual(route["sender"], "wb")
+            self.assertEqual(route["kind"], "chat")
+            self.assertIn(route["handle"], row["handles"])
+
+
+class DrainTail(unittest.TestCase):
+    def test_standing_defaults_seed_every_programme(self):
+        default_keys = {item["key"] for item in registry.DEFAULT_DRAIN_TAIL}
+        self.assertEqual(
+            default_keys, {"consolidation", "doc-updates", "performance"}
+        )
+        for slug in EXPECTED_SLUGS:
+            keys = {item["key"] for item in registry.drain_tail_for(slug)}
+            self.assertTrue(default_keys <= keys, slug)
+
+    def test_steam_powers_baked_in_extra_is_declared(self):
+        keys = {item["key"] for item in registry.drain_tail_for("steampowernj")}
+        self.assertIn("tech-debt-paydown", keys)
+        for slug in ("edgar-greenfield", "edgar-sec", "supreme-octo-robot"):
+            keys = {item["key"] for item in registry.drain_tail_for(slug)}
+            self.assertNotIn("tech-debt-paydown", keys)
+
+
+class Accessors(unittest.TestCase):
+    def test_for_handle_prefers_the_active_programme(self):
+        self.assertEqual(
+            registry.for_handle("@xbrl")["slug"], "edgar-greenfield"
+        )
+        self.assertEqual(
+            registry.for_handle("@workhorse")["slug"], "supreme-octo-robot"
+        )
+        self.assertIsNone(registry.for_handle("@nobody"))
+        self.assertIsNone(registry.for_handle(None))
+
+    def test_cadence_and_escalation_fall_back_to_the_default(self):
+        self.assertEqual(registry.cadence_for("@workhorse", 99), 15)
+        self.assertEqual(registry.cadence_for("@nobody", 99), 99)
+        self.assertEqual(registry.escalation_for("@steampower", 7), 1)
+        self.assertEqual(registry.escalation_for(None, 7), 7)
+
+    def test_wb_projects_linkage(self):
+        row = registry.for_slug("edgar-greenfield")
+        self.assertEqual(registry.wb_projects_for(row), ["edgar-sec"])
+        # An undeclared list falls back to the slug, the
+        # harness's own keying (programmes.wb_projects).
+        row = registry.for_slug("edgar-sec")
+        self.assertEqual(registry.wb_projects_for(row), ["edgar-sec"])
+
+    def test_workhorse_wb_projects_name_both_surfaces(self):
+        # The supervision programme's workbench surface
+        # answers to two names, one per surface: the wb
+        # server serves the bundle under
+        # "workbench-viewer" (its --project slug) while
+        # the armed-row file drop keys its rows
+        # "workrecord". Both are declared, so the
+        # frontier attribution and the armed match read
+        # the same programme.
+        row = registry.for_slug("supreme-octo-robot")
+        self.assertEqual(
+            registry.wb_projects_for(row),
+            ["workbench-viewer", "workrecord"],
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,101 @@
+{
+  "run_id": "specimen-ci-ledger-cobalt-extract-d-20261119T101100Z",
+  "job": "specimen-ci-ledger-cobalt-extract-d",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:11:00.767962+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T10:46:55.672537+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-ledger-cobalt-extract-d-out-specimen-ci-ledger-cobalt-extract-d-20261119T101100Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:28:02.753305+00:00",
+  "launch_unconfirmed_at": "2026-11-19T10:20:19.133681+00:00",
+  "last_poll_error": "checkpoint poll timed out at 2026-11-19T10:20:19.133625+00:00",
+  "collector_at": "2026-11-19T10:47:28.396079+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.83 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "resumed_at": "2026-11-19T10:26:43.874319+00:00",
+  "launch_confirmed_at": "2026-11-19T10:28:16.656410+00:00",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:28:16.656410+00:00"
+  },
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "extract-d-l.json",
+      "bytes": 4210912,
+      "sha256": "e20e9b3b9d22d3600bd7d9c04cd500a5dbfb84d5f796c96a4bf3910c3188441c",
+      "route": "misplaced"
+    },
+    {
+      "path": "extract-d-tf.json",
+      "bytes": 4238879,
+      "sha256": "72660c36bb2fe3283d9397808dc19d84422e136507fc9cc93310ff3752610392",
+      "route": "misplaced"
+    },
+    {
+      "path": "coci-extract-log-d.txt",
+      "bytes": 23085,
+      "sha256": "6ffd710972372df32771f786419092624538dab6d5baddb918fc3b35478838c4",
+      "route": "misplaced"
+    },
+    {
+      "path": "coci-extract-result-d.json",
+      "bytes": 808,
+      "sha256": "dc9a58239b0b7aa85a2a4dee3f4c00676133500fb90f317f64605e340eb53c23",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "extract-d-l.json",
+      "path": "/content/extract-d-l.json",
+      "bytes": 4210912,
+      "mtime": 1795084403.4911025,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "extract-d-tf.json",
+      "path": "/content/extract-d-tf.json",
+      "bytes": 4238879,
+      "mtime": 1795084607.6189191,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "coci-extract-log-d.txt",
+      "path": "/content/coci-extract-log-d.txt",
+      "bytes": 23085,
+      "mtime": 1795084607.663919,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "coci-extract-result-d.json",
+      "path": "/content/coci-extract-result-d.json",
+      "bytes": 808,
+      "mtime": 1795084607.663919,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:48:17.702321+00:00",
+  "usage_after": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:48:18.072473+00:00"
+}

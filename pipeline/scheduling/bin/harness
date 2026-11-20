@@ -1,0 +1,359 @@
+#!/usr/bin/env python3
+"""Client for the harness connector (server/connector.py): the
+agent tier's tool contract for agents running on any venue.
+
+  harness tools                        list the contract
+  harness call <tool> '<args-json>'    call a tool (bridged tools
+    [--wait SECS]                      are polled to completion,
+                                       default 150s, 0 = no wait)
+  harness chat-list | chat-tail <chat-id> [limit]
+  harness chat-send <chat-id> <text|->   (- reads stdin)
+  harness permissions                  pending permission requests
+  harness ack <ping-id>
+  harness state-read | state-write <file|->
+  harness nudge-append <sends|decisions> <record-json|->
+  harness reference                    templates + vocabulary
+  harness workbench <path>             a served /api/ path
+  harness result <request-id>
+  harness bridge-poll                  queued bridge requests
+  harness bridge-list                  the queue, payloads digested (metadata pass)
+  harness bridge-send <id>             mechanical relay of one queued chat_send
+  harness bridge-fulfill <id> <result-json|->
+  harness bridge-fail <id> <error>
+
+Configuration is env only, so the client carries to any venue
+as this one file:
+  HARNESS_URL    default http://127.0.0.1:8796
+  HARNESS_TOKEN  the caller's bearer token (required; delivered
+                 through the secure route, never committed)
+  HARNESS_TRANSPORT  http (default) or ferry. The ferry
+                 transport serves venues that cannot reach the
+                 service (Colab): each call is written as a
+                 request file {"id","method","path","token",
+                 "body"} into HARNESS_FERRY_OUT, the home relay
+                 performs it against the loopback service and
+                 lands {"status","body"} at the same id in
+                 HARNESS_FERRY_IN, and the client polls for it
+                 (HARNESS_FERRY_WAIT secs, default 120). The
+                 relay deletes the request file once served;
+                 the client deletes the response once read.
+                 Same contract, second adapter.
+
+Exit codes mirror the request: 0 ok, 3 still queued after the
+wait, 4 unreachable, otherwise the server's refusal/error.
+"""
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+
+URL = (os.environ.get("HARNESS_URL") or "http://127.0.0.1:8796").rstrip("/")
+TOKEN = os.environ.get("HARNESS_TOKEN") or ""
+TRANSPORT = os.environ.get("HARNESS_TRANSPORT") or "http"
+FERRY_OUT = os.environ.get("HARNESS_FERRY_OUT") or ""
+FERRY_IN = os.environ.get("HARNESS_FERRY_IN") or ""
+FERRY_WAIT = int(os.environ.get("HARNESS_FERRY_WAIT") or 120)
+
+
+def _ferry_request(method, path, payload=None):
+    import uuid
+    if not FERRY_OUT or not FERRY_IN:
+        sys.stderr.write("harness: ferry transport needs "
+                         "HARNESS_FERRY_OUT and HARNESS_FERRY_IN\n")
+        raise SystemExit(4)
+    request_id = uuid.uuid4().hex[:16]
+    envelope = {"id": request_id, "method": method, "path": path,
+                "token": TOKEN, "body": payload}
+    os.makedirs(FERRY_OUT, exist_ok=True)
+    with open(os.path.join(FERRY_OUT, request_id + ".json"), "w") as fh:
+        json.dump(envelope, fh)
+    response_path = os.path.join(FERRY_IN, request_id + ".json")
+    deadline = time.time() + FERRY_WAIT
+    while time.time() < deadline:
+        if os.path.exists(response_path):
+            with open(response_path) as fh:
+                response = json.load(fh)
+            os.unlink(response_path)
+            return response["status"], response["body"]
+        time.sleep(2)
+    sys.stderr.write("harness: ferry wait exceeded — no response "
+                     f"for {request_id}\n")
+    raise SystemExit(4)
+
+
+def request(method, path, payload=None):
+    if TRANSPORT == "ferry":
+        return _ferry_request(method, path, payload)
+    data = json.dumps(payload).encode("utf-8") if payload is not None else None
+    req = urllib.request.Request(URL + path, data=data, method=method)
+    req.add_header("Authorization", f"Bearer {TOKEN}")
+    if data is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return resp.status, json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        try:
+            return exc.code, json.loads(exc.read().decode("utf-8"))
+        except ValueError:
+            return exc.code, {"ok": False, "error": f"http {exc.code}"}
+    except (urllib.error.URLError, OSError) as exc:
+        sys.stderr.write(f"harness: cannot reach {URL}: {exc}\n")
+        raise SystemExit(4)
+
+
+def call(tool, args, wait=150):
+    code, payload = request("POST", f"/tools/{tool}", {"args": args})
+    if payload.get("status") == "queued" and wait:
+        request_id = payload["request_id"]
+        deadline = time.time() + wait
+        while time.time() < deadline:
+            time.sleep(3)
+            _c, res = request("GET", f"/tools/result/{request_id}")
+            if res.get("status") in ("done", "failed"):
+                return res.get("status") == "done", res
+        return False, {"ok": False, "error": "still_queued",
+                       "request_id": request_id}
+    return payload.get("ok", False), payload
+
+
+def emit(ok, payload):
+    sys.stdout.write(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    return 0 if ok else 1
+
+
+def read_arg(value):
+    if value == "-":
+        return sys.stdin.read()
+    return value
+
+
+def main(argv):
+    if not TOKEN:
+        sys.stderr.write("harness: HARNESS_TOKEN is not set\n")
+        return 4
+    if not argv:
+        sys.stderr.write(__doc__)
+        return 2
+    cmd, rest = argv[0], argv[1:]
+    if cmd == "tools":
+        code, payload = request("GET", "/tools")
+        return emit(payload.get("ok", False), payload)
+    if cmd == "call":
+        wait = 150
+        if "--wait" in rest:
+            i = rest.index("--wait")
+            wait = int(rest[i + 1])
+            rest = rest[:i] + rest[i + 2:]
+        args = json.loads(rest[1]) if len(rest) > 1 else {}
+        ok, payload = call(rest[0], args, wait=wait)
+        if payload.get("error") == "still_queued":
+            sys.stdout.write(json.dumps(payload, indent=2) + "\n")
+            return 3
+        return emit(ok, payload)
+    if cmd == "chat-list":
+        ok, payload = call("chat_list", {})
+        return emit(ok, payload)
+    if cmd == "chat-tail":
+        args = {"chat_id": rest[0]}
+        if len(rest) > 1:
+            args["limit"] = int(rest[1])
+        ok, payload = call("chat_tail", args)
+        return emit(ok, payload)
+    if cmd == "chat-send":
+        ok, payload = call(
+            "chat_send", {"chat_id": rest[0], "text": read_arg(rest[1])})
+        return emit(ok, payload)
+    if cmd == "permissions":
+        ok, payload = call("permissions_list", {})
+        return emit(ok, payload)
+    if cmd == "ack":
+        ok, payload = call("ping_ack", {"ping_id": rest[0]}, wait=0)
+        return emit(ok, payload)
+    if cmd == "state-read":
+        ok, payload = call("sweeper_state_read", {}, wait=0)
+        return emit(ok, payload)
+    if cmd == "state-write":
+        ok, payload = call(
+            "sweeper_state_write", {"state_text": read_arg(rest[0])}, wait=0)
+        return emit(ok, payload)
+    if cmd == "nudge-append":
+        ok, payload = call(
+            "nudge_append",
+            {"table": rest[0], "record": json.loads(read_arg(rest[1]))}, wait=0)
+        return emit(ok, payload)
+    if cmd == "reference":
+        ok, payload = call("sweeper_reference_read", {}, wait=0)
+        return emit(ok, payload)
+    if cmd == "workbench":
+        ok, payload = call("workbench_read", {"path": rest[0]}, wait=0)
+        return emit(ok, payload)
+    if cmd == "result":
+        code, payload = request("GET", f"/tools/result/{rest[0]}")
+        return emit(payload.get("status") == "done", payload)
+    if cmd == "bridge-poll":
+        ok, payload = call("bridge_poll", {}, wait=0)
+        return emit(ok, payload)
+    if cmd == "bridge-list":
+        # The executor's metadata pass: the queue's shape
+        # with payload text digested, never printed. Verify
+        # id / tool / caller / envelope / target / digest
+        # here; read one record's full text only at its
+        # send step (bridge record files). A poll that
+        # prints every payload puts instruction-shaped text
+        # in front of the executor for the whole queue at
+        # once — the 2026-11-12 screen-stall defect.
+        import hashlib
+        ok, payload = call("bridge_poll", {}, wait=0)
+        if not ok:
+            return emit(ok, payload)
+        requests = (payload.get("result") or {}).get("requests") or []
+        for rec in requests:
+            args = rec.get("args") or {}
+            text = args.get("text") or ""
+            digest = hashlib.sha256(
+                text.encode("utf-8")).hexdigest()[:12] if text else "-"
+            sys.stdout.write(
+                f"{rec.get('id')} | {rec.get('tool')} | "
+                f"{rec.get('caller')} | {rec.get('envelope_id')} | "
+                f"target={args.get('chat_id')} | "
+                f"text={len(text)} chars sha256:{digest} | "
+                f"{rec.get('ts')}\n")
+        return 0
+    if cmd == "bridge-send":
+        # Mechanical relay for one queued chat_send record
+        # (the drain's leg 2.5): the payload moves as data.
+        # This process loads the record file and the server's
+        # poll view and cross-checks them — status, tool,
+        # caller, envelope, target, and the payload's SHA-256
+        # across both sources; a mismatch sends nothing. The
+        # send itself rides the runtime daemon's own client
+        # (hatch-ws-client), so no agent reads the payload
+        # into context at any step, and the client's output
+        # (the recipient's reply) is consumed here and never
+        # printed — only the receipt is reported. The send
+        # half needs the daemon credential JARVIS_JWT_TOKEN
+        # in this process's environment (owner decision
+        # 2026-11-12: provisioned fabric-side); without it
+        # the command verifies and stops at the send gate,
+        # fulfilling nothing (exit 6). A digest or identity
+        # mismatch exits 5.
+        import hashlib
+        import subprocess
+        request_id = rest[0]
+        repo = os.path.dirname(os.path.dirname(
+            os.path.realpath(__file__)))
+        record_path = os.path.join(
+            repo, "state", "connector-bridge",
+            request_id + ".json")
+        try:
+            with open(record_path, encoding="utf-8") as fh:
+                record = json.load(fh)
+        except (OSError, ValueError) as exc:
+            sys.stderr.write(
+                f"bridge-send: cannot load record "
+                f"{request_id}: {exc}\n")
+            return 2
+        ok, payload = call("bridge_poll", {}, wait=0)
+        if not ok:
+            return emit(ok, payload)
+        server_view = next(
+            (r for r in
+             (payload.get("result") or {}).get("requests") or []
+             if r.get("id") == request_id), None)
+        if server_view is None:
+            sys.stderr.write(
+                f"bridge-send: {request_id} is not queued on "
+                f"the server view; nothing sent\n")
+            return 2
+
+        def shape(rec):
+            rargs = rec.get("args") or {}
+            rtext = rargs.get("text") or ""
+            return (rec.get("status"), rec.get("tool"),
+                    rec.get("caller"), rec.get("envelope_id"),
+                    rargs.get("chat_id"),
+                    hashlib.sha256(
+                        rtext.encode("utf-8")).hexdigest())
+
+        if shape(record) != shape(server_view):
+            sys.stderr.write(
+                f"bridge-send: MISMATCH between the record "
+                f"file and the server view for {request_id}; "
+                f"nothing sent\n")
+            return 5
+        if record.get("tool") != "chat_send":
+            sys.stderr.write(
+                f"bridge-send: {request_id} is a "
+                f"{record.get('tool')}, not a chat_send; the "
+                f"mechanical relay covers chat_send only\n")
+            return 2
+        args = record.get("args") or {}
+        target = args.get("chat_id")
+        text = args.get("text") or ""
+        sys.stdout.write(
+            f"verified {request_id} | "
+            f"{record.get('envelope_id')} | target={target} | "
+            f"text={len(text)} chars "
+            f"sha256:{shape(record)[5][:12]}\n")
+        if not (os.environ.get("JARVIS_JWT_TOKEN") or ""):
+            sys.stdout.write(
+                "send gate: JARVIS_JWT_TOKEN is not present "
+                "in this process's environment; the record "
+                "is verified and NOT sent, nothing "
+                "fulfilled\n")
+            return 6
+        try:
+            proc = subprocess.run(
+                ["hatch-ws-client", "chat-send", "--channel",
+                 target, text],
+                capture_output=True, text=True, timeout=1200)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            sys.stderr.write(
+                f"bridge-send: daemon client failed to run "
+                f"for {request_id}: {exc}; nothing "
+                f"fulfilled\n")
+            return 4
+        if proc.returncode != 0:
+            tail = (proc.stderr or "").strip().splitlines()
+            sys.stderr.write(
+                f"bridge-send: daemon client refused the "
+                f"send for {request_id} (exit "
+                f"{proc.returncode})"
+                f"{': ' + tail[-1] if tail else ''}; "
+                f"nothing fulfilled\n")
+            return 4
+        import re
+        found = re.search(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-"
+            r"[0-9a-f]{4}-[0-9a-f]{12}", proc.stdout or "")
+        receipt = found.group(0) if found else "accepted"
+        ok, payload = call(
+            "bridge_fulfill",
+            {"request_id": request_id, "ok": True,
+             "result": {"delivered": True, "via": "bridge-send",
+                        "receipt": receipt}}, wait=0)
+        if ok:
+            sys.stdout.write(
+                f"sent + fulfilled {request_id} | "
+                f"receipt={receipt}\n")
+        return emit(ok, payload)
+    if cmd == "bridge-fulfill":
+        ok, payload = call(
+            "bridge_fulfill",
+            {"request_id": rest[0], "ok": True,
+             "result": json.loads(read_arg(rest[1]))}, wait=0)
+        return emit(ok, payload)
+    if cmd == "bridge-fail":
+        ok, payload = call(
+            "bridge_fulfill",
+            {"request_id": rest[0], "ok": False, "error": rest[1]}, wait=0)
+        return emit(ok, payload)
+    sys.stderr.write(f"harness: unknown command {cmd}\n")
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

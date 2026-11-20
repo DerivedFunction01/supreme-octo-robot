@@ -1,0 +1,56 @@
+{
+  "run_id": "specimen-ci-ledger-cobalt-enum-20261119T104544Z",
+  "job": "specimen-ci-ledger-cobalt-enum",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:45:44.949041+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-11-19T10:48:45.331146+00:00",
+  "venue": "colab",
+  "session_pin": "amber-cliff-23",
+  "lease_action": "adopted",
+  "session": "amber-cliff-23",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-ledger-cobalt-enum-out-specimen-ci-ledger-cobalt-enum-20261119T104544Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:46:35.735281+00:00",
+  "launch_confirmed_at": "2026-11-19T10:46:40.513650+00:00",
+  "collector_at": "2026-11-19T10:48:46.435500+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:46:40.513650+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "coci-enum-result.json",
+      "bytes": 7476,
+      "sha256": "989911e6eb81490850d08b4d6ec6bcef2c2fcd65b553ef62bbb0360bbb927f11",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "coci-enum-result.json",
+      "path": "/content/coci-enum-result.json",
+      "bytes": 7476,
+      "mtime": 1795085199.0520668,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:48:54.532478+00:00",
+  "usage_after": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:48:54.565853+00:00"
+}

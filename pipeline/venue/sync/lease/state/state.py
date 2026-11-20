@@ -1,0 +1,652 @@
+import importlib.util as _ilu
+import json
+import math
+import os
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from ..core import foundation, catalog, records as _mod_records, spend as _mod_spend, accounts as _mod_accounts
+from ..access import gate as _mod_gate, access, grants
+from ..sessions import sessions, keepalive, provisioning, identity
+from ..sync import bridge, syncclaims
+from . import listeners, orphans, reconcile
+
+# The paths spine (paths.py at the package root) owns the
+# root derivation; bound by path — the bootstrap form.
+_paths_spec = _ilu.spec_from_file_location(
+    "venue_paths",
+    Path(__file__).resolve().parent.parent.parent.parent / "paths.py")
+_paths = _ilu.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(_paths)
+
+_extend_guard_spec = _ilu.spec_from_file_location("colab_extend_guard", _paths.EXTEND_GUARD)
+extend_guard = _ilu.module_from_spec(_extend_guard_spec)
+_extend_guard_spec.loader.exec_module(extend_guard)
+
+
+_SNAPSHOT_UNSET = object()
+
+
+def status(colab, repo: Path, session: str | None = None, snapshot=_SNAPSHOT_UNSET) -> dict:
+    rec = _mod_records.load_record(repo, session)
+    if not rec:
+        return {"action": "no-lease"}
+    # The served record carries the pruned jobs projection:
+    # consumers of the state document never see a registration
+    # whose backing record is gone or terminal. The on-disk
+    # record is untouched by the read (save_record prunes at
+    # the write); the projection rides a copy.
+    served = dict(rec)
+    served["jobs"] = [entry["id"] for entry in _mod_records.live_jobs(repo, rec)]
+    # Last use folds in detached activity: a detached shell
+    # job stamps its own record (results/detached/), never
+    # the lease record, so the record's last_used_at alone
+    # reads a session as idle while detached work runs on
+    # it. The served value widens; the stored record is
+    # untouched (a read never writes the record).
+    detached_at = _mod_records.detached_activity(repo, rec["session"])
+    if detached_at and (not served.get("last_used_at") or detached_at > served["last_used_at"]):
+        served["last_used_at"] = detached_at
+    # A caller composing many records (state_records)
+    # passes one shared listing snapshot and every verdict
+    # classifies from it — the reap pass's one-dial shape;
+    # the standalone read dials per record as before.
+    verdict = sessions.session_state(colab, rec["session"]) if snapshot is _SNAPSHOT_UNSET else sessions.state_in_snapshot(snapshot, rec["session"])
+    out = {"action": "active" if verdict == "alive" else "recorded-but-dead", "record": served}
+    if verdict == "absent":
+        # A live record whose session the channel reads
+        # absent is a records-vs-channel disagreement:
+        # journal it as evidence (an unreadable list —
+        # "unknown" — never journals; unknown is not absent).
+        reconcile.journal_disagreement(repo, rec["session"], "record-no-session", "record-live", "absent", "state")
+    # The session's live sync claim rides the status read (the
+    # panel renders holder + expiry from here); a lapsed claim
+    # serves as None — honest absence, never a stale holder.
+    out["sync_claim"] = syncclaims.read_sync_claim(repo, rec["session"])
+    # The session's provisioning verdict rides the status read
+    # the same way (the stamp lives in a side file; the read
+    # reconciles a landed verdict first). An e2e failure at
+    # launch can cite this instead of reading as product or
+    # contention; no stamp serves as None.
+    stamp = provisioning.reconcile_provisioning(colab, repo, rec["session"]) if out["action"] == "active" else provisioning.read_stamp(repo, rec["session"])
+    out["provisioning"] = stamp or None
+    # The session's runtime identity rides the status read
+    # the same way (its stamp lives in a side file; the reap
+    # cycle keeps it current): which runtime the lease is
+    # talking to, and — after a replacement — when it changed
+    # and what it replaced. No stamp serves as None.
+    out["runtime"] = identity.read_stamp(repo, rec["session"]) or None
+    # The work-channel verdict rides the same read (derived from
+    # the census stamps; a local file read, never a dial): a
+    # record can read active while its channel is dead, and the
+    # consumers steering by these records are owed that fact in
+    # the same document.
+    out["channel"] = listeners.channel_verdict(repo, rec["session"])
+    if out["action"] == "active" and foundation.load_config(repo).get("keepalive", {}).get("enabled"):
+        age = keepalive.heartbeat_age(colab, repo, rec["session"])
+        out["keepalive_heartbeat_age_s"] = round(age, 1) if age is not None else None
+    return out
+
+
+def specs(repo: Path, colab=None) -> list[dict]:
+    """The shape catalog for the UI's picker: every shape with the
+    fields the UI renders (identity, label, descriptor, rate). The
+    UI serves costs from this list only. The label is the display
+    name from the catalog (a shape id is an internal name; the UI
+    shows labels); a shape without one falls back to its id."""
+    gate = _mod_gate.session_gate_policy(repo)
+    out = []
+    for shape_id, entry in catalog.catalog_shapes(repo, colab).items():
+        out.append({
+            "id": shape_id,
+            "label": entry.get("label") or shape_id,
+            "gpu": entry.get("gpu"),
+            "tpu": entry.get("tpu"),
+            "high_mem": bool(entry.get("high_mem", False)),
+            "rate_cu_per_hour": entry.get("rate_cu_per_hour"),
+            # Session shape gate, served ready: whether an agent
+            # actor may start this shape (the panel itself is a
+            # bypass actor and can start any of them).
+            "agent_startable": not gate["enabled"] or _mod_gate.shape_class(entry) in gate["agent_classes"],
+        })
+    return out
+
+
+# --- State dial cache (E14) ---------------------------------------------------
+# State composition dialed the account on every read: the
+# budget portion's usage call and the orphan census's live
+# list. Under account load those reads took 41-63 s, so the
+# panel's data plane went stale-slow exactly when the account
+# was busiest. Both dials cache in var/ on a short TTL — the
+# mechanism's home is foundation (dial_cache_read /
+# dial_cache_write), shared with access.access_list, which
+# rides the same live-list cache file. Only these two dials
+# cache — a session's tri-state classification is never
+# served from cache.
+
+STATE_DIAL_CACHE_TTL_S = foundation.DIAL_CACHE_TTL_S
+_dial_cache_read = foundation.dial_cache_read
+_dial_cache_write = foundation.dial_cache_write
+
+
+def budget_snapshot(colab, repo: Path, now_dt: datetime | None = None) -> dict:
+    """Read-only budget numbers for `state`: the live balance and
+    spend from the attributed accounting (segment journal + live
+    records), never from balance deltas. The balance dial is
+    TTL-cached (E14, above); the spend figures are local reads
+    and are composed fresh on every call."""
+    cfg = foundation.load_config(repo)
+    now_dt = now_dt or datetime.now(timezone.utc)
+    balance = _dial_cache_read(repo, "state-cache-usage.json", now_dt)
+    if balance is None:
+        try:
+            balance = foundation.parse_balance(colab("usage", timeout=120).stdout)
+        except Exception:  # noqa: BLE001
+            balance = None
+        if balance is not None:
+            _dial_cache_write(repo, "state-cache-usage.json", balance, now_dt)
+    day_spent = month_spent = standing_day_spent = None
+    spend = None
+    if balance is not None:
+        spend = _mod_spend.attributed_spend(repo, now_dt)
+        day_spent = spend["day_spent"]
+        month_spent = spend["month_spent"]
+        # The standing caller's day spend from the same derivation
+        # the guard enforces against — the number served is the
+        # number enforced.
+        standing_day_spent = spend["callers"].get(catalog.standing_caller(repo), {}).get("day_spent", 0.0)
+    # Per-account portion (venue rework): every configured
+    # account of this venue with its resolved caps, its
+    # attributed spend, and its credential status. Only the
+    # primary account dials a balance — the funnel's live
+    # credential is its own; another account's balance serves
+    # as null (honest absence) until the funnel gains
+    # account-scoped invocation.
+    account_entries = []
+    for entry in _mod_accounts.venue_accounts(cfg, foundation.VENUE):
+        acct = entry["id"]
+        acct_spend = spend["accounts"].get(acct) if spend is not None else None
+        account_entries.append({
+            "venue": foundation.VENUE,
+            "account": acct,
+            "label": entry["label"],
+            "caps": _mod_accounts.caps_for(cfg, foundation.VENUE, acct),
+            "balance": balance if acct == _mod_accounts.PRIMARY_ACCOUNT else None,
+            "day_spent": acct_spend["day_spent"] if acct_spend is not None else None,
+            "month_spent": acct_spend["month_spent"] if acct_spend is not None else None,
+            "standing_day_spent": standing_day_spent if acct == _mod_accounts.PRIMARY_ACCOUNT else None,
+            "credential": _mod_accounts.credential_status(repo, cfg, foundation.VENUE, acct),
+        })
+    return {
+        "balance": balance,
+        "day_spent": day_spent,
+        "month_spent": month_spent,
+        "standing_day_spent": standing_day_spent,
+        "caps": grants._served_caps(cfg),
+        "accounts": account_entries,
+    }
+
+
+def accounts_state(repo: Path, now_dt: datetime | None = None) -> dict:
+    """The accounts census (venue rework): this venue's accounts
+    with their resolved caps, credential status, and attributed
+    spend — the read-only surface an operator checks after
+    bringing an account in (config entry + credential file).
+    Local reads only; no balance dial."""
+    cfg = foundation.load_config(repo)
+    spend = _mod_spend.attributed_spend(repo, now_dt)
+    out = []
+    for entry in _mod_accounts.venue_accounts(cfg, foundation.VENUE):
+        acct = entry["id"]
+        acct_spend = spend["accounts"].get(acct, {"day_spent": 0.0, "month_spent": 0.0})
+        out.append({
+            "venue": foundation.VENUE,
+            "account": acct,
+            "label": entry["label"],
+            "credential": _mod_accounts.credential_status(repo, cfg, foundation.VENUE, acct),
+            "caps": _mod_accounts.caps_for(cfg, foundation.VENUE, acct),
+            "day_spent": acct_spend["day_spent"],
+            "month_spent": acct_spend["month_spent"],
+        })
+    return {"venue": foundation.VENUE, "accounts": out}
+
+
+_UNSET = object()
+
+
+def set_budget_caps(repo: Path, daily=_UNSET, monthly=_UNSET, standing_daily=_UNSET, venue: str | None = None, account: str | None = None) -> dict:
+    """Update the budget caps in config/lease.json — the operator's
+    throttle, set from the panel (2026-11-01: the caps are the operator's to
+    set, not a fixed system wall; he holds 700+ CU banked with no
+    competing use for it). Each cap is a non-negative number or None
+    (no cap — the budget guard's own semantics); an omitted argument
+    leaves its cap untouched. Every other config key is preserved,
+    and the write is atomic (tmp sibling + rename) in the file's own
+    compact sorted style, so no reader sees a half-written config.
+
+    Addressing (venue rework): the default target — this venue's
+    primary account, with no budgets-block entry for it — writes
+    the legacy flat keys exactly as before accounts existed. An
+    addressed non-default account (or a target the budgets block
+    already carries) writes budgets[venue][account] in the served
+    key names, so each adapter's and each account's caps live
+    side by side in the one config."""
+    path = repo / "config" / "lease.json"
+    try:
+        cfg = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {"action": "caps-invalid", "error": "config/lease.json is unreadable"}
+    if not isinstance(cfg, dict):
+        return {"action": "caps-invalid", "error": "config/lease.json is not a JSON object"}
+    for name, value in (("daily", daily), ("monthly", monthly), ("standing_daily", standing_daily)):
+        if value is _UNSET or value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            return {"action": "caps-invalid", "error": f"{name} cap must be a non-negative number or null"}
+    venue = venue or foundation.VENUE
+    account = account or _mod_accounts.default_account(cfg, venue)
+    budgets = cfg.get("budgets")
+    addressed = account != _mod_accounts.PRIMARY_ACCOUNT or (
+        isinstance(budgets, dict)
+        and isinstance(budgets.get(venue), dict)
+        and isinstance(budgets[venue].get(account), dict))
+    if addressed and budgets is not None and not isinstance(budgets, dict):
+        return {"action": "caps-invalid", "error": "config budgets section is not an object"}
+    standing = cfg.get("standing")
+    if not addressed and standing_daily is not _UNSET and standing is not None and not isinstance(standing, dict):
+        return {"action": "caps-invalid", "error": "config standing section is not an object"}
+    previous = _mod_accounts.caps_for(cfg, venue, account)
+
+    def clean(v):
+        return int(v) if isinstance(v, float) and v.is_integer() else v
+
+    if addressed:
+        if not isinstance(budgets, dict):
+            budgets = cfg["budgets"] = {}
+        per_venue = budgets.get(venue)
+        if not isinstance(per_venue, dict):
+            per_venue = budgets[venue] = {}
+        entry = per_venue.get(account)
+        if not isinstance(entry, dict):
+            entry = per_venue[account] = {}
+        if daily is not _UNSET:
+            entry["daily"] = None if daily is None else clean(daily)
+        if monthly is not _UNSET:
+            entry["monthly"] = None if monthly is None else clean(monthly)
+        if standing_daily is not _UNSET:
+            entry["standing_daily"] = None if standing_daily is None else clean(standing_daily)
+    else:
+        if daily is not _UNSET:
+            cfg["daily_cu_budget"] = None if daily is None else clean(daily)
+        if monthly is not _UNSET:
+            cfg["monthly_cu_budget"] = None if monthly is None else clean(monthly)
+        if standing_daily is not _UNSET:
+            if not isinstance(standing, dict):
+                standing = cfg["standing"] = {}
+            standing["daily_cu_cap"] = None if standing_daily is None else clean(standing_daily)
+    foundation.staged_write(path, json.dumps(cfg, sort_keys=True, separators=(",", ":")).encode())
+    return {"action": "caps-updated", "venue": venue, "account": account, "caps": _mod_accounts.caps_for(cfg, venue, account), "previous": previous}
+
+
+def auth_required(repo: Path) -> dict | None:
+    """The wrapper guard's stop-and-surface marker
+    (var/auth-required.json): present while the stored Colab
+    credential is dead and a human re-authorization is the only way
+    forward. Written and cleared by bin/colab-run's guard."""
+    data = foundation.load_json(foundation.var_dir(repo) / "auth-required.json", None)
+    return data if isinstance(data, dict) else None
+
+
+def _envelope_block(colab, repo: Path, grant: dict | None, budget: dict) -> dict | None:
+    """The envelope view state serves with an active grant (two-tier
+    envelope plan): the grant, its scope, the live records attributed
+    to it (envelope_id = the grant's granted_at), and spend versus
+    the snapshot caps.
+
+    Spend: per-lease figures come from the attributed accounting
+    (segment journal + live records) — the lease's own burn in the
+    period, shared between envelope and non-envelope work on that
+    lease rather than metered per envelope. The totals are the
+    budget snapshot's own numbers, the same ones the guard enforces
+    against."""
+    if grant is None:
+        return None
+    scope = grant.get("scope")
+    if not isinstance(scope, dict):
+        # Pre-envelope grant: synthesize the view from the grant's
+        # own fields; its caps are the live ones (no snapshot was
+        # taken), which grant_caps reports as None.
+        scope = {"caps": grants._served_caps(foundation.load_config(repo)), "standing_shape": catalog.standing_shape(repo), "shapes": grants.grant_shapes(repo, grant)}
+    caps = grants.grant_caps(grant) or scope["caps"]
+    attributed = [rec for rec in _mod_records.all_records(repo) if rec.get("envelope_id") == grant.get("granted_at")]
+    balance = budget.get("balance")
+    spend = _mod_spend.attributed_spend(repo) if balance is not None else None
+    session_spend = []
+    for rec in attributed:
+        rate = rec.get("rate_cu_per_hour")
+        if rate is None and rec.get("shape"):
+            rate = catalog.shape_rate(repo, rec["shape"])
+        if spend is None or rate is None:
+            day = month = None
+        else:
+            entry = spend["sessions"].get(rec["session"], {})
+            day = entry.get("day_spent", 0.0)
+            month = entry.get("month_spent", 0.0)
+        session_spend.append({"session": rec["session"], "day_spent": day, "month_spent": month})
+    return {
+        "id": grant.get("granted_at"),
+        "grant": grant,
+        "scope": scope,
+        "caps": caps,
+        "records": attributed,
+        "spend": {"balance": balance, "day_spent": budget.get("day_spent"), "month_spent": budget.get("month_spent"), "standing_day_spent": budget.get("standing_day_spent")},
+        "session_spend": session_spend,
+    }
+
+
+def _bridge_block(colab, repo: Path) -> dict | None:
+    """The served bridge state for the panel/artifact: armed, the
+    heartbeat's age, live children, and the queue depth — all read
+    from the agent's own status file, nothing derived client-side.
+    None when no grant is active (the bridge has no home then)."""
+    now_dt = datetime.now(timezone.utc)
+    grant = grants.active_grant(repo, now_dt)
+    if grant is None:
+        return None
+    cfg = foundation.load_config(repo)
+    rec = grants.standing_record(repo)
+    if not rec:
+        return {"armed": False, "reason": "no-standing"}
+    status = bridge.bridge_status_read(colab, repo, rec["session"])
+    if status is None:
+        return {"armed": False, "reason": "no-status"}
+    age = None
+    try:
+        age = round(max(0.0, now_dt.timestamp() - foundation.parse_dt(status["ts"]).timestamp()))
+    except Exception:  # noqa: BLE001
+        pass
+    return {
+        "armed": age is not None and age <= bridge.BRIDGE_HEARTBEAT_STALE_S,
+        "generation": str(status.get("gen", ""))[:8],
+        "heartbeat_age_s": age,
+        "auth_down": bool(status.get("auth_down")),
+        "children": status.get("children", []),
+        "queue": status.get("queue", 0),
+        "processed": status.get("processed", 0),
+    }
+
+
+def state_records(colab, repo: Path) -> dict:
+    """Portion: every lease record's status. The per-record reads
+    are independent and I/O-bound (session probes, heartbeat
+    reads), so they run threaded — the portion's wall time is its
+    slowest record, not their sum. The session listing itself is
+    one shared snapshot for the whole portion (the reap pass's
+    shape): per-record listings under account load measured
+    12–15 s each and summed past the panel's read bound
+    (2026-11-15); one dial classifies every record, exactly as
+    the per-record reads did (state_in_snapshot is the same
+    test), and a failed listing classifies unknown, never dead."""
+    recs = _mod_records.all_records(repo)
+    snapshot = sessions.list_snapshot(colab)
+
+    def entry(rec):
+        e = status(colab, repo, session=rec["session"], snapshot=snapshot)
+        e["session"] = rec["session"]
+        e["venue"] = rec.get("venue")
+        e["warm"] = rec.get("warm")
+        e["caller"] = rec.get("caller")
+        return e
+
+    if len(recs) <= 1:
+        records = [entry(rec) for rec in recs]
+    else:
+        with ThreadPoolExecutor(max_workers=min(4, len(recs))) as pool:
+            records = list(pool.map(entry, recs))
+    # The access list rides this portion: the panel's records
+    # section is where live-but-unrecorded sessions surface.
+    # The binding finding rides it too (2026-11-17): the
+    # funnel's served state for the CLI's session-binding
+    # store, so a damaged binding renders as binding-damaged
+    # in the same document whose records it would otherwise
+    # blind. No file serves as None — no finding recorded.
+    binding = foundation.load_json(foundation.var_dir(repo) / "binding-state.json", None)
+    return {"venue": foundation.VENUE, "records": records, "access": access.access_list(colab, repo), "binding": binding if isinstance(binding, dict) else None}
+
+
+def state_specs(colab, repo: Path) -> dict:
+    """Portion: the spec catalog (CLI shapes read from the day
+    cache; a portion read never triggers a fresh catalog parse
+    beyond what specs() itself already does)."""
+    _shapes, catalog_error = catalog._cli_shapes(repo, colab)
+    out = {"venue": foundation.VENUE, "specs": specs(repo, colab), "session_gate": _mod_gate.session_gate_policy(repo)}
+    if catalog_error:
+        out["catalog_error"] = catalog_error
+    return out
+
+
+def budgets_state(colab, repo: Path, now_dt: datetime | None = None, snapshot: dict | None = None) -> list:
+    """The budget set of record (FU-2): one entry per (venue,
+    account) across every venue the config names, the home
+    venue first — budgets are per venue and per account and
+    are never merged into one mass. Each budgeted entry is
+    {"venue", "account", "label", "credential", "budget":
+    {"balance", "day_spent", "month_spent",
+    "standing_day_spent", "caps"}}.
+
+    The home venue's entries fold the budget snapshot's own
+    per-account figures (the dialed balance is the primary
+    account's; another account's balance is null until the
+    funnel can dial under its credential). Another venue's
+    entries carry its config-resolved caps with null figures:
+    this repo holds no balance dial and no spend journal for
+    a venue it does not run, so those figures are honest
+    absence, and its credential status is not this repo's to
+    serve (null).
+
+    A budget-less venue kind (a local machine venue —
+    core.accounts.NO_BUDGET_VENUES) contributes a single
+    entry, {"venue", "budget": None}: no account, no figures,
+    no caps — nothing budget-shaped exists for it."""
+    cfg = foundation.load_config(repo)
+    if snapshot is None:
+        snapshot = budget_snapshot(colab, repo, now_dt)
+    home = foundation.VENUE
+    venues = [home] + [v for v in _mod_accounts.configured_venues(cfg) if v != home]
+    entries = []
+    for venue in venues:
+        if _mod_accounts.venue_budgetless(venue):
+            entries.append({"venue": venue, "budget": None})
+            continue
+        if venue == home:
+            for acct in snapshot["accounts"]:
+                entries.append({
+                    "venue": venue,
+                    "account": acct["account"],
+                    "label": acct["label"],
+                    "credential": acct["credential"],
+                    "budget": {
+                        "balance": acct["balance"],
+                        "day_spent": acct["day_spent"],
+                        "month_spent": acct["month_spent"],
+                        "standing_day_spent": acct["standing_day_spent"],
+                        "caps": acct["caps"],
+                    },
+                })
+            continue
+        for entry in _mod_accounts.venue_accounts(cfg, venue):
+            entries.append({
+                "venue": venue,
+                "account": entry["id"],
+                "label": entry["label"],
+                "credential": None,
+                "budget": {
+                    "balance": None,
+                    "day_spent": None,
+                    "month_spent": None,
+                    "standing_day_spent": None,
+                    "caps": _mod_accounts.caps_for(cfg, venue, entry["id"]),
+                },
+            })
+    return entries
+
+
+def state_budget(colab, repo: Path) -> dict:
+    """Portion: the budget snapshot, including the balance read,
+    and the per-venue/account budget set of record."""
+    snapshot = budget_snapshot(colab, repo)
+    return {"venue": foundation.VENUE, "budget": snapshot, "budgets": budgets_state(colab, repo, snapshot=snapshot)}
+
+
+def state_grant(colab, repo: Path, budget: dict | None = None) -> dict:
+    """Portion: the two-tier grant and its envelope block. The
+    envelope prices on a budget snapshot; composed reads pass
+    theirs in so the balance is read once."""
+    grant = grants.load_grant(repo)
+    if budget is None:
+        budget = budget_snapshot(colab, repo)
+    return {"venue": foundation.VENUE, "grant": grant, "envelope": _envelope_block(colab, repo, grant, budget)}
+
+
+def state_meta(colab, repo: Path) -> dict:
+    """Portion: the bridge block and any outstanding auth need."""
+    out = {"venue": foundation.VENUE, "bridge": _bridge_block(colab, repo)}
+    auth = auth_required(repo)
+    if auth:
+        out["auth_required"] = auth
+    return out
+
+
+def state_extend_guard(repo: Path) -> dict:
+    """Portion: the auto-extension guard's resolved policy and
+    its latest verdict per lease, from the guard's own state
+    file. Before the guard's first pass the policy resolves
+    from config and the verdicts are empty."""
+    policy, _findings = extend_guard.load_policy(foundation.load_config(repo).get("extend_guard"))
+    verdicts = extend_guard.guard_state(repo).get("verdicts", {})
+    return {"venue": foundation.VENUE, "extend_guard": {"policy": policy, "verdicts": verdicts}}
+
+
+def _deadline_past(deadline: str | None, now_dt: datetime) -> bool:
+    """The served past-deadline determination (register E4,
+    ruled 2026-11-14): the orphan's evidenced deadline at or
+    before the served now, computed here where the census is
+    composed — never in a consumer. An absent deadline is not
+    past; an unparseable one is not past either — the census
+    serves its conflicts for those, and a verdict is never
+    invented from evidence it cannot read."""
+    if not deadline:
+        return False
+    try:
+        return foundation.parse_dt(deadline) <= now_dt
+    except ValueError:
+        return False
+
+
+def state_orphans(colab, repo: Path, now_dt: datetime | None = None) -> dict:
+    """Portion: the orphan census — live sessions with no lease
+    record, each entry derive_orphan's composition (the derived
+    deadline and its evidence), ready for the panel to offer an
+    adoption. Bridge-prefixed sessions are the bridge's, never
+    the lease system's, and stay out; a handover child stays in,
+    flagged, because its refusal reason is exactly what the
+    operator needs to see. An unreadable live list serves an
+    empty census flagged unreadable — no orphans rather than
+    invented ones. The live list itself is TTL-cached (E14):
+    inside the TTL the census composes from the cached list;
+    a stale cache re-dials, and an unreadable dial still
+    serves the flagged empty census (a cached list is only
+    ever a successful dial's result). Assigned-but-nameless
+    endpoints join the same census as endpoint-keyed rows:
+    the reap pass detects and stores them (its assignments
+    dial is the only one), and this serve merges the stored
+    rows against the present records and names."""
+    now_dt = now_dt or datetime.now(timezone.utc)
+    live = _dial_cache_read(repo, "state-cache-live.json", now_dt)
+    if live is None:
+        live = sessions.live_sessions(colab, repo)
+        if live is not None:
+            _dial_cache_write(repo, "state-cache-live.json", live, now_dt)
+    if live is None:
+        return {"venue": foundation.VENUE, "orphans": [], "unreadable": True}
+    recorded = {rec.get("session") for rec in _mod_records.all_records(repo)}
+    out = []
+    for entry in live:
+        name = entry.get("session")
+        if not name or name == "?" or name in recorded or name.startswith("bridge-"):
+            continue
+        entry_out = orphans.derive_orphan(repo, entry)
+        entry_out["deadline_past"] = _deadline_past(entry_out.get("derived_deadline"), now_dt)
+        out.append(entry_out)
+        # The census is a records-vs-channel disagreement
+        # made visible; journal it as evidence too (the
+        # journal throttles a standing orphan to one line
+        # per window, so the panel's poll cadence cannot
+        # flood it).
+        reconcile.journal_disagreement(repo, name, "live-no-record", "no-record", "live", "state", now_dt=now_dt)
+    # Nameless rows ride the same census: the reap pass's
+    # endpoint-keyed detection (orphans.detect_nameless) stores
+    # them, and the serve merges them — filtered against the
+    # present, so an endpoint a record has since claimed (an
+    # adoption between passes) or that now lists under a usable
+    # name (its own named row above) never double-rows. The
+    # serve makes no assignments dial of its own: the census
+    # stays a local read, refreshed on the reap cadence.
+    recorded_eps = orphans.recorded_endpoints(repo, recorded)
+    live_named_eps = {e.get("endpoint") for e in live if e.get("session") not in (None, "", "?") and e.get("endpoint")}
+    for row in orphans.load_nameless_census(repo):
+        ep = row.get("endpoint")
+        if not ep or ep in live_named_eps:
+            continue
+        if any(sessions.endpoints_match(ep, acc) for acc in recorded_eps):
+            continue
+        row = dict(row)
+        row["deadline_past"] = _deadline_past(row.get("derived_deadline"), now_dt)
+        out.append(row)
+        reconcile.journal_disagreement(repo, ep, "assigned-no-record", "no-record", "assigned", "state", now_dt=now_dt)
+    return {"venue": foundation.VENUE, "orphans": out}
+
+
+def state_listeners(repo: Path, now_dt: datetime | None = None) -> dict:
+    """Portion: the per-session listener census, keyed by
+    session — each lease's stamped census with its suspect
+    derivation (listeners module). A pure local read of the
+    collection duty's stamps: the portion never probes, so a
+    session with no stamp yet serves its honest empty."""
+    now_dt = now_dt or datetime.now(timezone.utc)
+    out = {}
+    for rec in _mod_records.all_records(repo):
+        session = rec.get("session")
+        if session:
+            out[session] = listeners.listeners_state(repo, rec, now_dt)
+    return {"venue": foundation.VENUE, "listeners": out}
+
+
+def state_torn_records(repo: Path) -> dict:
+    """Portion: the torn-record findings (E1) — lease-record
+    files whose contents cannot yield a record, served by
+    filename-derived session instead of vanishing from every
+    reader. A pure local read: the census never renames;
+    quarantine is a writer's act (records.quarantine_torn,
+    fired by save_record and the adoption path)."""
+    return {"venue": foundation.VENUE, "torn_records": _mod_records.torn_records(repo)}
+
+
+def state(colab, repo: Path) -> dict:
+    """The UI's composed read: every lease record's status, the
+    two-tier grant, the spec catalog, and the budget snapshot,
+    assembled from the portion reads above. All derivation lives
+    here in the core; the UI only renders."""
+    budget = budget_snapshot(colab, repo)
+    out = {}
+    out.update(state_records(colab, repo))
+    out.update(state_specs(colab, repo))
+    out["budget"] = budget
+    out["budgets"] = budgets_state(colab, repo, snapshot=budget)
+    out.update(state_grant(colab, repo, budget))
+    out.update(state_meta(colab, repo))
+    out.update(state_orphans(colab, repo))
+    out.update(state_torn_records(repo))
+    out.update(state_extend_guard(repo))
+    out.update(state_listeners(repo))
+    return out
