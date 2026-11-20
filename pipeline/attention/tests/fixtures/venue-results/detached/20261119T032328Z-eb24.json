@@ -1,0 +1,9 @@
+{
+  "id": "20261119T032328Z-eb24",
+  "session": "golden-delta-85",
+  "caller": "edgar-successor:greenfield-followup",
+  "state": "failed",
+  "exit_code": null,
+  "started_at": "2026-11-19T03:23:28.034070+00:00",
+  "finished_at": "2026-11-19T03:24:19.245592+00:00"
+}

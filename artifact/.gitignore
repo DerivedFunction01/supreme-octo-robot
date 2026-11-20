@@ -1,0 +1,10 @@
+# Build outputs and install state of the artifact tree — regenerable,
+# never tracked (the v41-prep lesson: tracked stale dist outputs were a
+# defect of the static publish pipeline). The publish pipeline (design
+# §3) builds from empty out-dirs at prep time.
+client/dist/
+server/dist/
+.bun-cache/
+.tsbuildinfo
+client/.tsbuildinfo.client
+server/.tsbuildinfo.server

@@ -1,0 +1,70 @@
+[
+  {
+    "hard_stop": false,
+    "name": "settled_continue"
+  },
+  {
+    "hard_stop": false,
+    "name": "program_step"
+  },
+  {
+    "hard_stop": false,
+    "name": "defect_fix"
+  },
+  {
+    "hard_stop": false,
+    "name": "result_preserving"
+  },
+  {
+    "hard_stop": false,
+    "name": "followup_worktree"
+  },
+  {
+    "hard_stop": false,
+    "name": "stall_hold"
+  },
+  {
+    "hard_stop": false,
+    "name": "redrive"
+  },
+  {
+    "hard_stop": false,
+    "name": "ruling_propagation"
+  },
+  {
+    "hard_stop": true,
+    "name": "permission_card"
+  },
+  {
+    "hard_stop": true,
+    "name": "scope_expansion"
+  },
+  {
+    "hard_stop": true,
+    "name": "login"
+  },
+  {
+    "hard_stop": true,
+    "name": "external_send"
+  },
+  {
+    "hard_stop": true,
+    "name": "purchase"
+  },
+  {
+    "hard_stop": true,
+    "name": "form_submit"
+  },
+  {
+    "hard_stop": true,
+    "name": "calendar_write"
+  },
+  {
+    "hard_stop": true,
+    "name": "schedule_change"
+  },
+  {
+    "hard_stop": true,
+    "name": "lease_renewal"
+  }
+]

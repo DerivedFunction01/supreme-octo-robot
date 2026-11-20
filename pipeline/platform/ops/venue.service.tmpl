@@ -1,0 +1,51 @@
+# Template — render before installing: the freeze render
+# substitutes @ROOT@ (the mega repo root), @PYTHON@ and
+# @HOME@ for the host. The rendered unit is a
+# machine-local artefact, never tracked.
+#
+# The lease panel's own unit (owner ruling, 2026-11-15:
+# process boundaries follow coupling, extended to the
+# venue). The panel serves alone — the repo-root run.py
+# serve-venue, the venue UI server's own mount on 8793 —
+# because its state reads shell out synchronously to the
+# lease core (a hung call pins its request thread) and
+# the panel faces the heaviest polling of the surfaces:
+# its saturation must not be able to starve the coupled
+# surfaces' health (the D-9 lesson, measured on the
+# venue's own state path). Its own process, its own
+# unit, its own health verdict; the coupled surfaces
+# (scheduler, attention) serve under workhorse.service
+# and the workbench under workbench.service, and no
+# probe or shim joins the processes. Inside this process
+# the panel's reads are hardened for that load: state
+# reads serve stale-while-recompute under a read-scoped
+# timeout, and the listener's handler threads are
+# bounded (pipeline/venue/ui/state_reads.py,
+# bounded_server.py). A worker fault exits this process
+# non-zero, so the Restart below is the supervision: the
+# process comes back loudly rather than serving with a
+# dead loop.
+#
+# This unit carries no ATTENTION_DATA: the panel binds
+# no attention store. Its config is its own seam
+# (ui/config.json plus COLAB_LEASE_UI_* env).
+[Unit]
+Description=Lease panel (workhorse superapp — its own process: the venue surface only)
+After=network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+EnvironmentFile=-@ROOT@/workhorse.env
+Environment=HOME=@HOME@
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStart=@PYTHON@ @ROOT@/run.py serve-venue
+Restart=always
+RestartSec=2
+StandardOutput=append:@ROOT@/pipeline/platform/var/venue.log
+StandardError=append:@ROOT@/pipeline/platform/var/venue.log
+
+[Install]
+WantedBy=default.target

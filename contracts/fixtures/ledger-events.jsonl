@@ -1,0 +1,2 @@
+{"collapsed": 0, "due": "2026-11-12T15:51:00+00:00", "exit_code": 0, "job_id": "bridge-wake", "kind": "run", "status": "ok", "ts": "2026-11-13T05:31:14.872415+00:00"}
+{"job_id": "bridge-wake", "kind": "ping_created", "ping_id": "3d2de23f1bd9", "ping_kind": "agent-due", "ts": "2026-11-13T05:31:14.884833+00:00"}

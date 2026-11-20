@@ -1,0 +1,75 @@
+{
+  "run_id": "greenfield-ci-cisep-fmt-20261119T091603Z",
+  "job": "greenfield-ci-cisep-fmt",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T09:16:03.623219+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T09:23:14.752646+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cisep-fmt-out-greenfield-ci-cisep-fmt-20261119T091603Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T09:20:05.936414+00:00",
+  "launch_confirmed_at": "2026-11-19T09:21:17.536529+00:00",
+  "collector_at": "2026-11-19T09:24:38.947163+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T09:21:17.536529+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 405.59 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cisep-fmt-log.txt",
+      "bytes": 585,
+      "sha256": "e1f981423d96d32c0010b332ca802414281d6aa8de8fb25d5454eb8d36085840",
+      "route": "misplaced"
+    },
+    {
+      "path": "cisep-fmt-result.json",
+      "bytes": 201,
+      "sha256": "177fab2ab96f8d1c8147c4d0186055c3a8f390e519bc4f0d382b7679de3381fe",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cisep-fmt-log.txt",
+      "path": "/content/cisep-fmt-log.txt",
+      "bytes": 585,
+      "mtime": 1795080035.465049,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cisep-fmt-result.json",
+      "path": "/content/cisep-fmt-result.json",
+      "bytes": 201,
+      "mtime": 1795080035.465049,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "missing_outputs": [
+    "cisep-fmt-out.tar.gz",
+    "cisep-fmt-diff.txt"
+  ],
+  "finished_at": "2026-11-19T09:28:02.136569+00:00",
+  "error": "job payload exited 2",
+  "usage_after": "Current balance: 405.45 compute units\nUsage rate: 0.86/hr\nActive assignments: 4",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T09:28:02.542797+00:00"
+}

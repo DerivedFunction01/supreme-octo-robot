@@ -1,0 +1,909 @@
+[
+ {
+  "id": "bridge-drain",
+  "title": "Bridge drain executor — works the connector bridge queue under its per-item contract",
+  "kind": "agent",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "1h"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Harness-connector platform machinery (F5 home, owner ruling 2026-11-11): the bridge serves every venue caller on the machine, so no single goal owns it. This entry is the drain permanent home the owner picked (registry-native agent drain) after the approval-sweeper-owned cron was removed as wrongly placed.",
+  "body": "bodies/bridge-drain.md",
+  "timeout_secs": 1800,
+  "state_paths": [
+   "${REPO}/state/connector-bridge",
+   "${REPO}/state/outbox.json"
+  ],
+  "classification": "agent by capability, not by judgment: the work is verbatim transport execution of queued bridge records (chat_send, chat_list, chat_tail, permissions_list) under bodies/bridge-wake-item.md, and only an agent holds the runtime tools those verbs execute through - the classification test fails on kind, not on discretion, since the body forbids judgment outright (never widen a send, never alter queued text, never approve or deny). The executing runtime matters as much as the kind: worker-class runtimes hold only the read half of the chat namespace (no send function even after the namespace loads), so the minter addresses the escalation ping to the drain home thread (the owners config drain mapping - a full agent surface whose send capability the F5 proof drain exercised), and a worker that encounters this ping leaves it for that surface. Wakes: primarily the bridge-wake minter episode escalation ping (job bridge-drain, planted once per non-empty queue episode); the hourly cadence is a backstop sweep for anything the escalation missed, and a backstop wake that finds an empty queue acks and ends. The executor acks the escalation ping only when its final poll finds the queue empty - that ack is the episode close the minter re-arms on.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "bridge-wake",
+  "title": "Bridge wake minter - one thread-addressed wake ping per queued connector bridge item",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "1m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Harness-connector platform machinery (F5 home, owner ruling 2026-11-11): the bridge serves every venue caller on the machine, so no single goal owns it; the retired approval-sweeper stamp it carried was the wrong-place defect the same ruling removed from the drain cron.",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/bridge_wake.py"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0
+   ],
+   "report_patterns": [
+    "UNRESOLVED"
+   ],
+   "quiet_patterns": [
+    "WAKE",
+    "DRAIN"
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/connector-bridge",
+   "${REPO}/state/outbox.json",
+   "${REPO}/bodies/bridge-wake-owners.yaml"
+  ],
+  "classification": "fixed command (one Python script): each pass reads the connector bridge queue from its record files and plants one wake ping per queued item in the scheduler outbox through the server own Outbox class - the per-item programmatic generation half of the bridge drain re-host (plan 2026-11-10). Wake addressing is derived, never judged: a chat_send wake targets the record own args.chat_id; a read tool (chat_list, chat_tail, permissions_list) targets the requesting caller owning thread from bodies/bridge-wake-owners.yaml. Every outcome is enumerable in advance: WAKE (a ping minted; quiet pattern), DRAIN (an episode escalation ping for the bridge-drain agent job minted; quiet pattern), silence (queue empty or every item already has a pending wake), or UNRESOLVED (an item with no resolvable target - left queued and reported, never guessed). Episode escalation (F5 home, 2026-11-11): a pass finding at least one resolvable queued item and no pending bridge-drain ping plants that ping once (detail: the resolvable count, plus target_chat from the owners config drain mapping when configured - the escalation is addressed to the drain home thread, a full agent surface carrying the chat send function, because worker-class runtimes hold only the read half of the chat namespace and an unaddressed drain ping claimed by one stalls every chat_send item; defect diagnosed 2026-11-12 after two such stalls); the executor acks it only when its final poll finds the queue empty, so a standing bridge-drain ping is the open episode and the first pass after its ack re-mints - no minter state, the outbox is the record. An unresolved-only queue never escalates. The ping detail carries the item identity and destination only, never its text; minting approves nothing and executes nothing - execution stays with the woken executor under the bridge contract (tools, never authority). Idempotence is the outbox itself: one pending ping per item job id, terminal records never re-minted, an acked-but-unfulfilled item re-minted on the next pass.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "colab-extend-guard",
+  "title": "Extend guard - every live Colab lease extended before it lapses",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "30m"
+  },
+  "owner": "none",
+  "owner_reason": "Owner-ordered coverage (2026-11-06): extending a live lease is lifecycle, never a fresh start; the guard keeps a venue standing for work that fires later.",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/colab-runner/bin/colab-extend-guard"
+   ]
+  },
+  "timeout_secs": 300,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/colab-extend-guard.md",
+  "state_paths": [
+   "${WS}/colab-runner/var/extend-guard-state.json"
+  ],
+  "classification": "fixed command (bin/colab-extend-guard); reads every lease record and applies the extend_guard policy from the lease config (per-shape/per-caller modes over activity read from records and run records; idle leases capped per shape, warmest first, once per idle episode), extending through the lease core; exit 0 when every due lease is extended or deliberately skipped (extensions and decision lines print as JSON and need no speech), exit 3 with one JSON finding line per refusal or bad policy value; when it speaks is fully determined by the exit code and its episode state file, no content judgment",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "colab-liveness-brisk-rocket-38",
+  "title": "Liveness check - Colab session brisk-rocket-38",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/colab-runner/bin/colab-liveness",
+    "brisk-rocket-38"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/colab-liveness.md",
+  "state_paths": [
+   "${WS}/colab-runner/var/liveness-brisk-rocket-38.json"
+  ],
+  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "lifetime": "until_complete",
+  "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
+ },
+ {
+  "id": "colab-liveness-cozy-pilot-61-r1794547171",
+  "title": "Liveness check - Colab session cozy-pilot-61-r1794547171",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/colab-runner/bin/colab-liveness",
+    "cozy-pilot-61-r1794547171"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/colab-liveness.md",
+  "state_paths": [
+   "${WS}/colab-runner/var/liveness-cozy-pilot-61-r1794547171.json"
+  ],
+  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "lifetime": "until_complete",
+  "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
+ },
+ {
+  "id": "colab-liveness-dawn-tower-93",
+  "title": "Liveness check - Colab session dawn-tower-93",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/colab-runner/bin/colab-liveness",
+    "dawn-tower-93"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/colab-liveness.md",
+  "state_paths": [
+   "${WS}/colab-runner/var/liveness-dawn-tower-93.json"
+  ],
+  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "lifetime": "until_complete",
+  "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
+ },
+ {
+  "id": "colab-runner-transient-restore",
+  "title": "colab-runner transient restore (5 min)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:colab-runner-for-programme-a",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/colab_transient_restore.sh"
+   ]
+  },
+  "timeout_secs": 600,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ],
+   "fail_patterns": [
+    "verify-failed"
+   ],
+   "report_patterns": [
+    "released-deadline",
+    "released-idle",
+    "cleared-dead"
+   ]
+  },
+  "state_paths": [
+   "${WS}/colab-runner/state/transient/"
+  ],
+  "classification": "two fixed commands composed in ops/colab_transient_restore.sh in the cron body's order; every outcome is an enumerated exit/result; speaking determined by failure or an actual lease release/clear. Timeout 600 assigned at seed - the cron set none.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "colab-store-prune",
+  "title": "Colab runner store auto-prune - reclaims transfer staging when free space crosses 45 GB",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Owner-ruled standing auto-prune (2026-11-12: auto prune, do not wait for a tap, else lockout); operated by the colab lease panel thread, which owns the runner store and the prune bounds.",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/colab-runner/ops/store_prune.py",
+    "--if-below-gb",
+    "45",
+    "--target-free-gb",
+    "60"
+   ]
+  },
+  "timeout_secs": 900,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "state_paths": [
+   "${WS}/colab-runner/var/prune-log.jsonl"
+  ],
+  "classification": "fixed command (one Python script): every pass reads free space and, only when it is below 45 GB, deletes from enumerable classes under fixed bounds (parts of complete transfers, snapshot bundles and unrecorded transfer staging past a 2h floor, failed-transfer parts past a 24h resume window, payload dirs of terminal runs, gate scratch; run/transfer records and anything in flight or fresh are never candidates) until 60 GB free; speech is fully determined by the branches - silent above the threshold, one JSON report when a prune fires, non-zero exit on failure",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "file-registry-check",
+  "title": "File-registry check — boot-triggered must-exist file pass (contract v1)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Fleet-survival instrumentation under the shared file-registry contract, commissioned by the owner 2026-11-09; the registry serves every workhorse on the machine, so no single goal owns it. The live manifest is seeded empty — entries land only by the owner's seed-list ruling.",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/file_registry.py"
+   ]
+  },
+  "timeout_secs": 300,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/registry/file-registry.yaml",
+   "${REPO}/state/file-registry-state.json"
+  ],
+  "classification": "fixed command (one Python script): every pass reads the boot identity (the restart detector's /proc source) and evaluates the live manifest (registry/file-registry.yaml) exactly per the file-registry contract v1 — presence rules exists / non-empty / sha256 with no partial credit, restore by declared class only (tracked from the repo HEAD, generated by the declared generator, backup copied back — a backup that fails presence flags rather than chaining; flag-only never written), every restore re-checked, an unrestorable failure flagged with its entry's owner named. Speaking is fully determined: one findings-first report when findings exist and the boot changed or the findings differ from the last reported set, silence on a clean or unchanged pass, exit 3 when the manifest or boot-id source is unreadable or invalid. The pass is the same code path at boot, on interval, and manually. The checker invents no content, ever.",
+  "lifetime": "permanent",
+  "catalog": {
+   "origin": "hand",
+   "generality": "deployment-specific",
+   "use_case": "file-survival"
+  }
+ },
+ {
+  "id": "flap-watch",
+  "title": "Flap watcher — origin-mimicry experiment, scripted detection of write-denial waves",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Fleet-health instrumentation commissioned 2026-11-09 (design amended the same night: scripted watcher + armed experiment instead of a standing agent cadence); the flap series serves every project on the machine, so no single goal owns it. Transitions report to the main chat; steady state is silent.",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/flap_watch.py"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/flap-watch.json",
+   "${REPO}/state/flap-watch-series.jsonl",
+   "${REPO}/state/flap-watch-arms",
+   "${REPO}/state/flap-probe-study"
+  ],
+  "classification": "fixed command (one Python script): every cycle runs the flap canary (ops/flap_canary.py) from two spawning origins — a plain server-tree child (control) and a child placed before exec into a dedicated /sys/fs/cgroup/init.scope/hatch-tool-prepared-flapwatch cgroup, mimicking the agent tool layer origin that the write-denial flap denies. Per-arm verdicts append to state/flap-watch-series.jsonl; output (and so a report) happens only on an arm transition, baseline adoption silent — the boot-detector shape. This entry is an ARMED EXPERIMENT, not a settled detector: between waves both origins write fine, so a clear cgroup-arm reading is inconclusive until a live wave tests it against agent-class ground truth (ops/flap_probe.py from an agent shell). Pre-stated criteria and the ground-truth protocol: state/flap-probe-study/read-signal-hunt.md. If the cgroup arm tracks the agent class across one full wave (denied at the start, clear at the clear, control clear throughout), the mimicry holds and this scripted entry is the flap job. If it stays clear while agent-class writes are denied through a full wave, mimicry fails: this entry is removed and an agent-cadence entry is admitted with that negative result in its classification evidence — the experiment outcome decides the final kind.",
+  "lifetime": "permanent",
+  "catalog": {
+   "origin": "hand",
+   "generality": "deployment-specific",
+   "use_case": "fleet-health"
+  }
+ },
+ {
+  "id": "local-test-watch",
+  "title": "Local test watcher — deterministic detection of test runs on the local box",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "1m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Venue-discipline instrumentation commissioned by the owner 2026-11-09 after a manual defect notice for local test runs; tightened 2026-11-10 at his direction (no checks or code run locally while the High-RAM fleet is live — he is paying for the fleet). Findings serve every project on the machine, so no single goal owns the entry. First-sighting warnings route directly to the owning thread via the harness connector (routes in state/local-test-watch-routes.json) and print to the main chat as the sweeper's copy; steady state is silent.",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/local_test_watch.py"
+   ]
+  },
+  "timeout_secs": 60,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/local-test-watch.json",
+   "${REPO}/state/local-test-watch-routes.json"
+  ],
+  "classification": "fixed command (one Python script): every cycle samples processes via /proc (argv + cwd + pid/ppid, reads only) and branches on the mechanical matchers alone, in two modes chosen by a mechanical signal — whether any colab-liveness entry stands in the registry (a live High-RAM fleet session; the lease core renders and removes those entries). NORMAL mode (no fleet live): silence when no test-runner process has its cwd inside the workspace; one LOCAL-TEST finding line per new episode per process signature (episode state in state/local-test-watch.json; a continuing episode never re-speaks, a closed episode that reappears is a new finding); the narrow pre-check exemption is mechanical (one test file plus a name filter; pytest <=5 named node ids from one file, or one file plus -k); check.py and package-test always flag. STRICT mode (fleet live; owner ruling 2026-11-10): the exemption is suspended and the trigger broadens to any local check/code execution from a workspace repo — test runners and gates, dev/backend servers (server binaries, python -m http.server, server-shaped script names, package dev/serve/start scripts), and experiment scripts (an interpreter running a script file) — while managed infrastructure never flags (the scheduler system's own automation surface — any argv running a script under this repo's ops/ or bin/, the scripted legs and this watcher included — and argv matching the untracked routes file's service patterns: the long-running servers, the fleet machinery; ancestry is not the discriminator, since agent work routed through the server's ops channel runs as server children too and must still flag). A strict finding is a WARNING printed on first sighting in the same cycle, naming the repo's owning thread from the untracked routes file, and is also sent directly to that thread via the harness connector (caller local-test-watch, send scope, envelope local-test-watch-<signature> for dedupe) when a route and token are configured; the printed line reaches the main chat as the sweeper's copy, so no finding waits on downstream classification. Exit 3 when /proc cannot be listed. Flagging is on sight, never load-gated; the load average is recorded in the finding as context only. Speaking is fully determined by those branches; the watcher reports and routes facts and judges nothing beyond the mechanical matchers.",
+  "lifetime": "permanent",
+  "catalog": {
+   "origin": "hand",
+   "generality": "deployment-specific",
+   "use_case": "fleet-health"
+  }
+ },
+ {
+  "id": "memory-index-watchdog",
+  "title": "Memory index watchdog",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "1h"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:memory-md-index-watchdog",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/memory_watchdog_check.sh"
+   ]
+  },
+  "timeout_secs": 300,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/memory-index-watchdog.md",
+  "state_paths": [
+   "${WS}/memory-watch",
+   "${HOME}/MEMORY.md",
+   "${WS}/archive"
+  ],
+  "classification": "scripted detection with agent remediation (the watchdog pattern) - the check compares MEMORY.md sha256+bytes against the baseline and exits 0 on match (silence), 3 on mismatch, 4 on baseline missing/unparseable, 5 on MEMORY.md unreadable, 6 on topic-file threshold overage (per-file 40960 bytes / set total 153600 bytes, added 2026-11-01 at the owner's direction); only a non-zero exit escalates, carrying the cleanup body transcribed from the cron. Timeout 300 assigned at seed - the cron set none.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "owner-attention-healthcheck",
+  "title": "Owner-Attention server healthcheck",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "2m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Owner-ordered fleet conformance (2026-11-11): the service repo carries the ladder and this registry carries the keeper, as with the workbench viewer; replaces a hand-bound cron retired the same day.",
+  "run": {
+   "argv": [
+    "bash",
+    "${WS}/owner-attention/ops/watchdog.sh"
+   ]
+  },
+  "timeout_secs": 600,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/owner-attention-healthcheck.md",
+  "state_paths": [
+   "${WS}/owner-attention/var/state/owner-attention.log"
+  ],
+  "classification": "fixed command (the service repo's own watchdog ladder); exit 0 healthy or revived silently, non-zero failure; speaking determined by exit code. Timeout 600 mirrors the fleet healthcheck entries.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "restart-reconcile",
+  "title": "Restart reconciliation — orphaned runner runs become a pushed event per owning thread",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "Owner-escalated fleet defect (2026-11-12, via the Brightwash thread): VM restarts silently orphan in-flight work — detached runs survive session-side but their collector lanes die with the old VM and nothing notices. Restart detection already reports each boot (vm-restart-detector); this job is the reconciliation leg, and orphaned work belongs to every programme on the machine, so no single goal owns it.",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/restart_reconcile.py"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/restart-reconcile.json"
+  ],
+  "classification": "fixed command (one Python script): every outcome branches on mechanical reads alone — the kernel boot id against this job's recorded boot (restart leg: a non-terminal runner record whose collector heartbeat — collector_at once the runner stamps it, last_evidence_at before — predates the boot time was orphaned by the restart) and heartbeat age against a fixed 30-minute bound (stuck leg, restart or not). On new orphans it plants one addressed outbox ping per resolved owning thread (caller -> chat from bodies/restart-reconcile-owners.yaml, exact caller then caller namespace — the segment before its first colon — then dash-family prefix; unresolved callers are never guessed and print as UNRESOLVED) and prints one summary; a record reports once per episode (episode state in state/restart-reconcile.json), closes silently when its record reaches a terminal state, and re-reports under a new boot. Exit 3 when the boot-id source or the run-record store is unreadable. Speaking is fully determined by those branches; the script enumerates and routes facts and judges nothing beyond the matchers.",
+  "lifetime": "permanent",
+  "catalog": {
+   "origin": "hand",
+   "generality": "deployment-specific",
+   "use_case": "fleet-health"
+  }
+ },
+ {
+  "id": "stale-mockup-cleanup",
+  "title": "Daily stale-mockup cleanup — scripted census classifies mechanically; agent escalates only on unresolved items",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "daily",
+   "at": "07:00"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "owner-commissioned standing ops cleanup (2026-11-08); the census spans every repo's mockups, so no single goal owns it; each run reports to the main chat",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/mockup_census.py"
+   ]
+  },
+  "timeout_secs": 600,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/stale-mockup-cleanup.md",
+  "state_paths": [
+   "${REPO}/state/mockup-census"
+  ],
+  "classification": "the census and mechanical classification are a fixed command over the registry schema - exclusions and stale verdicts branch on recorded fields alone, plan-lifecycle candidates propose from the tied plan's recorded status, and every outcome is its exit code; the unchanged check keys on per-project digests over census rows, attribution data, and the owning repo's HEAD, a moved digest re-escalates that project's keeps for re-judgment, and unresolved residue escalates on every run until cleared; judgment itself is the agent's, through the escalation body - scripted with agent escalation",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "storage-watch",
+  "title": "Storage watch — one report per free-space threshold crossing (home + /tmp)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "owner-commissioned fleet tripwire (2026-11-08) after the home filesystem filled unwatched (57G used 2026-11-07 to 108G used in a day, chunks 7.9G to 39G); free space serves every project on the machine, so no single goal owns it; crossings report to the main chat",
+  "run": {
+   "argv": [
+    "python3",
+    "${REPO}/ops/storage_watch.py"
+   ]
+  },
+  "timeout_secs": 300,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/storage-watch"
+  ],
+  "classification": "fixed command (one Python script); every outcome branches on two disk_usage reads against fixed thresholds — silent baseline adoption, silent healthy match, one report per threshold crossing (low, then critical), silent de-escalation and recovery, exit 3 when a filesystem is unreadable; speaking is fully determined by those branches and the recorded episode levels",
+  "source": {
+   "catalog": "example-storage-watch",
+   "catalog_version": 1,
+   "parameters": {
+    "id": "storage-watch",
+    "title": "Storage watch — one report per free-space threshold crossing (home + /tmp)",
+    "owner": "none",
+    "owner_reason": "owner-commissioned fleet tripwire (2026-11-08) after the home filesystem filled unwatched (57G used 2026-11-07 to 108G used in a day, chunks 7.9G to 39G); free space serves every project on the machine, so no single goal owns it; crossings report to the main chat",
+    "timezone": "America/New_York",
+    "cadence_every": "15m"
+   }
+  },
+  "lifetime": "permanent"
+ },
+ {
+  "id": "paywatch-lane-watchdog",
+  "title": "Paywatch v2 — venue lane watchdog",
+  "kind": "scripted",
+  "status": "suspended",
+  "suspend_reason": "Owner ruling 2026-11-08 — the venue lane stays down (its Standard session is dead and the owner declined to revive or re-point it); gates and probes only. Suspension lifts on the owner's word when the lane is revived.",
+  "suspended_on": "2026-11-08",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:paywatch",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/paywatch_lane_watchdog.sh"
+   ]
+  },
+  "timeout_secs": 5400,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/paywatch-lane-watchdog.md",
+  "state_paths": [
+   "${WS}/paywatch/var/state/runtime/lane-watchdog-episode.json"
+  ],
+  "classification": "fixed command (the lane watchdog ladder via ops/paywatch_lane_watchdog.sh); checks run in a fixed order over durable records (unit files byte-equal to the current render, units active, keeper checkpoint pull fresh inside 900s, ferried holder evidence fresh inside 900s) and every action branches on those enumerable verdicts — reinstall and start the units, start an inactive unit, restart the keeper unit, or the rollover chain (env-build, preflight pass line, keeper restart, resident restarts) — behind an episode marker that allows one attempt per episode; exit 0 is a healthy lane before or after the ladder, exit 1 an unhealthy lane whose episode is spent, exit 2 missing wiring; speech is fully determined by the exit code, no content judgment.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "paywatch-daily-scheduler",
+  "title": "Paywatch v2 — daily scheduler host",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "daily",
+   "at": "06:00"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:paywatch",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/paywatch_daily_scheduler.sh"
+   ]
+  },
+  "timeout_secs": 14400,
+  "report": {
+   "when": "always",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "state_paths": [
+   "${WS}/paywatch/var/state/scheduler",
+   "${WS}/paywatch/var/exports/live-model.json"
+  ],
+  "classification": "fixed command (the scheduler run-day host via ops/paywatch_daily_scheduler.sh); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "paywatch-deferral-retries",
+  "title": "Paywatch v2 — deferral retries (run-due)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:paywatch",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/paywatch_deferral_retries.sh"
+   ]
+  },
+  "timeout_secs": 3600,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0
+   ],
+   "quiet_patterns": [
+    "nothing due"
+   ]
+  },
+  "state_paths": [
+   "${WS}/paywatch/var"
+  ],
+  "classification": "fixed command (the scheduler run-due host via ops/paywatch_deferral_retries.sh); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "vm-restart-detector",
+  "title": "VM restart detector — reports each new boot once (boot-id comparison)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "5m"
+  },
+  "timezone": "America/New_York",
+  "owner": "none",
+  "owner_reason": "owner-commissioned fleet environment tripwire (2026-11-08); a restart fact serves every project on the machine, so no single goal owns it; each detection reports to the main chat",
+  "run": {
+   "argv": [
+    "bash",
+    "${REPO}/ops/vm_boot_check.sh"
+   ]
+  },
+  "timeout_secs": 60,
+  "report": {
+   "when": "on_output",
+   "ok_exit_codes": [
+    0,
+    3
+   ]
+  },
+  "state_paths": [
+   "${REPO}/state/vm-boot"
+  ],
+  "classification": "fixed command (one bash script); every outcome branches on the boot-id comparison alone — silent baseline adoption, silent match, one RESTART line (plus any LOST probe lines) on change, exit 3 when the boot-id source is unreadable; speaking is fully determined by those branches",
+  "source": {
+   "catalog": "example-vm-restart-detector",
+   "catalog_version": 1,
+   "parameters": {
+    "id": "vm-restart-detector",
+    "title": "VM restart detector — reports each new boot once (boot-id comparison)",
+    "owner": "none",
+    "owner_reason": "owner-commissioned fleet environment tripwire (2026-11-08); a restart fact serves every project on the machine, so no single goal owns it; each detection reports to the main chat",
+    "timezone": "America/New_York",
+    "cadence_every": "5m"
+   }
+  },
+  "lifetime": "permanent"
+ },
+ {
+  "id": "wb-progress-programme-a-t-01k8r0000000000000000000b1",
+  "title": "Progress check - programme-a: Extraction consolidation formation G1-G6 location pick (t-01K8R0000000000000000000B1)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Machine-written by the workbench harness for one armed todo; the todo file is the record of truth and this entry is its derived schedule.",
+  "run": {
+   "argv": [
+    "${WS}/workbench-viewer/.venv/bin/python",
+    "${WS}/workbench-viewer/wb",
+    "--root",
+    "${WS}/programme-a",
+    "progress-check",
+    "t-01K8R0000000000000000000B1"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "classification": "fixed command (wb progress-check <todo-id>); exit 0 on track, disarmed, or gone, exit 3 stalled with the stall line as output; when it speaks is fully determined by the exit code, no content judgment",
+  "lifetime": "until_complete",
+  "self_removal": "the harness deletes this entry in the same writer call that disarms the todo (a move to done or blocked, or the bundle's archival); the workbench doctor flags any entry that outlives its todo",
+  "catalog": {
+   "origin": "machine",
+   "generality": "deployment-specific",
+   "use_case": "work-tracking"
+  },
+  "source": {
+   "writer": "workbench-harness",
+   "project": "programme-a",
+   "todo": "t-01K8R0000000000000000000B1",
+   "source_class": "project"
+  }
+ },
+ {
+  "id": "wb-progress-programme-b-t-01k8r0000000000000000000b2",
+  "title": "Progress check - programme-b: Brightwash rebuild: land the one-slice build in sequence and cure the 2026-11-1 (t-01K8R0000000000000000000B2)",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "owner": "none",
+  "owner_reason": "Machine-written by the workbench harness for one armed todo; the todo file is the record of truth and this entry is its derived schedule.",
+  "run": {
+   "argv": [
+    "${WS}/workbench-viewer/.venv/bin/python",
+    "${WS}/workbench-viewer/wb",
+    "--root",
+    "${WS}/programme-b",
+    "progress-check",
+    "t-01K8R0000000000000000000B2"
+   ]
+  },
+  "timeout_secs": 120,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "classification": "fixed command (wb progress-check <todo-id>); exit 0 on track, disarmed, or gone, exit 3 stalled with the stall line as output; when it speaks is fully determined by the exit code, no content judgment",
+  "lifetime": "until_complete",
+  "self_removal": "the harness deletes this entry in the same writer call that disarms the todo (a move to done or blocked, or the bundle's archival); the workbench doctor flags any entry that outlives its todo",
+  "catalog": {
+   "origin": "machine",
+   "generality": "deployment-specific",
+   "use_case": "work-tracking"
+  },
+  "source": {
+   "writer": "workbench-harness",
+   "project": "programme-b",
+   "todo": "t-01K8R0000000000000000000B2",
+   "source_class": "project"
+  }
+ },
+ {
+  "id": "weekly-gmail-otp-cleanup",
+  "title": "Weekly Gmail OTP cleanup",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "168h"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:weekly-gmail-otp-cleanup",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/gmail_cleanup/clear_otp_mails.py",
+    "--apply",
+    "--yes"
+   ]
+  },
+  "timeout_secs": 3600,
+  "report": {
+   "when": "always",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "state_paths": [],
+  "classification": "fixed command (the standalone cleanup script under its standing approval); trashed/vetoed counts are enumerated in the script's own verified output and reported every run.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "weekly-gmail-stale-jobs-cleanup",
+  "title": "Weekly Gmail stale job postings cleanup",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "168h"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:stale-job-posting-email-cleanup",
+  "run": {
+   "argv": [
+    "python3",
+    "${WS}/gmail_cleanup/clear_stale_jobs.py",
+    "--apply",
+    "--yes"
+   ]
+  },
+  "timeout_secs": 3600,
+  "report": {
+   "when": "always",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "state_paths": [],
+  "classification": "fixed command (the standalone cleanup script under its standing approval, 14-day threshold); trashed/vetoed counts are enumerated in the script's own verified output and reported every run.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "workbench-viewer-doctor",
+  "title": "Workbench Viewer doctor",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "15m"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:workbench-viewer-server",
+  "run": {
+   "argv": [
+    "bash",
+    "${WS}/workbench-viewer/ops/doctor.sh"
+   ]
+  },
+  "timeout_secs": 600,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0,
+    1
+   ]
+  },
+  "escalate_body": "bodies/workbench-viewer-doctor.md",
+  "state_paths": [
+   "${WS}/workbench-viewer/state/doctor.log"
+  ],
+  "classification": "fixed command; exit 0 clean and exit 1 findings are both normal (findings travel the doctor's own workbench-outbox digest, never an agent) and only a crash (exit 2+) escalates - owner ruling normal means no agent. Timeout 600 assigned at seed - the cron set none.",
+  "lifetime": "permanent"
+ },
+ {
+  "id": "workbench-viewer-healthcheck",
+  "title": "Workbench Viewer server healthcheck",
+  "kind": "scripted",
+  "status": "active",
+  "cadence": {
+   "type": "interval",
+   "every": "2m"
+  },
+  "timezone": "America/New_York",
+  "owner": "goal:workbench-viewer-server",
+  "run": {
+   "argv": [
+    "bash",
+    "${WS}/workbench-viewer/ops/watchdog.sh"
+   ]
+  },
+  "timeout_secs": 600,
+  "report": {
+   "when": "on_failure",
+   "ok_exit_codes": [
+    0
+   ]
+  },
+  "escalate_body": "bodies/workbench-viewer-healthcheck.md",
+  "state_paths": [
+   "${WS}/workbench-viewer/state/health.json"
+  ],
+  "classification": "fixed command (the viewer's own watchdog); exit 0 healthy or revived silently, non-zero failure; speaking determined by exit code. Timeout 600 assigned at seed - the cron set none.",
+  "lifetime": "permanent"
+ }
+]

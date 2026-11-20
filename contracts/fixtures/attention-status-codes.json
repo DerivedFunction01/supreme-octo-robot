@@ -1,0 +1,58 @@
+[
+  {
+    "code": "WORKING",
+    "label": "Working",
+    "need": "agent_clearable",
+    "short": "W",
+    "terminal": false
+  },
+  {
+    "code": "CONTINUE",
+    "label": "Continue",
+    "need": "agent_clearable",
+    "short": "C",
+    "terminal": false
+  },
+  {
+    "code": "DONE",
+    "label": "Done",
+    "need": "agent_clearable",
+    "short": "D",
+    "terminal": true
+  },
+  {
+    "code": "CLOSED",
+    "label": "Closed",
+    "need": "agent_clearable",
+    "short": "CL",
+    "terminal": true
+  },
+  {
+    "code": "PARKED",
+    "label": "Parked",
+    "need": "agent_clearable",
+    "short": "P",
+    "terminal": false
+  },
+  {
+    "code": "BLOCKED-OWNER",
+    "label": "Blocked \u2014 owner",
+    "need": "owner_actionable",
+    "short": "BO",
+    "terminal": false
+  },
+  {
+    "code": "BLOCKED-HARD",
+    "label": "Blocked \u2014 hard stop",
+    "need": "owner_actionable",
+    "short": "BH",
+    "terminal": false
+  },
+  {
+    "code": "REVIEW",
+    "label": "Review",
+    "need": "owner_actionable",
+    "short": "R",
+    "terminal": false
+  }
+]

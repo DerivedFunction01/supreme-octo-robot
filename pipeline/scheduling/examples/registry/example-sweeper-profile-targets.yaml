@@ -1,0 +1,22 @@
+# Example profile-target config for the sweeper nudge
+# checker (ops/sweeper_nudge_idle.py), in the registry YAML
+# subset. The live file sits beside the sweeper templates
+# data file (untracked); this example ships with the repo.
+# Every repo and workload below is fictional.
+#
+# When a High-RAM venue sits idle with no compute work
+# waiting, the checker points the repo's owning thread at
+# the first target whose baseline is unmeasured or older
+# than 30 days. repo names a repo in the git-layer config;
+# measured_at is an ISO timestamp of the last recorded
+# baseline, or null.
+version: 1
+targets:
+  alpha-service-full-suite:
+    workload: "the alpha-service full test suite"
+    repo: alpha-service
+    measured_at: null
+  beta-worker-benchmark:
+    workload: "the beta-worker import benchmark"
+    repo: beta-worker
+    measured_at: "2026-01-15T00:00:00Z"

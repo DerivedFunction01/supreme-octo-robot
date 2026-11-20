@@ -1,0 +1,31 @@
+# Tool configuration for the attention package: the one
+# tooling seam, in the form the original owner-attention repo
+# carried it. The package is a source tree, not a distributable
+# package: it is imported as the top-level ``attention`` package
+# from pipeline/ and is never pip-installed, so this file holds
+# no project metadata — only the ruff config the package's
+# declared ruff legs (gate.json) run under. The pinned ruff
+# itself lives in requirements.txt, installed into var/venv by
+# init_venv.py.
+
+# ---------------------------------------------------------------------------
+# Ruff (format + lint). Config lives here, not in scattered noqa
+# comments; a suppression lands in this file with its rationale.
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+# A sane, defect-focused set: pycodestyle errors, pyflakes, import
+# sorting, pyupgrade, bugbear, warnings. Widen deliberately, in
+# this file, never per-module.
+select = ["E", "F", "I", "W", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# init_venv.py is the package's bootstrap/gate script: it
+# legitimately drives subprocesses and probes the machine.
+# No rule in the selected set needs suppressing for it today; the
+# entry pins where a future, rationale-carrying suppression goes.
+"init_venv.py" = []

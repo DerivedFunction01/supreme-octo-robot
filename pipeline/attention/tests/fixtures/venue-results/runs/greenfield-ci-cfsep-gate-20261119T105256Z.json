@@ -1,0 +1,100 @@
+{
+  "run_id": "greenfield-ci-cfsep-gate-20261119T105256Z",
+  "job": "greenfield-ci-cfsep-gate",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T10:52:56.673716+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T11:02:53.364354+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cfsep-gate-out-greenfield-ci-cfsep-gate-20261119T105256Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:54:06.473336+00:00",
+  "launch_confirmed_at": "2026-11-19T10:54:26.474649+00:00",
+  "collector_at": "2026-11-19T11:03:34.351270+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:54:26.474649+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.31 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "last_poll_error": "checkpoint poll timed out at 2026-11-19T11:02:27.633066+00:00",
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cfsep-gate-out.json",
+      "bytes": 1080,
+      "sha256": "afb8e5e60036c97f37dc3aab0d545dbe5da84a3fdd07bc34a6a4328ef8d0f2fe",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-log.txt",
+      "bytes": 98396,
+      "sha256": "6ff42ecff8dfa85dce59e0e3a108b6acce860c39a62bd8d3ee9d901aa888b804",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-result.json",
+      "bytes": 1543,
+      "sha256": "5aff040c0ef8443386199aeb409ef97f8be71fa114c39f3eb48535d2ce0779a0",
+      "route": "misplaced"
+    },
+    {
+      "path": "cfsep-gate-check.txt",
+      "bytes": 386,
+      "sha256": "8572613c6c95163ee0dc8e05758ee5138f3ad366ad4f7dd04288e3ff3745d25a",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cfsep-gate-out.json",
+      "path": "/content/cfsep-gate-out.json",
+      "bytes": 1080,
+      "mtime": 1795085698.806938,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-log.txt",
+      "path": "/content/cfsep-gate-log.txt",
+      "bytes": 98396,
+      "mtime": 1795085698.8079379,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-result.json",
+      "path": "/content/cfsep-gate-result.json",
+      "bytes": 1543,
+      "mtime": 1795085698.8079379,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cfsep-gate-check.txt",
+      "path": "/content/cfsep-gate-check.txt",
+      "bytes": 386,
+      "mtime": 1795085698.806938,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T11:04:43.668658+00:00",
+  "error": "job payload exited 1",
+  "usage_after": "Current balance: 404.18 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T11:04:43.694437+00:00"
+}

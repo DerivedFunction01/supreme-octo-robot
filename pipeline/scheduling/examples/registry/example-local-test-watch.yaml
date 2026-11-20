@@ -1,0 +1,35 @@
+id: example-local-test-watch
+title: Example local test watch (scripted /proc scan for test-runner processes)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1m
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/local_test_watch.py
+timeout_secs: 120
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+  report_patterns:
+    - LOCAL-TEST
+    - LOCAL-EXEC
+state_paths:
+  - ${REPO}/state/local-test-watch.json
+  - ${REPO}/state/local-test-watch-routes.json
+  - ${REPO}/state/local-test-watch-dispositions.json
+classification: fixed command; samples the process table (argv, cwd, pid/ppid — reads only) and branches on mechanical matchers in two modes chosen by a mechanical signal: whether any colab-liveness entry stands in the registry (a live High-RAM fleet session). Normal mode: test-runner processes — vitest, jest, pytest, check.py, playwright, package test scripts including their npx and pnpm-exec wrappers — whose working directory is inside the workspace flag on sight; a narrow pre-check is exempt mechanically (one test file with a name filter, at most five named pytest node ids from one file, or one pytest file with a -k filter), while check.py and package-test invocations always flag and installs, formatters, and servers never match. Strict mode (fleet live): the exemption is suspended and the trigger broadens to any local check/code execution from a workspace repo — runners and gates, dev/backend servers, and experiment scripts (an interpreter running a script file) — while managed infrastructure never flags (automation surfaces matched by resolved script identity — a real file under any workspace repo's ops/ or bin/, or a repo's named service surface (watchdog, healthcheck, autorepair, linkprobe, install-unit, deploy) script — and the untracked routes file's service patterns, matched against the argv as invoked and as resolved: the long-running servers, the fleet machinery). A strict finding is a warning printed on first sighting in the same cycle, naming the repo's owning thread from the untracked routes file and also sent directly to that thread via the harness connector (envelope-deduped per episode) when a route and token are configured. Every first sighting in either mode also raises one defect item per episode on the attention surface (deduped by handle + source ref, clears only by disposition), sends a copy to the main destination the routes file declares under its main key when configured, and opens an entry in the disposition record (state/local-test-watch-dispositions.json): an entry closes only through the watcher's disposition verb, which writes the reason, actor, and stamp into the record; a reappearing episode with a closed, reasoned disposition raises nothing, and an undispositioned reappearance re-raises. The printed line carries each destination's routing outcome. The host load average rides in the finding as context, never as a gate; finding discipline is per signature (cwd plus argv) in the state file — one finding per episode, silent while it continues, re-report when it closes and reappears; a missing state file reports live matches rather than swallowing them
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: fleet-health
+  setup:
+    state_dirs:
+      - ${REPO}/state

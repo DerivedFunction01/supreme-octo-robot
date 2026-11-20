@@ -1,0 +1,30 @@
+id: example-flaky-check
+title: Example flaky check (scripted, escalates on failure)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+owner: goal:example
+run:
+  argv:
+    - bash
+    - ${REPO}/examples/example_flaky.sh
+timeout_secs: 60
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+escalate_body: bodies/example-flaky-check-escalation.md
+state_paths:
+  - ${REPO}/state/flaky-on
+classification: scripted detection (a fixed command whose outcome is its exit code) with agent remediation on failure, handed over through the escalation body
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: demo
+  setup:
+    state_dirs:
+      - ${REPO}/state/flaky-on

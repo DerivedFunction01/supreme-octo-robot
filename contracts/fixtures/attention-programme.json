@@ -1,0 +1,14 @@
+{
+  "cadence_minutes": 15,
+  "escalation_hours": 1,
+  "handles": [
+    "@aldergrove-xbrl"
+  ],
+  "label": "aldergrove",
+  "slug": "aldergrove",
+  "staffing_band": {
+    "max": 12,
+    "min": 10
+  },
+  "venue": "colab"
+}

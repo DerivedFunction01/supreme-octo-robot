@@ -1,0 +1,26 @@
+# Example git-layer config for the sweeper nudge checker
+# (ops/sweeper_nudge_git.py), in the registry YAML subset.
+# The live file sits beside the sweeper templates data file
+# (untracked); this example ships with the repo. Every repo,
+# path, and chat below is fictional.
+#
+# Convention: each repo's path is relative to the workspace
+# root (the parent directory of the scheduler repo); the
+# checker joins it onto the workspace root it derives from
+# its own location. owner_chat is the chat a dirty-worktree
+# ping or a worktree escalation is addressed to; empty means
+# the main chat. Thresholds are hours: ahead_threshold_hours
+# ages an ahead-of-upstream surface, dirty_threshold_hours
+# ages a dirty worktree and an unmerged worktree's commit.
+version: 1
+repos:
+  alpha-service:
+    path: alpha-service
+    owner_chat: "chat-alpha"
+    ahead_threshold_hours: 24
+    dirty_threshold_hours: 24
+  beta-worker:
+    path: beta-worker
+    owner_chat: ""
+    ahead_threshold_hours: 48
+    dirty_threshold_hours: 12

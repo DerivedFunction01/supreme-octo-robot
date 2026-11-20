@@ -1,0 +1,12 @@
+{
+  "deadline": "2026-11-01T20:00:00+00:00",
+  "acquired_at": "2026-11-01T10:00:00+00:00",
+  "shape": "cpu",
+  "spec": {
+    "gpu": null,
+    "tpu": null,
+    "high_mem": false
+  },
+  "caller": null,
+  "venue": "colab"
+}

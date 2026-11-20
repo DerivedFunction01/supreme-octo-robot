@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+"""colab-harness-relay — the home-side ferry relay for one
+session (connector plan, Step 5).
+
+  bin/colab-harness-relay -s SESSION [--interval SECS]
+      [--cycles N] [--url URL]
+
+Cycles the relay (sync/harness.py) for the session: pending
+ferry requests are performed against the loopback connector
+service and the responses delivered back. With no --cycles it
+runs until interrupted. Runner-internal channel use, like the
+bridge duty — no sync claim is taken. The bootstrap driver
+(bin/colab-harness-bootstrap) runs the same relay for its
+smoke; this entry point serves a consumer running longer than
+a bootstrap (a venue sweep, an operator-held session).
+"""
+
+import argparse
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _load  # noqa: E402
+
+harness = _load.sync("harness")
+cli = _load.sync("cli")
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(prog="colab-harness-relay")
+    ap.add_argument("-s", "--session", required=True)
+    ap.add_argument("--interval", type=float, default=5.0)
+    ap.add_argument("--cycles", type=int, default=0, help="0 = until interrupted")
+    ap.add_argument("--url", default=harness.SERVICE_URL)
+    a = ap.parse_args()
+    totals = {"cycles": 0, "served": 0, "errors": 0}
+    try:
+        lock_ctx = harness.relay_lock(_load.REPO, a.session)
+        lock_ctx.__enter__()
+    except harness.RelayBusy:
+        print(f"colab-harness-relay: another relay already holds the ferry for {a.session}")
+        return 2
+    try:
+        while True:
+            try:
+                def _log(rid, method, path, status):
+                    import time as _time
+                    print(f"{_time.strftime('%H:%M:%S')} relay: served {rid} {method} {path} -> {status}", flush=True)
+                cycle = harness.relay_cycle(cli.colab, _load.REPO, a.session, a.url, log=_log)
+                totals["served"] += len(cycle["served"])
+            except Exception as exc:  # noqa: BLE001 - a failed cycle is a skipped cycle
+                totals["errors"] += 1
+                print(f"relay: cycle failed ({type(exc).__name__}: {exc}); continuing", flush=True)
+            totals["cycles"] += 1
+            if a.cycles and totals["cycles"] >= a.cycles:
+                break
+            import time
+            time.sleep(a.interval)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        lock_ctx.__exit__(None, None, None)
+    print(f"relay totals: {totals}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

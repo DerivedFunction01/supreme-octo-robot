@@ -1,0 +1,30 @@
+id: example-stale-mockup-cleanup
+title: Example stale-mockup cleanup — scripted census classifies mechanically; agent escalates only on unresolved items
+kind: scripted
+status: active
+cadence:
+  type: daily
+  at: "07:00"
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/mockup_census.py
+timeout_secs: 600
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+escalate_body: bodies/example-stale-mockup-cleanup.md
+state_paths:
+  - ${REPO}/state/mockup-census
+classification: the census and mechanical classification are a fixed command over the registry schema - exclusions and stale verdicts branch on recorded fields alone, plan-lifecycle candidates propose from the tied plan's recorded status, and every outcome is its exit code; the unchanged check keys on per-project digests over census rows, attribution data, and the owning repo's HEAD, a moved digest re-escalates that project's keeps for re-judgment, and unresolved residue escalates on every run until cleared; judgment itself is the agent's, through the escalation body - scripted with agent escalation
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: artifact-hygiene
+  setup:
+    state_dirs:
+      - ${REPO}/state/mockup-census

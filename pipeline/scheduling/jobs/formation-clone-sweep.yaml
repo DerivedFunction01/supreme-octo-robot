@@ -1,0 +1,27 @@
+id: formation-clone-sweep
+title: Formation-clone sweeper — reaps gate-formation clones in the workspace scratch roots once they pass the 1-hour reconciliation window
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+timezone: America/New_York
+owner: goal:workhorse-superapp-build-supreme-octo-robot
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/clone_sweep.py
+    - --dry-run
+timeout_secs: 900
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths: []
+classification: 'fixed command (one Python script): every cycle lists the top level of the four workspace scratch roots (tmp-gate, tmp-gate2, .tmp-parent-gate, tmp-s7), selects directories whose names carry the formation stamp (<job>-<UTC yyyymmddThhmmssZ>, parsed strictly from the name, never mtime), and removes those older than the 1-hour reconciliation window that no live process holds open (the /proc fd scan) and no non-terminal runner run record names; non-matching names, files, bundles and run records are never candidates. Outcomes branch on enumerable filesystem, proc and record state alone: silent when nothing qualifies, one CLONE-SWEEP line per reap (per would-reap and per guard-keep while the entry carries --dry-run), exit 3 when a root is unreadable or a removal fails. Speaking is fully determined by those branches.'
+lifetime: permanent
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: storage-hygiene

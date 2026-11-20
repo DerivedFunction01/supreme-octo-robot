@@ -1,0 +1,84 @@
+{
+  "run_id": "greenfield-ci-corefin-coci-price-20261119T104957Z",
+  "job": "greenfield-ci-corefin-coci-price",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:49:57.365944+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T10:57:39.706136+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-corefin-coci-price-out-greenfield-ci-corefin-coci-price-20261119T104957Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:50:44.947291+00:00",
+  "launch_confirmed_at": "2026-11-19T10:50:54.285385+00:00",
+  "collector_at": "2026-11-19T10:57:56.035319+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:50:54.285385+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "coci-pricing.json",
+      "bytes": 1328011,
+      "sha256": "271c6129a5098d7c3703f4be40243f4718a16796c3aeab5df0b1233967fce775",
+      "route": "misplaced"
+    },
+    {
+      "path": "coci-price-log.txt",
+      "bytes": 90978,
+      "sha256": "628c8cd7f8e0a88b62574d592ab3d5fc4e04fe4392e67e7f624e4824f4815f5e",
+      "route": "misplaced"
+    },
+    {
+      "path": "coci-price-result.json",
+      "bytes": 71,
+      "sha256": "7c41559c2241a9c718e5dba3f012131af43e275eea8d9a72421a21f7cb148f08",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "coci-pricing.json",
+      "path": "/content/coci-pricing.json",
+      "bytes": 1328011,
+      "mtime": 1795085452.4531596,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "coci-price-log.txt",
+      "path": "/content/coci-price-log.txt",
+      "bytes": 90978,
+      "mtime": 1795085452.4571595,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "coci-price-result.json",
+      "path": "/content/coci-price-result.json",
+      "bytes": 71,
+      "mtime": 1795085452.4531596,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:58:27.493166+00:00",
+  "usage_after": "Current balance: 404.25 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:58:27.746124+00:00"
+}

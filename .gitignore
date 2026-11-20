@@ -1,0 +1,36 @@
+# Regenerable build state — never tracked (repo rule: regenerable data is not tracked).
+node_modules/
+# Legacy: the client build once symlinked the artifact's
+# install at the repo root for the kit's resolution (the
+# pattern above matches directories only, and a symlink
+# is a file to git, so the link showed as untracked).
+# That scaffolding is removed — the kit resolves through
+# the artifact's own install — but a stray link from an
+# old build may still sit here; this root-anchored line
+# covers the link file. A real root install is a
+# directory — already covered by the `node_modules/`
+# line above, exactly as before; this line changes
+# nothing for it.
+/node_modules
+apps/*/frontend/dist/
+apps/*/frontend/dist-integration/
+apps/*/frontend/dist-adapter/
+apps/*/frontend/dist-live/
+apps/*/frontend/dist-relay/
+__pycache__/
+
+# Machine-local unit environment (render values, absolute paths) — never tracked.
+workhorse.env
+
+# Working state — never tracked (repo rule: working state is
+# local material; the harness runs on the files, not the
+# index). Plan files and their finished archive live here
+# on disk only.
+.plans/
+
+# Live runtime state — never tracked (the services run on
+# these files; they are machine-local by design).
+pipeline/platform/state/
+pipeline/platform/var/
+docs/overlay/holding/
+artifact/client/fake/fake-actions.log

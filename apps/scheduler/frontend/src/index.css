@@ -1,0 +1,44 @@
+@import "tailwindcss";
+/* The kit's components live in the kit's home (consumed through
+   the @workhorse/kit alias); Tailwind must scan them there or
+   their utilities never generate. The workbench app and the
+   runner set the same @source lines. */
+@source "../../../../kit/components";
+@source "../../../../kit/lib";
+/* Workhorse Kit v1 — vendored generated distribution (see
+   kit/PROVENANCE.md). themes/index.css is the kit's theme
+   assembly: it imports fonts.css (the @font-face rules for the
+   bundled woff2) and the olive/teal palettes (the [data-palette]
+   / [data-mode] scoped --wb-* variables every surface renders
+   with), then carries the :root scale block and the
+   [data-density] tail. This app's own Tailwind import above
+   stands first, the Workbench pattern; the vendored file's own
+   tailwind import resolves to the same setup. */
+@import "./kit/themes/index.css";
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--wb-font-ui);
+  background: #191b14;
+}
+
+.mono {
+  font-family: var(--wb-font-mono);
+}
+
+/* On pushed phone screens the kit PhoneShell's navbar carries
+   the large title; the view's own LargeTitle would state the
+   same title a second time beneath it. The shell's title
+   stays; the view's is suppressed at the kit's one phone
+   breakpoint — the Runner's .rn-largetitle and the
+   Workbench's .wb-largetitle rule, same seam. */
+@media (max-width: 480px) {
+  .sc-largetitle {
+    display: none;
+  }
+}

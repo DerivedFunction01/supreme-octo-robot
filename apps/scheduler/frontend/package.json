@@ -1,0 +1,37 @@
+{
+  "dependencies": {
+    "lucide-react": "^0.525.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "description": "Scheduler app frontend (stage D2, mock-first): the five storyboarded surfaces over a stateful mock adapter behind the SchedulerApi seam. S8 adds the live adapter (src/live/) behind the same seam — HTTP over the pipeline's /api/v1 — selected by ?adapter=live in the integration entry; the mock remains the default.",
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "@types/jsdom": "^30.0.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "jsdom": "^26.1.0",
+    "tailwindcss": "^4.1.11",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "name": "workhorse-scheduler-frontend",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit && vite build && node tools/check-truncation.mjs",
+    "check-live": "tsx --tsconfig tools/tsconfig.json tools/check-live.ts",
+    "check:truncation": "node tools/check-truncation.mjs",
+    "check-schemas": "tsx --tsconfig tools/tsconfig.json tools/check-schemas.ts",
+    "dev": "vite",
+    "exercise": "tsx --tsconfig tools/tsconfig.json tools/exercise-ui.tsx",
+    "gen-seeds": "python3 tools/gen-seeds.py",
+    "preview": "vite preview"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

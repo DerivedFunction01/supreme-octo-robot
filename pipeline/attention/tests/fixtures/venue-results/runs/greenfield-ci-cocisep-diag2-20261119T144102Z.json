@@ -1,0 +1,84 @@
+{
+  "run_id": "greenfield-ci-cocisep-diag2-20261119T144102Z",
+  "job": "greenfield-ci-cocisep-diag2",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T14:41:02.686076+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T14:43:18.610040+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-diag2-out-greenfield-ci-cocisep-diag2-20261119T144102Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T14:42:14.219572+00:00",
+  "launch_confirmed_at": "2026-11-19T14:42:38.511961+00:00",
+  "collector_at": "2026-11-19T14:43:29.981686+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T14:42:38.511961+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 401.32 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cocisep-diag2.json",
+      "bytes": 10511,
+      "sha256": "5e0df030e68c01ffad811da8866b03bea524e92d3802e383fc9239f6cf5e7dce",
+      "route": "misplaced"
+    },
+    {
+      "path": "cocisep-diag2-log.txt",
+      "bytes": 108,
+      "sha256": "8b96b734678eff05468dc2e646e84f6b9948bc3942a41b7a0e05aa9a3cff6119",
+      "route": "misplaced"
+    },
+    {
+      "path": "cocisep-diag2-result.json",
+      "bytes": 48,
+      "sha256": "cc2bfcc5bdacca693c1b1eaf7e8ca2646b6378a05d47248a60e4f536ff5c601f",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-diag2.json",
+      "path": "/content/cocisep-diag2.json",
+      "bytes": 10511,
+      "mtime": 1795099378.0196118,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cocisep-diag2-log.txt",
+      "path": "/content/cocisep-diag2-log.txt",
+      "bytes": 108,
+      "mtime": 1795099378.0996118,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cocisep-diag2-result.json",
+      "path": "/content/cocisep-diag2-result.json",
+      "bytes": 48,
+      "mtime": 1795099378.0996118,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T14:44:25.822470+00:00",
+  "usage_after": "Current balance: 401.32 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T14:44:25.976098+00:00"
+}

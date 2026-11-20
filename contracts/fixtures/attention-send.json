@@ -1,0 +1,24 @@
+{
+  "at": "2026-11-12T14:50:00+00:00",
+  "attempt": 1,
+  "dispatch": {
+    "attempts": 0,
+    "claim_expires_at": null,
+    "claimed_at": null,
+    "consumer": null,
+    "delivered_at": null,
+    "delivery_ref": null
+  },
+  "fact_hash": "abc",
+  "handle": "@aldergrove-xbrl",
+  "id": "s0001",
+  "mode": "active",
+  "outcome": "recorded",
+  "presence": "active",
+  "rule_id": "r",
+  "target": "thread-1",
+  "template": "continue",
+  "text": "Continue.",
+  "version": 1,
+  "wait_id": "w"
+}

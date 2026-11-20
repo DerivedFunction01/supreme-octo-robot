@@ -1,0 +1,31 @@
+# colab-runner
+
+Runs compute-bound work from this 2-vCPU machine on a Colab Pro high-RAM CPU runtime (measured 8 vCPU / ~51–55 GB) via Google's official `google-colab-cli`. First consumer: an XBRL workload repo — code and gate jobs, pipeline jobs, and probes.
+
+## How a job runs
+
+1. `bin/colab-run <job>` (or `bin/colab-check <paths>` for a gate job) restores transient state from the repo mirror and acquires-or-adopts the shared lease session for the manifest's shape (`bin/colab-lease`; `sync/lease/`) — a generated session name per lease, treated as a VM, 8 h hard cap, budget-guarded. Code syncs in as a git bundle on top of a base HTTPS clone.
+2. A remote bootstrap snippet prepares the VM (clone, dependencies, resource probe, Python-version assertion).
+3. The job executes detached on the VM (never as a kernel cell — the kill matrix measured that cells die with the local CLI); the wrapper polls and pushes checkpoints off the VM at the job's cadence.
+4. Results return as artifacts plus a hash manifest. The session stays up for the next job; a script-level reaper hook (2-minute poll) enforces the lease deadline. Colab is compute-only: code is authored on this machine, never on the VM.
+
+## Key pieces
+
+- `config/transient.json` + `ops/mirror_transient.py` — transient capture/restore; the canonical runbook is `ops/restore-cron.md`.
+- `config/lease.json` — the lease machinery's config: budget caps, the session shape-gate policy, the default shape jobs fall back to, and the standing lease's caller/shape. The shape catalog itself is dynamic, parsed from the CLI's own help; measured per-shape rates persist in `var/shape-rates.json` (null = unconfirmed).
+- `ui/` — the operator's lease control panel (127.0.0.1:8793): start any spec for a chosen duration, grant a two-tier lease (standing tier + burst shape), terminate early; every action is a `bin/colab-lease` call, and starts/stops/grants are announced to the main chat via the outbox + notify hook. No agent operates the lease.
+- `sync/` — snapshot-bundle construction on the origin lineage, bundle apply, the per-class data manifest (transfer vs driver-plus-regenerate vs network regeneration, priced), and result pull-back with hash verification.
+- `probes/` — the P0–P4 probe suites: local network, session shape, transfer channels, execution behaviour + kill matrix, restart survival. Results land in `probes/results/`.
+- `snippets/` — the versioned snippet library (the CLI has no snippet feature): remote bootstrap, resource probe, smoke tests, heartbeat job, and job zero (`env_build.sh`: Unit 0 `uv` guarantee + the clone's own `init_venv.py`, driven from the local repo registry in `config/repos.json` — untracked, seeded from `config/repos.example.json`).
+- `jobs/` — job manifests: pipeline jobs and gate jobs.
+
+## First-time setup
+
+```bash
+ops/bootstrap_local.sh          # installs google-colab-cli via uv, restores transients
+```
+
+Operator-only step: the one-time OAuth login. Create a session with the CLI (`colab new -s <any-name>`, adding `--high-mem` for the High-RAM shape); the command prints a URL to open anywhere and paste the returned code back.
+
+After that, the token is cached and mirrored, and wrappers handle the rest.
+

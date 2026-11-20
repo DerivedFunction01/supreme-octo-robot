@@ -1,0 +1,135 @@
+{
+  "run_id": "greenfield-ci-cocisep-price-20261119T124815Z",
+  "job": "greenfield-ci-cocisep-price",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T12:48:15.938385+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T13:08:56.937063+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-price-out-greenfield-ci-cocisep-price-20261119T124815Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T12:49:31.176313+00:00",
+  "launch_confirmed_at": "2026-11-19T12:49:41.074167+00:00",
+  "collector_at": "2026-11-19T13:09:49.851548+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T12:49:41.074167+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 402.82 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "output_name_warnings": [
+    {
+      "name": "cocisep-parta.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price-log.txt",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price-result.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "extract-b-cur.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "extract-d-cur.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    }
+  ],
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-price.json",
+      "path": "/content/cocisep-price.json",
+      "bytes": 53701,
+      "mtime": 1795093372.9110172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cocisep-parta.json",
+      "path": "/content/cocisep-parta.json",
+      "bytes": 15240,
+      "mtime": 1795093372.912017,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    },
+    {
+      "name": "extract-b-cur.json",
+      "path": "/content/extract-b-cur.json",
+      "bytes": 2688140,
+      "mtime": 1795093372.9140172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    },
+    {
+      "name": "extract-d-cur.json",
+      "path": "/content/extract-d-cur.json",
+      "bytes": 4687882,
+      "mtime": 1795093372.9180171,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cocisep-price-log.txt",
+      "path": "/content/cocisep-price-log.txt",
+      "bytes": 427,
+      "mtime": 1795093372.9200172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cocisep-price-result.json",
+      "path": "/content/cocisep-price-result.json",
+      "bytes": 140,
+      "mtime": 1795093372.9200172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "greenfield-ci-cocisep-price-20261119T114515Z",
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "cocisep-price.json",
+    "cocisep-parta.json",
+    "extract-b-cur.json",
+    "extract-d-cur.json",
+    "cocisep-price-log.txt",
+    "cocisep-price-result.json"
+  ],
+  "finished_at": "2026-11-19T13:10:44.631061+00:00",
+  "pulled": [],
+  "usage_after": "Current balance: 402.56 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T13:10:44.964414+00:00"
+}

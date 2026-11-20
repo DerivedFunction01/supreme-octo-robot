@@ -1,0 +1,243 @@
+{
+ "venue": "colab",
+ "records": [
+  {
+   "action": "active",
+   "record": {
+    "session": "flint-shore-39-r1794747856-r1794789256",
+    "shape": "cpu-highram",
+    "shape_spec": {
+     "gpu": null,
+     "tpu": null,
+     "high_mem": true
+    },
+    "rate_cu_per_hour": 0.26,
+    "acquired_at": "2026-11-16T00:34:16.455368+00:00",
+    "deadline": "2026-11-16T14:23:56.243515+00:00",
+    "last_used_at": "2026-11-16T09:55:13.147733+00:00",
+    "jobs": [
+     "detached:20261115T194454Z-5215",
+     "detached:20261115T212036Z-8c2c",
+     "detached:20261115T220547Z-c61c",
+     "detached:20261115T224109Z-c37a",
+     "detached:20261115T232009Z-eca1",
+     "detached:20261115T233008Z-2424",
+     "detached:20261115T233611Z-2f07",
+     "detached:20261115T233741Z-c345",
+     "detached:20261116T000354Z-eb5d",
+     "detached:20261116T000849Z-0c7c",
+     "detached:20261116T014307Z-b73f",
+     "detached:20261116T015342Z-9c77",
+     "detached:20261116T015720Z-17b7",
+     "detached:20261116T064322Z-0ea2",
+     "detached:20261116T070006Z-b199",
+     "detached:20261116T073054Z-6ac8",
+     "detached:20261116T074808Z-f079",
+     "detached:20261116T082246Z-c62e",
+     "detached:20261116T083916Z-317e",
+     "detached:20261116T091517Z-eb14",
+     "detached:20261116T093038Z-edee",
+     "detached:20261116T094610Z-5091",
+     "dedupe-landing-gate-v41-20261116T094857Z",
+     "dedupe-catch-v41-20261116T095148Z"
+    ],
+    "budget_at_acquire": {
+     "ok": true,
+     "balance": 488.11,
+     "projected": 2.08,
+     "day_spent": 16.63,
+     "month_spent": 204.96,
+     "committed_projected": 3.62
+    },
+    "via": "panel",
+    "caller": "panel",
+    "host": "8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
+    "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
+    "last_pulse_result": "ok",
+    "venue": "colab",
+    "account": "primary",
+    "renew": true,
+    "kit": "installed"
+   },
+   "sync_claim": null,
+   "provisioning": {
+    "attempted_at": "2026-11-16T01:00:37.824097+00:00",
+    "state": "verdict",
+    "checked_at": "2026-11-16T01:00:43Z",
+    "missing_before": [
+     "libatk1.0-0",
+     "libatk-bridge2.0-0",
+     "libxcomposite1"
+    ],
+    "install_names": [
+     "libatk1.0-0t64",
+     "libatk-bridge2.0-0t64",
+     "libxcomposite1"
+    ],
+    "missing_after": [],
+    "install_rc": 0,
+    "install_attempts": 1,
+    "chromium": "installed"
+   },
+   "runtime": {
+    "host": "8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
+    "endpoint": "https://8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
+    "boot_id": "41e52a69-950b-43ed-8386-ca21fec406df",
+    "boot_epoch": 1794788978.6923082,
+    "session": "flint-shore-39-r1794747856-r1794789256",
+    "captured_at": "2026-11-16T00:39:08.902043+00:00",
+    "source": "reconcile"
+   },
+   "channel": {
+    "verdict": "ok",
+    "at": "2026-11-16T08:33:11.257349+00:00"
+   },
+   "keepalive_heartbeat_age_s": null,
+   "session": "flint-shore-39-r1794747856-r1794789256",
+   "venue": "colab",
+   "warm": null,
+   "caller": "panel"
+  },
+  {
+   "action": "active",
+   "record": {
+    "session": "solar-falcon-70-r1794813871",
+    "shape": "cpu-highram",
+    "shape_spec": {
+     "gpu": null,
+     "tpu": null,
+     "high_mem": true
+    },
+    "rate_cu_per_hour": 0.26,
+    "acquired_at": "2026-11-16T07:24:31.257871+00:00",
+    "deadline": "2026-11-16T12:19:56.821563+00:00",
+    "last_used_at": "2026-11-16T07:24:31.257871+00:00",
+    "jobs": [
+     "detached:20261115T042307Z-9f29",
+     "detached:20261115T202417Z-78c6",
+     "detached:20261115T215814Z-d8c2",
+     "detached:20261115T221341Z-64b7",
+     "detached:20261115T225301Z-5794",
+     "detached:20261115T225806Z-1737",
+     "detached:20261115T230458Z-c3bf",
+     "detached:20261115T234348Z-7358",
+     "detached:20261116T022656Z-b716",
+     "detached:20261116T040510Z-1d82",
+     "detached:20261116T041312Z-a32a",
+     "detached:20261116T043110Z-d4e2",
+     "detached:20261116T045044Z-8b76",
+     "detached:20261116T051935Z-3205",
+     "detached:20261116T053510Z-b748",
+     "detached:20261116T061352Z-4f0d"
+    ],
+    "adopted": true,
+    "adopted_at": "2026-11-14T22:19:56.821563+00:00",
+    "deadline_source": "hours",
+    "caller": "panel",
+    "renew": true,
+    "budget_at_adopt": {
+     "ok": true,
+     "balance": 488.11,
+     "projected": 3.64,
+     "day_spent": 16.61,
+     "month_spent": 204.94
+    },
+    "host": "8080-m-hm-euw4b0-1eqtd3l7jpp4p-b.europe-west4.prod.r.colab.dev",
+    "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
+    "last_pulse_result": "failed",
+    "venue": "colab",
+    "account": "primary",
+    "kit": "installed"
+   },
+   "sync_claim": null,
+   "provisioning": null,
+   "runtime": null,
+   "channel": {
+    "verdict": "unknown",
+    "at": null
+   },
+   "keepalive_heartbeat_age_s": null,
+   "session": "solar-falcon-70-r1794813871",
+   "venue": "colab",
+   "warm": null,
+   "caller": "panel"
+  },
+  {
+   "action": "active",
+   "record": {
+    "session": "lilac-sail-28",
+    "shape": "cpu-highram",
+    "shape_spec": {
+     "gpu": null,
+     "tpu": null,
+     "high_mem": true
+    },
+    "rate_cu_per_hour": 0.26,
+    "acquired_at": "2026-11-16T08:41:26.670124+00:00",
+    "deadline": "2026-11-16T16:41:26.670124+00:00",
+    "last_used_at": "2026-11-16T09:05:22.348155+00:00",
+    "jobs": [
+     "greenfield-refresh-genre-verify4-20261116T085625Z"
+    ],
+    "budget_at_acquire": {
+     "ok": true,
+     "balance": 467.05,
+     "projected": 2.08,
+     "day_spent": 5.79,
+     "month_spent": 229.03,
+     "committed_projected": 2.43
+    },
+    "via": "panel",
+    "caller": "panel",
+    "venue": "colab",
+    "account": "primary",
+    "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
+    "last_pulse_result": "failed",
+    "host": "8080-m-hm-euw4b0-1k3tq5mf3pw6a-b.europe-west4.prod.r.colab.dev"
+   },
+   "sync_claim": null,
+   "provisioning": null,
+   "runtime": null,
+   "channel": {
+    "verdict": "unknown",
+    "at": null
+   },
+   "keepalive_heartbeat_age_s": null,
+   "session": "lilac-sail-28",
+   "venue": "colab",
+   "warm": null,
+   "caller": "panel"
+  },
+  {
+   "action": "no-lease",
+   "session": "lilac-sail-28",
+   "venue": "colab",
+   "warm": null,
+   "caller": "venue-lane"
+  }
+ ],
+ "access": [
+  {
+   "session": "solar-falcon-70-r1794813871",
+   "endpoint": "m-hm-euw4b0-1eqtd3l7jpp4p",
+   "shape_class": "high_ram",
+   "caller": "panel",
+   "first_seen": "2026-11-16T07:24:31.257871+00:00"
+  },
+  {
+   "session": "lilac-sail-28",
+   "endpoint": "m-hm-euw4b0-1k3tq5mf3pw6a",
+   "shape_class": "high_ram",
+   "caller": "panel",
+   "first_seen": "2026-11-16T08:41:26.670124+00:00"
+  },
+  {
+   "session": "flint-shore-39-r1794747856-r1794789256",
+   "endpoint": "m-hm-use1c0-3b5xtnvpksgu2",
+   "shape_class": "high_ram",
+   "caller": "panel",
+   "first_seen": "2026-11-16T00:34:16.455368+00:00"
+  }
+ ],
+ "stackdump_last_at": "2026-11-16T09:58:37.453890+00:00"
+}

@@ -1,0 +1,41 @@
+id: example-sweeper-derive
+title: Example sweeper derive (scripted derivation of the checker's approvals list)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/sweeper_nudge_approvals_derive.py
+    - --live
+  env_names:
+    - SWEEPER_CONNECTOR_TOKEN
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+  report_patterns:
+    - ESCALATE
+escalate_body: bodies/example-sweeper-nudge-escalation.md
+state_paths:
+  - ${WS}/approval-sweeper/state.json
+  - ${WS}/approval-sweeper/derive-state.json
+classification: scripted derivation over the harness connector's bridged permissions_list (caller sweeper-venue, token via the secure route, env SWEEPER_CONNECTOR_TOKEN); each cycle the approvals list is derived in the exact shape the checker consumes, first-seen and last-nudged preserved from the prior list, resolution inferred (absent from pending two consecutive cycles plus owning-chat activity after first-seen); divergences from the kept list are recorded and escalated once, never silently replaced; the leg's connector poll is bounded well under this entry's timeout, so an undrained bridge surfaces as a recorded non-run on an enumerable connector error, never as a silent hang that eats the whole window; every outcome is enumerable - derived and written, a recorded divergence, or a recorded non-run
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: work-tracking
+  setup:
+    state_dirs:
+      - ${WS}/approval-sweeper
+    files:
+      derive-state:
+        target: ${WS}/approval-sweeper/derive-state.json
+    registrations:
+      - "runs of this job consume the harness connector (scheduler server, /tools): the one caller for every sweeper leg is sweeper-venue (scopes read, write-state, send; minted with bin/sched connector-token) and its token is delivered through the secure route into the job environment (SWEEPER_CONNECTOR_TOKEN); the bridge scope stays with the fulfilling agent, never issued to this caller"

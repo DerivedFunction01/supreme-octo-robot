@@ -1,0 +1,207 @@
+{
+ "closing": {
+  "artifact_republished": null,
+  "build_thread_archived": null,
+  "handler_route_repointed": null,
+  "original_threads_retired": null,
+  "push": {
+   "at": null,
+   "authorization": "owner ruling 2026-11-14: the push happens at the cutover after the remake passes; no separate permission",
+   "sha": null
+  },
+  "remake_gate_recorded": null,
+  "successors": {
+   "backend": {
+    "handler": null,
+    "layer": "backend",
+    "succeeds": [
+     "scheduler",
+     "workbench",
+     "attention",
+     "venue"
+    ],
+    "thread": null
+   },
+   "frontend": {
+    "handler": null,
+    "layer": "frontend",
+    "succeeds": [
+     "scheduler",
+     "workbench",
+     "attention",
+     "venue"
+    ],
+    "thread": null
+   }
+  }
+ },
+ "conditions": {
+  "consolidated_gate_green": {
+   "proof": null,
+   "status": null
+  },
+  "data_cutovers_rehearsed": {
+   "proof": null,
+   "status": null
+  },
+  "live_fed": {
+   "proof": null,
+   "status": null
+  },
+  "reversible_switch": {
+   "proof": null,
+   "status": null
+  },
+  "zero_divergence": {
+   "proof": null,
+   "status": null
+  }
+ },
+ "freeze": {
+  "opened_at": null,
+  "operator": null,
+  "originals_pinned_tips": {
+   "attention": null,
+   "scheduler": null,
+   "venue": null,
+   "workbench": null
+  }
+ },
+ "oi_dispositions": {
+  "oi1_card_owner": "the mega card-watch owner holds card-watching from build completion; interim ownership never begins",
+  "oi2_config_tokens": "closed as build; the freeze acts are steps 7's provisioning + mint run",
+  "oi3_units": "superseded in form by the one-run.py topology: the mega side raises one unit from the one template (pipeline/platform/ops/workhorse.service.tmpl); the rollback renders are step 8's backups of the four installed units, and the originals keep their own templates in their frozen repos; the attention store-path binding is a serving-build requirement, landed in the serving core and carried by the unit template",
+  "oi4_scheduler_thread": "the scheduler workhorse has no live owning thread; its freeze steps execute under main, which also verifies the mega scheduler's first full cadence window"
+ },
+ "published_surface": {
+  "artifact": "workhorse-superapp",
+  "dist_hashes_match": null,
+  "note": "closing act before the push: the Library artifact's embedded builds were synced from pre-cure trees during the build; republish from the remade tree and verify the dist hashes against it",
+  "proof": null,
+  "republished_from": null
+ },
+ "rehearsals": {
+  "manifest": null
+ },
+ "remake": {
+  "gate_green": null,
+  "head": null,
+  "scan_hits": null
+ },
+ "rollback": {
+  "armed": null,
+  "post_cutover_verification": null,
+  "released_at": null
+ },
+ "serving": {
+  "boot_proof": null,
+  "gate_green": null,
+  "run_py": null,
+  "unit_rendered": null,
+  "unit_template": null
+ },
+ "steps": {
+  "10_threads_switch": {
+   "actor": null,
+   "divergence_named": null,
+   "done_at": null,
+   "evidence": null
+  },
+  "11_reversibility_hold": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null,
+   "unit_backups": null
+  },
+  "1_disarm_keepers": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null
+  },
+  "2_halt_fires": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null
+  },
+  "3_drain": {
+   "actor": null,
+   "bridge_queue": null,
+   "done_at": null,
+   "evidence": null,
+   "lease_read": null
+  },
+  "4_attention_store": {
+   "actor": null,
+   "census_after": null,
+   "census_before": null,
+   "done_at": null,
+   "evidence": null
+  },
+  "5_workbench_store": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null,
+   "goal_readback": null
+  },
+  "5b_todo_rename": {
+   "actor": null,
+   "dispositions": [
+    {
+     "defect": "record invalid: missing `created` \u2014 pre-existing, flagged by the naming lane (todo-naming-report.md, committed 8cfa422); the rename rehearsal leaves it invalid 1 -> 1 and renames it cleanly",
+     "options": [
+      "repair_from_evidence_before_rename",
+      "exclude_by_name_repair_post_cutover"
+     ],
+     "path_taken": null,
+     "post_cutover_owner": "successor backend handler (when excluded by name)",
+     "record": {
+      "armed_entry": "wb-progress-steampowernj-t-01m7860fnpkg0bn2rw0scb9rwz",
+      "bundle": "2026-11-12-steampowernj-programme",
+      "legacy_id": "t-01M7860FNPKG0BN2RW0SCB9RWZ",
+      "project": "steampowernj"
+     },
+     "repair_evidence": null,
+     "repair_value": null
+    }
+   ],
+   "done_at": null,
+   "evidence": null,
+   "mapping_stored_on_records": null,
+   "renamed": null,
+   "slug_verification": null
+  },
+  "6_venue_state": {
+   "actor": null,
+   "census_match": null,
+   "done_at": null,
+   "evidence": null,
+   "quarantined": null,
+   "stamped": null
+  },
+  "7_scheduler_state": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null,
+   "ledger_events": null,
+   "ledger_sha256": null,
+   "registry_assembly": null,
+   "tokens_roundtrip": null
+  },
+  "8_raise_mega_unit": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null,
+   "registry_class_fires": null,
+   "surfaces": null
+  },
+  "9_rearm_keepers": {
+   "actor": null,
+   "done_at": null,
+   "evidence": null
+  }
+ },
+ "todo_rename": {
+  "driver_landed": null,
+  "report": null
+ }
+}

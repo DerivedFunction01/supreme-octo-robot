@@ -1,0 +1,16 @@
+# Runtime state of the work-record service: the doctor's
+# run state and the message store it posts digests through.
+# Regenerable, never tracked.
+state/
+# The pipeline's own armed directory: machine-written
+# armed rows (derived state — the todo files are the
+# record of truth), never tracked.
+armed/
+# The harness venv, built by init_venv.py.
+.venv/
+# This service's own project data (project zero, as every
+# adopting project's): tooling is tracked, data is not.
+workbench/
+# Python runtime artefacts.
+__pycache__/
+*.pyc

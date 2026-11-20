@@ -1,0 +1,25 @@
+id: example-daily-report
+title: Example daily report (scripted, reports every run)
+kind: scripted
+status: active
+cadence:
+  type: daily
+  at: "06:00"
+owner: goal:example
+run:
+  argv:
+    - bash
+    - ${REPO}/examples/example_daily_report.sh
+timeout_secs: 120
+report:
+  when: always
+  ok_exit_codes:
+    - 0
+state_paths: []
+classification: fixed command; its output is the product, so it reports on every run; every outcome branches on the exit code alone
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: demo

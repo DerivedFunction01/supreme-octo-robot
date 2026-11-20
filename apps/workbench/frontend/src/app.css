@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@import "./kit/themes/index.css";
+
+/* The kit's primitives live in the kit's home, outside this
+   app's tree — Tailwind's automatic detection does not reach
+   them, so name them as sources explicitly. */
+@source "../../../../kit/components";
+@source "../../../../kit/lib";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+/* Phone (the kit's one breakpoint): the kit PhoneShell's
+   navbar carries the screen title, so the view-level large
+   title is suppressed — otherwise a pushed phone screen
+   shows the title twice. (The Runner re-point's
+   .rn-largetitle rule, same seam.) Full-bleed phone
+   sections (explorer, peek) carry their own titles and do
+   not render LargeTitle. */
+@media (max-width: 480px) {
+  .wb-largetitle {
+    display: none;
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "run_id": "greenfield-ci-cocisep-price-20261119T114601Z",
+  "job": "greenfield-ci-cocisep-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T11:46:01.692922+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T11:50:35.511968+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-price-out-greenfield-ci-cocisep-price-20261119T114601Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T11:48:01.941493+00:00",
+  "launch_confirmed_at": "2026-11-19T11:48:13.347077+00:00",
+  "collector_at": "2026-11-19T11:51:15.050124+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T11:48:13.347077+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.60 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "output_name_warnings": [
+    {
+      "name": "cocisep-parta.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price-log.txt",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price-result.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "cocisep-price.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "extract-b-cur.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    },
+    {
+      "name": "extract-d-cur.json",
+      "shared_with": "greenfield-ci-cocisep-price-20261119T114515Z"
+    }
+  ],
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-parta.json",
+      "path": "/content/cocisep-parta.json",
+      "bytes": 15240,
+      "mtime": 1795085253.4373386,
+      "fresh": false,
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "cocisep-price.json",
+    "cocisep-parta.json",
+    "extract-b-cur.json",
+    "extract-d-cur.json",
+    "cocisep-price-log.txt",
+    "cocisep-price-result.json"
+  ],
+  "finished_at": "2026-11-19T11:51:37.564564+00:00",
+  "error": "job payload exited 1",
+  "pulled": [],
+  "usage_after": "Current balance: 403.53 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T11:51:37.964768+00:00"
+}

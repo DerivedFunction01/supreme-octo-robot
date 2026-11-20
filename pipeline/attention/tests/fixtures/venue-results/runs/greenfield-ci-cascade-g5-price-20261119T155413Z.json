@@ -1,0 +1,18 @@
+{
+  "run_id": "greenfield-ci-cascade-g5-price-20261119T155413Z",
+  "job": "greenfield-ci-cascade-g5-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T15:54:13.595896+00:00",
+  "resumed": true,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T15:54:13.595896+00:00",
+  "venue": "colab",
+  "session_pin": "crisp-oasis-64",
+  "lease_action": "adopted",
+  "health_degraded": true,
+  "session": "crisp-oasis-64",
+  "launch_phase": "uploading",
+  "error": "runner script upload: upload failed (rc 1): [colab] Upload failed: File or directory not found: /content/greenfield-ci-cascade-g5-price-20261119T155413Z-g5price-wrap.py",
+  "resumed_at": "2026-11-19T15:55:54.496553+00:00"
+}

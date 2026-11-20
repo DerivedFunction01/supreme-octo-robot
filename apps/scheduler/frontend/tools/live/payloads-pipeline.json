@@ -1,0 +1,3281 @@
+{
+ "details": {
+  "bridge-drain": {
+   "activity_24h": {
+    "acked": 1,
+    "dues": 2,
+    "overdue": false
+   },
+   "audience": "builtin",
+   "cadence": {
+    "every": "1h",
+    "type": "interval"
+   },
+   "cadence_label": "every 1h",
+   "detail": {
+    "body": "bodies/bridge-drain.md",
+    "catalog": null,
+    "classification": "agent by capability, not by judgment: the work is verbatim transport execution of queued bridge records (chat_send, chat_list, chat_tail, permissions_list) under bodies/bridge-wake-item.md, and only an agent holds the runtime tools those verbs execute through - the classification test fails on kind, not on discretion, since the body forbids judgment outright (never widen a send, never alter queued text, never approve or deny). The executing runtime matters as much as the kind: worker-class runtimes hold only the read half of the chat namespace (no send function even after the namespace loads), so the minter addresses the escalation ping to the drain home thread (the owners config drain mapping - a full agent surface whose send capability the F5 proof drain exercised), and a worker that encounters this ping leaves it for that surface. Wakes: primarily the bridge-wake minter episode escalation ping (job bridge-drain, planted once per non-empty queue episode); the hourly cadence is a backstop sweep for anything the escalation missed, and a backstop wake that finds an empty queue acks and ends. The executor acks the escalation ping only when its final poll finds the queue empty - that ack is the episode close the minter re-arms on.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": null,
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/connector-bridge",
+     "${FIXTURE_HOME}/state/outbox.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 1800,
+    "title": "Bridge drain executor \u2014 works the connector bridge queue under its per-item contract"
+   },
+   "expected_wake_per_day": 24.0,
+   "failure_streak": 0,
+   "family": "dispatch",
+   "id": "bridge-drain",
+   "kind": "agent",
+   "last_activity": {
+    "acked_at": null,
+    "collapsed": 2,
+    "due": "2026-11-13T21:50:00+00:00",
+    "label": "Ping pending",
+    "state": "pending",
+    "tone": "warn",
+    "ts": "2026-11-13T21:50:00+00:00"
+   },
+   "last_run": null,
+   "next_due": "2026-11-13T22:30:00+00:00",
+   "next_due_in_secs": 1800,
+   "open_in": "dispatch",
+   "owner": "none",
+   "ping_history": [
+    {
+     "detail": "ping agent-due f10000000001",
+     "kind": "ping_woken",
+     "ping_id": "f10000000001",
+     "ping_kind": "agent-due",
+     "ts": "2026-11-13T21:51:00+00:00"
+    },
+    {
+     "detail": "ping agent-due f10000000001",
+     "kind": "ping_created",
+     "ping_id": "f10000000001",
+     "ping_kind": "agent-due",
+     "ts": "2026-11-13T21:50:05+00:00"
+    },
+    {
+     "detail": "ping agent-due f10000000008",
+     "kind": "ping_acked",
+     "ping_id": "f10000000008",
+     "ping_kind": "agent-due",
+     "ts": "2026-11-13T16:20:00+00:00"
+    },
+    {
+     "detail": "ping agent-due f10000000008",
+     "kind": "ping_woken",
+     "ping_id": "f10000000008",
+     "ping_kind": "agent-due",
+     "ts": "2026-11-13T16:01:00+00:00"
+    },
+    {
+     "detail": "ping agent-due f10000000008",
+     "kind": "ping_created",
+     "ping_id": "f10000000008",
+     "ping_kind": "agent-due",
+     "ts": "2026-11-13T16:00:05+00:00"
+    }
+   ],
+   "recent_dues": [
+    {
+     "collapsed": 2,
+     "due": "2026-11-13T21:50:00+00:00",
+     "ts": "2026-11-13T21:50:00+00:00"
+    },
+    {
+     "collapsed": 1,
+     "due": "2026-11-13T16:00:00+00:00",
+     "ts": "2026-11-13T16:00:00+00:00"
+    }
+   ],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "bridge-wake": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "1m",
+    "type": "interval"
+   },
+   "cadence_label": "every 1m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (one Python script): each pass reads the connector bridge queue from its record files and plants one wake ping per queued item in the scheduler outbox through the server own Outbox class - the per-item programmatic generation half of the bridge drain re-host (plan 2026-11-10). Wake addressing is derived, never judged: a chat_send wake targets the record own args.chat_id; a read tool (chat_list, chat_tail, permissions_list) targets the requesting caller owning thread from bodies/bridge-wake-owners.yaml. Every outcome is enumerable in advance: WAKE (a ping minted; quiet pattern), DRAIN (an episode escalation ping for the bridge-drain agent job minted; quiet pattern), silence (queue empty or every item already has a pending wake), or UNRESOLVED (an item with no resolvable target - left queued and reported, never guessed). Episode escalation (F5 home, 2026-11-11): a pass finding at least one resolvable queued item and no pending bridge-drain ping plants that ping once (detail: the resolvable count, plus target_chat from the owners config drain mapping when configured - the escalation is addressed to the drain home thread, a full agent surface carrying the chat send function, because worker-class runtimes hold only the read half of the chat namespace and an unaddressed drain ping claimed by one stalls every chat_send item; defect diagnosed 2026-11-12 after two such stalls); the executor acks it only when its final poll finds the queue empty, so a standing bridge-drain ping is the open episode and the first pass after its ack re-mints - no minter state, the outbox is the record. An unresolved-only queue never escalates. The ping detail carries the item identity and destination only, never its text; minting approves nothing and executes nothing - execution stays with the woken executor under the bridge contract (tools, never authority). Idempotence is the outbox itself: one pending ping per item job id, terminal records never re-minted, an acked-but-unfulfilled item re-minted on the next pass.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [
+      "WAKE",
+      "DRAIN"
+     ],
+     "report_patterns": [
+      "UNRESOLVED"
+     ],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/bridge_wake.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/connector-bridge",
+     "${FIXTURE_HOME}/state/outbox.json",
+     "${FIXTURE_HOME}/bodies/bridge-wake-owners.yaml"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Bridge wake minter - one thread-addressed wake ping per queued connector bridge item"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "dispatch",
+   "id": "bridge-wake",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": {
+    "collapsed": 0,
+    "due": "2026-11-13T21:59:00+00:00",
+    "error": null,
+    "exit_code": 0,
+    "label": "OK",
+    "matched_pattern": null,
+    "status": "ok",
+    "stderr_tail": "",
+    "stdout_tail": "",
+    "ts": "2026-11-13T21:59:00+00:00"
+   },
+   "next_due": "2026-11-13T21:31:00+00:00",
+   "next_due_in_secs": -1740,
+   "open_in": "dispatch",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T21:59:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "",
+     "ts": "2026-11-13T21:59:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T21:58:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": "UNRESOLVED",
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "WAKE chat-1",
+     "ts": "2026-11-13T21:58:00+00:00"
+    }
+   ],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 2,
+    "total": 2
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-extend-guard": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "30m",
+    "type": "interval"
+   },
+   "cadence_label": "every 30m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (bin/colab-extend-guard); reads every lease record and applies the extend_guard policy from the lease config (per-shape/per-caller modes over activity read from records and run records; idle leases capped per shape, warmest first, once per idle episode), extending through the lease core; exit 0 when every due lease is extended or deliberately skipped (extensions and decision lines print as JSON and need no speech), exit 3 with one JSON finding line per refusal or bad policy value; when it speaks is fully determined by the exit code and its episode state file, no content judgment",
+    "config": null,
+    "escalate_body": "bodies/colab-extend-guard.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/colab-runner/bin/colab-extend-guard"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/var/extend-guard-state.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 300,
+    "title": "Extend guard - every live Colab lease extended before it lapses"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-extend-guard",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T22:00:00+00:00",
+   "next_due_in_secs": 0,
+   "open_in": "runner",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-liveness-brisk-rocket-38": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+    "config": null,
+    "escalate_body": "bodies/colab-liveness.md",
+    "lifetime": "until_complete",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/colab-runner/bin/colab-liveness",
+      "brisk-rocket-38"
+     ]
+    },
+    "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan",
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/var/liveness-brisk-rocket-38.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Liveness check - Colab session brisk-rocket-38"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-liveness-brisk-rocket-38",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "runner",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-liveness-cozy-pilot-61-r1794547171": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+    "config": null,
+    "escalate_body": "bodies/colab-liveness.md",
+    "lifetime": "until_complete",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/colab-runner/bin/colab-liveness",
+      "cozy-pilot-61-r1794547171"
+     ]
+    },
+    "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan",
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/var/liveness-cozy-pilot-61-r1794547171.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Liveness check - Colab session cozy-pilot-61-r1794547171"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-liveness-cozy-pilot-61-r1794547171",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "runner",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-liveness-dawn-tower-93": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+    "config": null,
+    "escalate_body": "bodies/colab-liveness.md",
+    "lifetime": "until_complete",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/colab-runner/bin/colab-liveness",
+      "dawn-tower-93"
+     ]
+    },
+    "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan",
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/var/liveness-dawn-tower-93.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Liveness check - Colab session dawn-tower-93"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-liveness-dawn-tower-93",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "runner",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-runner-transient-restore": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "two fixed commands composed in ops/colab_transient_restore.sh in the cron body's order; every outcome is an enumerated exit/result; speaking determined by failure or an actual lease release/clear. Timeout 600 assigned at seed - the cron set none.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [
+      "verify-failed"
+     ],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [
+      "released-deadline",
+      "released-idle",
+      "cleared-dead"
+     ],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/colab_transient_restore.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/state/transient/"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 600,
+    "title": "colab-runner transient restore (5 min)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-runner-transient-restore",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": "runner",
+   "owner": "goal:colab-runner-for-programme-a",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "colab-store-prune": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (one Python script): every pass reads free space and, only when it is below 45 GB, deletes from enumerable classes under fixed bounds (parts of complete transfers, snapshot bundles and unrecorded transfer staging past a 2h floor, failed-transfer parts past a 24h resume window, payload dirs of terminal runs, gate scratch; run/transfer records and anything in flight or fresh are never candidates) until 60 GB free; speech is fully determined by the branches - silent above the threshold, one JSON report when a prune fires, non-zero exit on failure",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/colab-runner/ops/store_prune.py",
+      "--if-below-gb",
+      "45",
+      "--target-free-gb",
+      "60"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/colab-runner/var/prune-log.jsonl"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 900,
+    "title": "Colab runner store auto-prune - reclaims transfer staging when free space crosses 45 GB"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "venue",
+   "id": "colab-store-prune",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "runner",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "file-registry-check": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "hand",
+     "use_case": "file-survival"
+    },
+    "classification": "fixed command (one Python script): every pass reads the boot identity (the restart detector's /proc source) and evaluates the live manifest (registry/file-registry.yaml) exactly per the file-registry contract v1 \u2014 presence rules exists / non-empty / sha256 with no partial credit, restore by declared class only (tracked from the repo HEAD, generated by the declared generator, backup copied back \u2014 a backup that fails presence flags rather than chaining; flag-only never written), every restore re-checked, an unrestorable failure flagged with its entry's owner named. Speaking is fully determined: one findings-first report when findings exist and the boot changed or the findings differ from the last reported set, silence on a clean or unchanged pass, exit 3 when the manifest or boot-id source is unreadable or invalid. The pass is the same code path at boot, on interval, and manually. The checker invents no content, ever.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/file_registry.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/registry/file-registry.yaml",
+     "${FIXTURE_HOME}/state/file-registry-state.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 300,
+    "title": "File-registry check \u2014 boot-triggered must-exist file pass (contract v1)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "file-registry-check",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "flap-watch": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "hand",
+     "use_case": "fleet-health"
+    },
+    "classification": "fixed command (one Python script): every cycle runs the flap canary (ops/flap_canary.py) from two spawning origins \u2014 a plain server-tree child (control) and a child placed before exec into a dedicated /sys/fs/cgroup/init.scope/hatch-tool-prepared-flapwatch cgroup, mimicking the agent tool layer origin that the write-denial flap denies. Per-arm verdicts append to state/flap-watch-series.jsonl; output (and so a report) happens only on an arm transition, baseline adoption silent \u2014 the boot-detector shape. This entry is an ARMED EXPERIMENT, not a settled detector: between waves both origins write fine, so a clear cgroup-arm reading is inconclusive until a live wave tests it against agent-class ground truth (ops/flap_probe.py from an agent shell). Pre-stated criteria and the ground-truth protocol: state/flap-probe-study/read-signal-hunt.md. If the cgroup arm tracks the agent class across one full wave (denied at the start, clear at the clear, control clear throughout), the mimicry holds and this scripted entry is the flap job. If it stays clear while agent-class writes are denied through a full wave, mimicry fails: this entry is removed and an agent-cadence entry is admitted with that negative result in its classification evidence \u2014 the experiment outcome decides the final kind.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/flap_watch.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/flap-watch.json",
+     "${FIXTURE_HOME}/state/flap-watch-series.jsonl",
+     "${FIXTURE_HOME}/state/flap-watch-arms",
+     "${FIXTURE_HOME}/state/flap-probe-study"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Flap watcher \u2014 origin-mimicry experiment, scripted detection of write-denial waves"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "flap-watch",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": {
+    "collapsed": 0,
+    "due": "2026-11-13T21:40:00+00:00",
+    "error": null,
+    "exit_code": 3,
+    "label": "Exit 3 \u00b7 normal",
+    "matched_pattern": "write denied",
+    "status": "ok",
+    "stderr_tail": "",
+    "stdout_tail": "canary denied",
+    "ts": "2026-11-13T21:40:00+00:00"
+   },
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [
+    {
+     "detail": "ping escalation f10000000006",
+     "kind": "ping_acked",
+     "ping_id": "f10000000006",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T20:30:00+00:00"
+    },
+    {
+     "detail": "ping escalation f10000000006",
+     "kind": "ping_woken",
+     "ping_id": "f10000000006",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T20:11:00+00:00"
+    },
+    {
+     "detail": "ping escalation f10000000006",
+     "kind": "ping_created",
+     "ping_id": "f10000000006",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T20:10:05+00:00"
+    }
+   ],
+   "recent_dues": [],
+   "recent_runs": [
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T21:40:00+00:00",
+     "error": null,
+     "exit_code": 3,
+     "label": "Exit 3 \u00b7 normal",
+     "matched_pattern": "write denied",
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "canary denied",
+     "ts": "2026-11-13T21:40:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T20:10:00+00:00",
+     "error": null,
+     "exit_code": null,
+     "label": "Timed out",
+     "matched_pattern": null,
+     "status": "timeout",
+     "stderr_tail": "",
+     "stdout_tail": "",
+     "ts": "2026-11-13T20:10:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T20:05:00+00:00",
+     "error": "No such file or directory: 'python3'",
+     "exit_code": null,
+     "label": "Could not start",
+     "matched_pattern": null,
+     "status": "spawn_error",
+     "stderr_tail": "",
+     "stdout_tail": "",
+     "ts": "2026-11-13T20:05:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T20:00:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "canary ok",
+     "ts": "2026-11-13T20:00:00+00:00"
+    }
+   ],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 2,
+    "ok": 2,
+    "total": 4
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "local-test-watch": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "1m",
+    "type": "interval"
+   },
+   "cadence_label": "every 1m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "hand",
+     "use_case": "fleet-health"
+    },
+    "classification": "fixed command (one Python script): every cycle samples processes via /proc (argv + cwd + pid/ppid, reads only) and branches on the mechanical matchers alone, in two modes chosen by a mechanical signal \u2014 whether any colab-liveness entry stands in the registry (a live High-RAM fleet session; the lease core renders and removes those entries). NORMAL mode (no fleet live): silence when no test-runner process has its cwd inside the workspace; one LOCAL-TEST finding line per new episode per process signature (episode state in state/local-test-watch.json; a continuing episode never re-speaks, a closed episode that reappears is a new finding); the narrow pre-check exemption is mechanical (one test file plus a name filter; pytest <=5 named node ids from one file, or one file plus -k); check.py and package-test always flag. STRICT mode (fleet live; owner ruling 2026-11-10): the exemption is suspended and the trigger broadens to any local check/code execution from a workspace repo \u2014 test runners and gates, dev/backend servers (server binaries, python -m http.server, server-shaped script names, package dev/serve/start scripts), and experiment scripts (an interpreter running a script file) \u2014 while managed infrastructure never flags (the scheduler system's own automation surface \u2014 any argv running a script under this repo's ops/ or bin/, the scripted legs and this watcher included \u2014 and argv matching the untracked routes file's service patterns: the long-running servers, the fleet machinery; ancestry is not the discriminator, since agent work routed through the server's ops channel runs as server children too and must still flag). A strict finding is a WARNING printed on first sighting in the same cycle, naming the repo's owning thread from the untracked routes file, and is also sent directly to that thread via the harness connector (caller local-test-watch, send scope, envelope local-test-watch-<signature> for dedupe) when a route and token are configured; the printed line reaches the main chat as the sweeper's copy, so no finding waits on downstream classification. Exit 3 when /proc cannot be listed. Flagging is on sight, never load-gated; the load average is recorded in the finding as context only. Speaking is fully determined by those branches; the watcher reports and routes facts and judges nothing beyond the mechanical matchers.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/local_test_watch.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/local-test-watch.json",
+     "${FIXTURE_HOME}/state/local-test-watch-routes.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 60,
+    "title": "Local test watcher \u2014 deterministic detection of test runs on the local box"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "local-test-watch",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:31:00+00:00",
+   "next_due_in_secs": -1740,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "memory-index-watchdog": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "every": "1h",
+    "type": "interval"
+   },
+   "cadence_label": "every 1h",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "scripted detection with agent remediation (the watchdog pattern) - the check compares MEMORY.md sha256+bytes against the baseline and exits 0 on match (silence), 3 on mismatch, 4 on baseline missing/unparseable, 5 on MEMORY.md unreadable, 6 on topic-file threshold overage (per-file 40960 bytes / set total 153600 bytes, added 2026-11-01 at the owner's direction); only a non-zero exit escalates, carrying the cleanup body transcribed from the cron. Timeout 300 assigned at seed - the cron set none.",
+    "config": null,
+    "escalate_body": "bodies/memory-index-watchdog.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/memory_watchdog_check.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/memory-watch",
+     "//MEMORY.md",
+     "${FIXTURE_HOME}/archive"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 300,
+    "title": "Memory index watchdog"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "memory-index-watchdog",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T22:30:00+00:00",
+   "next_due_in_secs": 1800,
+   "open_in": null,
+   "owner": "goal:memory-md-index-watchdog",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "owner-attention-healthcheck": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "2m",
+    "type": "interval"
+   },
+   "cadence_label": "every 2m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the service repo's own watchdog ladder); exit 0 healthy or revived silently, non-zero failure; speaking determined by exit code. Timeout 600 mirrors the fleet healthcheck entries.",
+    "config": null,
+    "escalate_body": "bodies/owner-attention-healthcheck.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/owner-attention/ops/watchdog.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/owner-attention/var/state/owner-attention.log"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 600,
+    "title": "Owner-Attention server healthcheck"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "attention",
+   "id": "owner-attention-healthcheck",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:32:00+00:00",
+   "next_due_in_secs": -1680,
+   "open_in": "attention",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "restart-reconcile": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "hand",
+     "use_case": "fleet-health"
+    },
+    "classification": "fixed command (one Python script): every outcome branches on mechanical reads alone \u2014 the kernel boot id against this job's recorded boot (restart leg: a non-terminal runner record whose collector heartbeat \u2014 collector_at once the runner stamps it, last_evidence_at before \u2014 predates the boot time was orphaned by the restart) and heartbeat age against a fixed 30-minute bound (stuck leg, restart or not). On new orphans it plants one addressed outbox ping per resolved owning thread (caller -> chat from bodies/restart-reconcile-owners.yaml, exact caller then caller namespace \u2014 the segment before its first colon \u2014 then dash-family prefix; unresolved callers are never guessed and print as UNRESOLVED) and prints one summary; a record reports once per episode (episode state in state/restart-reconcile.json), closes silently when its record reaches a terminal state, and re-reports under a new boot. Exit 3 when the boot-id source or the run-record store is unreadable. Speaking is fully determined by those branches; the script enumerates and routes facts and judges nothing beyond the matchers.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/restart_reconcile.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/restart-reconcile.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Restart reconciliation \u2014 orphaned runner runs become a pushed event per owning thread"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "restart-reconcile",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "stale-mockup-cleanup": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "at": "07:00",
+    "type": "daily"
+   },
+   "cadence_label": "daily 07:00",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "the census and mechanical classification are a fixed command over the registry schema - exclusions and stale verdicts branch on recorded fields alone, plan-lifecycle candidates propose from the tied plan's recorded status, and every outcome is its exit code; the unchanged check keys on per-project digests over census rows, attribution data, and the owning repo's HEAD, a moved digest re-escalates that project's keeps for re-judgment, and unresolved residue escalates on every run until cleared; judgment itself is the agent's, through the escalation body - scripted with agent escalation",
+    "config": null,
+    "escalate_body": "bodies/stale-mockup-cleanup.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/mockup_census.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/mockup-census"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 600,
+    "title": "Daily stale-mockup cleanup \u2014 scripted census classifies mechanically; agent escalates only on unresolved items"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "stale-mockup-cleanup",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-14T12:00:00+00:00",
+   "next_due_in_secs": 50400,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "storage-watch": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (one Python script); every outcome branches on two disk_usage reads against fixed thresholds \u2014 silent baseline adoption, silent healthy match, one report per threshold crossing (low, then critical), silent de-escalation and recovery, exit 3 when a filesystem is unreadable; speaking is fully determined by those branches and the recorded episode levels",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/ops/storage_watch.py"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/storage-watch"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 300,
+    "title": "Storage watch \u2014 one report per free-space threshold crossing (home + /tmp)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 2,
+   "family": null,
+   "id": "storage-watch",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": {
+    "collapsed": 0,
+    "due": "2026-11-13T21:00:00+00:00",
+    "error": null,
+    "exit_code": 1,
+    "label": "Failed \u00b7 exit 1",
+    "matched_pattern": null,
+    "status": "failure",
+    "stderr_tail": "low tier crossed",
+    "stdout_tail": "",
+    "ts": "2026-11-13T21:00:00+00:00"
+   },
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [
+    {
+     "detail": "ping escalation f10000000003",
+     "kind": "ping_coalesced",
+     "ping_id": "f10000000003",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T21:00:05+00:00"
+    },
+    {
+     "detail": "ping escalation f10000000003",
+     "kind": "ping_woken",
+     "ping_id": "f10000000003",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T20:01:00+00:00"
+    },
+    {
+     "detail": "ping escalation f10000000003",
+     "kind": "ping_created",
+     "ping_id": "f10000000003",
+     "ping_kind": "escalation",
+     "ts": "2026-11-13T20:00:05+00:00"
+    }
+   ],
+   "recent_dues": [],
+   "recent_runs": [
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T21:00:00+00:00",
+     "error": null,
+     "exit_code": 1,
+     "label": "Failed \u00b7 exit 1",
+     "matched_pattern": null,
+     "status": "failure",
+     "stderr_tail": "low tier crossed",
+     "stdout_tail": "",
+     "ts": "2026-11-13T21:00:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T20:00:00+00:00",
+     "error": null,
+     "exit_code": 2,
+     "label": "Failed \u00b7 exit 2",
+     "matched_pattern": null,
+     "status": "failure",
+     "stderr_tail": "probe failed",
+     "stdout_tail": "",
+     "ts": "2026-11-13T20:00:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T19:00:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "tiers ok",
+     "ts": "2026-11-13T19:00:00+00:00"
+    },
+    {
+     "collapsed": 0,
+     "due": "2026-11-12T20:30:00+00:00",
+     "error": null,
+     "exit_code": 1,
+     "label": "Failed \u00b7 exit 1",
+     "matched_pattern": null,
+     "status": "failure",
+     "stderr_tail": "df: /home: no space left on device",
+     "stdout_tail": "",
+     "ts": "2026-11-12T20:30:00+00:00"
+    }
+   ],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 2,
+    "ok": 1,
+    "total": 3
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "paywatch-lane-watchdog": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the lane watchdog ladder via ops/paywatch_lane_watchdog.sh); checks run in a fixed order over durable records (unit files byte-equal to the current render, units active, keeper checkpoint pull fresh inside 900s, ferried holder evidence fresh inside 900s) and every action branches on those enumerable verdicts \u2014 reinstall and start the units, start an inactive unit, restart the keeper unit, or the rollover chain (env-build, preflight pass line, keeper restart, resident restarts) \u2014 behind an episode marker that allows one attempt per episode; exit 0 is a healthy lane before or after the ladder, exit 1 an unhealthy lane whose episode is spent, exit 2 missing wiring; speech is fully determined by the exit code, no content judgment.",
+    "config": null,
+    "escalate_body": "bodies/paywatch-lane-watchdog.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/paywatch_lane_watchdog.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/paywatch/var/state/runtime/lane-watchdog-episode.json"
+    ],
+    "suspended_on": "2026-11-08",
+    "timeout_secs": 5400,
+    "title": "Paywatch v2 \u2014 venue lane watchdog"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "paywatch-lane-watchdog",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": null,
+   "owner": "goal:paywatch",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "suspended",
+   "suspend_reason": "Owner ruling 2026-11-08 \u2014 the venue lane stays down (its Standard session is dead and the owner declined to revive or re-point it); gates and probes only. Suspension lifts on the owner's word when the lane is revived.",
+   "timezone": "America/New_York"
+  },
+  "paywatch-daily-scheduler": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "at": "06:00",
+    "type": "daily"
+   },
+   "cadence_label": "daily 06:00",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the scheduler run-day host via ops/paywatch_daily_scheduler.sh); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "always"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/paywatch_daily_scheduler.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/paywatch/var/state/scheduler",
+     "${FIXTURE_HOME}/paywatch/var/exports/live-model.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 14400,
+    "title": "Paywatch v2 \u2014 daily scheduler host"
+   },
+   "expected_wake_per_day": 1.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "paywatch-daily-scheduler",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-14T11:00:00+00:00",
+   "next_due_in_secs": 46800,
+   "open_in": null,
+   "owner": "goal:paywatch",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "always",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "paywatch-deferral-retries": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the scheduler run-due host via ops/paywatch_deferral_retries.sh); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [
+      "nothing due"
+     ],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/paywatch_deferral_retries.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/paywatch/var"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 3600,
+    "title": "Paywatch v2 \u2014 deferral retries (run-due)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "paywatch-deferral-retries",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": null,
+   "owner": "goal:paywatch",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "vm-restart-detector": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "5m",
+    "type": "interval"
+   },
+   "cadence_label": "every 5m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (one bash script); every outcome branches on the boot-id comparison alone \u2014 silent baseline adoption, silent match, one RESTART line (plus any LOST probe lines) on change, exit 3 when the boot-id source is unreadable; speaking is fully determined by those branches",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     3
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      3
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_output"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/ops/vm_boot_check.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/state/vm-boot"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 60,
+    "title": "VM restart detector \u2014 reports each new boot once (boot-id comparison)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": null,
+   "id": "vm-restart-detector",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:35:00+00:00",
+   "next_due_in_secs": -1500,
+   "open_in": null,
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_output",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "wb-progress-programme-a-t-01k8r0000000000000000000b1": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "machine",
+     "use_case": "work-tracking"
+    },
+    "classification": "fixed command (wb progress-check <todo-id>); exit 0 on track, disarmed, or gone, exit 3 stalled with the stall line as output; when it speaks is fully determined by the exit code, no content judgment",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "until_complete",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "${FIXTURE_HOME}/workbench-viewer/.venv/bin/python",
+      "${FIXTURE_HOME}/workbench-viewer/wb",
+      "--root",
+      "${FIXTURE_HOME}/programme-a",
+      "progress-check",
+      "t-01K8R0000000000000000000B1"
+     ]
+    },
+    "self_removal": "the harness deletes this entry in the same writer call that disarms the todo (a move to done or blocked, or the bundle's archival); the workbench doctor flags any entry that outlives its todo",
+    "state_paths": null,
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Progress check - programme-a: Extraction consolidation formation G1-G6 location pick (t-01K8R0000000000000000000B1)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "arming",
+   "id": "wb-progress-programme-a-t-01k8r0000000000000000000b1",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "workbench",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "wb-progress-programme-b-t-01k8r0000000000000000000b2": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": {
+     "generality": "deployment-specific",
+     "origin": "machine",
+     "use_case": "work-tracking"
+    },
+    "classification": "fixed command (wb progress-check <todo-id>); exit 0 on track, disarmed, or gone, exit 3 stalled with the stall line as output; when it speaks is fully determined by the exit code, no content judgment",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "until_complete",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "${FIXTURE_HOME}/workbench-viewer/.venv/bin/python",
+      "${FIXTURE_HOME}/workbench-viewer/wb",
+      "--root",
+      "${FIXTURE_HOME}/programme-b",
+      "progress-check",
+      "t-01K8R0000000000000000000B2"
+     ]
+    },
+    "self_removal": "the harness deletes this entry in the same writer call that disarms the todo (a move to done or blocked, or the bundle's archival); the workbench doctor flags any entry that outlives its todo",
+    "state_paths": null,
+    "suspended_on": null,
+    "timeout_secs": 120,
+    "title": "Progress check - programme-b: Brightwash rebuild: land the one-slice build in sequence and cure the 2026-11-1 (t-01K8R0000000000000000000B2)"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "arming",
+   "id": "wb-progress-programme-b-t-01k8r0000000000000000000b2",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "workbench",
+   "owner": "none",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "weekly-gmail-otp-cleanup": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "every": "168h",
+    "type": "interval"
+   },
+   "cadence_label": "every 168h",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the standalone cleanup script under its standing approval); trashed/vetoed counts are enumerated in the script's own verified output and reported every run.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "always"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/gmail_cleanup/clear_otp_mails.py",
+      "--apply",
+      "--yes"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [],
+    "suspended_on": null,
+    "timeout_secs": 3600,
+    "title": "Weekly Gmail OTP cleanup"
+   },
+   "expected_wake_per_day": 0.14285714285714285,
+   "failure_streak": 0,
+   "family": null,
+   "id": "weekly-gmail-otp-cleanup",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": {
+    "collapsed": 0,
+    "due": "2026-11-12T23:00:00+00:00",
+    "error": null,
+    "exit_code": 0,
+    "label": "OK",
+    "matched_pattern": null,
+    "status": "ok",
+    "stderr_tail": "",
+    "stdout_tail": "0 threads matched",
+    "ts": "2026-11-12T23:00:00+00:00"
+   },
+   "next_due": "2026-11-20T21:30:00+00:00",
+   "next_due_in_secs": 603000,
+   "open_in": null,
+   "owner": "goal:weekly-gmail-otp-cleanup",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [
+    {
+     "collapsed": 0,
+     "due": "2026-11-12T23:00:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "0 threads matched",
+     "ts": "2026-11-12T23:00:00+00:00"
+    }
+   ],
+   "report_when": "always",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 1,
+    "total": 1
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "weekly-gmail-stale-jobs-cleanup": {
+   "activity_24h": null,
+   "audience": "operator",
+   "cadence": {
+    "every": "168h",
+    "type": "interval"
+   },
+   "cadence_label": "every 168h",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the standalone cleanup script under its standing approval, 14-day threshold); trashed/vetoed counts are enumerated in the script's own verified output and reported every run.",
+    "config": null,
+    "escalate_body": null,
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "always"
+    },
+    "run": {
+     "argv": [
+      "python3",
+      "${FIXTURE_HOME}/gmail_cleanup/clear_stale_jobs.py",
+      "--apply",
+      "--yes"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [],
+    "suspended_on": null,
+    "timeout_secs": 3600,
+    "title": "Weekly Gmail stale job postings cleanup"
+   },
+   "expected_wake_per_day": 0.14285714285714285,
+   "failure_streak": 0,
+   "family": null,
+   "id": "weekly-gmail-stale-jobs-cleanup",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": {
+    "collapsed": 0,
+    "due": "2026-11-13T21:55:00+00:00",
+    "error": null,
+    "exit_code": 0,
+    "label": "OK",
+    "matched_pattern": null,
+    "status": "ok",
+    "stderr_tail": "",
+    "stdout_tail": "2 threads matched the stale pattern",
+    "ts": "2026-11-13T21:55:00+00:00"
+   },
+   "next_due": "2026-11-20T21:30:00+00:00",
+   "next_due_in_secs": 603000,
+   "open_in": null,
+   "owner": "goal:stale-job-posting-email-cleanup",
+   "ping_history": [
+    {
+     "detail": "ping report f10000000004",
+     "kind": "ping_created",
+     "ping_id": "f10000000004",
+     "ping_kind": "report",
+     "ts": "2026-11-13T21:55:05+00:00"
+    }
+   ],
+   "recent_dues": [],
+   "recent_runs": [
+    {
+     "collapsed": 0,
+     "due": "2026-11-13T21:55:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "2 threads matched the stale pattern",
+     "ts": "2026-11-13T21:55:00+00:00"
+    }
+   ],
+   "report_when": "always",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 1,
+    "total": 1
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "workbench-viewer-doctor": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "15m",
+    "type": "interval"
+   },
+   "cadence_label": "every 15m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command; exit 0 clean and exit 1 findings are both normal (findings travel the doctor's own workbench-outbox digest, never an agent) and only a crash (exit 2+) escalates - owner ruling normal means no agent. Timeout 600 assigned at seed - the cron set none.",
+    "config": null,
+    "escalate_body": "bodies/workbench-viewer-doctor.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0,
+     1
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0,
+      1
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/workbench-viewer/ops/doctor.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/workbench-viewer/state/doctor.log"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 600,
+    "title": "Workbench Viewer doctor"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "workbench",
+   "id": "workbench-viewer-doctor",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:45:00+00:00",
+   "next_due_in_secs": -900,
+   "open_in": "workbench",
+   "owner": "goal:workbench-viewer-server",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  },
+  "workbench-viewer-healthcheck": {
+   "activity_24h": null,
+   "audience": "builtin",
+   "cadence": {
+    "every": "2m",
+    "type": "interval"
+   },
+   "cadence_label": "every 2m",
+   "detail": {
+    "body": null,
+    "catalog": null,
+    "classification": "fixed command (the viewer's own watchdog); exit 0 healthy or revived silently, non-zero failure; speaking determined by exit code. Timeout 600 assigned at seed - the cron set none.",
+    "config": null,
+    "escalate_body": "bodies/workbench-viewer-healthcheck.md",
+    "lifetime": "permanent",
+    "ok_exit_codes": [
+     0
+    ],
+    "report": {
+     "fail_patterns": [],
+     "ok_exit_codes": [
+      0
+     ],
+     "quiet_patterns": [],
+     "report_patterns": [],
+     "when": "on_failure"
+    },
+    "run": {
+     "argv": [
+      "bash",
+      "${FIXTURE_HOME}/workbench-viewer/ops/watchdog.sh"
+     ]
+    },
+    "self_removal": null,
+    "state_paths": [
+     "${FIXTURE_HOME}/workbench-viewer/state/health.json"
+    ],
+    "suspended_on": null,
+    "timeout_secs": 600,
+    "title": "Workbench Viewer server healthcheck"
+   },
+   "expected_wake_per_day": 0.0,
+   "failure_streak": 0,
+   "family": "workbench",
+   "id": "workbench-viewer-healthcheck",
+   "kind": "scripted",
+   "last_activity": null,
+   "last_run": null,
+   "next_due": "2026-11-13T21:32:00+00:00",
+   "next_due_in_secs": -1680,
+   "open_in": "workbench",
+   "owner": "goal:workbench-viewer-server",
+   "ping_history": [],
+   "recent_dues": [],
+   "recent_runs": [],
+   "report_when": "on_failure",
+   "runs_24h": {
+    "failed": 0,
+    "ok": 0,
+    "total": 0
+   },
+   "status": "active",
+   "suspend_reason": null,
+   "timezone": "America/New_York"
+  }
+ },
+ "jobs": {
+  "jobs": [
+   {
+    "activity_24h": {
+     "acked": 1,
+     "dues": 2,
+     "overdue": false
+    },
+    "audience": "builtin",
+    "cadence": {
+     "every": "1h",
+     "type": "interval"
+    },
+    "cadence_label": "every 1h",
+    "expected_wake_per_day": 24.0,
+    "failure_streak": 0,
+    "family": "dispatch",
+    "id": "bridge-drain",
+    "kind": "agent",
+    "last_activity": {
+     "acked_at": null,
+     "collapsed": 2,
+     "due": "2026-11-13T21:50:00+00:00",
+     "label": "Ping pending",
+     "state": "pending",
+     "tone": "warn",
+     "ts": "2026-11-13T21:50:00+00:00"
+    },
+    "last_run": null,
+    "next_due": "2026-11-13T22:30:00+00:00",
+    "next_due_in_secs": 1800,
+    "open_in": "dispatch",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "1m",
+     "type": "interval"
+    },
+    "cadence_label": "every 1m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "dispatch",
+    "id": "bridge-wake",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": {
+     "collapsed": 0,
+     "due": "2026-11-13T21:59:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "",
+     "ts": "2026-11-13T21:59:00+00:00"
+    },
+    "next_due": "2026-11-13T21:31:00+00:00",
+    "next_due_in_secs": -1740,
+    "open_in": "dispatch",
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 2,
+     "total": 2
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "30m",
+     "type": "interval"
+    },
+    "cadence_label": "every 30m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-extend-guard",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T22:00:00+00:00",
+    "next_due_in_secs": 0,
+    "open_in": "runner",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-liveness-brisk-rocket-38",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "runner",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-liveness-cozy-pilot-61-r1794547171",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "runner",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-liveness-dawn-tower-93",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "runner",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-runner-transient-restore",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": "runner",
+    "owner": "goal:colab-runner-for-programme-a",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "venue",
+    "id": "colab-store-prune",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "runner",
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "file-registry-check",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "flap-watch",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": {
+     "collapsed": 0,
+     "due": "2026-11-13T21:40:00+00:00",
+     "error": null,
+     "exit_code": 3,
+     "label": "Exit 3 \u00b7 normal",
+     "matched_pattern": "write denied",
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "canary denied",
+     "ts": "2026-11-13T21:40:00+00:00"
+    },
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 2,
+     "ok": 2,
+     "total": 4
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "1m",
+     "type": "interval"
+    },
+    "cadence_label": "every 1m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "local-test-watch",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:31:00+00:00",
+    "next_due_in_secs": -1740,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "every": "1h",
+     "type": "interval"
+    },
+    "cadence_label": "every 1h",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "memory-index-watchdog",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T22:30:00+00:00",
+    "next_due_in_secs": 1800,
+    "open_in": null,
+    "owner": "goal:memory-md-index-watchdog",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "2m",
+     "type": "interval"
+    },
+    "cadence_label": "every 2m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "attention",
+    "id": "owner-attention-healthcheck",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:32:00+00:00",
+    "next_due_in_secs": -1680,
+    "open_in": "attention",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "restart-reconcile",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "at": "07:00",
+     "type": "daily"
+    },
+    "cadence_label": "daily 07:00",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "stale-mockup-cleanup",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-14T12:00:00+00:00",
+    "next_due_in_secs": 50400,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 2,
+    "family": null,
+    "id": "storage-watch",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": {
+     "collapsed": 0,
+     "due": "2026-11-13T21:00:00+00:00",
+     "error": null,
+     "exit_code": 1,
+     "label": "Failed \u00b7 exit 1",
+     "matched_pattern": null,
+     "status": "failure",
+     "stderr_tail": "low tier crossed",
+     "stdout_tail": "",
+     "ts": "2026-11-13T21:00:00+00:00"
+    },
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 2,
+     "ok": 1,
+     "total": 3
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "paywatch-lane-watchdog",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": null,
+    "owner": "goal:paywatch",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "suspended",
+    "suspend_reason": "Owner ruling 2026-11-08 \u2014 the venue lane stays down (its Standard session is dead and the owner declined to revive or re-point it); gates and probes only. Suspension lifts on the owner's word when the lane is revived.",
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "at": "06:00",
+     "type": "daily"
+    },
+    "cadence_label": "daily 06:00",
+    "expected_wake_per_day": 1.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "paywatch-daily-scheduler",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-14T11:00:00+00:00",
+    "next_due_in_secs": 46800,
+    "open_in": null,
+    "owner": "goal:paywatch",
+    "report_when": "always",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "paywatch-deferral-retries",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": null,
+    "owner": "goal:paywatch",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "5m",
+     "type": "interval"
+    },
+    "cadence_label": "every 5m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": null,
+    "id": "vm-restart-detector",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:35:00+00:00",
+    "next_due_in_secs": -1500,
+    "open_in": null,
+    "owner": "none",
+    "report_when": "on_output",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "arming",
+    "id": "wb-progress-programme-a-t-01k8r0000000000000000000b1",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "workbench",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "arming",
+    "id": "wb-progress-programme-b-t-01k8r0000000000000000000b2",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "workbench",
+    "owner": "none",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "every": "168h",
+     "type": "interval"
+    },
+    "cadence_label": "every 168h",
+    "expected_wake_per_day": 0.14285714285714285,
+    "failure_streak": 0,
+    "family": null,
+    "id": "weekly-gmail-otp-cleanup",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": {
+     "collapsed": 0,
+     "due": "2026-11-12T23:00:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "0 threads matched",
+     "ts": "2026-11-12T23:00:00+00:00"
+    },
+    "next_due": "2026-11-20T21:30:00+00:00",
+    "next_due_in_secs": 603000,
+    "open_in": null,
+    "owner": "goal:weekly-gmail-otp-cleanup",
+    "report_when": "always",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 1,
+     "total": 1
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "operator",
+    "cadence": {
+     "every": "168h",
+     "type": "interval"
+    },
+    "cadence_label": "every 168h",
+    "expected_wake_per_day": 0.14285714285714285,
+    "failure_streak": 0,
+    "family": null,
+    "id": "weekly-gmail-stale-jobs-cleanup",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": {
+     "collapsed": 0,
+     "due": "2026-11-13T21:55:00+00:00",
+     "error": null,
+     "exit_code": 0,
+     "label": "OK",
+     "matched_pattern": null,
+     "status": "ok",
+     "stderr_tail": "",
+     "stdout_tail": "2 threads matched the stale pattern",
+     "ts": "2026-11-13T21:55:00+00:00"
+    },
+    "next_due": "2026-11-20T21:30:00+00:00",
+    "next_due_in_secs": 603000,
+    "open_in": null,
+    "owner": "goal:stale-job-posting-email-cleanup",
+    "report_when": "always",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 1,
+     "total": 1
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "15m",
+     "type": "interval"
+    },
+    "cadence_label": "every 15m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "workbench",
+    "id": "workbench-viewer-doctor",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:45:00+00:00",
+    "next_due_in_secs": -900,
+    "open_in": "workbench",
+    "owner": "goal:workbench-viewer-server",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   },
+   {
+    "activity_24h": null,
+    "audience": "builtin",
+    "cadence": {
+     "every": "2m",
+     "type": "interval"
+    },
+    "cadence_label": "every 2m",
+    "expected_wake_per_day": 0.0,
+    "failure_streak": 0,
+    "family": "workbench",
+    "id": "workbench-viewer-healthcheck",
+    "kind": "scripted",
+    "last_activity": null,
+    "last_run": null,
+    "next_due": "2026-11-13T21:32:00+00:00",
+    "next_due_in_secs": -1680,
+    "open_in": "workbench",
+    "owner": "goal:workbench-viewer-server",
+    "report_when": "on_failure",
+    "runs_24h": {
+     "failed": 0,
+     "ok": 0,
+     "total": 0
+    },
+    "status": "active",
+    "suspend_reason": null,
+    "timezone": "America/New_York"
+   }
+  ],
+  "served_at": "2026-11-13T22:00:00+00:00"
+ },
+ "ledger": {
+  "events": [
+   {
+    "detail": "OK",
+    "job_id": "bridge-wake",
+    "kind": "run",
+    "ts": "2026-11-13T21:59:00+00:00"
+   },
+   {
+    "detail": "OK \u00b7 matched UNRESOLVED",
+    "job_id": "bridge-wake",
+    "kind": "run",
+    "ts": "2026-11-13T21:58:00+00:00"
+   },
+   {
+    "detail": "ping report f10000000004",
+    "job_id": "weekly-gmail-stale-jobs-cleanup",
+    "kind": "ping_created",
+    "ts": "2026-11-13T21:55:05+00:00"
+   },
+   {
+    "detail": "OK",
+    "job_id": "weekly-gmail-stale-jobs-cleanup",
+    "kind": "run",
+    "ts": "2026-11-13T21:55:00+00:00"
+   },
+   {
+    "detail": "ping agent-due f10000000001",
+    "job_id": "bridge-drain",
+    "kind": "ping_woken",
+    "ts": "2026-11-13T21:51:00+00:00"
+   },
+   {
+    "detail": "ping agent-due f10000000001",
+    "job_id": "bridge-drain",
+    "kind": "ping_created",
+    "ts": "2026-11-13T21:50:05+00:00"
+   },
+   {
+    "detail": "agent due",
+    "job_id": "bridge-drain",
+    "kind": "agent_due",
+    "ts": "2026-11-13T21:50:00+00:00"
+   },
+   {
+    "detail": "Exit 3 \u00b7 normal \u00b7 matched write denied",
+    "job_id": "flap-watch",
+    "kind": "run",
+    "ts": "2026-11-13T21:40:00+00:00"
+   },
+   {
+    "detail": "connector",
+    "job_id": null,
+    "kind": "connector",
+    "ts": "2026-11-13T21:20:00+00:00"
+   },
+   {
+    "detail": "skipped \u2014 previous run still running",
+    "job_id": "bridge-wake",
+    "kind": "skipped_overlap",
+    "ts": "2026-11-13T21:15:00+00:00"
+   },
+   {
+    "detail": "config storage-watch by sched-ops \u2014 ok",
+    "job_id": "storage-watch",
+    "kind": "op",
+    "ts": "2026-11-13T21:15:00+00:00"
+   },
+   {
+    "detail": "write jobs/flap-watch.yaml by sched-cli \u2014 ok",
+    "job_id": null,
+    "kind": "op",
+    "ts": "2026-11-13T21:10:00+00:00"
+   },
+   {
+    "detail": "exec bin/sched census by sched-cli \u2014 error (denied) exit 4",
+    "job_id": null,
+    "kind": "op",
+    "ts": "2026-11-13T21:05:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000003",
+    "job_id": "storage-watch",
+    "kind": "ping_coalesced",
+    "ts": "2026-11-13T21:00:05+00:00"
+   },
+   {
+    "detail": "Failed \u00b7 exit 1",
+    "job_id": "storage-watch",
+    "kind": "run",
+    "ts": "2026-11-13T21:00:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000006",
+    "job_id": "flap-watch",
+    "kind": "ping_acked",
+    "ts": "2026-11-13T20:30:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000006",
+    "job_id": "flap-watch",
+    "kind": "ping_woken",
+    "ts": "2026-11-13T20:11:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000006",
+    "job_id": "flap-watch",
+    "kind": "ping_created",
+    "ts": "2026-11-13T20:10:05+00:00"
+   },
+   {
+    "detail": "Timed out",
+    "job_id": "flap-watch",
+    "kind": "run",
+    "ts": "2026-11-13T20:10:00+00:00"
+   },
+   {
+    "detail": "Could not start",
+    "job_id": "flap-watch",
+    "kind": "run",
+    "ts": "2026-11-13T20:05:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000003",
+    "job_id": "storage-watch",
+    "kind": "ping_woken",
+    "ts": "2026-11-13T20:01:00+00:00"
+   },
+   {
+    "detail": "ping escalation f10000000003",
+    "job_id": "storage-watch",
+    "kind": "ping_created",
+    "ts": "2026-11-13T20:00:05+00:00"
+   },
+   {
+    "detail": "Failed \u00b7 exit 2",
+    "job_id": "storage-watch",
+    "kind": "run",
+    "ts": "2026-11-13T20:00:00+00:00"
+   },
+   {
+    "detail": "OK",
+    "job_id": "flap-watch",
+    "kind": "run",
+    "ts": "2026-11-13T20:00:00+00:00"
+   },
+   {
+    "detail": "OK",
+    "job_id": "storage-watch",
+    "kind": "run",
+    "ts": "2026-11-13T19:00:00+00:00"
+   },
+   {
+    "detail": "caught up 4 collapsed points",
+    "job_id": "bridge-drain",
+    "kind": "catchup",
+    "ts": "2026-11-13T18:00:00+00:00"
+   },
+   {
+    "detail": "ping agent-due f10000000008",
+    "job_id": "bridge-drain",
+    "kind": "ping_acked",
+    "ts": "2026-11-13T16:20:00+00:00"
+   },
+   {
+    "detail": "ping agent-due f10000000008",
+    "job_id": "bridge-drain",
+    "kind": "ping_woken",
+    "ts": "2026-11-13T16:01:00+00:00"
+   },
+   {
+    "detail": "ping agent-due f10000000008",
+    "job_id": "bridge-drain",
+    "kind": "ping_created",
+    "ts": "2026-11-13T16:00:05+00:00"
+   },
+   {
+    "detail": "agent due",
+    "job_id": "bridge-drain",
+    "kind": "agent_due",
+    "ts": "2026-11-13T16:00:00+00:00"
+   },
+   {
+    "detail": "OK",
+    "job_id": "weekly-gmail-otp-cleanup",
+    "kind": "run",
+    "ts": "2026-11-12T23:00:00+00:00"
+   },
+   {
+    "detail": "Failed \u00b7 exit 1",
+    "job_id": "storage-watch",
+    "kind": "run",
+    "ts": "2026-11-12T20:30:00+00:00"
+   },
+   {
+    "detail": "entry_removed",
+    "job_id": "retired-specimen",
+    "kind": "entry_removed",
+    "ts": "2026-11-11T22:00:00+00:00"
+   },
+   {
+    "detail": "state error: next_due.json has the wrong shape",
+    "job_id": null,
+    "kind": "state_error",
+    "ts": "2026-11-10T23:00:00+00:00"
+   },
+   {
+    "detail": "registry failed to parse \u2014 last-good registry kept",
+    "job_id": null,
+    "kind": "registry_error",
+    "ts": "2026-11-10T22:00:00+00:00"
+   },
+   {
+    "detail": "pruned 128 events past retention",
+    "job_id": null,
+    "kind": "ledger_pruned",
+    "ts": "2026-11-09T22:00:00+00:00"
+   }
+  ],
+  "served_at": "2026-11-13T22:00:00+00:00"
+ },
+ "overview": {
+  "config": {
+   "default_timezone": "America/New_York",
+   "outbox_ack_timeout_secs": 3600,
+   "port": 8796,
+   "tick_secs": 20
+  },
+  "expected_wake_per_day": 25.3,
+  "last_tick": null,
+  "outbox": {
+   "aged": 1,
+   "by_kind": {
+    "agent-due": 1,
+    "escalation": 1,
+    "report": 1
+   },
+   "depth": 3
+  },
+  "pid": 122395,
+  "registry": {
+   "by_kind": {
+    "agent": 1,
+    "scripted": 25
+   },
+   "by_status": {
+    "active": 25,
+    "suspended": 1
+   },
+   "total": 26
+  },
+  "registry_errors": [],
+  "running": [],
+  "served_at": "2026-11-13T22:00:00+00:00",
+  "server_now": "2026-11-13T22:00:00+00:00",
+  "state_error": null,
+  "status": "ok",
+  "storage": {
+   "db_bytes": 36864,
+   "events": 36,
+   "kind": "sqlite",
+   "last_prune": {
+    "dropped": 128,
+    "ts": "2026-11-09T22:00:00+00:00"
+   },
+   "newest": "2026-11-13T21:59:00+00:00",
+   "oldest": "2026-11-09T22:00:00+00:00",
+   "retention_days": 90
+  },
+  "totals_24h": {
+   "failures": 4,
+   "pings_created": 5,
+   "runs": 11,
+   "wakeups_served": 4
+  },
+  "uptime_secs": 1800
+ },
+ "pin": "cf910ce6a2b1c696bb7bcdbc5c9fe49460cea779",
+ "pings": {
+  "pings": [
+   {
+    "age_secs": 7200,
+    "body_ref": null,
+    "coalesced_count": 2,
+    "created": "2026-11-13T20:00:00+00:00",
+    "detail": {
+     "exit_code": 1,
+     "stderr_tail": "low tier crossed",
+     "stdout_tail": ""
+    },
+    "due": "2026-11-13T21:00:00+00:00",
+    "id": "f10000000003",
+    "job_id": "storage-watch",
+    "kind": "escalation",
+    "last_woken_at": "2026-11-13T20:01:00+00:00",
+    "overdue": true,
+    "state": "pending"
+   },
+   {
+    "age_secs": 600,
+    "body_ref": "bodies/bridge-drain.md",
+    "coalesced_count": 1,
+    "created": "2026-11-13T21:50:00+00:00",
+    "detail": {
+     "queue": 3,
+     "summary": "bridge-drain \u2014 drain episode open"
+    },
+    "due": "2026-11-13T21:50:00+00:00",
+    "id": "f10000000001",
+    "job_id": "bridge-drain",
+    "kind": "agent-due",
+    "last_woken_at": "2026-11-13T21:51:00+00:00",
+    "overdue": false,
+    "state": "pending"
+   },
+   {
+    "age_secs": 300,
+    "body_ref": null,
+    "coalesced_count": 1,
+    "created": "2026-11-13T21:55:00+00:00",
+    "detail": {
+     "exit_code": 0,
+     "stderr_tail": "",
+     "stdout_tail": "2 threads matched the stale pattern"
+    },
+    "due": "2026-11-13T21:55:00+00:00",
+    "id": "f10000000004",
+    "job_id": "weekly-gmail-stale-jobs-cleanup",
+    "kind": "report",
+    "last_woken_at": null,
+    "overdue": false,
+    "state": "pending"
+   }
+  ],
+  "served_at": "2026-11-13T22:00:00+00:00"
+ },
+ "recent_pings": {
+  "pings": [
+   {
+    "acked_at": "2026-11-13T20:30:00+00:00",
+    "body_ref": null,
+    "coalesced_count": 1,
+    "created": "2026-11-13T20:10:00+00:00",
+    "detail": {
+     "exit_code": null,
+     "stderr_tail": "",
+     "stdout_tail": ""
+    },
+    "due": "2026-11-13T20:10:00+00:00",
+    "id": "f10000000006",
+    "job_id": "flap-watch",
+    "kind": "escalation",
+    "last_woken_at": "2026-11-13T20:11:00+00:00",
+    "state": "acked"
+   },
+   {
+    "acked_at": "2026-11-13T16:20:00+00:00",
+    "body_ref": "bodies/bridge-drain.md",
+    "coalesced_count": 1,
+    "created": "2026-11-13T16:00:00+00:00",
+    "detail": {
+     "queue": 1,
+     "summary": "bridge-drain \u2014 drain episode open"
+    },
+    "due": "2026-11-13T16:00:00+00:00",
+    "id": "f10000000008",
+    "job_id": "bridge-drain",
+    "kind": "agent-due",
+    "last_woken_at": "2026-11-13T16:01:00+00:00",
+    "state": "acked"
+   }
+  ],
+  "served_at": "2026-11-13T22:00:00+00:00"
+ },
+ "seed_ledger_events": 36,
+ "seed_ledger_sha256": "b327f37a20ef3673e11a7a783dccdd717d1d132795ff46ca5cc2fefa8b12598b",
+ "served_at": "2026-11-13T22:00:00+00:00",
+ "tree": "pipeline"
+}

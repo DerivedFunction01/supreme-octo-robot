@@ -1,0 +1,683 @@
+#!/usr/bin/env python3
+"""Bare-shell channel to a leased Colab session, over real SSH.
+
+Usage:
+  colab-sh [-s SESSION] [--caller TAG] [--dir DIR] [--timeout SECONDS]
+           [--long] [--env K=V ...] ('inline command' | -f script.sh | -- args...)
+           [< script]
+  colab-sh --detach [same options] (command | -f script.sh) [< script]
+  colab-sh --poll ID [-s SESSION] [--caller TAG]
+  colab-sh --wait ID [--max SECONDS]
+
+The official CLI's `exec` runs Python inside the session's IPython
+kernel (sys.argv leaks, SystemExit non-fatal, kernel state shared).
+This wrapper instead drives the CLI's own SSH bridge
+(`colab ssh --proxy-mode`, a WebSocket to the runtime's /colab/ssh
+endpoint) with the system `ssh`, so the remote side is a plain bash
+process: real exit codes, clean stdout/stderr, no kernel involved.
+The script (inline, file, or stdin) is delivered on ssh's stdin to
+`bash -s`; anything after `--` becomes the script's positional args.
+
+Rules:
+- Targets an existing session only — the active lease's session by
+  default. It never creates a session: the target must read alive
+  server-side before connecting (verified via the lease machinery's
+  own read), because the CLI's ssh flow otherwise assigns a fresh
+  default-shape runtime for a dead name; session lifecycle belongs
+  to the lease.
+- One SSH connection per runtime at a time (the server answers 429
+  while another is connected). This wrapper is one-shot: it connects,
+  runs, disconnects.
+- Synchronous use is claim-gated: before connecting, the lease
+  core's sync_rights verdict must allow this caller (a TTL'd claim
+  held by the session's sole active caller; attaches auto-claim).
+  A caller marked active in the registry is refused outright —
+  active callers are detached-only. A refusal exits 2 naming the
+  holder, the evidence, and the detached alternative. --detach
+  and --poll are the async path —
+  seconds-long connects that launch or read in-session work — and
+  stay open to every caller; they never take the claim. Lease- and
+  runner-internal calls never pass through this gate by
+  construction: they use the CLI funnel (sync/cli.py), not this
+  wrapper.
+- Synchronous use is also duration-capped (E3): the lease
+  config's sync_claim.max_sync_seconds (default 300) is the sync
+  timeout budget — it is the wrapper's default --timeout, and an
+  explicit --timeout above it refuses before connecting. --long
+  is the only override: it journals the hold on the claim with
+  its bound, and the hold counts as claim evidence until its
+  stated end. A bridge-busy (429-class) failure is translated
+  into a named verdict — channel busy, claim holder and expiry
+  when a claim exists — never a bare ssh result.
+- --wait ID reads only the local detached record
+  (results/detached/) — zero channel use; exit 0 complete, 1
+  failed (or no such record), 3 still running at the --max bound.
+- Auth is the local ~/.ssh/id_ed25519 key (ed25519/ecdsa only; the
+  server rejects RSA). The CLI derives the offered public key from
+  the same key, so the pair always matches.
+- Colab/Google traffic bypasses this machine's egress proxy (the
+  NO_PROXY suffix rule in AGENTS.md); ssh passes its environment to
+  the ProxyCommand, so the fix set here reaches the bridge.
+"""
+
+import argparse
+import base64
+import json
+import os
+import re
+import secrets
+import shlex
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _load
+
+REPO = _load.REPO
+CLI_VENV_PYTHON = (
+    Path.home() / ".local" / "share" / "uv" / "tools" / "google-colab-cli" / "bin" / "python"
+)
+DEFAULT_IDENTITY = Path.home() / ".ssh" / "id_ed25519"
+SSH_HOST = "root@colab-runtime"
+PROXY_SUFFIXES = "google.com,googleapis.com,googleusercontent.com,colab.dev"
+
+# Local-state helpers and refusal text live in sibling modules
+# (consolidation Lane B step 5) and are bound here under their
+# existing names: this module's surface — everything the suite
+# and callers address as colab_sh.<name> — is unchanged.
+from _sh_refusal import _evidence_text, _is_busy, detached_alternative, refusal_message  # noqa: E402
+from _sh_state import (  # noqa: E402
+    LIVENESS_CACHE_TTL_S,
+    MIRROR_FRESH_S,
+    _CACHE_KEY,
+    _lease_module,
+    _liveness_cache_read,
+    _liveness_cache_write,
+    _mirror_fresh,
+    _var_dir,
+    resolve_session,
+    restore_transient,
+)
+
+
+def proxy_env(env: dict) -> dict:
+    """Return env with the Colab proxy-bypass suffixes appended."""
+    out = dict(env)
+    for key in ("NO_PROXY", "no_proxy"):
+        cur = out.get(key)
+        out[key] = f"{cur},{PROXY_SUFFIXES}" if cur else PROXY_SUFFIXES
+    return out
+
+
+def proxy_command(session: str) -> str:
+    """The OpenSSH ProxyCommand bridging to the session's /colab/ssh."""
+    return shlex.join(
+        [
+            str(CLI_VENV_PYTHON),
+            "-m",
+            "colab_cli.cli",
+            "--auth",
+            "oauth2",
+            "ssh",
+            "--proxy-mode",
+            "-s",
+            session,
+        ]
+    )
+
+
+def ssh_argv(session: str, remote_dir: str, script_args: list, identity: Path) -> list:
+    remote = f"cd {shlex.quote(remote_dir)} && bash -s"
+    if script_args:
+        remote += " -- " + " ".join(shlex.quote(a) for a in script_args)
+    return [
+        "ssh",
+        "-o",
+        f"ProxyCommand={proxy_command(session)}",
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "LogLevel=ERROR",
+        "-i",
+        str(identity),
+        SSH_HOST,
+        remote,
+    ]
+
+
+def build_stdin(script: str, env_pairs: list) -> str:
+    """Env exports (shlex-quoted) ahead of the script, exec-style."""
+    lines = [f"export {k}={shlex.quote(v)}" for k, v in env_pairs]
+    if lines:
+        return "\n".join(lines) + "\n" + script
+    return script
+
+
+def live_state(session: str, attempts: int | None = None, timeout: int = 120) -> str:
+    """The target's server-side tri-state (alive/absent/unknown),
+    read through the lease machinery's own funnel (bin/colab-run)
+    and tri-state read (sync.lease.session_state). One seam, so the
+    connect guard in main() is the only place that consults it.
+    The async path passes the reap precedent's reduced budget
+    (sessions._REAP_READ_ATTEMPTS × _REAP_READ_TIMEOUT_S): a stall
+    classifies unknown sooner, and unknown is never read as dead."""
+    from importlib.machinery import SourceFileLoader
+
+    colab_run = SourceFileLoader("colab_run", str(REPO / "bin" / "colab-run")).load_module()
+    return _lease_module().session_state(colab_run.colab, session, attempts=attempts, timeout=timeout)
+
+
+# The async path's pre-connect read budget: the reap pass's
+# numbers (2 attempts × 45 s), for the same reason — the shell
+# path repeats on the caller's next poll, so a stall should
+# classify unknown in ~90 s, not the standard ~370 s.
+ASYNC_READ_ATTEMPTS = 2
+ASYNC_READ_TIMEOUT_S = 45
+
+def liveness(session: str, *, async_path: bool) -> str:
+    """The connect guard's read: cache first (a fresh dialed-alive
+    verdict), else the dial — at the standard budget on the sync
+    path, the reduced reap budget on the async path. A dialed
+    alive refreshes the cache."""
+    if _liveness_cache_read(session):
+        return "alive"
+    if async_path:
+        state = live_state(session, attempts=ASYNC_READ_ATTEMPTS, timeout=ASYNC_READ_TIMEOUT_S)
+    else:
+        state = live_state(session)
+    if state == "alive":
+        _liveness_cache_write(session)
+    return state
+
+
+def orphan_advisory(session: str) -> None:
+    """E1(a), shell half: a live target with no lease record is
+    an orphan — outside deadline governance, invisible to the
+    job path. Name the state and the verb that routes it back;
+    the attach itself proceeds. Best-effort, stderr only."""
+    try:
+        if _lease_module().load_record(REPO, session) is None:
+            print(
+                f"colab-sh: note: session {session!r} is live but has no lease record (orphaned) — "
+                f"it sits outside lease governance; adopt it with: bin/colab-lease adopt {session}",
+                file=sys.stderr,
+            )
+            # The disagreement is evidence, not just a note:
+            # journal it (the lease core throttles a standing
+            # orphan to one line per window).
+            _lease_module().reconcile.journal_disagreement(REPO, session, "live-no-record", "no-record", "live", "colab-sh")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def claim_caller(flag: str | None) -> tuple[str | None, str | None]:
+    """Resolve the attach's caller claim (--caller flag over
+    $COLAB_CALLER) through the lease core's registry. Returns
+    (caller, error): a presented but unregistered claim is an
+    error — refused at claim time. Attach is journal-only: an
+    absent claim never blocks, it just leaves the attach
+    unattributed in the journal."""
+    lease = _lease_module()
+    env = os.environ.get("COLAB_CALLER")
+    err = lease.caller_claim_error(REPO, flag=flag, env=env)
+    if err:
+        return None, err
+    return lease.resolve_caller(REPO, flag=flag, env=env), None
+
+
+def journal_claim(session: str, caller: str | None) -> None:
+    """Record the attach in the caller-claims journal (the
+    attribution evidence for sessions outside lease records).
+    Best-effort, like every journal in the lease core."""
+    try:
+        _lease_module().append_caller_claim(REPO, session, caller, "colab-sh")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+# --- Synchronous claim gate -----------------------------------------------------
+# The gate binds this wrapper's synchronous mode only. sync_rights
+# (sync/lease/syncclaims.py) is the one implementation; a gate
+# error refuses — fail closed, like the liveness guard above —
+# because an unreadable claim state is exactly when an unrecorded
+# hold does its damage.
+
+DETACHED_REMOTE_DIR = "/content/sync-detached"
+_DETACH_ID = re.compile(r"[0-9A-Za-z-]{1,64}\Z")
+
+
+def sync_gate(session: str, caller: str | None) -> dict | None:
+    """The refusal verdict when the lease core denies this caller
+    the synchronous channel, else None. The verdict is the core's
+    own dict (blocked_by / holder / evidence / expires_at)."""
+    try:
+        verdict = _lease_module().sync_rights(REPO, session, caller)
+    except Exception as err:  # noqa: BLE001
+        return {"blocked_by": "error", "holder": None, "evidence": [], "expires_at": None, "error": str(err)}
+    return None if verdict.get("allowed") else verdict
+
+
+# --- Duration cap and busy translation (E3) --------------------------------------
+# The claim governs admission; the cap governs duration. Both are
+# local reads, evaluated before any dial (E15): a refusal must be
+# instant and free.
+
+
+def sync_cap_seconds() -> float:
+    """The sync_claim.max_sync_seconds budget for this repo."""
+    try:
+        return float(_lease_module().sync_claim_policy(REPO)["max_sync_seconds"])
+    except Exception:  # noqa: BLE001
+        return 300.0
+
+
+def busy_message(session: str) -> str:
+    """The named verdict for a busy channel: who holds the claim
+    and until when, when a claim exists — the connection's holder
+    is otherwise anonymous to the refused (E3). A purely local
+    read; a failure to read it degrades to the holder-less form."""
+    holder = expires = None
+    try:
+        claim = _lease_module().read_sync_claim(REPO, session)
+    except Exception:  # noqa: BLE001
+        claim = None
+    if claim:
+        holder, expires = claim.get("caller"), claim.get("expires_at")
+    if holder:
+        return (
+            f"colab-sh: channel busy — session {session!r} already has a connection; "
+            f"the sync claim is held by {holder!r} until {expires}. "
+            "Detached work (colab-sh --detach / --poll, colab-run) stays open to all callers."
+        )
+    return (
+        f"colab-sh: channel busy — session {session!r} already has a connection held by another attach. "
+        "Detached work (colab-sh --detach / --poll, colab-run) stays open to all callers."
+    )
+
+
+# --- Detached mode ----------------------------------------------------------------
+# --detach launches the script in-session under nohup and returns
+# at once; --poll reads its state with one short call. The launch
+# and the poll are seconds-long connects — the sanctioned async
+# path, open to every caller, never claim-gated.
+
+
+def detach_id() -> str:
+    return f"{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}-{secrets.token_hex(2)}"
+
+
+def run_remote(session: str, script_text: str, timeout: float) -> subprocess.CompletedProcess:
+    cmd = ssh_argv(session, "/content", [], DEFAULT_IDENTITY)
+    return subprocess.run(
+        cmd, input=script_text, text=True, capture_output=True,
+        timeout=timeout, env=proxy_env(os.environ),
+    )
+
+
+# The async path retries busy answers inside the wrapper (E4):
+# 3 attempts over ~60 s of bounded backoff, so contention reads
+# as latency, not failure. Only busy-class results retry — a
+# timeout is never retried (the launch may have landed; a second
+# launch under the same id would double-run the script).
+BUSY_ATTEMPTS = 3
+BUSY_BACKOFF_S = (15, 30)
+
+
+def run_remote_async(session: str, script_text: str, timeout: float = 120):
+    """run_remote with the async busy retry. Returns
+    (proc, busy_exhausted): proc is the last attempt's result;
+    busy_exhausted is True when every attempt answered busy.
+    TimeoutExpired propagates, as in run_remote."""
+    proc = None
+    for attempt in range(BUSY_ATTEMPTS):
+        if attempt:
+            time.sleep(BUSY_BACKOFF_S[min(attempt - 1, len(BUSY_BACKOFF_S) - 1)])
+        proc = run_remote(session, script_text, timeout=timeout)
+        if not _is_busy(proc):
+            return proc, False
+    return proc, True
+
+
+# --- Detached registration (E8) ---------------------------------------------------
+# A launch registers locally the moment it lands: the detached
+# record (results/detached/<id>.json, via the claim core's
+# storage) and a detached:<id> entry on the lease record's jobs
+# list. The poll that observes the end marks the record terminal
+# and unregisters. Registration is best-effort — the launch has
+# already happened in-session; a failed local write must not
+# strand it — but in the normal case the guard, the claim gate,
+# and adoption all see the work.
+
+
+def _register_detached(session: str, did: str, caller: str | None, started_at: str) -> None:
+    try:
+        lease = _lease_module()
+        lease.syncclaims.write_detached_record(REPO, {
+            "id": did, "session": session, "caller": caller, "state": "running",
+            "exit_code": None, "started_at": started_at, "finished_at": None,
+        })
+        rec = lease.load_record(REPO, session)
+        if rec is not None:
+            jobs = rec.setdefault("jobs", [])
+            if f"detached:{did}" not in jobs:
+                jobs.append(f"detached:{did}")
+                lease.save_record(REPO, rec)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _mark_detached_terminal(session: str, did: str, state: str, exit_code) -> None:
+    try:
+        lease = _lease_module()
+        marked = lease.syncclaims.mark_detached_terminal(REPO, did, state, exit_code)
+        if marked is None:
+            return  # another machine's launch: not ours to unregister
+        rec = lease.load_record(REPO, session)
+        if rec is not None and f"detached:{did}" in (rec.get("jobs") or []):
+            rec["jobs"] = [j for j in rec["jobs"] if j != f"detached:{did}"]
+            lease.save_record(REPO, rec)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def detach_launch(session: str, args, script: str, env_pairs: list, caller: str | None) -> int:
+    did = detach_id()
+    body = build_stdin(script, env_pairs)
+    if args.dir != "/content":
+        body = f"cd {shlex.quote(args.dir)}\n" + body
+    payload_b64 = base64.b64encode(body.encode()).decode()
+    started_at = datetime.now(timezone.utc).isoformat()
+    meta = {
+        "id": did, "session": session, "caller": caller,
+        "started_at": started_at, "state": "running",
+    }
+    lines = [
+        "set -u",
+        f"D={DETACHED_REMOTE_DIR}",
+        'mkdir -p "$D"',
+        f"printf %s {shlex.quote(payload_b64)} | base64 -d > \"$D/{did}.sh\"",
+        f"cat > \"$D/{did}.json\" <<'META'",
+        json.dumps(meta),
+        "META",
+        f"nohup bash -c 'bash \"$0\"; echo $? > \"$0.exit\"' \"$D/{did}.sh\" > \"$D/{did}.log\" 2>&1 &",
+        f"echo $! > \"$D/{did}.pid\"",
+        "",
+    ]
+    try:
+        r, busy = run_remote_async(session, "\n".join(lines))
+    except subprocess.TimeoutExpired:
+        print(f"colab-sh: detached launch timed out (session {session})", file=sys.stderr)
+        return 124
+    if busy:
+        print(busy_message(session), file=sys.stderr)
+        return 2
+    if r.returncode != 0:
+        print(f"colab-sh: detached launch failed (ssh rc {r.returncode})", file=sys.stderr)
+        return r.returncode
+    _register_detached(session, did, caller, started_at)
+    print(json.dumps({"id": did, "session": session, "state": "running", "log": f"{DETACHED_REMOTE_DIR}/{did}.log"}))
+    return 0
+
+
+def detach_poll(session: str, did: str) -> int:
+    if not _DETACH_ID.fullmatch(did):
+        print(f"colab-sh: bad detached id {did!r}", file=sys.stderr)
+        return 2
+    lines = [
+        "set -u",
+        f"D={DETACHED_REMOTE_DIR}",
+        f"ID={shlex.quote(did)}",
+        'if [ ! -f "$D/$ID.json" ]; then echo NOT-FOUND; exit 0; fi',
+        'cat "$D/$ID.json"',
+        'if [ -f "$D/$ID.exit" ]; then echo "STATE done"; echo "EXIT $(cat "$D/$ID.exit")";',
+        'elif [ -n "$(cat "$D/$ID.pid" 2>/dev/null)" ] && kill -0 "$(cat "$D/$ID.pid")" 2>/dev/null; then echo "STATE running"; echo "EXIT -";',
+        'else echo "STATE exited-unrecorded"; echo "EXIT -"; fi',
+        'echo ---LOG---',
+        'tail -n 40 "$D/$ID.log" 2>/dev/null || true',
+        "",
+    ]
+    try:
+        r, busy = run_remote_async(session, "\n".join(lines))
+    except subprocess.TimeoutExpired:
+        print(f"colab-sh: detached poll timed out (session {session})", file=sys.stderr)
+        return 124
+    if busy:
+        print(busy_message(session), file=sys.stderr)
+        return 2
+    if r.returncode != 0:
+        print(f"colab-sh: detached poll failed (ssh rc {r.returncode})", file=sys.stderr)
+        return r.returncode
+    out = r.stdout
+    if out.startswith("NOT-FOUND"):
+        print(json.dumps({"id": did, "session": session, "state": "not-found"}))
+        return 2
+    meta_line, _, rest = out.partition("\n")
+    try:
+        meta = json.loads(meta_line)
+    except json.JSONDecodeError:
+        meta = {}
+    state, exit_code, log_tail = "exited-unrecorded", None, ""
+    for line in rest.splitlines():
+        if line.startswith("STATE "):
+            state = line.split(" ", 1)[1]
+        elif line.startswith("EXIT "):
+            raw = line.split(" ", 1)[1]
+            exit_code = int(raw) if raw.lstrip("-").isdigit() else None
+    if "---LOG---\n" in rest:
+        log_tail = rest.split("---LOG---\n", 1)[1]
+    print(json.dumps({"id": did, "session": session, "state": state, "exit_code": exit_code,
+                      "caller": meta.get("caller"), "started_at": meta.get("started_at"),
+                      "log_tail": log_tail}))
+    if state == "done":
+        _mark_detached_terminal(session, did, "complete", exit_code)
+        return exit_code if exit_code is not None else 0
+    if state == "exited-unrecorded":
+        _mark_detached_terminal(session, did, "failed", None)
+        return 3
+    return 0
+
+
+def wait_detached(did: str, max_seconds: float) -> int:
+    """E13, shell half: a bounded wait over the LOCAL detached
+    record only — zero channel use, built for short waits
+    repeated by a scheduler or hook. Exit 0 complete, 1 failed
+    (a missing record is a failed outcome: it can never
+    complete), 3 still running at the bound."""
+    if not _DETACH_ID.fullmatch(did):
+        print(f"colab-sh: bad detached id {did!r}", file=sys.stderr)
+        return 2
+    deadline = time.monotonic() + max(0.0, max_seconds)
+    while True:
+        try:
+            rec = _lease_module().syncclaims.read_detached_record(REPO, did)
+        except Exception:  # noqa: BLE001
+            rec = None
+        if rec is None:
+            print(f"colab-sh: no local detached record for {did!r}", file=sys.stderr)
+            return 1
+        state = rec.get("state")
+        if state == "complete":
+            return 0
+        if state == "failed":
+            return 1
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            return 3
+        time.sleep(min(2.0, remaining))
+
+
+def read_script(args) -> str | None:
+    if args.file:
+        return Path(args.file).read_text()
+    if args.command:
+        return " ".join(args.command) + "\n"
+    if not sys.stdin.isatty():
+        return sys.stdin.read()
+    return None
+
+
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(prog="colab-sh", description=__doc__.split("\n")[0])
+    ap.add_argument("-s", "--session", help="session name (default: the active lease's)")
+    ap.add_argument("--caller", help="caller claim: the thread doing this work (or $COLAB_CALLER); journaled per attach")
+    ap.add_argument("--detach", action="store_true", help="launch the script detached in-session (nohup + log under /content/sync-detached) and return its id at once; the async path, open to all callers")
+    ap.add_argument("--poll", metavar="ID", help="one short read of a detached launch's state + log tail; exits with the job's exit code once it is done")
+    ap.add_argument("--wait", metavar="ID", help="bounded wait over the LOCAL detached record only (zero channel use): exit 0 complete, 1 failed, 3 still running at the --max bound")
+    ap.add_argument("--max", type=float, default=60, dest="max_seconds", help="seconds to wait with --wait (default 60)")
+    ap.add_argument("--long", action="store_true", help="override the sync duration cap for this call: the hold is journaled on the claim with its bound and counts as claim evidence until its stated end")
+    ap.add_argument("-f", "--file", help="shell script file to run")
+    ap.add_argument("--dir", default="/content", help="remote working directory")
+    ap.add_argument("--timeout", type=float, default=None, help="seconds (default: the sync_claim max_sync_seconds cap, 300)")
+    ap.add_argument("--env", action="append", default=[], metavar="K=V",
+                    help="environment variable for the remote script; repeatable")
+    ap.add_argument("command", nargs="*", help="inline command (or after --, script args with -f)")
+    args, script_args = ap.parse_known_args(argv)
+    # argparse puts everything after `--` in script_args only when it
+    # follows the options; positionals before `--` are the command.
+    if args.file and args.command:
+        script_args = args.command + script_args
+        args.command = []
+
+    if args.wait is not None:
+        # A wait is local state only: no caller resolution, no
+        # session, no identity, no channel (E13).
+        return wait_detached(args.wait, args.max_seconds)
+
+    caller, claim_err = claim_caller(args.caller)
+    if claim_err:
+        print(f"colab-sh: {claim_err}", file=sys.stderr)
+        return 2
+    session = resolve_session(args.session)
+    if not session:
+        print("colab-sh: no session (no -s, no $COLAB_SH_SESSION, no lease record)", file=sys.stderr)
+        return 2
+    identity = DEFAULT_IDENTITY
+    if not identity.exists():
+        print(f"colab-sh: identity key {identity} missing (server accepts ed25519/ecdsa only)", file=sys.stderr)
+        return 2
+    if not CLI_VENV_PYTHON.exists():
+        print(f"colab-sh: colab CLI venv python missing at {CLI_VENV_PYTHON}", file=sys.stderr)
+        return 2
+
+    async_path = args.detach or args.poll is not None
+    script = None
+    env_pairs: list = []
+    timeout = args.timeout
+    if not async_path:
+        # Synchronous admission is entirely local (E15): validate
+        # the call, enforce the duration cap, and take the claim
+        # gate's verdict BEFORE the liveness dial — a refusal is
+        # instant and makes zero dials.
+        script = read_script(args)
+        if script is None or not script.strip():
+            print("colab-sh: no script (pass a command, -f FILE, or pipe stdin)", file=sys.stderr)
+            return 2
+        for item in args.env:
+            if "=" not in item:
+                print(f"colab-sh: invalid --env {item!r} (expected K=V)", file=sys.stderr)
+                return 2
+            env_pairs.append(tuple(item.split("=", 1)))
+        cap = sync_cap_seconds()
+        if timeout is None:
+            timeout = cap
+        if timeout > cap and not args.long:
+            print(
+                f"colab-sh: synchronous --timeout {timeout:g}s exceeds the sync_claim max_sync_seconds cap ({cap:g}s); "
+                "refusing before connecting — pass --long to journal an override, or run the work detached.\n"
+                f"Detached alternative (open to all callers): {detached_alternative(args, session, caller, script_args)}",
+                file=sys.stderr,
+            )
+            return 2
+        verdict = sync_gate(session, caller)
+        if verdict is not None:
+            print(refusal_message(session, caller, verdict,
+                                  detached_alternative(args, session, caller, script_args)), file=sys.stderr)
+            return 2
+        if args.long:
+            # The hold is recorded before connecting, strict like
+            # a grant: an unrecorded hold is the invisible
+            # collision the cap exists to prevent.
+            try:
+                _lease_module().syncclaims.note_long_hold(REPO, session, caller, timeout)
+            except Exception as err:  # noqa: BLE001
+                print(f"colab-sh: --long hold could not be recorded ({err}); refusing — fail closed", file=sys.stderr)
+                return 2
+
+    # Existing sessions only — enforced, not assumed. The CLI's ssh
+    # flow assigns a fresh default-shape (Standard) runtime when the
+    # named session has no live assignment, so probing a dead or
+    # stale profile name silently mints one (2026-11-04: lane probes
+    # of two dead profile names created Standard runtimes under
+    # both, each behind its own approval card). Refuse unless the
+    # machinery's own read calls the session alive.
+    try:
+        state = liveness(session, async_path=async_path)
+    except Exception:  # noqa: BLE001
+        state = "unknown"
+    if state != "alive":
+        print(
+            f"colab-sh: session {session!r} is not live (state: {state}); refusing to connect — "
+            "the CLI's ssh flow would create a new runtime. Attach to the lease record's session instead.",
+            file=sys.stderr,
+        )
+        return 2
+    orphan_advisory(session)
+    if args.poll is not None:
+        # A poll is a seconds-long read of in-session state — the
+        # async path, never claim-gated. The attach is journaled
+        # like any other: attribution is evidence.
+        journal_claim(session, caller)
+        return detach_poll(session, args.poll)
+    if script is None:
+        script = read_script(args)
+        if script is None or not script.strip():
+            print("colab-sh: no script (pass a command, -f FILE, or pipe stdin)", file=sys.stderr)
+            return 2
+        for item in args.env:
+            if "=" not in item:
+                print(f"colab-sh: invalid --env {item!r} (expected K=V)", file=sys.stderr)
+                return 2
+            env_pairs.append(tuple(item.split("=", 1)))
+
+    # Wrapper parity: restore transient state on entry, while the
+    # last restore is stale (E4 freshness stamp).
+    restore_transient()
+
+    if args.detach:
+        # The launch is a seconds-long connect that starts
+        # in-session work and disconnects — open to every caller,
+        # never claim-gated.
+        journal_claim(session, caller)
+        return detach_launch(session, args, script, env_pairs, caller)
+
+    # The attach is real from here: journal its caller claim.
+    journal_claim(session, caller)
+    cmd = ssh_argv(session, args.dir, script_args, identity)
+    try:
+        r = subprocess.run(
+            cmd,
+            input=build_stdin(script, env_pairs),
+            text=True,
+            timeout=timeout,
+            env=proxy_env(os.environ),
+        )
+    except subprocess.TimeoutExpired:
+        print(f"colab-sh: timed out after {timeout}s (session {session})", file=sys.stderr)
+        return 124
+    except FileNotFoundError:
+        print("colab-sh: system ssh not found", file=sys.stderr)
+        return 2
+    if _is_busy(r):
+        # A busy bridge is a named verdict, not a bare ssh result.
+        print(busy_message(session), file=sys.stderr)
+        return 2
+    return r.returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

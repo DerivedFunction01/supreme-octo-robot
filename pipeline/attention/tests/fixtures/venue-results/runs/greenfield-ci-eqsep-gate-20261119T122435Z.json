@@ -1,0 +1,99 @@
+{
+  "run_id": "greenfield-ci-eqsep-gate-20261119T122435Z",
+  "job": "greenfield-ci-eqsep-gate",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T12:24:35.090080+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T12:25:53.833166+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-eqsep-gate-out-greenfield-ci-eqsep-gate-20261119T122435Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T12:25:19.244259+00:00",
+  "launch_confirmed_at": "2026-11-19T12:25:26.215684+00:00",
+  "collector_at": "2026-11-19T12:26:02.551852+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T12:25:26.215684+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.14 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "eqsep-gate-out.json",
+      "bytes": 1787,
+      "sha256": "e512ebb10d4ce41b6c624d348e518b3a7ebce2a6068d854d7a115ce30db4fcdc",
+      "route": "misplaced"
+    },
+    {
+      "path": "eqsep-gate-log.txt",
+      "bytes": 119685,
+      "sha256": "827fc5bbc7cddd9d127b0da9ef4a7725c92e06141df559dc411a6d3da16df06c",
+      "route": "misplaced"
+    },
+    {
+      "path": "eqsep-gate-result.json",
+      "bytes": 2318,
+      "sha256": "39cc6b458582904ebd95b6773ff7418aa28b2dc9184a8c16ca9fa2c9e0decea3",
+      "route": "misplaced"
+    },
+    {
+      "path": "eqsep-gate-check.txt",
+      "bytes": 446,
+      "sha256": "947bb48bea8cb9bd8f1692d6c4465b02f9ba9e603aa452d81b6a852e11abf0cc",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "eqsep-gate-out.json",
+      "path": "/content/eqsep-gate-out.json",
+      "bytes": 1787,
+      "mtime": 1795091124.7420468,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "eqsep-gate-log.txt",
+      "path": "/content/eqsep-gate-log.txt",
+      "bytes": 119685,
+      "mtime": 1795091124.7430468,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "eqsep-gate-result.json",
+      "path": "/content/eqsep-gate-result.json",
+      "bytes": 2318,
+      "mtime": 1795091124.7430468,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "eqsep-gate-check.txt",
+      "path": "/content/eqsep-gate-check.txt",
+      "bytes": 446,
+      "mtime": 1795091124.7420468,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T12:26:57.467879+00:00",
+  "error": "job payload exited 1",
+  "usage_after": "Current balance: 403.08 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T12:26:57.745070+00:00"
+}

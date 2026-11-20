@@ -1,0 +1,4900 @@
+{
+  "presence": {
+    "mode": "away",
+    "expires_at": null,
+    "expectation": ""
+  },
+  "handlers": [
+    {
+      "handle": "@fixture-1",
+      "label": "Fixture 1",
+      "thread_id": "fixture-thread-1"
+    },
+    {
+      "handle": "@fixture-2",
+      "label": "Fixture 2",
+      "thread_id": "fixture-thread-2"
+    },
+    {
+      "handle": "@fixture-3",
+      "label": "Fixture 3",
+      "thread_id": "fixture-thread-3"
+    },
+    {
+      "handle": "@fixture-4",
+      "label": "Fixture 4",
+      "thread_id": "fixture-thread-4"
+    },
+    {
+      "handle": "@fixture-5",
+      "label": "Fixture 5",
+      "thread_id": "fixture-thread-5"
+    },
+    {
+      "handle": "@fixture-6",
+      "label": "Fixture 6",
+      "thread_id": "fixture-thread-6"
+    },
+    {
+      "handle": "@fixture-7",
+      "label": "Fixture 7",
+      "thread_id": "fixture-thread-7"
+    },
+    {
+      "handle": "@fixture-8",
+      "label": "Fixture 8",
+      "thread_id": "fixture-thread-8"
+    },
+    {
+      "handle": "@fixture-9",
+      "label": "Fixture 9",
+      "thread_id": "fixture-thread-9"
+    },
+    {
+      "handle": "@fixture-10",
+      "label": "Fixture 10",
+      "thread_id": "fixture-thread-10"
+    }
+  ],
+  "programmes": [
+    {
+      "slug": "fixture-programme-1",
+      "label": "Fixture programme 1",
+      "handles": [
+        "@fixture-1"
+      ]
+    },
+    {
+      "slug": "fixture-programme-2",
+      "label": "Fixture programme 2",
+      "handles": [
+        "@fixture-2"
+      ]
+    },
+    {
+      "slug": "fixture-programme-3",
+      "label": "Fixture programme 3",
+      "handles": [
+        "@fixture-3"
+      ]
+    }
+  ],
+  "sends": [
+    {
+      "id": "s0001",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 1",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0002",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 2",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0003",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 3",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0004",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 4",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0005",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 5",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0006",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 6",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0007",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 7",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0008",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 8",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0009",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 9",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0010",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 10",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0011",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 11",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0012",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 12",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0013",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 13",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0014",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 14",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0015",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 15",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0016",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 16",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0017",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 17",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0018",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 18",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0019",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 19",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0020",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 20",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0021",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 21",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0022",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 22",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0023",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 23",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0024",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 24",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0025",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 25",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0026",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 26",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0027",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 27",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0028",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 28",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0029",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 29",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0030",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 30",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0031",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 31",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0032",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 32",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0033",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 33",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0034",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 34",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0035",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 35",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0036",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 36",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0037",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 37",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0038",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 38",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0039",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 39",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0040",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 40",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0041",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 41",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0042",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 42",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0043",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 43",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0044",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 44",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0045",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 45",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0046",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 46",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    },
+    {
+      "id": "s0047",
+      "at": "2026-11-01T00:00:00+00:00",
+      "rule_id": "fixture-rule",
+      "wait_id": null,
+      "handle": "@fixture-1",
+      "target": "fixture-thread-1",
+      "template": "venue-ping",
+      "version": 1,
+      "attempt": 1,
+      "presence": "away",
+      "text": "Fixture send 47",
+      "fact_hash": null,
+      "mode": "active",
+      "outcome": "recorded"
+    }
+  ],
+  "items": [
+    {
+      "id": "@fixture-1:item-1",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 1",
+      "status_code": null,
+      "source_ref": "fixture-1",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-2",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 2",
+      "status_code": null,
+      "source_ref": "fixture-2",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-3",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 3",
+      "status_code": null,
+      "source_ref": "fixture-3",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-4",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 4",
+      "status_code": null,
+      "source_ref": "fixture-4",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-5",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 5",
+      "status_code": null,
+      "source_ref": "fixture-5",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-6",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 6",
+      "status_code": null,
+      "source_ref": "fixture-6",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-7",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 7",
+      "status_code": null,
+      "source_ref": "fixture-7",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-8",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 8",
+      "status_code": null,
+      "source_ref": "fixture-8",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-9",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 9",
+      "status_code": null,
+      "source_ref": "fixture-9",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-10",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 10",
+      "status_code": null,
+      "source_ref": "fixture-10",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-11",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 11",
+      "status_code": null,
+      "source_ref": "fixture-11",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-12",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 12",
+      "status_code": null,
+      "source_ref": "fixture-12",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-13",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 13",
+      "status_code": null,
+      "source_ref": "fixture-13",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-14",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 14",
+      "status_code": null,
+      "source_ref": "fixture-14",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-15",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 15",
+      "status_code": null,
+      "source_ref": "fixture-15",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-16",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 16",
+      "status_code": null,
+      "source_ref": "fixture-16",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-17",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 17",
+      "status_code": null,
+      "source_ref": "fixture-17",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-18",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 18",
+      "status_code": null,
+      "source_ref": "fixture-18",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-19",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 19",
+      "status_code": null,
+      "source_ref": "fixture-19",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-20",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 20",
+      "status_code": null,
+      "source_ref": "fixture-20",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-21",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 21",
+      "status_code": null,
+      "source_ref": "fixture-21",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-22",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 22",
+      "status_code": null,
+      "source_ref": "fixture-22",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-23",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 23",
+      "status_code": null,
+      "source_ref": "fixture-23",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-24",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 24",
+      "status_code": null,
+      "source_ref": "fixture-24",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-25",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 25",
+      "status_code": null,
+      "source_ref": "fixture-25",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-26",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 26",
+      "status_code": null,
+      "source_ref": "fixture-26",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-27",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 27",
+      "status_code": null,
+      "source_ref": "fixture-27",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-28",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 28",
+      "status_code": null,
+      "source_ref": "fixture-28",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-29",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 29",
+      "status_code": null,
+      "source_ref": "fixture-29",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-30",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 30",
+      "status_code": null,
+      "source_ref": "fixture-30",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-31",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 31",
+      "status_code": null,
+      "source_ref": "fixture-31",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-32",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 32",
+      "status_code": null,
+      "source_ref": "fixture-32",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-33",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 33",
+      "status_code": null,
+      "source_ref": "fixture-33",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-34",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 34",
+      "status_code": null,
+      "source_ref": "fixture-34",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-35",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 35",
+      "status_code": null,
+      "source_ref": "fixture-35",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-36",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 36",
+      "status_code": null,
+      "source_ref": "fixture-36",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-37",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 37",
+      "status_code": null,
+      "source_ref": "fixture-37",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-38",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 38",
+      "status_code": null,
+      "source_ref": "fixture-38",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-39",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 39",
+      "status_code": null,
+      "source_ref": "fixture-39",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-40",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 40",
+      "status_code": null,
+      "source_ref": "fixture-40",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-41",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 41",
+      "status_code": null,
+      "source_ref": "fixture-41",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-42",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 42",
+      "status_code": null,
+      "source_ref": "fixture-42",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-43",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 43",
+      "status_code": null,
+      "source_ref": "fixture-43",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-44",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 44",
+      "status_code": null,
+      "source_ref": "fixture-44",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-45",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 45",
+      "status_code": null,
+      "source_ref": "fixture-45",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-46",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 46",
+      "status_code": null,
+      "source_ref": "fixture-46",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-47",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 47",
+      "status_code": null,
+      "source_ref": "fixture-47",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-48",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 48",
+      "status_code": null,
+      "source_ref": "fixture-48",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-49",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 49",
+      "status_code": null,
+      "source_ref": "fixture-49",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-50",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 50",
+      "status_code": null,
+      "source_ref": "fixture-50",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-51",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 51",
+      "status_code": null,
+      "source_ref": "fixture-51",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-52",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 52",
+      "status_code": null,
+      "source_ref": "fixture-52",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    },
+    {
+      "id": "@fixture-1:item-53",
+      "handle": "@fixture-1",
+      "kind": "followup",
+      "title": "Fixture item 53",
+      "status_code": null,
+      "source_ref": "fixture-53",
+      "source_url": "",
+      "clears_at_source": false,
+      "due_at": null,
+      "waiting_since": "2026-11-01T00:00:00+00:00",
+      "need": "agent_clearable",
+      "tier": "digest",
+      "triage": "open",
+      "snooze_return_at": null,
+      "snooze_on_activity": false,
+      "resume_note": null,
+      "provenance": "offer",
+      "options": []
+    }
+  ],
+  "templates": [
+    {
+      "audience": "chat",
+      "kind": "continue-settled",
+      "slots": [
+        "summary"
+      ],
+      "text": "Continue \u2014 settled under a standing rule: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "continue-standing-rule",
+      "slots": [
+        "summary"
+      ],
+      "text": "Continue under the standing rule: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "grant-program",
+      "slots": [
+        "summary",
+        "scope"
+      ],
+      "text": "Granted \u2014 program step inside the approved scope: {summary}. Scope restated: {scope}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "grant-followup",
+      "slots": [
+        "summary"
+      ],
+      "text": "Granted \u2014 build it in a worktree for accept / reject / modify: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "stall-nudge",
+      "slots": [
+        "summary",
+        "age_minutes"
+      ],
+      "text": "Stall check \u2014 no report in {age_minutes}m on: {summary}. Status?",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-request",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status request \u2014 {summary}: reply with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "main",
+      "kind": "approval-surface",
+      "slots": [
+        "summary",
+        "handle"
+      ],
+      "text": "Approval waiting \u2014 {summary} ({handle}).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "record-reconcile",
+      "slots": [
+        "summary"
+      ],
+      "text": "Reconcile the record: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "idleness-nudge",
+      "slots": [
+        "summary"
+      ],
+      "text": "Idle with work outstanding: {summary}. Continue, or report PARKED.",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "venue-question",
+      "slots": [
+        "summary"
+      ],
+      "text": "Venue question: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "venue-ping",
+      "slots": [
+        "summary"
+      ],
+      "text": "Venue check: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "verdict",
+      "slots": [
+        "summary",
+        "verb",
+        "note"
+      ],
+      "text": "Owner verdict \u2014 {verb}: {summary} {note}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "reply",
+      "slots": [
+        "summary",
+        "note"
+      ],
+      "text": "Owner reply on {summary} \u2014 {note}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-ping",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status ping \u2014 the owner asks for a fresh status on: {summary}. Reply with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "continuation",
+      "slots": [
+        "summary",
+        "detail"
+      ],
+      "text": "Continue \u2014 {summary} {detail}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-ping-urgent",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status ping (second) \u2014 still no fresh status on: {summary}. Reply now with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "parallelize",
+      "slots": [
+        "summary"
+      ],
+      "text": "Parallelize \u2014 the owner directs this work staffed across the live fleet now: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "commission",
+      "slots": [
+        "summary"
+      ],
+      "text": "Commission from the owner: {summary}",
+      "version": 1
+    }
+  ],
+  "action_rules": [
+    {
+      "id": "R1-defect-clears-on-terminal",
+      "fixture": true
+    },
+    {
+      "id": "R2-stale-status-pings",
+      "fixture": true
+    },
+    {
+      "id": "R3-perf-clears-as-fyi",
+      "fixture": true
+    },
+    {
+      "id": "R4-done-with-conflict-returns",
+      "fixture": true
+    },
+    {
+      "id": "R5-ui-done-draws-critic",
+      "fixture": true
+    },
+    {
+      "id": "R6-completion-proposes-consolidation",
+      "fixture": true
+    },
+    {
+      "id": "fixture-action-rule",
+      "fixture": true
+    }
+  ],
+  "waits": [],
+  "armed_rows": [
+    {
+      "todo": "fixture-todo-1",
+      "row": {
+        "status": "doing"
+      }
+    },
+    {
+      "todo": "fixture-todo-2",
+      "row": {
+        "status": "doing"
+      }
+    }
+  ],
+  "owner_actions": [
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 1"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 2"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 3"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 4"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 5"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 6"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 7"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 8"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 9"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 10"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 11"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 12"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 13"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 14"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 15"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 16"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 17"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 18"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 19"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 20"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 21"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 22"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 23"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 24"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 25"
+    },
+    {
+      "at": "2026-11-01T00:00:00+00:00",
+      "kind": "fixture",
+      "summary": "Fixture owner action 26"
+    }
+  ],
+  "dispatch_failures": [
+    {
+      "send_id": "s0001",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0002",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0003",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0004",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0005",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0006",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0007",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0008",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0009",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0010",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0011",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0012",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0013",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0014",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0015",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0016",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0017",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0018",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0019",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0020",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0021",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0022",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0023",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0024",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0025",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0026",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0027",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0028",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0029",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0030",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0031",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0032",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0033",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0034",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0035",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0036",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0037",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0038",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0039",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0040",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0041",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0042",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0043",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0044",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0045",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0046",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0047",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0048",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0049",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0050",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0051",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0052",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0053",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0054",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0055",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0056",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0057",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0058",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0059",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0060",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0061",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0062",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0063",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0064",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0065",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0066",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0067",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0068",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0069",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0070",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0071",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0072",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0073",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0074",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0075",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0076",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0077",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0078",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0079",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0080",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0081",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0082",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0083",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0084",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0085",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0086",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0087",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0088",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0089",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0090",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0091",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0092",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0093",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0094",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0095",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0096",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0097",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0098",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0099",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0100",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0101",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0102",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0103",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0104",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0105",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0106",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0107",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0108",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0109",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0110",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0111",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0112",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0113",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0114",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0115",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0116",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0117",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0118",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0119",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0120",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0121",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0122",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0123",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0124",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0125",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0126",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0127",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0128",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0129",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0130",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0131",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0132",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0133",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0134",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0135",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0136",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0137",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0138",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0139",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0140",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0141",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0142",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0143",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0144",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0145",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0146",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0147",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0148",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0149",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0150",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0151",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0152",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0153",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0154",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0155",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0156",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0157",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0158",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0159",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0160",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0161",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0162",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0163",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0164",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0165",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0166",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0167",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0168",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0169",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0170",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0171",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0172",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0173",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0174",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0175",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0176",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0177",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0178",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0179",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0180",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0181",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0182",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0183",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0184",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0185",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0186",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0187",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0188",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0189",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0190",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0191",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0192",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0193",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0194",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0195",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0196",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0197",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0198",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0199",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0200",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0201",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0202",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0203",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0204",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0205",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0206",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0207",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0208",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0209",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0210",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0211",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0212",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0213",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0214",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0215",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0216",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0217",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0218",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0219",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0220",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0221",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0222",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0223",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0224",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0225",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0226",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0227",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0228",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0229",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0230",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0231",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0232",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0233",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0234",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0235",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0236",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0237",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0238",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0239",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0240",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0241",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0242",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0243",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0244",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0245",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0246",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0247",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0248",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0249",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0250",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0251",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0252",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0253",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0254",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0255",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0256",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0257",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0258",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0259",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0260",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0261",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0262",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0263",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0264",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0265",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0266",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0267",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0268",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0269",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0270",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0271",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0272",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0273",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0274",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0275",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0276",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0277",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0278",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0279",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0280",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0281",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0282",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0283",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0284",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0285",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0286",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0287",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0288",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0289",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0290",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0291",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0292",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0293",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0294",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0295",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0296",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0297",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0298",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0299",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0300",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0301",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0302",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0303",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0304",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0305",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0306",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0307",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0308",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0309",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0310",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0311",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0312",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0313",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0314",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0315",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0316",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0317",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0318",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0319",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0320",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0321",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0322",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0323",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0324",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0325",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0326",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0327",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0328",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0329",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0330",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0331",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0332",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0333",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0334",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0335",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0336",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0337",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0338",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0339",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0340",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0341",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0342",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0343",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0344",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0345",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0346",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0347",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0348",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0349",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0350",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0351",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0352",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0353",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0354",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0355",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0356",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0357",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0358",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0359",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0360",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0361",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0362",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0363",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0364",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0365",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0366",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0367",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0368",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0369",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0370",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0371",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0372",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0373",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0374",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0375",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0376",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0377",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0378",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0379",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0380",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0381",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0382",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0383",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0384",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0385",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0386",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0387",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0388",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0389",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0390",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0391",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0392",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0393",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0394",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0395",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0396",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0397",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0398",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0399",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0400",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0401",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0402",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0403",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0404",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0405",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0406",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0407",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0408",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0409",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0410",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0411",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0412",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0413",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0414",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0415",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0416",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0417",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0418",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0419",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0420",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0421",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0422",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0423",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0424",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0425",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0426",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0427",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0428",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0429",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0430",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0431",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0432",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0433",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0434",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0435",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0436",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0437",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0438",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0439",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0440",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0441",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    },
+    {
+      "send_id": "s0442",
+      "consumer": "fixture-consumer",
+      "reason": "fixture failure",
+      "at": "2026-11-01T00:00:00+00:00"
+    }
+  ]
+}

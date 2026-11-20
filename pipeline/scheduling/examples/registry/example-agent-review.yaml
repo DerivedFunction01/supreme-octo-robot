@@ -1,0 +1,18 @@
+id: example-agent-review
+title: Example agent review (agent job)
+kind: agent
+status: active
+cadence:
+  type: daily
+  at: "09:00"
+owner: goal:example
+body: bodies/example-agent-review.md
+timeout_secs: 1800
+state_paths: []
+classification: the work is reading the day's run record and judging what deserves the operator's attention - judgment over content, so agent
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: demo

@@ -1,0 +1,752 @@
+{
+  "action_rules": [
+    {
+      "created_from": "seed",
+      "id": "R1-defect-clears-on-terminal",
+      "match": {
+        "kind": "defect"
+      },
+      "mode": "shadow",
+      "note": "A defect item closes when its handler posts a terminal status.",
+      "verb": "close_on_verify"
+    },
+    {
+      "created_from": "seed",
+      "id": "R2-stale-status-pings",
+      "match": {
+        "status_code": [
+          "WORKING",
+          "CONTINUE"
+        ]
+      },
+      "mode": "shadow",
+      "note": "A stale working status draws a status ping.",
+      "verb": "status_ping"
+    },
+    {
+      "created_from": "seed",
+      "id": "R3-perf-clears-as-fyi",
+      "match": {
+        "kind": "performance",
+        "provenance": "offer"
+      },
+      "mode": "shadow",
+      "note": "Result-preserving performance clears as FYI.",
+      "verb": "clear_fyi"
+    },
+    {
+      "created_from": "seed",
+      "id": "R4-done-with-conflict-returns",
+      "match": {
+        "status_code": [
+          "DONE",
+          "CLOSED"
+        ]
+      },
+      "mode": "shadow",
+      "note": "Deferred: reads the workbench derivation.",
+      "verb": "reject_incomplete"
+    },
+    {
+      "created_from": "seed",
+      "id": "R5-ui-done-draws-critic",
+      "match": {
+        "status_code": [
+          "DONE",
+          "CLOSED"
+        ],
+        "ui_surface": true
+      },
+      "mode": "shadow",
+      "note": "Deferred: dispatches a commission.",
+      "verb": "critic_pass"
+    },
+    {
+      "created_from": "seed",
+      "id": "R6-completion-proposes-consolidation",
+      "match": {
+        "status_code": [
+          "DONE",
+          "CLOSED"
+        ]
+      },
+      "mode": "shadow",
+      "note": "Deferred: reads the workbench derivation.",
+      "verb": "consolidation_proposal"
+    }
+  ],
+  "fields": [
+    {
+      "name": "wait_class",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "enum"
+    },
+    {
+      "name": "status_code",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "enum"
+    },
+    {
+      "name": "kind",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "enum"
+    },
+    {
+      "name": "handle",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "string"
+    },
+    {
+      "name": "program_approved",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "bool"
+    },
+    {
+      "name": "reversible",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "bool"
+    },
+    {
+      "name": "in_budget",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "bool"
+    },
+    {
+      "name": "only_blocker",
+      "poster_settable": true,
+      "source": "poster",
+      "type": "bool"
+    },
+    {
+      "name": "age_minutes",
+      "poster_settable": false,
+      "source": "derived",
+      "type": "number"
+    },
+    {
+      "name": "repeat_count",
+      "poster_settable": false,
+      "source": "derived",
+      "type": "number"
+    },
+    {
+      "name": "presence",
+      "poster_settable": false,
+      "source": "derived",
+      "type": "enum"
+    },
+    {
+      "name": "handler_status_code",
+      "poster_settable": false,
+      "source": "derived",
+      "type": "enum"
+    }
+  ],
+  "item_kinds": [
+    {
+      "digest_owner": null,
+      "kind": "decision",
+      "label": "Decision",
+      "on_stale": "expire",
+      "stale_after_hours": 72,
+      "status_kind": false
+    },
+    {
+      "digest_owner": null,
+      "kind": "action",
+      "label": "Action",
+      "on_stale": "expire",
+      "stale_after_hours": null,
+      "status_kind": false
+    },
+    {
+      "digest_owner": "lane",
+      "kind": "defect",
+      "label": "Defect",
+      "on_stale": "expire",
+      "stale_after_hours": null,
+      "status_kind": true
+    },
+    {
+      "digest_owner": null,
+      "kind": "approval",
+      "label": "Approval",
+      "on_stale": "expire",
+      "stale_after_hours": 48,
+      "status_kind": false
+    },
+    {
+      "digest_owner": null,
+      "kind": "fyi",
+      "label": "FYI",
+      "on_stale": "expire",
+      "stale_after_hours": null,
+      "status_kind": false
+    },
+    {
+      "digest_owner": null,
+      "kind": "rule_proposal",
+      "label": "Rule proposal",
+      "on_stale": "expire",
+      "stale_after_hours": 168,
+      "status_kind": false
+    },
+    {
+      "digest_owner": "self",
+      "kind": "followup",
+      "label": "Follow-up",
+      "on_stale": "expire",
+      "stale_after_hours": 168,
+      "status_kind": true
+    },
+    {
+      "digest_owner": "owner",
+      "kind": "improvement",
+      "label": "Improvement",
+      "on_stale": "expire",
+      "stale_after_hours": 168,
+      "status_kind": true
+    },
+    {
+      "digest_owner": "owner",
+      "kind": "consolidation",
+      "label": "Consolidation",
+      "on_stale": "expire",
+      "stale_after_hours": 168,
+      "status_kind": true
+    },
+    {
+      "digest_owner": "owner",
+      "kind": "performance",
+      "label": "Performance",
+      "on_stale": "expire",
+      "stale_after_hours": 168,
+      "status_kind": true
+    },
+    {
+      "digest_owner": "owner",
+      "kind": "push_needed",
+      "label": "Push needed",
+      "on_stale": "expire",
+      "stale_after_hours": 24,
+      "status_kind": true
+    }
+  ],
+  "rules": [
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "settled-continue",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "settled_continue"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 10,
+      "requires": [],
+      "scope": "always",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "program-step",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "program_step"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 20,
+      "requires": [
+        "program_approved",
+        "reversible",
+        "in_budget",
+        "only_blocker"
+      ],
+      "scope": "always",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "defect-fix",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "defect_fix"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 30,
+      "requires": [],
+      "scope": "always",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "result-preserving",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "result_preserving"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 40,
+      "requires": [],
+      "scope": "always",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "followup-worktree",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "followup_worktree"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 50,
+      "requires": [],
+      "scope": "away",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "stall-hold",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "stall_hold"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 60,
+      "requires": [],
+      "scope": "away",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "redrive",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "redrive"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 70,
+      "requires": [],
+      "scope": "active",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    },
+    {
+      "action": {
+        "type": "auto_apply"
+      },
+      "guards": {},
+      "id": "ruling-propagation",
+      "match": {
+        "handle": null,
+        "kind": null,
+        "status_code": null,
+        "wait_class": "ruling_propagation"
+      },
+      "mode": "active",
+      "on_scope_miss": "pending",
+      "priority": 80,
+      "requires": [],
+      "scope": "active",
+      "trigger": {
+        "on": "on_enter"
+      },
+      "where": null
+    }
+  ],
+  "status_codes": [
+    {
+      "code": "WORKING",
+      "label": "Working",
+      "need": "agent_clearable",
+      "short": "W",
+      "terminal": false
+    },
+    {
+      "code": "CONTINUE",
+      "label": "Continue",
+      "need": "agent_clearable",
+      "short": "C",
+      "terminal": false
+    },
+    {
+      "code": "DONE",
+      "label": "Done",
+      "need": "agent_clearable",
+      "short": "D",
+      "terminal": true
+    },
+    {
+      "code": "CLOSED",
+      "label": "Closed",
+      "need": "agent_clearable",
+      "short": "CL",
+      "terminal": true
+    },
+    {
+      "code": "PARKED",
+      "label": "Parked",
+      "need": "agent_clearable",
+      "short": "P",
+      "terminal": false
+    },
+    {
+      "code": "BLOCKED-OWNER",
+      "label": "Blocked \u2014 owner",
+      "need": "owner_actionable",
+      "short": "BO",
+      "terminal": false
+    },
+    {
+      "code": "BLOCKED-HARD",
+      "label": "Blocked \u2014 hard stop",
+      "need": "owner_actionable",
+      "short": "BH",
+      "terminal": false
+    },
+    {
+      "code": "REVIEW",
+      "label": "Review",
+      "need": "owner_actionable",
+      "short": "R",
+      "terminal": false
+    }
+  ],
+  "templates": [
+    {
+      "audience": "chat",
+      "kind": "continue-settled",
+      "slots": [
+        "summary"
+      ],
+      "text": "Continue \u2014 settled under a standing rule: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "continue-standing-rule",
+      "slots": [
+        "summary"
+      ],
+      "text": "Continue under the standing rule: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "grant-program",
+      "slots": [
+        "summary",
+        "scope"
+      ],
+      "text": "Granted \u2014 program step inside the approved scope: {summary}. Scope restated: {scope}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "grant-followup",
+      "slots": [
+        "summary"
+      ],
+      "text": "Granted \u2014 build it in a worktree for accept / reject / modify: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "stall-nudge",
+      "slots": [
+        "summary",
+        "age_minutes"
+      ],
+      "text": "Stall check \u2014 no report in {age_minutes}m on: {summary}. Status?",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-request",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status request \u2014 {summary}: reply with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "main",
+      "kind": "approval-surface",
+      "slots": [
+        "summary",
+        "handle"
+      ],
+      "text": "Approval waiting \u2014 {summary} ({handle}).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "record-reconcile",
+      "slots": [
+        "summary"
+      ],
+      "text": "Reconcile the record: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "idleness-nudge",
+      "slots": [
+        "summary"
+      ],
+      "text": "Idle with work outstanding: {summary}. Continue, or report PARKED.",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "venue-question",
+      "slots": [
+        "summary"
+      ],
+      "text": "Venue question: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "venue-ping",
+      "slots": [
+        "summary"
+      ],
+      "text": "Venue check: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "verdict",
+      "slots": [
+        "summary",
+        "verb",
+        "note"
+      ],
+      "text": "Owner verdict \u2014 {verb}: {summary} {note}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "reply",
+      "slots": [
+        "summary",
+        "note"
+      ],
+      "text": "Owner reply on {summary} \u2014 {note}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-ping",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status ping \u2014 the owner asks for a fresh status on: {summary}. Reply with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "continuation",
+      "slots": [
+        "summary",
+        "detail"
+      ],
+      "text": "Continue \u2014 {summary} {detail}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "status-ping-urgent",
+      "slots": [
+        "summary"
+      ],
+      "text": "Status ping (second) \u2014 still no fresh status on: {summary}. Reply now with the status form (done / ongoing / blockers).",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "parallelize",
+      "slots": [
+        "summary"
+      ],
+      "text": "Parallelize \u2014 the owner directs this work staffed across the live fleet now: {summary}",
+      "version": 1
+    },
+    {
+      "audience": "chat",
+      "kind": "commission",
+      "slots": [
+        "summary"
+      ],
+      "text": "Commission from the owner: {summary}",
+      "version": 1
+    }
+  ],
+  "wait_classes": [
+    {
+      "hard_stop": false,
+      "name": "settled_continue",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "program_step",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "defect_fix",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "result_preserving",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "followup_worktree",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "stall_hold",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "redrive",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": false,
+      "name": "ruling_propagation",
+      "on_stale": "expire",
+      "stale_after_hours": 48
+    },
+    {
+      "hard_stop": true,
+      "name": "permission_card",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "scope_expansion",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "login",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "external_send",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "purchase",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "form_submit",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "calendar_write",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    },
+    {
+      "hard_stop": true,
+      "name": "schedule_change",
+      "on_stale": "expire_blocked",
+      "stale_after_hours": null
+    }
+  ]
+}

@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+# colab-fs — write/patch/delete/read files on a Colab session.
+#
+#   colab-fs write  -s SESSION PATH (--from LOCALFILE | --stdin)
+#   colab-fs patch  -s SESSION PATH (--old TEXT --new TEXT | --old-file F --new-file F)
+#   colab-fs delete -s SESSION PATH [--missing-ok]
+#   colab-fs read   -s SESSION PATH [--offset N] [--max-lines N]
+#
+# A read is paged: --offset is the 1-based first line (default 1)
+# and --max-lines caps the lines returned (default
+# $COLAB_FS_READ_MAX_LINES or 900; 0 means no cap) — a monolith
+# read is never the default; the verdict on stderr reports
+# total_lines and whether the window was truncated.
+#
+# Payloads are bounded by the measured single-file ceiling
+# (50 MB): a write larger than $COLAB_FS_MAX_WRITE_BYTES (default
+# 52428800) is refused before the channel is touched, and a read
+# spec carries a byte cap for its window ($COLAB_FS_MAX_READ_BYTES,
+# same default; the payload enforces it) — both refusals name
+# bin/colab-xfer, the chunked verb bulk movement rides instead.
+#
+# The session comes from -s or $COLAB_SH_SESSION (bin/colab-sh's
+# convention); the tool never creates a session — it rides
+# bin/colab-sh, which attaches to live sessions only. One stdin
+# stream goes to colab-sh: it plants adapters/colab/snippets/channels/fs_ops.py (base64,
+# read from this repo at runtime) at an in-session temp path and
+# runs it with one JSON spec as its stdin. Text and content travel
+# base64 so the spec survives the channel byte-exact; the path is
+# a plain JSON string, so a path containing a double quote or a
+# backslash is refused. The driver itself writes no local files.
+#
+# write/patch/delete print the payload's one-line JSON verdict on
+# stdout; read decodes the verdict's content to stdout and puts
+# the verdict on stderr. The exit code is the VERIFIED outcome:
+# 0 only when the payload's verdict says ok — and, for a write,
+# when the verdict's after_sha256 equals the local content's
+# hash. A channel refusal (the sync-claim gate answers a refused
+# attach rather than failing it) produces no verdict at all, and
+# no verdict means the op did NOT land: exit 1 with the reason
+# named. (2026-11-11: refused plants exited 0 with zero files
+# landed, and lanes built hours of work on plants that never
+# happened.) 2 is usage error.
+
+set -u
+
+usage() {
+    printf 'usage: colab-fs write|patch|delete|read -s SESSION PATH [options]\n' >&2
+    exit 2
+}
+
+b64() { base64 | tr -d '\n'; }
+
+[ $# -ge 1 ] || usage
+op=$1
+shift
+case $op in
+    write | patch | delete | read) ;;
+    *) usage ;;
+esac
+
+session=${COLAB_SH_SESSION:-}
+path=
+from_file=
+use_stdin=0
+old_text=
+new_text=
+old_set=0
+new_set=0
+old_file=
+new_file=
+missing_ok=0
+read_offset=1
+read_max_lines=${COLAB_FS_READ_MAX_LINES:-900}
+read_max_bytes=${COLAB_FS_MAX_READ_BYTES:-52428800}
+max_write_bytes=${COLAB_FS_MAX_WRITE_BYTES:-52428800}
+paging_set=0
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -s)
+            [ $# -ge 2 ] || usage
+            session=$2
+            shift 2
+            ;;
+        --from)
+            [ $# -ge 2 ] || usage
+            from_file=$2
+            shift 2
+            ;;
+        --stdin)
+            use_stdin=1
+            shift
+            ;;
+        --old)
+            [ $# -ge 2 ] || usage
+            old_text=$2
+            old_set=1
+            shift 2
+            ;;
+        --new)
+            [ $# -ge 2 ] || usage
+            new_text=$2
+            new_set=1
+            shift 2
+            ;;
+        --old-file)
+            [ $# -ge 2 ] || usage
+            old_file=$2
+            shift 2
+            ;;
+        --new-file)
+            [ $# -ge 2 ] || usage
+            new_file=$2
+            shift 2
+            ;;
+        --missing-ok)
+            missing_ok=1
+            shift
+            ;;
+        --offset)
+            [ $# -ge 2 ] || usage
+            case $2 in '' | *[!0-9]* | 0) usage ;; esac
+            read_offset=$2
+            paging_set=1
+            shift 2
+            ;;
+        --max-lines)
+            [ $# -ge 2 ] || usage
+            case $2 in '' | *[!0-9]*) usage ;; esac
+            read_max_lines=$2
+            paging_set=1
+            shift 2
+            ;;
+        -*)
+            usage
+            ;;
+        *)
+            [ -z "$path" ] || usage
+            path=$1
+            shift
+            ;;
+    esac
+done
+
+[ -n "$session" ] || usage
+[ -n "$path" ] || usage
+case $path in
+    *'"'* | *'\'* | *$'\n'*) usage ;;
+esac
+
+case $read_max_lines in '' | *[!0-9]*) usage ;; esac
+case $read_max_bytes in '' | *[!0-9]*) usage ;; esac
+case $max_write_bytes in '' | *[!0-9]*) usage ;; esac
+
+refuse_oversize_write() {
+    printf 'colab-fs: write payload of %s bytes exceeds the %s-byte single-call ceiling; bulk movement rides bin/colab-xfer (colab-xfer up -s %s LOCAL_PATH REMOTE_NAME)\n' "$1" "$max_write_bytes" "$session" >&2
+    exit 2
+}
+
+# Per-op option discipline and the spec body.
+spec=
+case $op in
+    write)
+        [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$missing_ok" = 0 ] && [ "$paging_set" = 0 ] || usage
+        content_b64=
+        if [ -n "$from_file" ] && [ "$use_stdin" = 0 ]; then
+            [ -f "$from_file" ] || usage
+            src_bytes=$(wc -c <"$from_file")
+            src_bytes=${src_bytes//[[:space:]]/}
+            [ "$src_bytes" -gt "$max_write_bytes" ] && refuse_oversize_write "$src_bytes"
+            content_b64=$(b64 <"$from_file")
+        elif [ -z "$from_file" ] && [ "$use_stdin" = 1 ]; then
+            content_b64=$(b64)
+            b64_len=${#content_b64}
+            pad=0
+            case $content_b64 in
+                *==) pad=2 ;;
+                *=) pad=1 ;;
+            esac
+            src_bytes=$((b64_len / 4 * 3 - pad))
+            [ "$src_bytes" -gt "$max_write_bytes" ] && refuse_oversize_write "$src_bytes"
+        else
+            usage
+        fi
+        spec=$(printf '{"op":"write","path":"%s","content_b64":"%s"}' "$path" "$content_b64")
+        ;;
+    patch)
+        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$missing_ok" = 0 ] && [ "$paging_set" = 0 ] || usage
+        old_b64=
+        new_b64=
+        if [ "$old_set" = 1 ] && [ "$new_set" = 1 ] && [ -z "$old_file" ] && [ -z "$new_file" ]; then
+            old_b64=$(printf %s "$old_text" | b64)
+            new_b64=$(printf %s "$new_text" | b64)
+        elif [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -n "$old_file" ] && [ -n "$new_file" ]; then
+            [ -f "$old_file" ] && [ -f "$new_file" ] || usage
+            old_b64=$(b64 <"$old_file")
+            new_b64=$(b64 <"$new_file")
+        else
+            usage
+        fi
+        spec=$(printf '{"op":"patch","path":"%s","old_b64":"%s","new_b64":"%s"}' "$path" "$old_b64" "$new_b64")
+        ;;
+    delete)
+        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$paging_set" = 0 ] || usage
+        if [ "$missing_ok" = 1 ]; then
+            spec=$(printf '{"op":"delete","path":"%s","missing_ok":true}' "$path")
+        else
+            spec=$(printf '{"op":"delete","path":"%s","missing_ok":false}' "$path")
+        fi
+        ;;
+    read)
+        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$missing_ok" = 0 ] || usage
+        spec=$(printf '{"op":"read","path":"%s","offset":%s,"max_lines":%s,"max_bytes":%s}' "$path" "$read_offset" "$read_max_lines" "$read_max_bytes")
+        ;;
+esac
+
+REPO=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+SH_BIN=${COLAB_FS_SH:-$REPO/bin/colab-sh}
+[ -f "$REPO/adapters/colab/snippets/channels/fs_ops.py" ] || {
+    printf 'colab-fs: payload %s missing\n' "$REPO/adapters/colab/snippets/channels/fs_ops.py" >&2
+    exit 2
+}
+payload_b64=$(b64 <"$REPO/adapters/colab/snippets/channels/fs_ops.py")
+
+emit_stream() {
+    printf '%s\n' 'TMPD=$(mktemp -d) || exit 1'
+    printf '%s\n' 'trap '"'"'rm -rf "$TMPD"'"'"' EXIT'
+    printf '%s\n' 'base64 -d >"$TMPD/fs_ops.py" <<'"'"'COLAB_FS_PAYLOAD_B64'"'"
+    printf '%s\n' "$payload_b64"
+    printf '%s\n' 'COLAB_FS_PAYLOAD_B64'
+    printf '%s\n' 'python3 "$TMPD/fs_ops.py" <<'"'"'COLAB_FS_SPEC_JSON'"'"
+    printf '%s\n' "$spec"
+    printf '%s\n' 'COLAB_FS_SPEC_JSON'
+}
+
+verdict_line_of() {
+    # The payload's one verdict line out of whatever the channel
+    # printed: the last line carrying the verdict's "ok" field.
+    printf '%s\n' "$1" | grep '"ok":' | tail -n 1
+}
+
+verdict_field() {
+    printf %s "$1" | sed -n "s/.*\"$2\": *\"\([^\"]*\)\".*/\1/p"
+}
+
+if [ "$op" = read ]; then
+    verdict=$("$SH_BIN" -s "$session" < <(emit_stream))
+    rc=$?
+    printf '%s\n' "$verdict" >&2
+    if [ "$rc" = 0 ]; then
+        vline=$(verdict_line_of "$verdict")
+        if [ -z "$vline" ] || ! printf %s "$vline" | grep -q '"ok": *true'; then
+            printf 'colab-fs: read %s on %s returned no ok verdict although the channel exited 0 — treating as failed; nothing was read\n' "$path" "$session" >&2
+            exit 1
+        fi
+        content_b64=$(printf %s "$verdict" | sed -n 's/.*"content_b64": *"\([A-Za-z0-9+/=]*\)".*/\1/p')
+        printf %s "$content_b64" | base64 -d
+    fi
+    exit "$rc"
+fi
+
+out=$(emit_stream | "$SH_BIN" -s "$session")
+rc=$?
+vline=$(verdict_line_of "$out")
+if [ "$rc" != 0 ] || [ -z "$vline" ] || ! printf %s "$vline" | grep -q '"ok": *true'; then
+    printf '%s\n' "$out"
+    if [ "$rc" = 2 ]; then
+        # The channel's own refusal (the claim gate's exit 2):
+        # terminal, never retried, and the driver's exit stays
+        # 2 so callers can tell refused from failed — with the
+        # non-landing stated, since the refusal text alone
+        # reads like an answer, not a non-write.
+        printf 'colab-fs: %s %s did NOT land on %s — the channel refused the attach (rc 2); nothing was written.\n' "$op" "$path" "$session" >&2
+        exit 2
+    fi
+    printf 'colab-fs: %s %s did NOT land on %s — no ok verdict from the payload (channel rc %s). The channel output above is the whole story: a refused attach writes nothing.\n' "$op" "$path" "$session" "$rc" >&2
+    exit 1
+fi
+if [ "$op" = write ]; then
+    if [ -n "$from_file" ]; then
+        expected_sha=$(sha256sum <"$from_file" | cut -d' ' -f1)
+    else
+        expected_sha=$(printf %s "$content_b64" | base64 -d | sha256sum | cut -d' ' -f1)
+    fi
+    landed_sha=$(verdict_field "$vline" after_sha256)
+    if [ "$landed_sha" != "$expected_sha" ]; then
+        printf '%s\n' "$vline"
+        printf 'colab-fs: write %s on %s landed with a hash mismatch (payload after_sha256 %s, local %s) — treating as not landed\n' "$path" "$session" "$landed_sha" "$expected_sha" >&2
+        exit 1
+    fi
+fi
+printf '%s\n' "$vline"
+exit 0

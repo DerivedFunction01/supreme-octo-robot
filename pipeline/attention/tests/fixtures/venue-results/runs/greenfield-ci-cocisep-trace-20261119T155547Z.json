@@ -1,0 +1,75 @@
+{
+  "run_id": "greenfield-ci-cocisep-trace-20261119T155547Z",
+  "job": "greenfield-ci-cocisep-trace",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T15:55:47.494489+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T16:01:53.091699+00:00",
+  "venue": "colab",
+  "session_pin": "scarlet-ledge-52",
+  "lease_action": "adopted",
+  "session": "scarlet-ledge-52",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-trace-out-greenfield-ci-cocisep-trace-20261119T155547Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T16:01:00.994439+00:00",
+  "launch_confirmed_at": "2026-11-19T16:01:16.491213+00:00",
+  "collector_at": "2026-11-19T16:02:28.917944+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T16:01:16.491213+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 400.35 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cocisep-trace-log.txt",
+      "bytes": 1144,
+      "sha256": "ed09a696b53f66c50570032c76bcdf15eca1267f873383ac5f7b1d8570079d9a",
+      "route": "misplaced"
+    },
+    {
+      "path": "cocisep-trace-result.json",
+      "bytes": 1470,
+      "sha256": "7cae4f642520858df6a8453b0740505688de1296f43e1b63284d5178b2929e85",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-trace-log.txt",
+      "path": "/content/cocisep-trace-log.txt",
+      "bytes": 1144,
+      "mtime": 1795104073.9911926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cocisep-trace-result.json",
+      "path": "/content/cocisep-trace-result.json",
+      "bytes": 1470,
+      "mtime": 1795104073.9911926,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "missing_outputs": [
+    "cocisep-diag2p-priced.json",
+    "cocisep-diag2p-build.json"
+  ],
+  "finished_at": "2026-11-19T16:03:38.177113+00:00",
+  "error": "job payload exited 1",
+  "usage_after": "Current balance: 400.28 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T16:03:38.308992+00:00"
+}

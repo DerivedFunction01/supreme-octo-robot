@@ -1,0 +1,32 @@
+id: card-watch
+title: Permission-card watch — one watcher pass over pending runtime permission cards
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 15m
+timezone: America/New_York
+owner: none
+owner_reason: Platform machinery: the watcher serves every programme and lane that can be blocked by a runtime permission card, so no single programme owns it.
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/card_watch.py
+timeout_secs: 1800
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+    - 3
+    - 4
+  fail_patterns:
+    - CARD_WATCH_DEFECT
+state_paths:
+  - ${REPO}/state/connector-bridge
+  - ${REPO}/ops-tokens/card-watch.token
+classification: 'fixed command (one Python script): each pass builds the bridged card source under the dedicated read-only caller (card-watch, read scope only, token read from its token file at call time), hands source and clock to the registry watcher core, and branches only on the core''s enumerable outcome — exit 0 pass complete (silent), exit 3 source-stale non-run (no watcher state touched, never read as zero cards), exit 4 partial history; the core decides when a pass speaks and its line is relayed verbatim, a line carrying CARD_WATCH_DEFECT on an otherwise-normal exit is a failure by report rule (the repeated-source-stale escalation rides that marker), and a missing or nonconforming core exits 5 as a failure. Speaking is fully determined by those branches; the adapter judges no card content, holds no approve or deny capability, and writes no runtime decision.'
+lifetime: permanent
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: permission-card-watch

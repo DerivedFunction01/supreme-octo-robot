@@ -1,0 +1,84 @@
+{
+  "run_id": "greenfield-ci-cascade-g1-price-20261119T154437Z",
+  "job": "greenfield-ci-cascade-g1-price",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T15:44:37.886360+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T15:48:44.104699+00:00",
+  "venue": "colab",
+  "session_pin": "scarlet-ledge-52",
+  "lease_action": "adopted",
+  "session": "scarlet-ledge-52",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cascade-g1-price-out-greenfield-ci-cascade-g1-price-20261119T154437Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T15:46:05.355883+00:00",
+  "launch_confirmed_at": "2026-11-19T15:46:19.832621+00:00",
+  "collector_at": "2026-11-19T15:49:12.880791+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T15:46:19.832621+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 400.54 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cascade-g1-pricing.json",
+      "bytes": 40824,
+      "sha256": "be5453593f41174334a25e7cf3e171961ac272b79568290338b7ebf38e26e860",
+      "route": "misplaced"
+    },
+    {
+      "path": "cascade-g1-price-log.txt",
+      "bytes": 12930,
+      "sha256": "66fcda3426a09919d6f2e2e4229d5b78029dcfb6f1c4210fe87a29511d1e1392",
+      "route": "misplaced"
+    },
+    {
+      "path": "cascade-g1-price-result.json",
+      "bytes": 66,
+      "sha256": "e4e0db2ccdece99afad7cd37c0860e7179ab0c88c48ac62a260bf228f1ea549b",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cascade-g1-pricing.json",
+      "path": "/content/cascade-g1-pricing.json",
+      "bytes": 40824,
+      "mtime": 1795103171.7364788,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cascade-g1-price-log.txt",
+      "path": "/content/cascade-g1-price-log.txt",
+      "bytes": 12930,
+      "mtime": 1795103171.7364788,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cascade-g1-price-result.json",
+      "path": "/content/cascade-g1-price-result.json",
+      "bytes": 66,
+      "mtime": 1795103171.7364788,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T15:50:10.403496+00:00",
+  "usage_after": "Current balance: 400.48 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T15:50:10.586044+00:00"
+}

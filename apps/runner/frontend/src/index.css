@@ -1,0 +1,423 @@
+@import "./kit/themes/index.css";
+
+/* The kit's components live in the kit's home (consumed through
+   the @workhorse/kit alias); Tailwind must scan them there or
+   their utilities never generate. The workbench app sets the
+   same @source lines. */
+@source "../../../../kit/components";
+@source "../../../../kit/lib";
+
+/* App-level content chrome only — the shell (sidebar, top bar,
+   phone frame) is the kit's AppShell, consumed from the kit.
+   Every color, radius, and type value below is a Workhorse
+   Kit v1 token (--wb-*), never a local literal palette. */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  background: var(--wb-surface-canvas);
+  color: var(--wb-content-primary);
+}
+
+.mono {
+  font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
+/* --- preview harness strip (outside the app chrome) --- */
+.rn-harness {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: var(--wb-surface-1);
+  border-bottom: 1px solid var(--wb-border-default);
+  font-size: 13px;
+  color: var(--wb-content-secondary);
+}
+.rn-harness b {
+  color: var(--wb-content-primary);
+}
+
+.rn-crumb {
+  font-size: 13.5px;
+  color: var(--wb-content-secondary);
+}
+.rn-crumb b {
+  color: var(--wb-content-primary);
+  font-weight: 650;
+}
+.rn-back {
+  color: var(--wb-accent);
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.rn-search {
+  margin-left: auto;
+  width: 210px;
+}
+.rn-content {
+  padding: 22px 26px;
+  overflow-y: auto;
+}
+.rn-largetitle {
+  font-size: 27px;
+  font-weight: 750;
+  letter-spacing: -0.015em;
+  margin: 0 0 4px;
+}
+.rn-subtitle {
+  color: var(--wb-content-secondary);
+  font-size: 14px;
+  margin: 0 0 20px;
+}
+
+/* --- grouped list / rows --- */
+.rn-glabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--wb-content-secondary);
+  margin: 20px 0 8px 2px;
+}
+.rn-glabel:first-child {
+  margin-top: 0;
+}
+.rn-group {
+  background: var(--wb-surface-2);
+  border: 1px solid var(--wb-border-default);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.rn-group > * + * {
+  border-top: 1px solid var(--wb-border-default);
+}
+.rn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  min-height: 47px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.rn-row-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+.rn-row-btn:hover {
+  background: var(--wb-surface-1);
+}
+.rn-lab {
+  font-size: 14.5px;
+  font-weight: 550;
+  color: var(--wb-content-primary);
+}
+.rn-sub {
+  font-size: 12.5px;
+  color: var(--wb-content-secondary);
+}
+.rn-val {
+  margin-left: auto;
+  font-size: 14px;
+  color: var(--wb-content-secondary);
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rn-chev {
+  color: var(--wb-content-muted);
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+.rn-action .rn-lab {
+  color: var(--wb-accent);
+  font-weight: 650;
+}
+.rn-action.danger .rn-lab {
+  color: color-mix(in srgb, var(--wb-okabe-vermilion) 82%, var(--wb-content-primary));
+}
+.rn-ml-auto {
+  margin-left: auto;
+  min-width: 0;
+}
+
+/* --- lease rows (owner's form, 2026-11-13): line 1 carries the
+   lease name + status badge + chevron; line 2 is the details at
+   full row width — the Recent Runs form. The badge slot never
+   shrinks, so a badge can never clip; the name truncates with
+   an ellipsis when space runs out. --- */
+.rn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.rn-stack-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.rn-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rn-stack-end {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+/* The stack's details line (RowText's sub line): the sub is
+   the flexible element and truncates with an ellipsis; the
+   trailing slot (.rn-stack-end) is paid for first and never
+   shrinks — the kit Row's details-line discipline. */
+.rn-stack-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.rn-sub-truncate {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- orphan rows: the lease-row form with actions in place of
+   the badge. The actions are paid for first and never shrink;
+   the session name is the flexible element on line 1, and its
+   details take the full row width on line 2. --- */
+.rn-orphan-top {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+/* The orphan name keeps a readable floor: when the action
+   cluster (Jobs / Adopt / Release) cannot share the line,
+   it wraps whole to a second line before the name can
+   crush below the floor and ellipsize to a stub. */
+.rn-orphan-top .rn-name {
+  flex: 1 1 auto;
+  min-width: 150px;
+}
+.rn-orphan-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.rn-orphan-actions > button {
+  flex: 0 0 auto;
+}
+
+/* --- E4 headline cluster (2026-11-14): the served deadline
+   time + the past-deadline chip ride line 1's badge slot.
+   Both are flex-none and never shrink; the session name
+   stays the flexible element, as in the lease-row form. --- */
+.rn-orphan-past {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.rn-orphan-past-time {
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--wb-content-primary);
+}
+/* A past-deadline headline outgrows one phone line (name +
+   time + chip + three actions, every element after the name
+   flex-none): the top line wraps and the actions take their
+   own line, right-aligned — nothing clips, nothing leaves
+   the card. Without the cluster the line never wraps and
+   the form is exactly the pre-E4 one. */
+.rn-orphan-top:has(.rn-orphan-past) {
+  flex-wrap: wrap;
+}
+
+/* --- drawer scroll pane: the kit Sheet's children wrapper
+   carries the height bound; the pane inside it carries the
+   overflow, so a long jobs list scrolls inside the drawer. --- */
+.rn-drawer-scroll {
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* --- chips --- */
+.rn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 650;
+  border-radius: 999px;
+  padding: 2.5px 9px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  font-family: inherit;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+.rn-chip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: block;
+  flex: 0 0 auto;
+}
+/* The chip label truncates with an ellipsis (the kit
+   chip's form) instead of clipping mid-glyph at the
+   chip's border when a long label meets the max-width
+   cap. */
+.rn-chip-lab {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button.rn-pick {
+  cursor: pointer;
+  background: none;
+}
+
+/* --- log rows --- */
+/* Event rows are the kit's LogRow (@workhorse/kit) since the
+   timeline-component study — the old .rn-logrow anatomy (62px
+   time column, mono message) is retired with it. */
+
+/* --- notices --- */
+.rn-notice {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--wb-okabe-orange);
+  background: color-mix(in srgb, var(--wb-okabe-orange) 16%, var(--wb-surface-2));
+  color: var(--wb-content-primary);
+}
+.rn-notice b {
+  font-weight: 700;
+}
+.rn-notice-fail {
+  border-color: var(--wb-okabe-vermilion);
+  background: color-mix(in srgb, var(--wb-okabe-vermilion) 12%, var(--wb-surface-2));
+}
+
+/* --- dialog over scrim --- */
+.rn-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.rn-dialog {
+  background: var(--wb-surface-2);
+  border-radius: 12px;
+  border: 1px solid var(--wb-border-default);
+  width: 420px;
+  max-width: calc(100vw - 48px);
+  padding: 20px;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
+}
+.rn-dialog-title {
+  font-size: 16.5px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.rn-dialog-body {
+  font-size: 14px;
+  color: var(--wb-content-secondary);
+  margin-bottom: 18px;
+}
+.rn-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* --- caps editor fields (Budget): label + hint in a fixed
+   column beside the input on wide viewports; at phone width
+   the field stacks — the label takes its own line at full
+   width (its hint no longer wraps mid-phrase inside the
+   170px column) and the input takes the full width below. --- */
+.rn-capfield {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rn-capfield-lab {
+  flex: 0 0 170px;
+}
+.rn-capfield-hint {
+  color: var(--wb-content-muted);
+}
+.rn-capfield-in {
+  width: 160px;
+}
+
+/* A row label that must never wrap: beside a wrapping
+   control cluster (the duration picker's chips + custom
+   input) an unprotected label is squeezed into the leftover
+   width and wraps mid-phrase ("Extend" / "by"). The label
+   is paid for first; the cluster wraps in what remains —
+   the orphan-actions discipline. */
+.rn-lab-keep {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* --- phone (kit breakpoint): the PhoneShell navbar carries the
+   screen title, so the view-level large title is suppressed —
+   otherwise a pushed phone screen shows the title twice. --- */
+@media (max-width: 480px) {
+  .rn-largetitle {
+    display: none;
+  }
+  .rn-capfield {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .rn-capfield-lab {
+    flex: none;
+  }
+  .rn-capfield-in {
+    width: auto;
+  }
+}

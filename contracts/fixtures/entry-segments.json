@@ -1,0 +1,149 @@
+{
+  "entry_id": "field-note",
+  "main_file": "note.md",
+  "blocks": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "runs": [
+        {
+          "type": "text",
+          "text": "Field note — residual diagnostics"
+        }
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "runs": [
+        {
+          "type": "text",
+          "text": "For each observation "
+        },
+        {
+          "type": "math",
+          "source": "i",
+          "display": false,
+          "valid": true
+        },
+        {
+          "type": "text",
+          "text": " we record the residual "
+        },
+        {
+          "type": "math",
+          "source": "r_i = y_i - \\hat{y}_i",
+          "display": false,
+          "valid": true
+        },
+        {
+          "type": "text",
+          "text": ", the gap\nbetween the measured value and the fitted value. The fit is accepted when the\nresiduals stay small relative to "
+        },
+        {
+          "type": "math",
+          "source": "\\sigma / \\sqrt{n}",
+          "display": false,
+          "valid": true
+        },
+        {
+          "type": "text",
+          "text": "."
+        }
+      ]
+    },
+    {
+      "kind": "math",
+      "source": "R^2 = 1 - \\frac{\\sum_{i=1}^{n} r_i^2}{\\sum_{i=1}^{n} (y_i - \\bar{y})^2}",
+      "display": true,
+      "valid": true,
+      "number": "(1)"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "runs": [
+        {
+          "type": "text",
+          "text": "Checks"
+        }
+      ]
+    },
+    {
+      "kind": "list",
+      "ordered": false,
+      "items": [
+        [
+          {
+            "type": "text",
+            "text": "The prices $5 and $10 in the log are currency, not math."
+          }
+        ],
+        [
+          {
+            "type": "text",
+            "text": "Inline code like "
+          },
+          {
+            "type": "code",
+            "text": "$\\alpha$"
+          },
+          {
+            "type": "text",
+            "text": " stays literal inside backticks."
+          }
+        ],
+        [
+          {
+            "type": "text",
+            "text": "A broken draft term "
+          },
+          {
+            "type": "math",
+            "source": "\\frac{1}{2",
+            "display": false,
+            "valid": false
+          },
+          {
+            "type": "text",
+            "text": " is missing its closing brace."
+          }
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "runs": [
+        {
+          "type": "text",
+          "text": "The normal equations collect the moments:"
+        }
+      ]
+    },
+    {
+      "kind": "math",
+      "source": "\\mathbf{X}^{\\top} \\mathbf{X} \\, \\boldsymbol{\\beta} = \\mathbf{X}^{\\top} \\mathbf{y}",
+      "display": true,
+      "valid": true
+    },
+    {
+      "kind": "paragraph",
+      "runs": [
+        {
+          "type": "text",
+          "text": "A broken display term from the draft:"
+        }
+      ]
+    },
+    {
+      "kind": "math",
+      "source": "\\frac{\\sum_{i=1}^{n} x_i}{n",
+      "display": true,
+      "valid": false
+    },
+    {
+      "kind": "code",
+      "text": "Segments never reach inside a fence: $x^2$ stays text here.",
+      "language": "text"
+    }
+  ]
+}

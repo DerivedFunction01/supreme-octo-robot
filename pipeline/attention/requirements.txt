@@ -1,0 +1,9 @@
+# The attention package venv's pinned toolchain, installed by
+# init_venv.py into var/venv. The package's code is stdlib-only;
+# the venv exists so the package's declared gate legs run under
+# one pinned interpreter (gate.json "python": {"venv":
+# "var/venv"}) and so the ruff legs have a ruff to run. Exact
+# pin, on purpose: the gate must behave identically on every
+# machine. This is the original owner-attention repo's pin
+# (its pyproject dev toolchain), carried unchanged.
+ruff==0.17.2

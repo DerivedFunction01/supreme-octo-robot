@@ -1,0 +1,75 @@
+{
+  "run_id": "greenfield-ci-cocisep-repro-20261119T102303Z",
+  "job": "greenfield-ci-cocisep-repro",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-11-19T10:23:03.771387+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T10:27:46.656849+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-repro-out-greenfield-ci-cocisep-repro-20261119T102303Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:26:28.205172+00:00",
+  "launch_confirmed_at": "2026-11-19T10:26:47.464884+00:00",
+  "collector_at": "2026-11-19T10:28:11.352565+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:26:47.464884+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.70 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cocisep-repro-log.txt",
+      "bytes": 43604,
+      "sha256": "8905102e795c92aa2c28b78374ae2fa0884dedd74a455fa36ab7d77c229a6e29",
+      "route": "misplaced"
+    },
+    {
+      "path": "cocisep-repro-result.json",
+      "bytes": 120,
+      "sha256": "7ea39785ea846961247c0cc7a372789cf0cb7abebf16dbf2988c4c3a54d529a8",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-repro-log.txt",
+      "path": "/content/cocisep-repro-log.txt",
+      "bytes": 43604,
+      "mtime": 1795083996.3554685,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cocisep-repro-result.json",
+      "path": "/content/cocisep-repro-result.json",
+      "bytes": 120,
+      "mtime": 1795083996.3554685,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "missing_outputs": [
+    "cocisep-repro.json",
+    "cocisep-parta.json"
+  ],
+  "finished_at": "2026-11-19T10:29:16.432999+00:00",
+  "error": "job payload exited 4",
+  "usage_after": "Current balance: 404.64 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-11-19T10:29:16.642532+00:00"
+}

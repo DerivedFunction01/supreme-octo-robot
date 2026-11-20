@@ -1,0 +1,70 @@
+{
+  "run_id": "greenfield-ci-cocisep-diag-d-20261119T112613Z",
+  "job": "greenfield-ci-cocisep-diag-d",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T11:26:13.459631+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T11:27:46.742382+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cocisep-diag-d-out-greenfield-ci-cocisep-diag-d-20261119T112613Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T11:27:23.847664+00:00",
+  "launch_confirmed_at": "2026-11-19T11:27:32.324331+00:00",
+  "collector_at": "2026-11-19T11:27:55.757270+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T11:27:32.324331+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.86 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cocisep-diagd.json",
+      "bytes": 850,
+      "sha256": "ce7cfb1d810ad10ab0eb74464cb733b997be2a87d9f7e0df6076ee5f651f3af6",
+      "route": "misplaced"
+    },
+    {
+      "path": "cocisep-diagd-log.txt",
+      "bytes": 784,
+      "sha256": "69d8282028d4b432d41f8b7fdefe4f038b78ad80752b302946915f6117baddcb",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cocisep-diagd.json",
+      "path": "/content/cocisep-diagd.json",
+      "bytes": 850,
+      "mtime": 1795087649.5751832,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cocisep-diagd-log.txt",
+      "path": "/content/cocisep-diagd-log.txt",
+      "bytes": 784,
+      "mtime": 1795087649.5751832,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T11:28:38.356692+00:00",
+  "usage_after": "Current balance: 403.86 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T11:28:38.676762+00:00"
+}

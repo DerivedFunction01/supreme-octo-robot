@@ -1,0 +1,24 @@
+[Unit]
+Description=Scheduler server (owns every repeating task; pings the main thread for agent tasks)
+After=network.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=@ROOT@
+EnvironmentFile=-@ROOT@/scheduler.env
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# HOME must be the workspace owner's home, not the service
+# user's: member jobs resolve per-user caches and tool state
+# from HOME, and an unset HOME resolves to the service user's
+# home instead, breaking every job that depends on them.
+Environment=HOME=@HOME@
+ExecStart=@PYTHON@ -m server
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:@ROOT@/state/server.log
+StandardError=append:@ROOT@/state/server.log
+
+[Install]
+WantedBy=default.target

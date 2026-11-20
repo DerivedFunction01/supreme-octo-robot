@@ -1,0 +1,24 @@
+id: stale-mockup-cleanup
+title: Daily stale-mockup cleanup — scripted census classifies mechanically; agent escalates only on unresolved items
+kind: scripted
+status: active
+cadence:
+  type: daily
+  at: "07:00"
+timezone: America/New_York
+owner: none
+owner_reason: owner-commissioned standing ops cleanup (2026-11-08); the census spans every repo's mockups, so no single goal owns it; each run reports to the main chat
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/mockup_census.py
+timeout_secs: 600
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+escalate_body: bodies/stale-mockup-cleanup.md
+state_paths:
+  - ${REPO}/state/mockup-census
+classification: the census and mechanical classification are a fixed command over the registry schema - exclusions and stale verdicts branch on recorded fields alone, plan-lifecycle candidates propose from the tied plan's recorded status, and every outcome is its exit code; the unchanged check keys on per-project digests over census rows, attribution data, and the owning repo's HEAD, a moved digest re-escalates that project's keeps for re-judgment, and unresolved residue escalates on every run until cleared; judgment itself is the agent's, through the escalation body - scripted with agent escalation
+lifetime: permanent

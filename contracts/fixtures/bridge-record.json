@@ -1,0 +1,12 @@
+{
+  "args": {
+    "chat_id": "chat-target-1",
+    "text": "hello"
+  },
+  "caller": "attention-dispatch",
+  "envelope_id": "attn-s0001-a1",
+  "id": "0123456789abcdef",
+  "status": "queued",
+  "tool": "chat_send",
+  "ts": "2026-11-10T11:59:00+00:00"
+}

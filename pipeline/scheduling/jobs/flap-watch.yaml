@@ -1,0 +1,31 @@
+id: flap-watch
+title: Flap watcher — origin-mimicry experiment, scripted detection of write-denial waves
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+timezone: America/New_York
+owner: none
+owner_reason: Fleet-health instrumentation commissioned 2026-11-09 (design amended the same night: scripted watcher + armed experiment instead of a standing agent cadence); the flap series serves every project on the machine, so no single goal owns it. Transitions report to the main chat; steady state is silent.
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/flap/flap_watch.py
+timeout_secs: 120
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/flap-watch.json
+  - ${REPO}/state/flap-watch-series.jsonl
+  - ${REPO}/state/flap-watch-arms
+  - ${REPO}/state/flap-probe-study
+classification: 'fixed command (one Python script): every cycle runs the flap canary (ops/flap/flap_canary.py) from two spawning origins — a plain server-tree child (control) and a child placed before exec into a dedicated /sys/fs/cgroup/init.scope/hatch-tool-prepared-flapwatch cgroup, mimicking the agent tool layer origin that the write-denial flap denies. Per-arm verdicts append to state/flap-watch-series.jsonl; output (and so a report) happens only on an arm transition, baseline adoption silent — the boot-detector shape. This entry is an ARMED EXPERIMENT, not a settled detector: between waves both origins write fine, so a clear cgroup-arm reading is inconclusive until a live wave tests it against agent-class ground truth (ops/flap/flap_probe.py from an agent shell). Pre-stated criteria and the ground-truth protocol: state/flap-probe-study/read-signal-hunt.md. If the cgroup arm tracks the agent class across one full wave (denied at the start, clear at the clear, control clear throughout), the mimicry holds and this scripted entry is the flap job. If it stays clear while agent-class writes are denied through a full wave, mimicry fails: this entry is removed and an agent-cadence entry is admitted with that negative result in its classification evidence — the experiment outcome decides the final kind.'
+lifetime: permanent
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: fleet-health

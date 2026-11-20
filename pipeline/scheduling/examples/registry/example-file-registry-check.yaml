@@ -1,0 +1,31 @@
+id: example-file-registry-check
+title: Example file-registry check (boot-triggered must-exist file pass)
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+timezone: America/New_York
+owner: goal:example
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/file_registry.py
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/file-registry-state.json
+classification: scripted to the classification test - the pass evaluates a manifest exactly (presence rules, restore classes, re-check), reports findings-first when the boot changed or the findings differ, and invents no content; flag delivery names each entry's owner in the report
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: file-survival
+  setup:
+    state_dirs:
+      - ${REPO}/state

@@ -1,0 +1,1 @@
+{"compilerOptions":{"paths":{"@workhorse/kit/*":["../../../../kit/*"],"react":["../node_modules/react"],"react-dom":["../node_modules/react-dom"],"react-dom/client":["../node_modules/react-dom/client.js"],"react/jsx-runtime":["../node_modules/react/jsx-runtime.js"]}},"extends":"../tsconfig.json","include":["./**/*","../src/**/*"]}

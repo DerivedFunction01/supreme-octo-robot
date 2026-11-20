@@ -1,0 +1,32 @@
+# ## Goal contract — Stale job posting cleanup
+#
+# - **Objective** — The weekly sweep removes job-posting email older than the 14-day threshold under its standing approval, so stale postings do not accumulate.
+# - **Complete when** — Each weekly run's verified output reports its trashed and vetoed counts with zero postings older than the threshold remaining, recorded in the job's run record.
+# - **Blocked only when** — a named hard stop, a genuine owner-only decision, or a verified external blocker. The claim carries its cited basis, with its time, and a verification stamp; an uncited or unverified claim is void — the work resumes under its standing authorization and the claim is surfaced as a defect. Sequencing choices, agent-clearable waits, and matters already decided are never blocked states.
+# - **Work record** — The job's run records in the scheduler ledger, carrying the cleanup script's verified output.
+# - **Cadence** — conforming progress-checkpoints every 15 minutes while doing; two missed intervals is a stall.
+# - **Continuation** — a step landing staffs the next in the same movement; a turn ends only with work in flight, a complete report, or a blocked report satisfying the Blocked only when clause. An acknowledgement does not clear a stall; measured movement does.
+#
+id: weekly-gmail-stale-jobs-cleanup
+title: Weekly Gmail stale job postings cleanup
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 168h
+timezone: America/New_York
+owner: goal:stale-job-posting-email-cleanup
+run:
+  argv:
+    - python3
+    - ${WS}/gmail_cleanup/clear_stale_jobs.py
+    - --apply
+    - --yes
+timeout_secs: 3600
+report:
+  when: always
+  ok_exit_codes:
+    - 0
+state_paths: []
+classification: fixed command (the standalone cleanup script under its standing approval, 14-day threshold); trashed/vetoed counts are enumerated in the script's own verified output and reported every run.
+lifetime: permanent

@@ -1,0 +1,98 @@
+{
+  "run_id": "greenfield-ci-cisep-gate-20261119T101558Z",
+  "job": "greenfield-ci-cisep-gate",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-11-19T10:15:58.840482+00:00",
+  "resumed": false,
+  "caller": "edgar-successor:greenfield-followup",
+  "last_evidence_at": "2026-11-19T10:21:30.563981+00:00",
+  "venue": "colab",
+  "session_pin": "calm-ledge-48",
+  "lease_action": "adopted",
+  "session": "calm-ledge-48",
+  "launch_phase": "launched",
+  "remote_out": "greenfield-ci-cisep-gate-out-greenfield-ci-cisep-gate-20261119T101558Z",
+  "extra_args": [],
+  "launch_at": "2026-11-19T10:19:24.351823+00:00",
+  "launch_confirmed_at": "2026-11-19T10:19:45.032354+00:00",
+  "collector_at": "2026-11-19T10:21:57.532082+00:00",
+  "collector": "edgar-successor:greenfield-followup",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-11-19T10:19:45.032354+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.77 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cisep-gate-out.json",
+      "bytes": 1146,
+      "sha256": "f7650d1b65457e3645783fb645c99377fdb7dd982c591e22c79659b36303dd0b",
+      "route": "misplaced"
+    },
+    {
+      "path": "cisep-gate-log.txt",
+      "bytes": 65639,
+      "sha256": "e1a3275a4b3eeb3e977c2600c5c0fd40858395beba448fde7a5b631c3e451fc5",
+      "route": "misplaced"
+    },
+    {
+      "path": "cisep-gate-result.json",
+      "bytes": 2861,
+      "sha256": "a61cd29763088fd0627328dcfd8ba59b025cb1c24a953fae9a26c081126d6e09",
+      "route": "misplaced"
+    },
+    {
+      "path": "cisep-gate-check.txt",
+      "bytes": 1617,
+      "sha256": "260a0a649de8c3a2b203c07efca4919dc4e77c4e57a94ace64e4cc80f3b37494",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cisep-gate-out.json",
+      "path": "/content/cisep-gate-out.json",
+      "bytes": 1146,
+      "mtime": 1795083635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cisep-gate-log.txt",
+      "path": "/content/cisep-gate-log.txt",
+      "bytes": 65639,
+      "mtime": 1795083635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cisep-gate-result.json",
+      "path": "/content/cisep-gate-result.json",
+      "bytes": 2861,
+      "mtime": 1795083635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cisep-gate-check.txt",
+      "path": "/content/cisep-gate-check.txt",
+      "bytes": 1617,
+      "mtime": 1795083635.7387924,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-11-19T10:23:51.435247+00:00",
+  "usage_after": "Current balance: 404.70 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-11-19T10:23:51.635366+00:00"
+}
