@@ -31,20 +31,10 @@ import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+from ..core import foundation
+
 LOAD_WINDOW_MINUTES = 120
 NONTERMINAL_STATES = {"starting", "launching", "polling", "running", "active"}
-
-
-def _parse_dt(value) -> datetime | None:
-    if not isinstance(value, str) or not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(value)
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed
 
 
 def session_load(repo: Path, now_dt: datetime | None = None) -> dict[str, int]:
@@ -70,7 +60,15 @@ def session_load(repo: Path, now_dt: datetime | None = None) -> dict[str, int]:
         session = record.get("session")
         if not session:
             continue
-        started = _parse_dt(record.get("started_at") or record.get("launch_at"))
+        started_raw = record.get("started_at") or record.get("launch_at")
+        started = None
+        if isinstance(started_raw, str) and started_raw:
+            try:
+                started = foundation.parse_dt(started_raw)
+            except ValueError:
+                started = None
+            if started is not None and started.tzinfo is None:
+                started = started.replace(tzinfo=timezone.utc)
         if started is not None and started < horizon:
             continue
         counts[session] = counts.get(session, 0) + 1
