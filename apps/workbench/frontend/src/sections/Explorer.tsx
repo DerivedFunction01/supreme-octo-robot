@@ -505,7 +505,7 @@ export function PhonePeek({ repoSlug, path }: { repoSlug: string; path: string }
   const hasDiff = Boolean(file?.headContent && file.headContent !== file.content);
   return (
     <PhoneShell
-      backLabel={parent.length > 0 ? parent[parent.length - 1] : repo?.name ?? "Repos"}
+      backLabel={parent.length > 0 ? parent[parent.length - 1] : repo?.name ?? "Code"}
       onBack={() => navigate({ section: "browse", repo: repoSlug, path: parent })}
     >
       <PeekPane repoSlug={repoSlug} path={path} initialTab={hasDiff ? "content" : undefined} />
