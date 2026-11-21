@@ -346,7 +346,12 @@ def main() -> int:
     if use_lease:
         if pin_session:
             rec["session_pin"] = pin_session
-        got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session)
+        # The window floor the acquire ranks by: this job's
+        # timeout, capped at an hour — the renewal machinery
+        # owns windows beyond that; the floor only keeps a
+        # fire off a lease in its final hour.
+        window_floor_s = min(int(job.get("timeout", 18000)), 3600)
+        got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session, min_window_s=window_floor_s)
         if got["action"] in ("refused-budget", "create-failed", "shape-refused", "shape-mismatch", "caller-start-refused", "unknown-shape", "pin-unavailable"):
             rec.update(state="failed", error=json.dumps(got)[:300])
             save_record(rec)
