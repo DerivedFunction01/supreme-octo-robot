@@ -3,10 +3,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from ..core import foundation, catalog, callers, records, spend
 from ..access import gate, access, grants
-from ..sessions import sessions, keepalive, renewal, health, provisioning, identity
+from ..sessions import sessions, keepalive, renewal, health, provisioning, identity, load
 from ..state import orphans
 
-def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, hours: float | None = None, max_hours_cap: float | None = None, via: str | None = None, caller: str | None = None, duty: bool = False, standing: bool = False, create: bool = False, prefer_session: str | None = None) -> dict:
+def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, hours: float | None = None, max_hours_cap: float | None = None, via: str | None = None, caller: str | None = None, duty: bool = False, standing: bool = False, create: bool = False, prefer_session: str | None = None, min_window_s: float | None = None) -> dict:
     """Adopt a live lease at this shape or create one. The only
     entry point that ever creates a session under the lease model.
     A session is shared capacity, not a caller's possession: any
@@ -69,7 +69,29 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     adopting the one session whose upload probes were timing
     out. Health demotes; it never reorders tiers and never
     blocks: an all-degraded pool still adopts, flagged
-    `health_degraded` on the result."""
+    `health_degraded` on the result.
+
+    Load-aware assignment (2026-11-21): inside a tier, a
+    warm session (its provisioning verdict stands —
+    sync/lease/sessions/load.py) ranks before a cold one,
+    and the least in-flight load ranks before health and
+    deadline: the deadline tiebreak alone concentrated
+    every unpinned fire on the longest-lived session
+    while other live sessions stood idle. Spreading is
+    the sort's output, not a caller's duty. A cold
+    session stays eligible — it is adopted when nothing
+    warm can be.
+
+    Window floor (same commission): `min_window_s`
+    names the window a fire needs covered (the runner
+    passes its job's timeout, capped at its seam). A
+    live candidate whose remaining window cannot cover
+    it is skipped WITHOUT being cleared — the lease
+    stays usable for shorter work — and the call falls
+    through to creation when nothing covers. A pin on a
+    window-short session refuses pin-unavailable naming
+    the window: the pin is honoured or refused, never
+    silently retargeted."""
     now_dt = now_dt or datetime.now(timezone.utc)
     cfg = foundation.load_config(repo)
     if not cfg.get("enabled"):
@@ -94,11 +116,15 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         pool = at_shape
     # Preference: the caller's own record, then an unstamped one
     # (adoptable by the first caller to ask — the adoption stamps
-    # it, below), then any other caller's; within a tier, sessions
-    # the launch channel recently failed on rank below healthy
-    # ones; latest deadline breaks the remaining ties.
+    # it, below), then any other caller's; within a tier, warm
+    # sessions before cold, the least in-flight load next,
+    # sessions the launch channel recently failed on below
+    # healthy ones, and latest deadline breaks the remaining
+    # ties. The load census reads the results store once per
+    # acquire; launches are minute-scale, never hot-path.
     health_map = health.launch_health(repo, now_dt)
-    pool.sort(key=lambda r: (caller is not None and r.get("caller") == caller, r.get("caller") is None, not health_map.get(r.get("session"), {}).get("degraded", False), r.get("deadline") or ""), reverse=True)
+    load_map = load.session_load(repo, now_dt) if pool else {}
+    pool.sort(key=lambda r: (caller is not None and r.get("caller") == caller, r.get("caller") is None, load.is_warm(r), -load_map.get(r.get("session"), 0), not health_map.get(r.get("session"), {}).get("degraded", False), r.get("deadline") or ""), reverse=True)
     if prefer_session is not None:
         if create:
             return {"action": "pin-unavailable", "session": prefer_session, "reason": "a pin names a lease to adopt; it cannot combine with create"}
@@ -131,6 +157,16 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
             # as it is; a later call retries.
             return {"action": "acquire-unknown", "record": cand, "session": session}
         if now_dt < foundation.parse_dt(cand["deadline"]) and state == "alive":
+            if min_window_s is not None:
+                remaining_s = (foundation.parse_dt(cand["deadline"]) - now_dt).total_seconds()
+                if remaining_s < min_window_s:
+                    if prefer_session is not None and session == prefer_session:
+                        return {"action": "pin-unavailable", "session": prefer_session, "reason": f"named session's remaining window ({int(remaining_s)}s) cannot cover the required window ({int(min_window_s)}s)", "record": cand}
+                    # Window-short for this fire only: skip the
+                    # candidate WITHOUT clearing it — the lease
+                    # stays usable for shorter work, and the
+                    # fall-through creates when nothing covers.
+                    continue
             rec = cand
             break
         # Not usable. The caller's own (or an unstamped) record is
