@@ -128,10 +128,12 @@ def main() -> int:
         # with that context twice over: the child inherits the
         # context's output pipes, so the context cannot complete
         # while the child lives; and the context's timeout
-        # cleanup kills its whole process group, the merely-
-        # nohup'd runner included (Steam DF-NEXT-111 specimens,
-        # 2026-11-21: two fires dead at the op cap, records
-        # orphaned mid-launch). The daemon form separates both:
+        # cleanup kills its whole process group (ops.py's
+        # killpg on timeout), the merely-nohup'd runner
+        # included — read in the ops code and proven by the
+        # daemon-proof run of 2026-11-21, which outlived its
+        # op's timeout kill and completed. The daemon form
+        # separates both:
         # the parent mints the run id, spawns the real launch
         # in its OWN session (start_new_session) with stdio
         # redirected to the run's daemon log, waits only for
