@@ -67,13 +67,19 @@ DEFAULT_DRAIN_TAIL = (
 # only on a later measure showing at least 2 families
 # in flight across at least 2 sessions, and a defect
 # surviving two consecutive runs names the
-# coordinator's non-response.
+# coordinator's non-response. Amended 2026-11-21
+# under the owner's fleet ruling of the same day —
+# the fleet target is 3 standing High-RAM sessions
+# and all three must actually be used — so the
+# carrying floor is 3: family work spread over only
+# 2 sessions while a third stands live and idle is
+# the serial defect, priced by the same condition.
 EDGAR_STAFFING_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
     "min_families_in_flight": 2,
     "min_live_sessions": 2,
-    "min_sessions_carrying_work": 2,
+    "min_sessions_carrying_work": 3,
     "defect_conditions": [
         "fewer_than_min_families_in_flight",
         "all_compute_on_one_session_while_another_live_session_carries_none",
