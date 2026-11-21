@@ -12,22 +12,40 @@ it does not invoke per-repo check files.
 ## Contracts
 
 - **Components, one implementation each.** `linecap.py`
-  (the 800-line cap; the scheduler's `git ls-files`
-  enumeration is the surviving one), `portability.py` (the
+  (the line cap, repo-scoped since 2026-11-21: 800 lines,
+  a file at the cap passes; a 700-line creep band lists
+  non-test files on every run and bans growth past the
+  file's committed count at HEAD; the root check runs it
+  once over every tracked code file in the tree — coverage
+  is by default, declared nowhere; the scheduler's
+  `git ls-files` enumeration survives in its package form),
+  `portability.py` (the
   portability/denylist scanner, lifted from the scheduler;
   fed by one untracked denylist per deployment),
   `staticlegs.py` (ruff format/lint and the policy-scanner
   leg), `isolation.py` (the test-isolation state hash),
   `foldercensus.py` (the folder census: tracked files per
-  folder over the same enumeration; warn 16 / fail 24 in
-  the composed gate's config; single-kind family folders
-  are exempt by gate.json declaration and always
+  folder over the tracked-only enumeration; warn 16 / fail
+  24 in the composed gate's config; single-kind family
+  folders are exempt by gate.json declaration and always
   reported),
   `targeting/` (the AST test-targeting mechanism ported
   from programme-a's check.py lineage: snapshot, prose-only
   exclusion, reverse import lineage, explainable reasons),
   `venvbuild.py` (one `find_uv`, one venv builder,
-  parameterized by per-package config).
+  parameterized by per-package config). Three more
+  components run repo-scoped by default since the
+  2026-11-21 reversal, in the line cap's form — the root
+  check executes each once per run, their recorded
+  exceptions ride this package's repo leg declarations as
+  data, and no package declares coverage:
+  `writeruniqueness.py` over every tracked Python source
+  in the tree (the repowriteruniqueness row),
+  `importisolation.py` for every composed pipeline
+  package automatically (the repoimportisolation row),
+  and the scanner-runner contract (`staticlegs.scanners`)
+  over every package carrying a `scanners.py` module,
+  discovered from the tree (the reposcanners row).
 - **Declarations are data.** Each package names its legs
   in a `gate.json` beside its code; the app frontends'
   legs are served-by declarations in `frontends.json`

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Lane } from "@kit/components/Lane";
+import { Lane } from "@kit/components/display/Lane";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import type { BoardCard } from "../lib/seam";

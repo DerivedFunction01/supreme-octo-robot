@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { ArmConfirm } from "@kit/components/ArmConfirm";
-import { Button } from "@kit/components/Button";
-import { Sheet } from "@kit/components/Sheet";
-import { Toggle } from "@kit/components/Toggle";
+import { ArmConfirm } from "@kit/components/shell/ArmConfirm";
+import { Button } from "@kit/components/controls/Button";
+import { Sheet } from "@kit/components/shell/Sheet";
+import { Toggle } from "@kit/components/controls/Toggle";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import {
   ActionRow,

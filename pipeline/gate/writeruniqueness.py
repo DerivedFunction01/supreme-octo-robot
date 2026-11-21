@@ -95,6 +95,15 @@ Known limits, stated plainly:
 - a file that does not parse yields no findings here;
   it fails the legs that compile it.
 
+Repo form (the runner's repowriteruniqueness leg): the
+component evaluates over every tracked Python source in
+the tree by default — coverage is never declared. The
+exceptions are recorded once, in the gate package's repo
+leg declaration (repo-relative paths); the per-package
+leg declarations this component once read are retired.
+Opt-out exists only as those recorded exceptions, under
+the registry discipline both ways.
+
 Usage (module form, from the pipeline root):
 python3 -m gate.writeruniqueness [--root DIR]
 Exit: 0 = no undeclared findings; 1 = findings;
@@ -108,7 +117,7 @@ import json
 import os
 import sys
 
-from .linecap import enumerate_files
+from .linecap import enumerate_files, enumerate_tracked_files
 
 # The one home: the unified writer itself is never
 # scanned (repo-relative, and the bare name at the
@@ -435,13 +444,19 @@ def _is_python_source(rel, full):
     return first.startswith("#!") and "python" in first
 
 
-def scan(root, repo_root, exceptions=(), exclude=()):
-    """(rows, failures, scanned) over the tracked Python
-    sources under root (a package dir). exclude names
-    repo-relative subtree prefixes skipped entirely."""
+def scan(root, repo_root, exceptions=(), exclude=(),
+         tracked=False):
+    """(rows, failures, scanned) over the Python sources
+    under root (a package dir, or the repo root for the
+    repo-scoped leg). exclude names repo-relative subtree
+    prefixes skipped entirely. tracked=True restricts the
+    population to tracked files (the repo leg's form: an
+    untracked staging file is not yet the tree's code)."""
     files = {}
     scanned = 0
-    for rel in enumerate_files(str(root)):
+    enumerate = enumerate_tracked_files if tracked \
+        else enumerate_files
+    for rel in enumerate(str(root)):
         repo_rel = os.path.relpath(
             os.path.join(str(root), rel), str(repo_root)
         ).replace(os.sep, "/")

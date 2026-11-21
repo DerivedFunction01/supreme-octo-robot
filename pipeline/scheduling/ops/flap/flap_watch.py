@@ -143,10 +143,7 @@ def load_state():
 
 
 def save_state(state):
-    tmp = STATE + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(state, fh, indent=1, sort_keys=True)
-    os.replace(tmp, STATE)
+    paths.save_json(STATE, state)
 
 
 def transitions(prev, current):

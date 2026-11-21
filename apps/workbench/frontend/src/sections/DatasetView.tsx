@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { DataTable } from "@kit/components/DataTable";
-import { Button } from "@kit/components/Button";
+import { DataTable } from "@kit/components/display/DataTable";
+import { Button } from "@kit/components/controls/Button";
 import { useAdapter } from "../lib/store";
 import type { DatasetTable, RepoFile } from "../lib/types";
 import { Group, GroupLabel, Lab, Row, Sub, Val } from "../components/ui";

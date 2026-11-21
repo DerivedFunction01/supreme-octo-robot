@@ -7,8 +7,16 @@ serializes every change that has to find, order, or merge
 files in it).
 
 The census counts tracked files per directory over the
-surviving enumeration (gate.linecap's git ls-files form,
-run at the repo root). Folders at or over the warn
+tracked enumeration (gate.linecap's
+enumerate_tracked_files: git ls-files --cached, run at
+the repo root). Tracked only, by the 2026-11-21
+enforcement plan: untracked staging in a working tree is
+not the tree the verdict names, and an earlier form of
+this census that counted untracked files failed a clean
+tracked tree on venue job staging. Every folder counts
+by default — a folder is never registered into the
+census; the family declarations below are the exception
+form, not the entry ticket. Folders at or over the warn
 threshold print in the gate output on every run, so an
 approach is visible before it trips:
 
@@ -35,7 +43,7 @@ leg (warn/fail); the values here are the defaults.
 from collections import Counter
 from pathlib import PurePosixPath
 
-from .linecap import enumerate_files
+from .linecap import enumerate_tracked_files
 
 DEFAULT_WARN = 16
 DEFAULT_FAIL = 24
@@ -93,7 +101,7 @@ def evaluate(counts, families, warn=DEFAULT_WARN,
 def scan(root, families, warn=DEFAULT_WARN, fail=DEFAULT_FAIL):
     """Census the tree at root (repo-relative enumeration)
     and evaluate it against the declared families."""
-    counts = count_by_folder(enumerate_files(str(root)))
+    counts = count_by_folder(enumerate_tracked_files(str(root)))
     return evaluate(counts, families, warn, fail)
 
 

@@ -88,6 +88,16 @@ Known limits, stated plainly:
 - a file that does not parse yields no findings here; it
   fails the legs that compile it.
 
+Repo form (the runner's repoimportisolation leg): the
+invariant is per-package by nature, so the repo leg runs
+this component for every composed package automatically
+— the population derives from the tree's package set,
+never from a per-package declaration. The recorded
+exceptions live once, in the gate package's repo leg
+declaration (repo-relative paths, rebased per package by
+the runner); the per-package leg declarations are
+retired.
+
 Usage (module form, from the pipeline root):
 python3 -m gate.importisolation [--root DIR]
 Exit: 0 = no undeclared findings; 1 = undeclared
@@ -234,15 +244,19 @@ def _is_python_source(rel, full):
     return first.startswith("#!") and "python" in first
 
 
-def scan(root, repo_root, siblings):
+def scan(root, repo_root, siblings, exceptions=None):
     """(findings, scanned) over the tracked Python sources
     under root (a package dir). The package's own gate.json
-    supplies the leg's exception declarations, read here —
-    the runner's dispatch passes only the roots. Findings
-    are the failures (undeclared imports, plus stale
-    exceptions at lineno 0) as a Findings list carrying the
-    exceptioned notes; paths are repo-relative; scanned is
-    the number of Python sources read."""
+    supplies the leg's exception declarations, read here
+    when exceptions is None — the runner's per-package
+    dispatch passes only the roots. The repo leg passes
+    exceptions explicitly (package-relative paths): the
+    recorded exceptions live once, in the gate package's
+    repo leg declaration. Findings are the failures
+    (undeclared imports, plus stale exceptions at
+    lineno 0) as a Findings list carrying the exceptioned
+    notes; paths are repo-relative; scanned is the number
+    of Python sources read."""
     files = {}
     scanned = 0
     for rel in enumerate_files(str(root)):
@@ -252,8 +266,9 @@ def scan(root, repo_root, siblings):
         with open(full, encoding="utf-8", errors="replace") as fh:
             files[rel.replace(os.sep, "/")] = fh.read()
         scanned += 1
-    notes, failures, stale = classify(
-        files, siblings, leg_exceptions(root))
+    if exceptions is None:
+        exceptions = leg_exceptions(root)
+    notes, failures, stale = classify(files, siblings, exceptions)
     prefix = os.path.relpath(
         str(root), str(repo_root)).replace(os.sep, "/")
 

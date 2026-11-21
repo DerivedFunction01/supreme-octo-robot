@@ -48,10 +48,10 @@ def main(argv):
         return 2
     result = executor.run_entry(entries[job_id], datetime.now(timezone.utc), 65536)
     out_path = os.path.join(paths.STATE_DIR, f"proof-{job_id}.txt")
-    with open(out_path, "w", encoding="utf-8") as fh:
-        fh.write(f"status={result.status} exit={result.exit_code}\n")
-        fh.write((result.stdout_tail or "")[-2000:])
-        fh.write((result.stderr_tail or "")[-1000:])
+    text = (f"status={result.status} exit={result.exit_code}\n"
+            + (result.stdout_tail or "")[-2000:]
+            + (result.stderr_tail or "")[-1000:])
+    paths.staged_write(out_path, text.encode("utf-8"))
     print(f"proof {job_id}: status={result.status} exit={result.exit_code}")
     return 0 if result.status == "ok" else 1
 

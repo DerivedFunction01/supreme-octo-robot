@@ -1,7 +1,7 @@
 import type { CSSProperties, ReactNode } from "react";
 import { ChevronRight } from "lucide-react";
-import { Badge } from "@kit/components/Badge";
-import { Chip, type RuledStatus } from "@kit/components/Chip";
+import { Badge } from "@kit/components/display/Badge";
+import { Chip, type RuledStatus } from "@kit/components/controls/Chip";
 import type { ReviewState, TodoStatus } from "../lib/types";
 
 // The iOS form vocabulary (kit sheet): GroupedList, GroupLabel,

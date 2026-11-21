@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useIsPhone } from "@kit/lib/responsive";
-import { ArmConfirm } from "@kit/components/ArmConfirm";
-import { Button } from "@kit/components/Button";
-import { Frame } from "@kit/components/Frame";
-import { Sheet } from "@kit/components/Sheet";
+import { ArmConfirm } from "@kit/components/shell/ArmConfirm";
+import { Button } from "@kit/components/controls/Button";
+import { Frame } from "@kit/components/shell/Frame";
+import { Sheet } from "@kit/components/shell/Sheet";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import type { EntryPageResult } from "../lib/seam";

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { ArmConfirm } from "@kit/components/ArmConfirm";
-import { Button } from "@kit/components/Button";
-import { Sheet } from "@kit/components/Sheet";
+import { ArmConfirm } from "@kit/components/shell/ArmConfirm";
+import { Button } from "@kit/components/controls/Button";
+import { Sheet } from "@kit/components/shell/Sheet";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import type { MessageThread } from "../lib/types";
 import {

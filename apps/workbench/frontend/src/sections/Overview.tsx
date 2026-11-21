@@ -1,4 +1,4 @@
-import { Toggle } from "@kit/components/Toggle";
+import { Toggle } from "@kit/components/controls/Toggle";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import {

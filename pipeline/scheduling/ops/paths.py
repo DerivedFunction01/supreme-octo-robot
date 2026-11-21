@@ -73,6 +73,71 @@ PLATFORM_WRITER = os.path.join(
     os.path.dirname(REPO_ROOT), "platform", "writer.py")
 
 
+def _load_writer():
+    """The pipeline's unified writer (contract 15), loaded
+    by path from PLATFORM_WRITER — the file_registry seam's
+    pattern. None when the ops tree runs standalone,
+    outside the mega repo."""
+    if not os.path.isfile(PLATFORM_WRITER):
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_writer", PLATFORM_WRITER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def staged_write(path, data):
+    """Write bytes through the unified writer's protocol
+    (stage to a fresh sibling, fsync, read-back compare,
+    rename over — contract 15), so a denied or torn write
+    leaves the standing file byte-identical. Standalone
+    (no pipeline), the same protocol is performed inline:
+    the protocol, not the module, is the invariant. This
+    module is the ops tree's one staged-write home — ops
+    scripts call it instead of staging by hand."""
+    writer = _load_writer()
+    if writer is not None:
+        writer.staged_write(path, data)
+        return
+    directory = os.path.dirname(path)
+    if directory:
+        os.makedirs(directory, exist_ok=True)
+    tmp = path + ".tmp-ops"
+    try:
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        with open(tmp, "rb") as fh:
+            if fh.read() != data:
+                raise OSError(
+                    "read-back mismatch on staged write")
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+    dir_fd = os.open(directory or ".", os.O_RDONLY)
+    try:
+        os.fsync(dir_fd)
+    finally:
+        os.close(dir_fd)
+
+
+def save_json(path, obj):
+    """A state file's write in the ops tree's standing
+    serialization (indent=1, sort_keys=True), through
+    staged_write."""
+    import json
+    staged_write(
+        path,
+        json.dumps(obj, indent=1, sort_keys=True).encode("utf-8"))
+
+
 def script_dir(file):
     """A consuming script's own directory (its cluster dir) —
     for sibling pointers and own-dir sys.path entries."""

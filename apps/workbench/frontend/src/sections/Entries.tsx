@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Chip } from "@kit/components/Chip";
+import { Chip } from "@kit/components/controls/Chip";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import type { EntryKind, RuledStatus } from "../lib/types";

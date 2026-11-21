@@ -197,11 +197,8 @@ def main() -> int:
         recorded = None
 
     os.makedirs(state_dir, exist_ok=True)
-    tmp_state = state_file + ".tmp"
-    with open(tmp_state, "w") as fh:
-        json.dump(current, fh)
-        fh.write("\n")
-    os.replace(tmp_state, state_file)
+    paths.staged_write(
+        state_file, (json.dumps(current) + "\n").encode("utf-8"))
 
     if recorded is None:
         return 0  # baseline adoption is silent (detector discipline)

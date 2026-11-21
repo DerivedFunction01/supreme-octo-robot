@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { SegmentedControl } from "@kit/components/SegmentedControl";
+import { SegmentedControl } from "@kit/components/controls/SegmentedControl";
 import { DatasetView } from "./DatasetView";
-import { Toggle } from "@kit/components/Toggle";
+import { Toggle } from "@kit/components/controls/Toggle";
 import { ChevronDown, ChevronLeft, ChevronRight, File, FileSpreadsheet, FileText, Folder } from "lucide-react";
 import { useIsPhone } from "@kit/lib/responsive";
 import { lineDiff } from "../components/ui";
