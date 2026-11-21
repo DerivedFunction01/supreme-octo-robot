@@ -134,29 +134,40 @@ import sys
 spec_path, ops_dir, scratch = sys.argv[1:4]
 values = dict(zip(("ROOT", "PYTHON", "HOME",
                    "ATTENTION_DATA"), sys.argv[4:8]))
+# The scratch writes ride the denial-tolerant writer
+# (ops/cutover/durable_write.py): a plain open("w") from
+# this process class dies intermittently under the host's
+# write-denial wave, and one denied write used to kill the
+# whole generation — the watchdog ladder then classified
+# the unit UNKNOWN and failed loud on a healthy service.
+sys.path.insert(0, os.path.join(ops_dir, "cutover"))
+from durable_write import write_text
+
 with open(spec_path, encoding="utf-8") as fh:
     entries = json.load(fh)
-with open(os.path.join(scratch, "outs.tsv"), "w",
-          encoding="utf-8") as map_fh:
-    for entry in entries:
-        concrete = [{
-            "template": os.path.join(ops_dir,
-                                     entry["template"]),
-            "out": entry["out"],
-            "values": {key: values[key]
-                       for key in entry["values"]},
-        }]
-        out_path = os.path.join(scratch,
-                                f"spec-{entry['unit']}.json")
-        with open(out_path, "w", encoding="utf-8") as fh:
-            json.dump(concrete, fh)
-        enable = 0 if entry.get("enable") is False else 1
-        map_fh.write(
-            f"{entry['unit']}\t{entry['out']}\t{enable}\n")
+map_lines = []
+spec_files = {}
+for entry in entries:
+    concrete = [{
+        "template": os.path.join(ops_dir,
+                                 entry["template"]),
+        "out": entry["out"],
+        "values": {key: values[key]
+                   for key in entry["values"]},
+    }]
+    spec_files[f"spec-{entry['unit']}.json"] = \
+        json.dumps(concrete)
+    enable = 0 if entry.get("enable") is False else 1
+    map_lines.append(
+        f"{entry['unit']}\t{entry['out']}\t{enable}\n")
+write_text(os.path.join(scratch, "outs.tsv"),
+           "".join(map_lines))
+for name, text in spec_files.items():
+    write_text(os.path.join(scratch, name), text)
 PY
 GENERATED_RC=$?
 [ "$GENERATED_RC" -eq 0 ] || {
-    echo "install-units: could not read $SPEC" >&2
+    echo "install-units: the render-spec generation step failed (its error is on stderr above); refusing to classify or install" >&2
     exit 1
 }
 

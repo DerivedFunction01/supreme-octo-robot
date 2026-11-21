@@ -30,6 +30,9 @@ import shutil
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from durable_write import write_text
+
 TOKEN_RE = re.compile(r"@[A-Z_]+@")
 
 
@@ -71,8 +74,7 @@ def main(argv=None):
             print(f"FAIL {exc}")
             failed = True
             continue
-        with open(out_path, "w", encoding="utf-8") as fh:
-            fh.write(text)
+        write_text(out_path, text)
         proc = subprocess.run([analyzer, "verify", out_path],
                               capture_output=True, text=True)
         complaints = [line for line in
