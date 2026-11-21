@@ -14,8 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now, repo_registry, transfer
-from .launch import orphan_notes, upload_one
-from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, output_name_overlaps, pull_outputs
+from .launch import orphan_notes, session_launch_lock, upload_one
+from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, pull_outputs
+from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
 from .sweep import collect_stale_detached, orphan_sweep
@@ -421,6 +422,16 @@ def main() -> int:
         # names its phase.
         rec["launch_phase"] = "uploading"
         save_record(rec)
+        # The upload→launch window is serialized per session
+        # (launch.session_launch_lock): manifest uploads share
+        # /content/<basename> slots, and a concurrent launch's
+        # same-named upload landing between this launch's
+        # upload and its job start is the mislanding class.
+        # Held until the confirmation chain below concludes;
+        # every failure return inside the window exits this
+        # process, and process death releases the flock.
+        launch_lock = session_launch_lock(session)
+        launch_lock.__enter__()
         err = upload_one(session, script, remote_script, run_id)
         if err is not None:
             rec.update(state="failed", error=f"runner script upload: {err}")
@@ -456,7 +467,7 @@ def main() -> int:
             # manifest's tree in the seed's own output before any
             # launch: a seed that did not land is a failed run,
             # never a job launched against a missing tree.
-            up = transfer.chunked_upload(session, seed_ctx["bundle_path"], seed_ctx["bundle_path"].name)
+            up = transfer.chunked_upload(session, seed_ctx["bundle_path"], seed_ctx["bundle_path"].name, staging_token=run_id)
             if not up["ok"]:
                 rec.update(state="failed", error=f"bundle seed: chunked upload failed: {json.dumps(up)[:300]}")
                 save_record(rec)
@@ -618,27 +629,12 @@ def main() -> int:
             rec["last_poll_error"] = _confirm_error
             stamp_collector(rec, rec.get("caller"))
             save_record(rec)
-        def _name_warnings() -> list:
-            # Output-name risk, named at launch while a rename
-            # is still cheap: a declared basename a live run on
-            # this session also declares is safe in the per-run
-            # out dirs, but two payloads writing it cwd-relative
-            # share the session root and interleave silently
-            # (defect routed 2026-11-12). Advisory only — it
-            # blocks nothing; finalize's contention guard is
-            # the backstop. The computation is guarded at every
-            # level: a warning that can raise is a gate.
-            try:
-                found = output_name_overlaps(session, run_id, job.get("outputs", []))
-            except Exception:  # noqa: BLE001
-                return []
-            if found:
-                rec["output_name_warnings"] = found
-                save_record(rec)
-                for warning in found:
-                    print(f"warning: output name {warning['name']!r} is also declared by live run {warning['shared_with']} on {session} — if both payloads write it cwd-relative, the root copy is unattributable and finalize will flag it contended rather than collect it", file=sys.stderr)
-            return found
-
+        # The launch attempt has concluded on every branch
+        # above (the one branch that returned already exited
+        # the process, releasing the flock with it): the
+        # upload→launch window closes and the next launcher on
+        # this session may enter it.
+        launch_lock.__exit__(None, None, None)
         if detach_flag:
             # E5: launch exactly as the foreground form, write
             # the record, return. usage_before is stamped now —
@@ -661,9 +657,9 @@ def main() -> int:
             # exactly as before the check existed, so a consumer
             # parsing stdout whole is untouched.
             print(json.dumps({"run_id": run_id, "session": session, "state": rec["state"]}, indent=2), flush=True)
-            _name_warnings()
+            name_warnings(rec, session, run_id, job.get("outputs", []))
             return 0
-        _name_warnings()
+        name_warnings(rec, session, run_id, job.get("outputs", []))
         deadline = time.time() + job.get("timeout", 18000)
         cadence = job.get("checkpoint_pull_seconds", 300)
         # A checkpoint poll that outlives its subprocess timeout

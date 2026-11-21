@@ -468,3 +468,34 @@ def test_split_timeout_names_its_stage(tmp_path, monkeypatch):
     monkeypatch.setattr(xfer, "colab", _timeout_on("# transfer:split", fake))
     r = xfer.chunked_download("s", "big.bin", tmp_path / "out.bin")
     assert not r["ok"] and r["stage"] == "remote split"
+
+
+def test_upload_parts_are_staged_under_the_transfer_token(tmp_path, monkeypatch):
+    """The B3-S3b specimen (2026-11-21): local part files named
+    by remote_name alone were one flat slot per name, so two
+    concurrent transfers of different files under one remote
+    name overwrote each other's parts between split and
+    upload. Parts now stage under a per-transfer token dir,
+    distinct tokens never share a part path, and the staging
+    is removed when the transfer closes."""
+    fake, local = harness(tmp_path, monkeypatch)
+    sources = []
+    real_call = fake.__call__
+
+    def recording(*args, **kwargs):
+        if args and args[0] == "upload":
+            sources.append(Path(args[3]))
+        return real_call(*args, **kwargs)
+
+    monkeypatch.setattr(xfer, "colab", recording)
+    other = tmp_path / "other.bin"
+    other.write_bytes(bytes(range(199, -1, -1)))
+    r1 = xfer.chunked_upload("s", local, "big.bin", staging_token="run-a")
+    r2 = xfer.chunked_upload("s", other, "big.bin", staging_token="run-b")
+    assert r1["ok"] and r2["ok"]
+    a_parts = [p for p in sources if "run-a" in p.parts]
+    b_parts = [p for p in sources if "run-b" in p.parts]
+    assert a_parts and b_parts, sources
+    assert not (tmp_path / "var" / "chunks" / "run-a").exists()
+    assert not (tmp_path / "var" / "chunks" / "run-b").exists()
+    assert fake.remote["big.bin"] == bytes(range(199, -1, -1))

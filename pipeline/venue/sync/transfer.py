@@ -31,6 +31,7 @@ import hashlib
 import importlib.util as _ilu
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -246,7 +247,7 @@ def _remote_part_hashes(session: str, names: list, mkdir_dir: str = "") -> dict:
         return {}
 
 
-def chunked_upload(session: str, local: Path, remote_name: str, progress=None) -> dict:
+def chunked_upload(session: str, local: Path, remote_name: str, progress=None, staging_token: str | None = None) -> dict:
     """Upload local to /content/<remote_name> in 32 MB parts; verify hash.
 
     Parts already on the VM with a matching SHA-256 are skipped
@@ -255,15 +256,32 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None) -
     "resumed_parts", "moved_parts"} once the part count is known and
     again after every part lands or is skipped — the transfer
     record bin/colab-xfer keeps is written from these calls.
+
+    The local part files live under a per-transfer staging
+    token (var/chunks/<token>/): parts named by remote_name
+    alone were one flat slot per name, and two concurrent
+    transfers of different files under one remote name
+    overwrote each other's parts between split and upload —
+    the bytes that landed were the other transfer's, caught
+    only by the end-to-end hash as a failed run (2026-11-21,
+    the B3-S3b tree-tar specimen). The token defaults to a
+    per-process unique value; a caller that knows its run
+    passes it (the runner passes the run id). The remote
+    staging dir stays content-addressed by the file's hash —
+    identical bytes share it safely, different bytes never
+    meet there. Local parts are scratch (resume is
+    remote-side) and are removed when the transfer closes.
     """
     local = Path(local)
     digest = sha256_file(local)
     staging_dir = _xfer_dir(digest)
+    token = staging_token or f"{os.getpid()}-{time.time_ns()}"
+    part_dir = REPO / "var" / "chunks" / token
     metas = []
     with open(local, "rb") as fh:
         i = 0
         while chunk := fh.read(CHUNK):
-            part = REPO / "var" / "chunks" / f"{remote_name}.part-{i:03d}"
+            part = part_dir / f"{remote_name}.part-{i:03d}"
             part.parent.mkdir(parents=True, exist_ok=True)
             part.write_bytes(chunk)
             metas.append({"name": f"{staging_dir}/{part.name}", "path": part, "sha256": sha256_bytes(chunk)})
@@ -294,6 +312,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None) -
         r, used = _attempt(lambda m=m: colab("upload", "-s", session, str(m["path"]), f"/content/{m['name']}", timeout=3600))
         if r is None or r.returncode != 0:
             stderr = "" if r is None else (r.stdout + r.stderr)[-300:]
+            shutil.rmtree(part_dir, ignore_errors=True)
             return {"ok": False, "stage": f"upload part {i}", "attempts": used,
                     "resumed_parts": resumed, "uploaded_parts": uploaded, "stderr": stderr}
         uploaded += 1
@@ -328,6 +347,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None) -
         except (ValueError, json.JSONDecodeError, KeyError):
             pass
     if got != digest:
+        shutil.rmtree(part_dir, ignore_errors=True)
         return {"ok": False, "stage": "verify (reassemble)", "sha256": digest, "remote_sha256": got,
                 "parts": len(metas), "resumed_parts": resumed,
                 "uploaded_parts": uploaded, "retried_parts": retried,
@@ -336,6 +356,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None) -
     # Remove them (and any legacy flat residue for this target)
     # so the target's directory holds only the target.
     _cleanup_parts(session, remote_name, staging_dir)
+    shutil.rmtree(part_dir, ignore_errors=True)
     return {"ok": True, "sha256": digest, "remote_sha256": got,
             "parts": len(metas), "resumed_parts": resumed,
             "uploaded_parts": uploaded, "retried_parts": retried,

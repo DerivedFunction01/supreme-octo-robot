@@ -12,8 +12,14 @@ upload_one against a stub foundation whose colab is scripted:
 a stall signature (timeout, unreadable output) retries, a size
 mismatch is information and returns at once, and the journal
 keeps one entry per upload_one call — the final outcome.
+
+2026-11-21: the probe also verifies the landed SHA-256 — a
+same-size foreign file in the shared slot is a mismatch that
+returns at once with the foreign-bytes error — and the
+per-session launch lock's keying is pinned below.
 """
 
+import hashlib
 import json
 import subprocess
 import sys
@@ -41,9 +47,12 @@ def _json_object_from_output(text):
 class ScriptedColab:
     """Uploads always land; exec outcomes follow the script.
 
-    Each script entry is ("timeout",), ("stdout", text), or
-    ("size", n) — the last renders the probe's own output for a
-    remote file of n bytes.
+    Each script entry is ("timeout",), ("stdout", text),
+    ("size", n), or ("hash", hex) — the size entry renders the
+    probe's own output for a remote file of n bytes of the
+    source's own content (b"x" * n, matching make_src); the
+    hash entry renders the probe output for a same-size file
+    carrying the given SHA-256 instead.
     """
 
     def __init__(self, script):
@@ -63,7 +72,11 @@ class ScriptedColab:
         if outcome[0] == "stdout":
             return subprocess.CompletedProcess(argv, 0, outcome[1], "")
         if outcome[0] == "size":
-            body = json.dumps({"size": outcome[1]})
+            body = json.dumps({"size": outcome[1],
+                               "sha256": hashlib.sha256(b"x" * outcome[1]).hexdigest()})
+            return subprocess.CompletedProcess(argv, 0, body + "\n", "")
+        if outcome[0] == "hash":
+            body = json.dumps({"size": SIZE, "sha256": outcome[1]})
             return subprocess.CompletedProcess(argv, 0, body + "\n", "")
         raise AssertionError(outcome)
 
@@ -150,3 +163,40 @@ def test_all_attempts_unreadable_fails_with_the_unreadable_error(tmp_path):
     assert err.startswith(f"upload verify unreadable for {DEST}:")
     assert colab.exec_calls == 3
     assert journal == [{"stage": "probe", "ok": False, "detail": DEST}]
+
+
+def test_same_size_foreign_bytes_fail_at_once_on_the_hash(tmp_path):
+    foreign = hashlib.sha256(b"y" * SIZE).hexdigest()
+    colab = ScriptedColab([("hash", foreign), ("size", SIZE)])
+    launch, journal = load_launch(tmp_path, colab)
+    err = launch.upload_one("sess", make_src(tmp_path), DEST, "tag")
+    expected = hashlib.sha256(b"x" * SIZE).hexdigest()
+    assert err == (f"upload verify: {DEST} landed with sha256 {foreign}, "
+                   f"expected {expected} — the slot holds foreign bytes")
+    assert colab.exec_calls == 1
+    assert journal == [{"stage": "probe", "ok": False, "detail": DEST}]
+
+
+def test_launch_lock_is_keyed_per_session_and_excludes(tmp_path):
+    import fcntl
+    import os
+
+    colab = ScriptedColab([])
+    launch, _journal = load_launch(tmp_path, colab)
+
+    def try_grab(session):
+        path = tmp_path / "var" / f"launch-{session}.lock"
+        fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o644)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            os.close(fd)
+            return False
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+        return True
+
+    with launch.session_launch_lock("sess-a"):
+        assert not try_grab("sess-a"), "a held session lock must exclude"
+        assert try_grab("sess-b"), "another session's lock stays free"
+    assert try_grab("sess-a"), "a released session lock must be grabbable"
