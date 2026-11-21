@@ -150,7 +150,7 @@ class FeedsDocumentPrimeGuardTest(unittest.TestCase):
         self.assertEqual(
             over["cold_shape_keys"],
             sorted(["config", "home", "projects",
-                    "projectFeeds", "repos", "repoDetails",
+                    "projectFeeds", "projectsIndex",
                     "messages", "outbox", "settings",
                     "armedRows", "armedSkipped",
                     "statusVocabulary", "goals",

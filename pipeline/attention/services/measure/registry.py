@@ -100,7 +100,6 @@ REQUIRED_FIELDS = (
     "staffing_contract",
     "wb_projects",
     "retired",
-    "caller_stems",
 )
 
 _VENUES = ("colab", "none")
