@@ -22,15 +22,18 @@ from attention.services.measure import registry  # noqa: E402
 
 # The edgar staffing contract as ruled (owner
 # enforcement ruling, 2026-11-19, in the
-# edgar-parallel-staffing reminder's measure section):
-# written out here from the ruling, so the seed is
-# checked against the source, not against itself.
+# edgar-parallel-staffing reminder's measure section;
+# carrying floor amended to 3 under the owner's
+# fleet ruling, 2026-11-21: 3 standing sessions, all
+# three actually used): written out here from the
+# ruling, so the seed is checked against the source,
+# not against itself.
 EXPECTED_EDGAR_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
     "min_families_in_flight": 2,
     "min_live_sessions": 2,
-    "min_sessions_carrying_work": 2,
+    "min_sessions_carrying_work": 3,
     "defect_conditions": [
         "fewer_than_min_families_in_flight",
         "all_compute_on_one_session_while_another_live_session_carries_none",
