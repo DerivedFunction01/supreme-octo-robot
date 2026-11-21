@@ -475,17 +475,57 @@ class TerminalUnconsumed(unittest.TestCase):
     the collector within seconds, unconsumed for
     90+ minutes while its seat reported it in flight."""
 
-    def test_terminal_failed_selection(self):
+    def test_terminal_selection_covers_the_three_specimen_shapes(self):
         now = at(2, 0)
+        orphaned = _record(
+            "job-scenes-20261119T010000Z", "orphaned", at(0, 30), None
+        )
+        orphaned["terminal_event_at"] = at(1, 20)
+        orphaned["missing_outputs"] = []
+        unpulled = _record(
+            "job-collect-20261119T011000Z", "complete", at(1, 10), at(1, 15)
+        )
+        unpulled["missing_outputs"] = ["frames.tar", "base-scenes.json"]
+        clean = _record(
+            "job-gate-20261119T013000Z", "complete", at(1, 30), at(1, 40)
+        )
+        clean["missing_outputs"] = []
         records_in = [
             _record("job-gate-20261119T010000Z", "failed", at(1, 0), at(1, 10)),
-            _record("job-gate-20261119T013000Z", "complete", at(1, 30), at(1, 40)),
+            clean,
             _record("job-gate-20261119T015000Z", "failed", at(1, 50), None),
             _record("job-gate-20261119T015500Z", "polling", at(1, 55), None),
+            orphaned,
+            unpulled,
         ]
-        out = venue.terminal_failed_at(records_in, now)
-        self.assertEqual([r["id"] for r in out], ["job-gate-20261119T010000Z"])
-        self.assertEqual(out[0]["finished_at"], at(1, 10).isoformat())
+        for record in records_in:
+            record.setdefault("terminal_event_at", None)
+            record.setdefault("missing_outputs", [])
+        out = venue.terminal_unconsumed_at(records_in, now)
+        by_id = {r["id"]: r for r in out}
+        self.assertEqual(
+            set(by_id),
+            {
+                "job-gate-20261119T010000Z",
+                "job-scenes-20261119T010000Z",
+                "job-collect-20261119T011000Z",
+            },
+        )
+        self.assertEqual(by_id["job-gate-20261119T010000Z"]["shape"], "failed")
+        self.assertEqual(
+            by_id["job-gate-20261119T010000Z"]["finished_at"], at(1, 10).isoformat()
+        )
+        # The orphaned shape's terminal instant is its
+        # terminal event, not a payload finish.
+        self.assertEqual(by_id["job-scenes-20261119T010000Z"]["shape"], "orphaned")
+        self.assertEqual(
+            by_id["job-scenes-20261119T010000Z"]["finished_at"], at(1, 20).isoformat()
+        )
+        self.assertEqual(by_id["job-collect-20261119T011000Z"]["shape"], "unpulled")
+        self.assertEqual(
+            by_id["job-collect-20261119T011000Z"]["missing_outputs"],
+            ["frames.tar", "base-scenes.json"],
+        )
 
     def test_consumption_citation_needs_a_terminal_token(self):
         run = "steampower-reformed-gate-20261121T005537Z"
@@ -509,15 +549,17 @@ class TerminalUnconsumed(unittest.TestCase):
                 "steampowernj": {
                     "at": now,
                     "jobs": 1,
-                    "terminal_failed": [
+                    "terminal_unconsumed": [
                         {
                             "id": "steampower-reformed-gate-20261121T005537Z",
                             "job": "steampower-reformed-gate",
                             "caller": "steampower-cust",
                             "session": "storm-mosaic-17",
                             "state": "failed",
+                            "shape": "failed",
                             "started_at": (finished - timedelta(minutes=14)).isoformat(),
                             "finished_at": finished.isoformat(),
+                            "missing_outputs": [],
                         }
                     ],
                 }
@@ -547,7 +589,7 @@ class TerminalUnconsumed(unittest.TestCase):
             continuation.SWEEP_CLASSES["terminal_unconsumed"], ("terminal",)
         )
         self.assertIn(
-            "collect the failure", continuation._SWEEP_NEXT_ACT["terminal_unconsumed"]
+            "collect the record", continuation._SWEEP_NEXT_ACT["terminal_unconsumed"]
         )
 
     def test_row_waits_one_cadence_interval(self):

@@ -385,9 +385,9 @@ _SWEEP_NEXT_ACT = {
         "re-fire the work — and verify the collecting lane."
     ),
     "terminal_unconsumed": (
-        "Next act: collect the failure — read the run record, "
-        "post the disposition in the programme's own record — "
-        "and verify the collecting lane."
+        "Next act: collect the record — read it, post the "
+        "disposition in the programme's own record — and "
+        "verify the collecting lane."
     ),
     "phantom_stop": (
         "Next act: cite the owner's message (thread and time) with "

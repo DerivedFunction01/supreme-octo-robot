@@ -248,6 +248,16 @@ def read_run_store(runs_dir: Path, now: datetime) -> list:
                 "started_at": started,
                 "finished_at": finished,
                 "evidence_at": evidence,
+                # The terminal-unconsumed class's own
+                # fields: when the record entered its
+                # terminal state by event (the orphaned
+                # shape carries no payload finish), and
+                # the declared outputs the collector
+                # never recovered (the unpulled shape).
+                "terminal_event_at": detached_records._parse_time(
+                    record.get("terminal_event_at")
+                ),
+                "missing_outputs": list(record.get("missing_outputs") or []),
             }
         )
     return out
@@ -312,26 +322,54 @@ def orphans_at(records: list, now: datetime, window_minutes: float) -> list:
     return out
 
 
-# Terminal states the terminal-unconsumed class
-# covers: failed first, per the commission — a
-# completed run is consumed by its own success, and
-# non-terminal states are the orphan class's ground.
-TERMINAL_FAILED_STATES = {"failed"}
+def terminal_unconsumed_at(records: list, now: datetime) -> list:
+    """A programme's terminal runs in the shapes the
+    terminal-unconsumed class covers — the three
+    specimens of the 2026-11-20 commission:
 
+    failed — a payload finish in state failed (the
+    clean specimen: prompt terminal record, zero
+    consumption). orphaned — a record closed into
+    state orphaned by its terminal event, carrying no
+    payload finish; its terminal instant is the
+    event, the hours before it being the orphan
+    class's ground. unpulled — a record in state
+    complete whose declared outputs were never
+    recovered (missing_outputs non-empty): the
+    deceptive specimen, a terminal state that reads
+    complete while the substance is absent — and the
+    derivable face of the orphan class's named
+    residual, since this record carries the outputs
+    declaration the residual waits on.
 
-def terminal_failed_at(records: list, now: datetime) -> list:
-    """A programme's terminal failed runs: state
-    failed with a payload finish at or before `now`.
-    Whether the owning programme has consumed one is
-    the records measure's evidence, not the record's
-    — the collector's stamp on the record is the
-    recording, and recording is not consumption."""
+    A clean complete run never enters; a non-terminal
+    record is the orphan class's ground. Whether the
+    owning programme has consumed one is the records
+    measure's evidence, not the record's — the
+    collector's stamp on the record is the recording,
+    and recording is not consumption."""
     out = []
     for record in records:
-        if record.get("state") not in TERMINAL_FAILED_STATES:
-            continue
+        state = record.get("state")
         finished = record.get("finished_at")
-        if finished is None or finished > now:
+        missing = record.get("missing_outputs") or []
+        if state == "failed" and finished is not None and finished <= now:
+            shape, terminal_at = "failed", finished
+        elif state == "orphaned":
+            terminal_at = record.get("terminal_event_at") or record.get(
+                "evidence_at"
+            )
+            if terminal_at is None or terminal_at > now:
+                continue
+            shape = "orphaned"
+        elif (
+            state == "complete"
+            and finished is not None
+            and finished <= now
+            and missing
+        ):
+            shape, terminal_at = "unpulled", finished
+        else:
             continue
         started = record["started_at"]
         out.append(
@@ -340,9 +378,11 @@ def terminal_failed_at(records: list, now: datetime) -> list:
                 "job": record["job"],
                 "caller": record["caller"],
                 "session": record["session"],
-                "state": record["state"],
+                "state": state,
+                "shape": shape,
                 "started_at": started.isoformat() if started else None,
-                "finished_at": finished.isoformat(),
+                "finished_at": terminal_at.isoformat(),
+                "missing_outputs": list(missing),
             }
         )
     return out
@@ -444,7 +484,7 @@ def collect(state: dict, settings: Settings, now: datetime) -> bool:
             facts["orphans"] = orphans_at(attributed, now, window)
         facts["jobs"] = len(attributed)
         if slug in terminal_slugs:
-            facts["terminal_failed"] = terminal_failed_at(attributed, now)
+            facts["terminal_unconsumed"] = terminal_unconsumed_at(attributed, now)
         snapshot[slug] = {"at": now, **facts}
     before = {
         slug: {k: v for k, v in entry.items() if k != "at"}
