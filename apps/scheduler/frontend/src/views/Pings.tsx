@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { GroupedList } from "@workhorse/kit/components/GroupedList";
-import { LogRow, type LogRowEntry } from "@workhorse/kit/components/LogRow";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
+import { LogRow, type LogRowEntry } from "@workhorse/kit/components/display/LogRow";
 import type { SchedulerApi } from "../api";
 import type { PingView } from "../types";
 import { LargeTitle } from "../components/ui";

@@ -12,9 +12,9 @@
 // or end date resolves to an instant and rides the exact
 // same setPresence write the presets use.
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
-import { Field, Input } from "@workhorse/kit/components/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
+import { Field, Input } from "@workhorse/kit/components/controls/Fields";
 import { useDataSource, useStoreVersion } from "../attention/useStore";
 import type { AttentionDataSource, ExpiryChoice, PresenceMode } from "../attention/types";
 import { Group, GroupLabel, RadioRow } from "../components/groups";

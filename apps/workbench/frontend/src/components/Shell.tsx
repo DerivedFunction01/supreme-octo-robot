@@ -5,7 +5,7 @@ import {
   SidebarNav,
   TopBar,
   type AppShellNavItem,
-} from "@kit/components/AppShell";
+} from "@kit/components/shell/AppShell";
 import { useIsPhone } from "@kit/lib/responsive";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { sidebarKey, useNav, type NavTarget } from "../lib/nav";

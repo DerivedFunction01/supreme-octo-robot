@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "@kit/components/Button";
+import { Button } from "@kit/components/controls/Button";
 import { useAdapter } from "../lib/store";
 import type { GoalRecord, StatusPost } from "../lib/types";
 import { PickChip } from "../sections/Mockups";

@@ -11,7 +11,7 @@ import {
   RowText,
   StatusChip,
 } from "../components/ui";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { GrantCard } from "./GrantCard";
 
 /** Frame 1 — Leases. Also renders frame 8 (Degraded) when the

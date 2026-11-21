@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useIsPhone } from "@kit/lib/responsive";
-import { SegmentedControl } from "@kit/components/SegmentedControl";
-import { Button } from "@kit/components/Button";
+import { SegmentedControl } from "@kit/components/controls/SegmentedControl";
+import { Button } from "@kit/components/controls/Button";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import type { AnnotationThread, Plan } from "../lib/types";

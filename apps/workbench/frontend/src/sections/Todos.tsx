@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { Button } from "@kit/components/Button";
-import { Checkbox } from "@kit/components/Checkbox";
-import { Field, Input, Select } from "@kit/components/Fields";
-import { SegmentedControl } from "@kit/components/SegmentedControl";
-import { Sheet } from "@kit/components/Sheet";
+import { Button } from "@kit/components/controls/Button";
+import { Checkbox } from "@kit/components/controls/Checkbox";
+import { Field, Input, Select } from "@kit/components/controls/Fields";
+import { SegmentedControl } from "@kit/components/controls/SegmentedControl";
+import { Sheet } from "@kit/components/shell/Sheet";
 import { ChevronRight, Plus } from "lucide-react";
 import {
   armedRowFilename,

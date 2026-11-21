@@ -10,8 +10,8 @@ import {
   Row,
   StatusChip,
 } from "../components/ui";
-import { Button } from "@workhorse/kit/components/Button";
-import { LogRow, type LogRowEntry } from "@workhorse/kit/components/LogRow";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { LogRow, type LogRowEntry } from "@workhorse/kit/components/display/LogRow";
 
 /** The served AccessLogView is the kit LogRow's entry shape
  *  for the timeline study's scoped variant: its kind is

@@ -2,12 +2,12 @@ import { Fragment, useState } from "react";
 import { Zap } from "lucide-react";
 import type { EventKind, EventView, Snapshot } from "../venue/types";
 import { GroupLabel, GroupedList, PickerChips } from "../components/ui";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   LogRow,
   LogRowDrawer,
   type LogRowEntry,
-} from "@workhorse/kit/components/LogRow";
+} from "@workhorse/kit/components/display/LogRow";
 
 type Filter = "all" | EventKind;
 

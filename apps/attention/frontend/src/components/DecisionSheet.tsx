@@ -6,19 +6,19 @@
 // item into the awaiting band. Validation failures surface
 // here, in the sheet, and record nothing.
 import { useMemo, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { Field, Input } from "@workhorse/kit/components/Fields";
-import { GroupedList } from "@workhorse/kit/components/GroupedList";
-import { Toggle } from "@workhorse/kit/components/Toggle";
-import { LabeledCheckbox } from "@workhorse/kit/components/Checkbox";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { Field, Input } from "@workhorse/kit/components/controls/Fields";
+import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
+import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
 import {
   LogRow,
   LogRowDrawer,
   type LogRowEntry,
   type LogRowTone,
-} from "@workhorse/kit/components/LogRow";
+} from "@workhorse/kit/components/display/LogRow";
 import { useDataSource } from "../attention/useStore";
 import { verbLabel } from "../attention/verb-labels";
 import type { DecisionHistoryEntry, ItemView } from "../attention/types";

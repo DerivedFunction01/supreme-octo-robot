@@ -16,8 +16,8 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { useIsPhone } from "@workhorse/kit/lib/responsive";
 import type { SchedulerApi } from "../api";
 import type { JobView } from "../types";

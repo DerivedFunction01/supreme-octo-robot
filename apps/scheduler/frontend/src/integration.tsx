@@ -37,7 +37,7 @@
 // surface (the shell's unified Settings owns the axes).
 import { StrictMode, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import type { ModeValue } from "@workhorse/kit/components/ModeControl";
+import type { ModeValue } from "@workhorse/kit/components/controls/ModeControl";
 import { App } from "./App";
 import type { SchedulerApi } from "./api";
 import { LiveSchedulerApi } from "./live/live-adapter";

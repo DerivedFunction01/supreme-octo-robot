@@ -79,7 +79,7 @@
 // follow-up — the Button danger active state F9 measured
 // at 3.92:1 olive/dark and 3.67:1 teal/dark and named
 // outside its scope): the BUTTON STATE pairs join the
-// net. Button (components/Button.tsx) paints its primary
+// net. Button (components/controls/Button.tsx) paints its primary
 // and danger fills per state from the accent/danger
 // tokens and color-mix steps toward a shade endpoint;
 // the text is on-accent in every state. Part 4 covers
@@ -223,7 +223,7 @@
 // Exit 1 on any failure.
 
 import { readFileSync, readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -831,10 +831,10 @@ for (const palette of Object.keys(tokens.semantic)) {
 // data; the scan itself is generated, never listed.
 const kitRoot6 = join(here, "..");
 function scanDir6(dir, exts) {
-  return readdirSync(join(kitRoot6, dir))
+  return readdirSync(join(kitRoot6, dir), { recursive: true })
     .filter((f) => exts.some((e) => f.endsWith(e)))
     .sort()
-    .map((f) => ({ name: f, text: readFileSync(join(kitRoot6, dir, f), "utf8") }));
+    .map((f) => ({ name: basename(f), text: readFileSync(join(kitRoot6, dir, f), "utf8") }));
 }
 const componentFiles6 = scanDir6("components", [".tsx"]);
 const indexCss6 = readFileSync(join(kitRoot6, "themes", "index.css"), "utf8");

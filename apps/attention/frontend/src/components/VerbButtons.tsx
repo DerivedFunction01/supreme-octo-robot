@@ -2,7 +2,7 @@
 // (handler status card, steering group, digest topic
 // lanes) renders the same row over the served verb set.
 import type { VerbEntry } from "../attention/types";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 
 export function VerbButtons({
   verbs,

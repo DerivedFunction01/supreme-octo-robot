@@ -11,8 +11,8 @@ import {
   Row,
   RowValue,
 } from "../components/ui";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { Select, Input } from "@workhorse/kit/components/Fields";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { Select, Input } from "@workhorse/kit/components/controls/Fields";
 import { Check } from "lucide-react";
 import { GrantCard } from "./GrantCard";
 

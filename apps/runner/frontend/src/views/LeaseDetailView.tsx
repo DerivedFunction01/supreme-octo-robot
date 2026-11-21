@@ -14,7 +14,7 @@ import {
   RowValue,
   StatusChip,
 } from "../components/ui";
-import { Input } from "@workhorse/kit/components/Fields";
+import { Input } from "@workhorse/kit/components/controls/Fields";
 
 /** Frame 2 — Lease detail, with working Extend / Shorten /
  *  Release and a Run-a-job group that exercises the adapter's

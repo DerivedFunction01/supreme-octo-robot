@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Toggle } from "@workhorse/kit/components/Toggle";
-import { Button } from "@workhorse/kit/components/Button";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { GroupedList } from "@workhorse/kit/components/GroupedList";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
 import {
   LogRow,
   type LogRowEntry,
   type LogRowTone,
-} from "@workhorse/kit/components/LogRow";
+} from "@workhorse/kit/components/display/LogRow";
 import type { SchedulerApi } from "../api";
 import type { OpenInTarget, RunView } from "../types";
 import { ConfigGroup } from "../components/ConfigGroup";

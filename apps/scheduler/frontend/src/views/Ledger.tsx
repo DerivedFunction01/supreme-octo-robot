@@ -1,10 +1,10 @@
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { GroupedList } from "@workhorse/kit/components/GroupedList";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
 import {
   LogRow,
   type LogRowEntry,
   type LogRowTone,
-} from "@workhorse/kit/components/LogRow";
+} from "@workhorse/kit/components/display/LogRow";
 import type { SchedulerApi } from "../api";
 import { LargeTitle } from "../components/ui";
 import { fmtDateToken, fmtTimeOfDay } from "../format";

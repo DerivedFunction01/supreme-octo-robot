@@ -8,7 +8,7 @@
 import { Fragment, useState } from "react";
 import { useDataSource, useStoreVersion } from "../attention/useStore";
 import type { RuleRecord } from "../attention/types";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { Group, GroupLabel, Row, RowText, RowValue } from "../components/groups";
 import { RuleEditor } from "../components/RuleEditor";
 import { LargeTitle } from "../components/LargeTitle";

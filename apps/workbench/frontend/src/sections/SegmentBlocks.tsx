@@ -1,4 +1,4 @@
-import { Math } from "@kit/components/Math";
+import { Math } from "@kit/components/shell/Math";
 import type { FeedSegmentBlock, FeedSegmentRun } from "../lib/feeds";
 
 // The served-segments renderer (the segment feed, math
