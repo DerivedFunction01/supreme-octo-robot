@@ -24,10 +24,15 @@
  * E2E_PORT + scratch dir, the browser-binary ensure, a
  * port-free check before the run (a busy port aborts —
  * another suite owns it) and after it (the final leg: the
- * port must be free again; Playwright stops its webServer
- * on exit, and a still-bound port is a teardown failure,
- * exit 97). Its verdict is Playwright's own exit code,
- * conjoined with the teardown leg.
+ * port must be free again within a bounded grace;
+ * Playwright stops its webServer on exit, but the release
+ * is asynchronous — a single instantaneous probe races a
+ * healthy shutdown and reads a mid-release port as a leak.
+ * A port still bound when the grace expires is a teardown
+ * failure, exit 97, and the failure line names the
+ * occupant where the platform can read it). Its verdict
+ * is Playwright's own exit code, conjoined with the
+ * teardown leg.
  *
  * The partition is a PARTITION: every tests/e2e/*.spec.ts
  * on disk belongs to exactly one family, and this script
@@ -41,10 +46,17 @@
  * says so, because the seed ships no app specs yet.
  *
  * Seeding state: the qa family carries the legs this repo
- * has seeded — today the dead-click sweep alone (S-4). A
- * leg joins the partition in the same change that seeds
- * its spec; a leg the project has not seeded is
- * unexercised, never passed (docs/checks.md).
+ * has seeded — today the dead-click sweep alone (S-4). The
+ * app family carries the project's own surface specs —
+ * today the jobs-overflow after-proof, a measurement leg
+ * whose staged-payload prerequisites are the caller's, as
+ * its header names. A leg joins the partition in the same
+ * change that seeds its spec; a leg the project has not
+ * seeded is unexercised, never passed (docs/checks.md).
+ * (jobs-overflow2 sat unassigned from the repo remake
+ * until 2026-11-21 — the partition check refused every run
+ * in that window, which is the check working as designed
+ * against a seeding change that skipped its half.)
  *
  * Toolchain: this repo carries no root package-manager
  * workspace — the legs' one dependency (@playwright/test,
@@ -69,7 +81,7 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 const FAMILIES = {
   qa: ["qa-dead-click.spec.ts"],
-  app: [],
+  app: ["jobs-overflow2.spec.ts"],
 };
 
 const DEFAULT_PORTS = { qa: "3510", app: "3520" };
@@ -174,6 +186,38 @@ function portFree(candidate) {
   });
 }
 
+// The teardown grace: the webServer's release is
+// asynchronous (Playwright signals it as the CLI exits;
+// the socket frees some hundreds of milliseconds later),
+// so the final leg re-probes over a bounded window rather
+// than judging one instant. Free at any probe inside the
+// window is a clean teardown; bound at every probe to the
+// window's end is a leak.
+const TEARDOWN_GRACE_MS = 20_000;
+const TEARDOWN_PROBE_MS = 250;
+
+async function portFreeWithin(candidate, graceMs) {
+  const deadline = Date.now() + graceMs;
+  for (;;) {
+    if (await portFree(candidate)) return true;
+    if (Date.now() >= deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, TEARDOWN_PROBE_MS));
+  }
+}
+
+// Who holds the port, for the teardown failure line: a
+// verdict that names its evidence. Best-effort — an
+// unnamed occupant still fails the leg.
+function portOccupant(candidate) {
+  const ss = spawnSync("ss", ["-ltnp", `sport = :${candidate}`], {
+    encoding: "utf8",
+  });
+  const line = (ss.stdout ?? "")
+    .split("\n")
+    .find((entry) => entry.includes(`:${candidate}`));
+  return line ? line.trim().replace(/\s+/g, " ") : "occupant unreadable";
+}
+
 if (!(await portFree(port))) {
   fail(`port ${port} is busy before the run — another suite owns it; pass --port`, 69);
 }
@@ -214,9 +258,14 @@ const status = await new Promise((resolve) => {
   child.on("close", (code) => resolve(code ?? 1));
 });
 
-// The final leg: the port must be free again (teardown).
-if (!(await portFree(port))) {
-  console.error(`e2e-shard ${shard}: TEARDOWN_FAIL — port ${port} still bound after the run`);
+// The final leg: the port must be free again within the
+// teardown grace (see portFreeWithin — one instantaneous
+// probe races the webServer's asynchronous release and
+// fires on clean runs).
+if (!(await portFreeWithin(port, TEARDOWN_GRACE_MS))) {
+  console.error(
+    `e2e-shard ${shard}: TEARDOWN_FAIL — port ${port} still bound ${TEARDOWN_GRACE_MS}ms after the run (${portOccupant(port)})`,
+  );
   process.exit(status === 0 ? 97 : status);
 }
 console.log(`e2e-shard ${shard}: port ${port} free after the run`);
