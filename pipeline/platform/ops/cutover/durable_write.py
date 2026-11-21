@@ -41,20 +41,24 @@ _BASE_DELAY_S = float(os.environ.get("DURABLE_WRITE_BASE_DELAY_S", "0.3"))
 _MAX_DELAY_S = 5.0
 
 
-def _load_writer():
-    """The platform writer, loaded by path from this file's
-    own location (ops/cutover -> platform/writer.py): the
-    ops tools run with only their own directory importable,
-    so the writer is reached by derivation, never by an
-    assumed sys.path."""
-    writer_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(
-            os.path.abspath(__file__)))), "writer.py")
-    spec = importlib.util.spec_from_file_location(
-        "platform_writer", writer_path)
+def _load_by_path(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_writer():
+    """The platform writer, reached through the platform's
+    paths spine: the ops tools run with only their own
+    directory importable, so this module bootstraps the
+    spine by path (ops/cutover -> platform/paths.py) and
+    takes the writer's location from it — derivation lives
+    in the spine, never here."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    paths = _load_by_path(
+        "platform_paths", os.path.join(here, "..", "..", "paths.py"))
+    return _load_by_path("platform_writer", paths.WRITER)
 
 
 _WRITER = _load_writer()
