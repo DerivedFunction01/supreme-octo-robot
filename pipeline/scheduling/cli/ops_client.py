@@ -15,6 +15,7 @@ per caller name: a token file present for the acting caller
 is presented as a bearer token; none present means the call
 goes out unauthenticated and the server refuses it — the
 client never invents an identity."""
+import importlib.util
 import json
 import os
 import sys
@@ -55,16 +56,21 @@ def resolve_ops_token(caller, env=None):
 
 def store_ops_token(caller, token, env=None):
     """Write the acting caller's token file (0600, created in
-    the token home). The delivery half of a mint: the token
-    prints once at mint and is saved here by its receiver."""
+    the token home) through the platform writer's staged
+    protocol — a denied or torn write leaves the standing
+    token byte-identical, where the direct truncate-write
+    this replaced destroyed it (the 2026-11-21 mint failure
+    the writer census named). The delivery half of a mint:
+    the token prints once at mint and is saved here by its
+    receiver."""
     path = token_file_path(caller, env)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    try:
-        os.write(fd, (token + "\n").encode("utf-8"))
-    finally:
-        os.close(fd)
-    os.chmod(path, 0o600)
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_writer", _paths.PLATFORM_WRITER)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.staged_write(
+        path, (token + "\n").encode("utf-8"), mode=0o600)
     return path
 
 

@@ -136,14 +136,28 @@ def load_dispositions(path):
     return {"dispositions": {}}
 
 
+def _ops_paths():
+    """The ops tree's paths spine (ops/paths.py), loaded by
+    file location — this module is itself loaded by file
+    location (by the local-test watch), so the spine rides
+    the same pattern from this file's parent directory."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "ops_paths",
+        os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.abspath(__file__))),
+            "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def save_dispositions(path, record):
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(record, fh, indent=1, sort_keys=True)
-    os.replace(tmp, path)
+    _ops_paths().save_json(path, record)
 
 
 def is_explained(record, sig):

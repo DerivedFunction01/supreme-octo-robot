@@ -233,10 +233,7 @@ def load_state(path):
 
 def save_state(path, state):
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
-        json.dump(state, fh, indent=1, sort_keys=True)
-    os.replace(tmp, path)
+    paths.save_json(path, state)
 
 
 def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,

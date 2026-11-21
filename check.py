@@ -35,12 +35,29 @@ the warn threshold, family declarations exempt from
 warn/fail but always reported. It enters the summary as
 the repo-census row. A --legs filter that does not name
 foldercensus suppresses it. Beside it, the repo-scoped
+line cap (gate.linecap's repo form) counts every tracked
+code file in the tree by default — no package or folder
+declares coverage — and enters the summary as the
+repo-linecap row; a --legs filter that does not name
+repolinecap suppresses it. Beside it, the repo-scoped
 root portability coverage (gate.runner's rootportability
 leg) scans every tracked file no package's portability
 leg covers, so the whole tracked tree is scanned exactly
 once; it enters the summary as the repo-portability row,
 and a --legs filter that does not name rootportability
-suppresses it.
+suppresses it. Beside them, three more repo-scoped rows
+run by default (the 2026-11-21 default-on reversal):
+repo-writeruniqueness (the writer-uniqueness component
+over every tracked Python source in the tree),
+repo-importisolation (the import-isolation component run
+for every composed pipeline package automatically), and
+repo-scanners (every pipeline package carrying a
+scanners.py runner module, discovered from the tree).
+Each enters the summary under its own row; a --legs
+filter that does not name repowriteruniqueness,
+repoimportisolation, or reposcanners suppresses that row.
+Opt-out from any of them exists only as a recorded
+exception in the gate package's repo leg declaration.
 
 Parallelism (owner ruling 2026-11-13: tests always run
 parallel): a multi-package run executes the independent
@@ -261,10 +278,30 @@ def main() -> int:
         outcome = runner.run_folder_census(REPO_ROOT, packages)
         verdicts["repo-census"] = outcome.ok
 
+    if not args.legs or "repolinecap" in args.legs.split(","):
+        print("\n##### repo (line cap)")
+        outcome = runner.run_repo_linecap(REPO_ROOT, packages)
+        verdicts["repo-linecap"] = outcome.ok
+
     if not args.legs or "rootportability" in args.legs.split(","):
         print("\n##### repo (root portability coverage)")
         outcome = runner.run_root_portability(REPO_ROOT, packages)
         verdicts["repo-portability"] = outcome.ok
+
+    if not args.legs or "repowriteruniqueness" in args.legs.split(","):
+        print("\n##### repo (writer uniqueness)")
+        outcome = runner.run_repo_writeruniqueness(REPO_ROOT, packages)
+        verdicts["repo-writeruniqueness"] = outcome.ok
+
+    if not args.legs or "repoimportisolation" in args.legs.split(","):
+        print("\n##### repo (import isolation)")
+        outcome = runner.run_repo_importisolation(REPO_ROOT, packages)
+        verdicts["repo-importisolation"] = outcome.ok
+
+    if not args.legs or "reposcanners" in args.legs.split(","):
+        print("\n##### repo (scanner runners)")
+        outcome = runner.run_repo_scanners(REPO_ROOT, packages)
+        verdicts["repo-scanners"] = outcome.ok
 
     print("\n== gate summary")
     for name, ok in verdicts.items():

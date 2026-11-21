@@ -7,6 +7,7 @@ delivered through the secure store (docs/connector-setup.md).
 
 import importlib.util
 import json
+import os
 import re
 import sys
 from datetime import date
@@ -40,14 +41,39 @@ def main(argv: list[str]) -> int:
             )
             return 1
     RECORD.parent.mkdir(parents=True, exist_ok=True)
-    RECORD.write_text(
+    data = (
         json.dumps(
             {"caller": name, "registered_at": date.today().isoformat()},
             indent=2,
         )
-        + "\n",
-        encoding="utf-8",
-    )
+        + "\n"
+    ).encode("utf-8")
+    # The unified writer's protocol (contract 15), performed
+    # inline: this script runs on a venue host, outside the
+    # pipeline tree the writer lives in — the protocol, not
+    # the module, is the invariant. Stage to a fresh sibling,
+    # fsync, read back and compare, rename over, so a denied
+    # or torn write leaves the standing record byte-identical.
+    tmp = RECORD.parent / (RECORD.name + ".tmp-register")
+    try:
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        if tmp.read_bytes() != data:
+            raise OSError("read-back mismatch on staged write")
+        os.replace(tmp, RECORD)
+    except BaseException:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+        raise
+    dir_fd = os.open(RECORD.parent, os.O_RDONLY)
+    try:
+        os.fsync(dir_fd)
+    finally:
+        os.close(dir_fd)
     print(f"caller recorded: {name} ({RECORD})")
     print("next: the host issues this caller's token; it reaches")
     print("this venue through the secure store and is injected at")

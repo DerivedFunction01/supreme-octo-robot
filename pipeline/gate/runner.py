@@ -57,6 +57,51 @@ its targeting layout, and its legs in order. Leg kinds:
                  in the gate package's declaration; the root
                  check executes it once per run, so
                  run_package skips it (recorded as skipped)
+- repolinecap  — the line-cap component in its repo form
+                 (gate.linecap.scan_repo): repo-scoped like
+                 the census. The gate package's declaration
+                 carries its cap/band values as config; the
+                 root check executes it once per run over
+                 every tracked code file in the tree —
+                 coverage is by default, never declared per
+                 package, so run_package skips it (recorded
+                 as skipped). The per-package linecap kind
+                 survives only as the component's CLI form;
+                 no package declares it since 2026-11-21.
+- repowriteruniqueness — the writer-uniqueness component
+                 in its repo form (gate.writeruniqueness):
+                 repo-scoped like the census. The gate
+                 package's declaration carries the recorded
+                 exceptions as data; the root check executes
+                 it once per run over every tracked Python
+                 source in the tree — coverage is by
+                 default, never declared per package, so
+                 run_package skips it (recorded as skipped).
+                 The per-package writeruniqueness kind is
+                 retired (declared by platform and venue
+                 until 2026-11-21).
+- repoimportisolation — the import-isolation component
+                 in its repo form (gate.importisolation):
+                 the invariant is per-package by nature, so
+                 the root check runs the component for every
+                 composed pipeline package automatically —
+                 the population derives from the tree's
+                 package set, never from a declaration. The
+                 gate package's declaration carries the
+                 recorded exceptions (repo-relative paths);
+                 run_package skips the config declaration
+                 (recorded as skipped). The per-package
+                 importisolation kind is retired (declared
+                 by attention until 2026-11-21).
+- reposcanners — the scanner-runner leg in its repo form
+                 (gate.staticlegs.scanners): a pipeline
+                 package carrying a scanners.py module at
+                 its root (the runner contract: run_all
+                 (root)) is run automatically — discovery is
+                 tree-derived, never declared. Declared once
+                 in the gate package as the composed gate's
+                 config; run_package skips it (recorded as
+                 skipped).
 
 Execution runs every declared leg, in declared order,
 and each leg verdicts independently: a red leg never
@@ -249,19 +294,10 @@ def run_root_portability(repo_root: Path,
         code=0 if ok else 1)
 
 
-def run_folder_census(repo_root: Path,
-                      packages: list[Package]) -> LegOutcome:
-    """The repo-scoped census leg: prints on every run;
-    fails on an undeclared folder at or over the fail
-    threshold."""
-    warn, fail = census_config(packages)
-    rows, failures = foldercensus.scan(
-        repo_root, load_families(packages), warn, fail)
-    for line in foldercensus.render(rows, failures, warn, fail):
-        print(line)
-    return LegOutcome(
-        name="folder census", ok=not failures,
-        code=0 if not failures else 1)
+from .repolegs import (  # noqa: F401 — re-exported for check.py
+    linecap_config, repo_leg_config, run_folder_census,
+    run_repo_importisolation, run_repo_linecap,
+    run_repo_scanners, run_repo_writeruniqueness)
 
 
 def _run_argv(argv: list[str], cwd: Path) -> int:
@@ -483,16 +519,12 @@ def run_leg(pkg: Package, leg: dict, *, repo_root: Path,
             print(missing)
             return LegOutcome(name=name, ok=False, code=2)
     if kind == "linecap":
-        findings, missing = linecap.scan(
-            str(pkg.root), int(leg.get("cap", linecap.DEFAULT_CAP)))
-        for relpath, lines in findings:
-            print(f"LINE LIMIT: {relpath} has {lines} lines")
-        for relpath in missing:
-            print(f"line-limit: note - enumerated file missing "
-                  f"from the working tree: {relpath}")
-        if not findings:
-            print("line-limit: ok")
-        code = 1 if findings else 0
+        cap = int(leg.get("cap", linecap.DEFAULT_CAP))
+        band = int(leg.get("band", linecap.DEFAULT_BAND))
+        result = linecap.scan(str(pkg.root), cap=cap, band=band)
+        for line in linecap.render(result, cap, band):
+            print(line)
+        code = 1 if (result.findings or result.growth) else 0
     elif kind == "portability":
         fail_mode = leg.get("fail_on_denylist", "auto")
         fail_on = (portability.denylist_provisioned(str(pkg.root))
@@ -588,7 +620,9 @@ def run_package(pkg: Package, *, repo_root: Path,
     for leg in pkg.decl.get("legs", []):
         kind = leg["leg"]
         name = leg.get("name", kind)
-        if kind in ("foldercensus", "rootportability"):
+        if kind in ("foldercensus", "rootportability", "repolinecap",
+                    "repowriteruniqueness", "repoimportisolation",
+                    "reposcanners"):
             # Repo-scoped: executed once per run by the
             # root check, never per package.
             result.skipped.append(name)
