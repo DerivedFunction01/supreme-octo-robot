@@ -356,17 +356,12 @@ def terminal_unconsumed_at(records: list, now: datetime) -> list:
         if state == "failed" and finished is not None and finished <= now:
             shape, terminal_at = "failed", finished
         elif state == "orphaned":
-            terminal_at = record.get("terminal_event_at") or record.get(
-                "evidence_at"
-            )
+            terminal_at = record.get("terminal_event_at") or record.get("evidence_at")
             if terminal_at is None or terminal_at > now:
                 continue
             shape = "orphaned"
         elif (
-            state == "complete"
-            and finished is not None
-            and finished <= now
-            and missing
+            state == "complete" and finished is not None and finished <= now and missing
         ):
             shape, terminal_at = "unpulled", finished
         else:
@@ -469,9 +464,7 @@ def collect(state: dict, settings: Settings, now: datetime) -> bool:
     snapshot: dict = {}
     for row in measured:
         slug = row["slug"]
-        attributed = [
-            r for r in records if attribute_slug(r["caller"], active) == slug
-        ]
+        attributed = [r for r in records if attribute_slug(r["caller"], active) == slug]
         facts: dict = {}
         if row.get("venue") == "colab":
             contract = registry.staffing_contract_for(slug)

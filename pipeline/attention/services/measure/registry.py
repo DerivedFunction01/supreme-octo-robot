@@ -262,8 +262,7 @@ def validate_declaration(row) -> dict:
         problems.append(f"{slug}.retired: a boolean")
     stems = row.get("caller_stems")
     if stems is not None and (
-        not isinstance(stems, list)
-        or not all(isinstance(s, str) and s for s in stems)
+        not isinstance(stems, list) or not all(isinstance(s, str) and s for s in stems)
     ):
         problems.append(
             f"{slug}.caller_stems: a list of caller stems the "

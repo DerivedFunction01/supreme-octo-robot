@@ -257,10 +257,16 @@ class TestTrim(Fixture):
         for m in manifests:
             self.assertIn(f"expiry_epoch={NOW + HOUR}", m.read_text())
             self.assertIn("dirty=0", m.read_text())
-            # the archive holds the tree itself: its file
-            # moved with it, admin directory alongside
+            # the archive holds the tree itself: its own
+            # file moved with it (later trees also carry
+            # the earlier landed files — the fixture lands
+            # each tree into main before growing the next),
+            # admin directory alongside
             adir = _archive_dir(m)
-            self.assertEqual(len(list((adir / "tree").glob("t*.txt"))), 1)
+            fields = dict(ln.split("=", 1) for ln in
+                          m.read_text().splitlines() if "=" in ln)
+            own = fields["tree"].removeprefix("repo-a-").removesuffix("-wt")
+            self.assertTrue((adir / "tree" / f"{own}.txt").exists())
             self.assertTrue((adir / "worktree-admin").is_dir())
         # 2026-11-21 cure: branches are NOT trimmed while
         # their archives stand — the branch is the restore's

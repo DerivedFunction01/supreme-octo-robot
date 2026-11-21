@@ -1,7 +1,10 @@
 """The denial-tolerant writer (ops/cutover/durable_write.py):
-a transient PermissionError on the staged write is retried
-until the write lands; a persistent one raises after the
-attempts run out; the landed bytes are exactly the text.
+it delegates the write to the platform's unified writer and
+retries denials (a bare PermissionError, or the writer's
+WriterError wrapping one) until the write lands; a
+persistent denial raises after the attempts run out; other
+errors propagate unretried; the landed bytes are exactly
+the text.
 """
 
 import builtins
@@ -50,8 +53,9 @@ class DurableWriteTests(unittest.TestCase):
         calls = {"n": 0}
 
         def flaky(file, mode="r", *a, **kw):
-            if "w" in mode and str(file).endswith(
-                    f".tmp-{os.getpid()}"):
+            # the unified writer's staging opens carry its
+            # sched-tmp marker; deny the first three
+            if "w" in mode and ".sched-tmp-" in str(file):
                 calls["n"] += 1
                 if calls["n"] <= 3:
                     raise PermissionError(1, "denied (fixture)")
@@ -74,8 +78,12 @@ class DurableWriteTests(unittest.TestCase):
             return builtins.open(file, mode, *a, **kw)
 
         with mock.patch("builtins.open", denied):
-            with self.assertRaises(PermissionError):
+            # the denial surfaces in the writer's form: a
+            # WriterError whose cause is the PermissionError
+            with self.assertRaises(Exception) as ctx:
                 mod.write_text(str(target), "never")
+            self.assertIsInstance(ctx.exception.__cause__,
+                                  PermissionError)
         self.assertFalse(target.exists())
         self.assertEqual(list(self.dir.iterdir()), [])
 
@@ -91,8 +99,12 @@ class DurableWriteTests(unittest.TestCase):
             return builtins.open(file, mode, *a, **kw)
 
         with mock.patch("builtins.open", broken):
-            with self.assertRaises(IsADirectoryError):
+            with self.assertRaises(Exception) as ctx:
                 mod.write_text(str(target), "never")
+            # unretried, and surfaced in the writer's form
+            # with the original error as its cause
+            self.assertIsInstance(ctx.exception.__cause__,
+                                  IsADirectoryError)
         self.assertEqual(calls["n"], 1)
 
 
