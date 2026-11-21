@@ -287,9 +287,36 @@ fi
 # Unit survival rungs — before any health classification.
 # install-units.sh --check prints "<unit>: <state>"; the
 # state word is the classification. A check that cannot
-# classify (its output names nothing) reads unknown.
+# classify (its output names nothing) reads unknown. The
+# check's stderr is captured, never discarded: an empty
+# classification used to reach this rung with its cause
+# thrown away (the 2026-11-20 outage's UNKNOWN verdicts),
+# so the fail-loud line below carries the check's own
+# error text.
+check_err="$STATE_DIR/.check-stderr-$UNIT"
 unit_state="$("$OPS_DIR/install-units.sh" --check "$UNIT" \
-    2>/dev/null | sed -n "s/^$UNIT: //p")"
+    2>"$check_err" | sed -n "s/^$UNIT: //p")"
+if [ -z "$unit_state" ]; then
+    # The direct check died without a verdict. In the
+    # keeper/agent process class the host's intermittent
+    # write-denial wave kills install-units' Python steps
+    # while the unit being classified is healthy — the
+    # false "server down" wake shape (three on 2026-11-21
+    # alone). Re-run the same check through the scheduler
+    # ops route: the scheduler server process is never
+    # denied, so a healthy server's check classifies.
+    # Only a check that yields nothing there too is
+    # UNKNOWN. Under the systemd driver the direct check
+    # classifies and this fallback never runs.
+    SCHED="${WORKHORSE_SCHED:-$ROOT/pipeline/scheduling/bin/sched}"
+    if [ -x "$SCHED" ]; then
+        unit_state="$("$SCHED" exec \
+            --caller "${WORKHORSE_SCHED_CALLER:-workhorse}" \
+            --timeout 120 -- \
+            bash "$OPS_DIR/install-units.sh" --check "$UNIT" \
+            2>>"$check_err" | sed -n "s/^$UNIT: //p")"
+    fi
+fi
 case "$unit_state" in
     current)
         ;;
@@ -302,7 +329,9 @@ case "$unit_state" in
         echo "watchdog: unit $UNIT was $unit_state; reinstalled from its tracked template render" >&2
         ;;
     *)
-        echo "watchdog: unit $UNIT state could not be classified (install-units --check gave '${unit_state:-nothing}') — state UNKNOWN; failing loud" >&2
+        err_tail="$(tail -n 3 "$check_err" 2>/dev/null \
+            | tr '\n' ' ')"
+        echo "watchdog: unit $UNIT state could not be classified (install-units --check gave '${unit_state:-nothing}'; its stderr: ${err_tail:-none captured}) — state UNKNOWN; failing loud" >&2
         exit 1
         ;;
 esac
