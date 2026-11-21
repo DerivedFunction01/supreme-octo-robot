@@ -9,13 +9,30 @@
 # (the retired bundle format — still honored until the last
 # such archive expires). This script permanently removes
 # every archive whose expiry has passed — no exemption, no
-# knob — and prints one PURGED line per removal. Before an
-# archive is removed, its branch is enqueued in the trim
-# job's per-repo origin-deletion queue
-# (state/worktree-trim/remote-pending-<repo>.txt), so a purge
-# never loses the branch trim the archive was owed. It is
-# run by worktree_trim.sh at the head of every pass, and can
-# be run standalone.
+# knob — and prints one PURGED line per removal. The purge
+# is also where the archived tree's branch is trimmed
+# (2026-11-21 cure: the trim itself no longer touches the
+# branch while the archive stands, so restoration inside
+# the window is mechanical). In the act that removes an
+# expired archive, the branch is dealt with — but ONLY
+# when it provably is the archive's own: it still points
+# at the manifest's recorded head AND that head is landed
+# in the repo's base branch. Then the local branch is
+# deleted and the branch is enqueued in the trim job's
+# per-repo origin-deletion queue
+# (state/worktree-trim/remote-pending-<repo>.txt), so the
+# origin trim is never lost. A branch a seat moved since
+# the trim, one still carrying unlanded commits, or one
+# whose manifest records no head is left entirely alone —
+# local ref and origin copy both — and the PURGED line
+# reports branch_local=kept-moved / kept-unlanded /
+# kept-unrecorded (an unverifiable branch is never the
+# purge's to destroy — the Stage-4 specimen's
+# unreferenced-commit recovery is the failure this
+# refuses to repeat). The WT_TRIM_BRANCH_TRIM kill-switch
+# (off) stands both branch acts down. It is run by
+# worktree_trim.sh at the head of every pass, and can be
+# run standalone.
 #
 # Exit codes: 0 = clean pass complete (silent when nothing
 # expired, or when no archive folder exists yet);
@@ -60,15 +77,44 @@ enqueue_branch() {
   grep -Fxq "$2" "$qf" || echo "$2" >>"$qf"
 }
 
+purge_local_branch() {
+  # $1 = repo, $2 = branch, $3 = recorded head, $4 = base.
+  # Echoes the disposition; deletes the local branch only
+  # when it is provably the archived tree's own unmoved,
+  # landed branch. Anything unverifiable is kept.
+  local repo="$1" branch="$2" head="$3" base="$4"
+  case "$branch" in ""|DETACHED) echo "none"; return 0 ;; esac
+  if [ "${WT_TRIM_BRANCH_TRIM:-on}" != "on" ]; then echo "stood-down"; return 0; fi
+  local main_dir="$SCHED_WS_ROOT/$repo"
+  [ -d "$main_dir" ] || { echo "no-repo"; return 0; }
+  git -c core.fsync=none -C "$main_dir" rev-parse --git-dir >/dev/null 2>&1 || { echo "no-repo"; return 0; }
+  local tip
+  tip="$(git -c core.fsync=none -C "$main_dir" rev-parse --verify --quiet "refs/heads/$branch" 2>/dev/null)"
+  [ -z "$tip" ] && { echo "absent"; return 0; }
+  [ -z "$head" ] && { echo "kept-unrecorded"; return 0; }
+  [ "$tip" != "$head" ] && { echo "kept-moved"; return 0; }
+  [ -z "$base" ] && base="main"
+  if ! git -c core.fsync=none -C "$main_dir" merge-base --is-ancestor "$head" "$base" 2>/dev/null; then
+    echo "kept-unlanded"; return 0
+  fi
+  if git -c core.fsync=none -C "$main_dir" branch -D "$branch" >/dev/null 2>&1; then
+    echo "trimmed"
+  else
+    echo "delete-failed"
+  fi
+}
+
 purge_one() {
   # $1 = manifest file, $2 = archive directory to remove,
   # $3 = "sibling" when the manifest itself must also go.
   local manifest="$1" adir="$2" sibling="${3:-}"
-  local expiry repo tree branch
+  local expiry repo tree branch head base
   expiry="$(field "$manifest" expiry_epoch)"
   repo="$(field "$manifest" repo)"
   tree="$(field "$manifest" tree)"
   branch="$(field "$manifest" branch)"
+  head="$(field "$manifest" head)"
+  base="$(field "$manifest" base)"
   case "$expiry" in
     ''|*[!0-9]*) echo "CLEAN-SKIP no expiry in manifest: $adir"; return 0 ;;
   esac
@@ -78,10 +124,19 @@ purge_one() {
     if [ "$DRY_RUN" -eq 1 ]; then
       echo "WOULD-PURGE repo=${repo:-?} tree=${tree:-?} archive=$adir bytes=${bytes:-0}"
     else
-      enqueue_branch "$repo" "$branch"
+      local branch_local
+      branch_local="$(purge_local_branch "$repo" "$branch" "$head" "$base")"
+      # The origin-deletion queue is charged only when the
+      # branch proved to be the archive's own (trimmed
+      # above, or already absent locally): a moved or
+      # unlanded branch is a seat's live work, and its
+      # origin copy is a backup, never the purge's to take.
+      case "$branch_local" in
+        trimmed|absent) enqueue_branch "$repo" "$branch" ;;
+      esac
       rm -rf "$adir"
       [ "$sibling" = "sibling" ] && rm -f "$manifest"
-      echo "PURGED repo=${repo:-?} tree=${tree:-?} archive=$adir bytes=${bytes:-0}"
+      echo "PURGED repo=${repo:-?} tree=${tree:-?} archive=$adir bytes=${bytes:-0} branch_local=$branch_local"
     fi
   fi
 }
