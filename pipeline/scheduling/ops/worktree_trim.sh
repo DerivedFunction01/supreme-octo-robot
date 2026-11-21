@@ -9,7 +9,37 @@
 #      newest of last commit time and latest file touch — a
 #      progress checkpoint is a file touch in the tree, so it
 #      counts by construction); the newest up to the tier cap
-#      make the cut, every older tree is trimmed;
+#      make the cut, every older tree is trimmed — subject to
+#      the held set below, which outranks the cut entirely.
+#
+# Held set (2026-11-21 cure, owner commission through the
+# workhorse seat): a tree is HELD — never archived, and not
+# counted against the cap — while any of these stands:
+#   - dirty: uncommitted or untracked state in the tree
+#     (git status --porcelain non-empty). The pre-cure trim
+#     archived dirty trees whole; an uncommitted cure in one
+#     (Edgar W-P3NORM-1) was lost when its archive expired.
+#   - unlanded: the head carries commits the base branch
+#     does not (ahead > 0 / not merged). The census always
+#     computed this and the pre-cure trim ignored it: the
+#     2026-11-21 cycles archived the Steam DF-NEXT-101
+#     exceptions formation at ahead=5, merged=0 — twice in
+#     one night — and the 111/112/113-114 form trees the
+#     same way, each mid-gate. A terminal gate record's
+#     tree is unlanded until its seat lands it, so this
+#     hold is also the unconsumed-terminal-record hold:
+#     the record's consumption ends in a landing or an
+#     abandonment, and both clear the hold mechanically.
+#   - live: a process holds the tree (cwd or an open fd
+#     under it, the /proc scan — the formation-clone
+#     sweeper's precedent), or a non-terminal venue run
+#     record names the tree's path.
+#   - held: a seat's explicit hold — a .trim-hold file at
+#     the tree root, or the tree's path in the state dir's
+#     holds.txt (one absolute path per line).
+# Every held tree prints one HELD line naming its reasons;
+# a lane reading the ping learns its tree was at risk and
+# why it stands.
 #   3. trim = move the worktree directory itself into the
 #      archive folder with mv, together with its git admin
 #      directory (.git/worktrees/<id> — it holds the index,
@@ -22,18 +52,33 @@
 #      extraction. Each archived tree prints one ARCHIVED
 #      line — the archive ping's content: the owning lane
 #      has that hour to move back what it actually needs.
-#   4. branches are trimmed the same way as worktrees: a
-#      trimmed tree's branch is deleted locally at trim time
-#      and deleted on origin through a per-repo retry queue
-#      (state/worktree-trim/remote-pending-<repo>.txt) that
-#      every pass seeds from unexpired archive manifests and
-#      drains at worker start and end — a failed origin
-#      deletion stays queued and is retried next pass, and a
-#      purge never loses the obligation (the clean script
-#      enqueues the branch before removing an archive). A
-#      tree the owner moved back inside the hour is a rescue:
-#      its manifest is skipped while its path stands as a
-#      registered worktree again.
+#   4. branches: an archived tree's branch is NOT trimmed
+#      while its archive stands (2026-11-21 cure — the
+#      pre-cure trim deleted the branch locally and queued
+#      its origin deletion in the same act as the archive,
+#      which killed the registration and turned every
+#      restore into a drill). The branch trim lands at
+#      purge time instead: the clean script, before
+#      removing an expired archive, enqueues the branch in
+#      the per-repo origin-deletion retry queue
+#      (state/worktree-trim/remote-pending-<repo>.txt) and
+#      deletes the local branch when it still points at
+#      the manifest's recorded head (a branch a seat moved
+#      since is left standing, and the PURGED line says
+#      so). The queue drains at worker start and end — a
+#      failed origin deletion stays queued and is retried
+#      next pass. The queue seeds from archive manifests
+#      only when the archive itself no longer stands (the
+#      crash window: a tree removed by hand without a
+#      purge); a standing archive's manifest seeds nothing.
+#      A tree restored inside the hour is a rescue: its
+#      manifest is skipped while its path stands as a
+#      registered worktree again. Restoration is mechanical
+#      — ops/worktree_restore.sh <archive-dir> performs the
+#      whole sequence (branch re-created at the recorded
+#      head when missing, tree and admin directory moved
+#      back, registration and head verified) and prints
+#      RESTORED or the exact failing step.
 #      Restore semantics (2026-11-18): the move-back in
 #      point 3 is a complete restore only while the tree's
 #      registration survives. Where the registration is
@@ -59,16 +104,22 @@
 #      verified byte-identical against it (diff 0), then
 #      the redundant archive copy removed. The archive is
 #      a comparison copy, not a restorable worktree.
-#   5. no branch is exempt: branches trim exactly as their
-#      trees do, whatever their name or state — a formation
-#      that needs its branch lands it. (A keeper exemption
-#      for formation union branches plus a pins file stood
-#      briefly on 2026-11-15 and was removed the same day
-#      by the owner's ruling: no carve-out.) The branch leg
-#      carries a kill-switch (WT_TRIM_BRANCH_TRIM, default
-#      on): it stood the leg down on 2026-11-15 after an
-#      incident report until the flip back; setting it to
-#      off re-imposes the stand-down.
+#   5. no branch is exempt by NAME: whatever their name or
+#      state, branches trim when their trees' archives
+#      expire — a formation that needs its branch lands it.
+#      (A keeper exemption for formation union branches plus
+#      a pins file stood briefly on 2026-11-15 and was
+#      removed the same day by the owner's ruling: no
+#      carve-out.) The held set above is not a name
+#      carve-out: it is work state (dirty, unlanded, live,
+#      explicitly held), it lapses mechanically when the
+#      state clears, and it binds every tree equally. The
+#      branch leg carries a kill-switch
+#      (WT_TRIM_BRANCH_TRIM, default on): it stood the leg
+#      down on 2026-11-15 after an incident report until
+#      the flip back; setting it to off re-imposes the
+#      stand-down (no purge-time branch acts, no queue
+#      seeding or draining; tree archiving is unaffected).
 #
 # Silent when nothing happens. Exit codes: 0 = every repo
 # complete; 3 = at least one repo partial (archive failure,
@@ -86,7 +137,11 @@
 # Overrides (tests, fixtures): SCHEDULER_WORKSPACE (via
 # paths.sh), WORKTREE_ARCHIVE_ROOT, WORKTREE_TRIM_STATE_DIR,
 # WORKTREE_TRIM_REPOS, WORKTREE_TRIM_NOW (epoch, fake clock),
-# WT_TRIM_CAP_<SLUG>, WT_TRIM_REPO_TIMEOUT_SECS.
+# WT_TRIM_CAP_<SLUG>, WT_TRIM_REPO_TIMEOUT_SECS,
+# WORKTREE_TRIM_PROC_ROOT (the live-process scan's /proc),
+# WORKTREE_TRIM_RUNS_DIR (venue run records for the
+# live-run hold; default: the venue package's results/runs
+# derived from this script's location in the mega repo).
 #
 # Configuration: the target set and its per-repo caps are
 # deployment data, not code — they live in the untracked
@@ -108,6 +163,9 @@ OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WS_ROOT="$SCHED_WS_ROOT"
 ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-$WS_ROOT/worktree-archive}"
 STATE_DIR="${WORKTREE_TRIM_STATE_DIR:-$SCHED_STATE_DIR/worktree-trim}"
+PROC_ROOT="${WORKTREE_TRIM_PROC_ROOT:-/proc}"
+RUNS_DIR="${WORKTREE_TRIM_RUNS_DIR:-$(cd "$OPS_DIR/../.." 2>/dev/null && pwd)/venue/results/runs}"
+HOLDS_FILE="$STATE_DIR/holds.txt"
 NOW="${WORKTREE_TRIM_NOW:-$(date +%s)}"
 TODAY="$(date -d "@$NOW" +%F)"
 EXPIRY_EPOCH=$((NOW + 3600))
@@ -268,18 +326,29 @@ run_worker() {
     mv "$keep" "$qf"
   }
 
-  # Seed the queue from unexpired archive manifests (both the
-  # sibling manifests this script writes and the in-tree
-  # manifests of the retired bundle format): each archived
-  # tree's branch is owed the same trim, locally and on
-  # origin — unless the owner rescued the tree, in which case
-  # its path stands registered again and the manifest is
-  # skipped. Runs against the census path set, so it executes
-  # after the census below; declared here with the helpers.
+  # Seed the queue from archive manifests whose archive no
+  # longer stands (both the sibling manifests and the
+  # in-tree manifests of the retired bundle format): the
+  # archive's purge is what normally discharges the branch
+  # trim (the clean script enqueues before removing), so a
+  # manifest whose archive still stands seeds NOTHING —
+  # its rescue window is open and its branch stands with
+  # it (2026-11-21 cure). Seeding remains for the crash
+  # window: an archive removed by hand, unpurged, its
+  # branch still owed the trim — unless the owner rescued
+  # the tree, in which case its path stands registered
+  # again and the manifest is skipped. Runs against the
+  # census path set, so it executes after the census
+  # below; declared here with the helpers.
   seed_branch_queue() {
-    local mf b mp
+    local mf b mp adir
     for mf in "$ARCHIVE_ROOT"/*/"${slug}__"*/manifest.txt "$ARCHIVE_ROOT"/*/"${slug}__"*.manifest.txt; do
       [ -f "$mf" ] || continue
+      case "$mf" in
+        *.manifest.txt) adir="${mf%.manifest.txt}" ;;
+        *) adir="$(dirname "$mf")" ;;
+      esac
+      [ -d "$adir" ] && continue  # archive stands: rescue window open
       b="$(sed -n 's/^branch=//p' "$mf" | head -1)"
       mp="$(sed -n 's/^path=//p' "$mf" | head -1)"
       case "$b" in ""|DETACHED|"$base_branch"|main) continue ;; esac
@@ -289,8 +358,71 @@ run_worker() {
     done
   }
 
+  # --- held-set facts (per pass, before the census) ------------
+  # Origin tips for the manifest's record (one read per pass;
+  # an unreachable origin simply leaves the map empty).
+  declare -A origin_tips=()
+  local ob os
+  while IFS=$'\t' read -r os ob; do
+    [ -n "$ob" ] && origin_tips["${ob#refs/heads/}"]="$os"
+  done < <($GIT -C "$main_dir" ls-remote --heads origin 2>/dev/null | head -200)
+  # Live-process targets: every process's cwd and open fds,
+  # resolved. A tree is live while any target is the tree or
+  # under it. The scan root is a seam (tests plant a fake).
+  local proc_targets; proc_targets="$(mktemp)"
+  local pd tgt
+  for pd in "$PROC_ROOT"/[0-9]*; do
+    [ -d "$pd" ] || continue
+    tgt="$(readlink "$pd/cwd" 2>/dev/null)" && [ -n "$tgt" ] && echo "$tgt" >>"$proc_targets"
+    for tgt in "$pd"/fd/*; do
+      tgt="$(readlink "$tgt" 2>/dev/null)" && [ -n "$tgt" ] && echo "$tgt" >>"$proc_targets"
+    done
+  done
+  # Non-terminal venue run records (the live-run hold): a
+  # record names its tree by path anywhere in its text.
+  local -a live_record_files=()
+  local rf
+  if [ -d "$RUNS_DIR" ]; then
+    for rf in "$RUNS_DIR"/*.json; do
+      [ -f "$rf" ] || continue
+      grep -Eq '"state": "(complete|failed|orphaned)"' "$rf" || live_record_files+=("$rf")
+    done
+  fi
+  # Explicit holds from the state dir's holds file.
+  local -a hold_paths=()
+  if [ -f "$HOLDS_FILE" ]; then
+    local hp
+    while IFS= read -r hp; do
+      case "$hp" in ""|\#*) continue ;; esac
+      hold_paths+=("$hp")
+    done <"$HOLDS_FILE"
+  fi
+
+  # hold_reasons <path> <branch> <ahead> <merged> <dirty>:
+  # echoes the comma-joined hold reasons, empty when the
+  # tree is unheld. Reasons: dirty, unlanded, live, run,
+  # held — the held-set contract in the header.
+  hold_reasons() {
+    local hp_path="$1" hp_branch="$2" hp_ahead="$3" hp_merged="$4" hp_dirty="$5"
+    local reasons=""
+    [ "$hp_dirty" = "1" ] && reasons="dirty"
+    if [ "$hp_ahead" != "-1" ] && [ "$hp_ahead" -gt 0 ] && [ "$hp_merged" != "1" ]; then
+      reasons="${reasons:+$reasons,}unlanded"
+    fi
+    if grep -Fxq "$hp_path" "$proc_targets" || grep -Fq "$hp_path/" "$proc_targets"; then
+      reasons="${reasons:+$reasons,}live"
+    fi
+    if [ "${#live_record_files[@]}" -gt 0 ] && grep -lF "$hp_path" "${live_record_files[@]}" >/dev/null 2>&1; then
+      reasons="${reasons:+$reasons,}run"
+    fi
+    if [ -f "$hp_path/.trim-hold" ] || is_in "$hp_path" "${hold_paths[@]:-}"; then
+      reasons="${reasons:+$reasons,}held"
+    fi
+    echo "$reasons"
+  }
+
   # --- census -------------------------------------------------
-  # rows: activity_epoch<TAB>path<TAB>branch|DETACHED<TAB>head<TAB>ahead<TAB>merged
+  # rows: activity_epoch<TAB>path<TAB>branch|DETACHED<TAB>head<TAB>ahead<TAB>merged<TAB>dirty
   local rows_file; rows_file="$(mktemp)"
   local line
   local cur_path="" cur_branch="DETACHED" cur_head=""
@@ -299,7 +431,7 @@ run_worker() {
     [ -z "$cur_path" ] && return
     [ "$cur_path" = "$main_dir" ] && return
     census_paths+=("$cur_path")
-    local last_commit=0 newest_touch=0 activity ahead=-1 merged=0
+    local last_commit=0 newest_touch=0 activity ahead=-1 merged=0 dirty=0
     if [ -d "$cur_path" ]; then
       last_commit="$($GIT -C "$cur_path" log -1 --format=%ct HEAD 2>/dev/null || echo 0)"
       [ -z "$last_commit" ] && last_commit=0
@@ -310,10 +442,11 @@ run_worker() {
         ahead="$($GIT -C "$cur_path" rev-list --count "$base_branch..HEAD" 2>/dev/null || echo -1)"
         if $GIT -C "$cur_path" merge-base --is-ancestor HEAD "$base_branch" 2>/dev/null; then merged=1; fi
       fi
+      [ -n "$($GIT -C "$cur_path" status --porcelain 2>/dev/null)" ] && dirty=1
     else
       activity=0
     fi
-    printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$activity" "$cur_path" "$cur_branch" "$cur_head" "$ahead" "$merged" >>"$rows_file"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$activity" "$cur_path" "$cur_branch" "$cur_head" "$ahead" "$merged" "$dirty" >>"$rows_file"
   }
   while IFS= read -r line; do
     case "$line" in
@@ -343,10 +476,11 @@ EOF
   fi
 
   if [ "$DRY_RUN" -eq 1 ]; then
-    while IFS=$'\t' read -r act p b h a m; do
-      echo "CENSUS repo=$slug tree=$(basename "$p") branch=$b activity=$(iso_of "$act") ahead=$a merged=$m cap=$cap tier=$TIER" >>"$RESULT_FILE"
+    while IFS=$'\t' read -r act p b h a m d; do
+      local rs; rs="$(hold_reasons "$p" "$b" "$a" "$m" "$d")"
+      echo "CENSUS repo=$slug tree=$(basename "$p") branch=$b activity=$(iso_of "$act") ahead=$a merged=$m dirty=$d held=${rs:--} cap=$cap tier=$TIER" >>"$RESULT_FILE"
     done < <(sort -t$'\t' -k1,1rn -k2,2 "$rows_file")
-    rm -f "$rows_file"
+    rm -f "$rows_file" "$proc_targets"
     return 0
   fi
 
@@ -359,26 +493,40 @@ EOF
   fi
 
   # --- rank + cut ----------------------------------------------
-  # keep set: newest CAP trees (activity desc, path asc).
+  # Held trees are partitioned out FIRST: they are never
+  # trimmed and never consume cap — the cap binds only the
+  # unheld population the trim is allowed to take.
+  local -a unheld_rows=()
+  while IFS=$'\t' read -r act p b h a m d; do
+    local rs; rs="$(hold_reasons "$p" "$b" "$a" "$m" "$d")"
+    if [ -n "$rs" ]; then
+      echo "HELD repo=$slug tree=$(basename "$p") branch=$b reasons=$rs" >>"$RESULT_FILE"
+      echo "act=held repo=$slug tree=$(basename "$p") branch=$b reasons=$rs epoch=$NOW" >>"$LEDGER_FILE"
+    else
+      unheld_rows+=("$act|$p|$b|$h|$a|$m|$d")
+    fi
+  done <"$rows_file"
+  rm -f "$rows_file" "$proc_targets"
+
+  # keep set: newest CAP unheld trees (activity desc, path asc).
   local -a keep=()
   local n=0
-  while IFS=$'\t' read -r act p b h a m; do
+  while IFS='|' read -r act p b h a m d; do
     n=$((n+1))
     [ "$n" -le "$cap" ] && keep+=("$p")
-  done < <(sort -t$'\t' -k1,1rn -k2,2 "$rows_file")
+  done < <(printf '%s\n' "${unheld_rows[@]:-}" | grep -v '^$' | sort -t'|' -k1,1rn -k2,2)
 
-  # trim set: everything not kept, acted on oldest first.
+  # trim set: every unheld tree not kept, acted on oldest first.
   local -a trimset=()
-  while IFS=$'\t' read -r act p b h a m; do
-    if ! is_in "$p" "${keep[@]:-}"; then trimset+=("$act|$p|$b|$h|$a|$m"); fi
-  done < <(sort -t$'\t' -k1,1n -k2,2 "$rows_file")
-  rm -f "$rows_file"
+  while IFS='|' read -r act p b h a m d; do
+    if ! is_in "$p" "${keep[@]:-}"; then trimset+=("$act|$p|$b|$h|$a|$m|$d"); fi
+  done < <(printf '%s\n' "${unheld_rows[@]:-}" | grep -v '^$' | sort -t'|' -k1,1n -k2,2)
 
   # --- trim each target ----------------------------------------
-  local t act p b h a m rest
+  local t act p b h a m d rest
   for t in "${trimset[@]:-}"; do
     [ -z "$t" ] && continue
-    act="${t%%|*}"; rest="${t#*|}"; p="${rest%%|*}"; rest="${rest#*|}"; b="${rest%%|*}"; rest="${rest#*|}"; h="${rest%%|*}"; rest="${rest#*|}"; a="${rest%%|*}"; m="${rest##*|}"
+    act="${t%%|*}"; rest="${t#*|}"; p="${rest%%|*}"; rest="${rest#*|}"; b="${rest%%|*}"; rest="${rest#*|}"; h="${rest%%|*}"; rest="${rest#*|}"; a="${rest%%|*}"; rest="${rest#*|}"; m="${rest%%|*}"; d="${rest##*|}"
     local tname; tname="$(basename "$p")"
     if [ ! -d "$p" ]; then
       $GIT -C "$main_dir" worktree prune >/dev/null 2>&1
@@ -410,10 +558,12 @@ EOF
     if ! mkdir -p "$adir" || ! {
       echo "repo=$slug"; echo "tree=$tname"; echo "path=$p"; echo "branch=$b"
       echo "head=$h"; echo "base=$base_branch"; echo "ahead=$a"; echo "merged=$m"
+      echo "dirty=$d"; echo "origin_tip=${origin_tips[$b]:-}"
       echo "plan=$plan"; echo "admin_id=$admin_id"; echo "admin_path=$gitdir_path"
       echo "restore_1=mv $adir/tree $p"
       echo "restore_2=mv $adir/worktree-admin $gitdir_path"
       if [ "$b" != "DETACHED" ]; then echo "restore_3=git -C $main_dir branch $b $h"; fi
+      echo "restore_cmd=ops/worktree_restore.sh $adir"
       echo "trimmed_epoch=$NOW"; echo "expiry_epoch=$EXPIRY_EPOCH"
     } >"$adir/manifest.txt"; then
       rm -rf "$adir"
@@ -435,18 +585,16 @@ EOF
       continue
     fi
     $GIT -C "$main_dir" worktree prune >/dev/null 2>&1
-    # the branch is trimmed the same way as the worktree:
-    # deleted locally now, deleted on origin via the queue —
-    # unless the branch leg is stood down.
-    if [ "$BRANCH_TRIM" = "on" ] && [ "$b" != "DETACHED" ] && [ "$b" != "$base_branch" ] && [ "$b" != "main" ]; then
-      trim_local_branch "$b" || partial=3
-      enqueue_branch "$b"
-    fi
-    echo "ARCHIVED repo=$slug tree=$tname branch=$b archive=$adir expires=$EXPIRY_ISO note=restore-by-move-back-within-1h" >>"$RESULT_FILE"
+    # The branch is NOT trimmed while the archive stands
+    # (2026-11-21 cure): it is the restore's registration
+    # and the purge's charge — the clean script trims it
+    # (locally when unmoved, on origin via the queue) in
+    # the act that removes the expired archive.
+    echo "ARCHIVED repo=$slug tree=$tname branch=$b archive=$adir expires=$EXPIRY_ISO note=branch-kept-until-purge restore=ops/worktree_restore.sh" >>"$RESULT_FILE"
     echo "act=trim repo=$slug tree=$tname branch=$b archive=$adir expiry_epoch=$EXPIRY_EPOCH epoch=$NOW" >>"$LEDGER_FILE"
   done
 
-  # --- origin deletions for this pass's trims -------------------
+  # --- origin deletions queued by purges / earlier seeds --------
   if [ "$BRANCH_TRIM" = "on" ]; then
     drain_queue
   fi

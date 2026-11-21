@@ -8,9 +8,17 @@ and path overrides, never against the live workspace.
 The archive is a folder holding the worktree directory itself
 (moved with mv), its git admin directory (the index moves
 with it, so a move-back restores the tree whole), and a
-manifest. Branches are trimmed the same way as worktrees:
-deleted locally at trim time, deleted on origin through a
-per-repo retry queue.
+manifest. Restoration is mechanical: ops/worktree_restore.sh.
+
+Held set (2026-11-21 cure): a tree that is dirty, unlanded
+(ahead of base / unmerged), live (a process holds it, or a
+non-terminal run record names it), or explicitly held
+(.trim-hold / holds.txt) is never archived and never counts
+against the cap. An archived tree's branch is not trimmed
+while the archive stands; the purge (worktree_archive_clean.sh)
+trims it — locally and via the origin retry queue — only when
+it still points at the manifest's recorded head and that head
+is landed in base.
 """
 
 import os
@@ -36,6 +44,10 @@ def _env(ws, extra=None):
         "WORKTREE_TRIM_STATE_DIR": str(ws / "state"),
         "WORKTREE_TRIM_NOW": str(NOW),
         "WORKTREE_TRIM_REPOS": "repo-a",
+        # hermetic held-set seams: fixture passes never read
+        # the real /proc or the real venue run records
+        "WORKTREE_TRIM_PROC_ROOT": str(ws / "proc"),
+        "WORKTREE_TRIM_RUNS_DIR": str(ws / "runs"),
         # the branch leg's code default is exercised as-is;
         # the stand-down test pins WT_TRIM_BRANCH_TRIM=off
         # explicitly so the kill-switch stays tested
@@ -98,7 +110,8 @@ class Fixture(unittest.TestCase):
 
     def add_tree(self, name, branch, files, activity):
         """files: list of (filename, content). One commit, dated
-        and touched at `activity`."""
+        and touched at `activity`. The tree is UNLANDED (its
+        commit sits ahead of main) until land() is called."""
         path = self.ws / name
         _git(self.main, "worktree", "add", "-b", branch, str(path),
              "main", env=self.env)
@@ -108,6 +121,17 @@ class Fixture(unittest.TestCase):
         _git(path, "commit", "-m", f"work on {branch}", epoch=activity,
              env=self.env)
         _touch_tree(path, activity)
+        return path
+
+    def land(self, branch):
+        """Fast-forward main onto the branch's tip: the tree's
+        work is landed (ahead=0, merged), so the held set's
+        unlanded reason no longer stands for it."""
+        _git(self.main, "merge", "--ff-only", branch, env=self.env)
+
+    def add_landed_tree(self, name, branch, files, activity):
+        path = self.add_tree(name, branch, files, activity)
+        self.land(branch)
         return path
 
     def run_trim(self, *args, extra_env=None):
@@ -181,13 +205,16 @@ class TestClean(unittest.TestCase):
             self.assertFalse(
                 (root / "repo-a__sib.manifest.txt").exists())
             self.assertTrue((root / "repo-a__fresh").exists())
-            # a purge never loses the branch trim: both expired
-            # archives' branches are queued for origin deletion
+            # 2026-11-21 cure: these manifests record no head,
+            # so their branches are unverifiable — the purge
+            # charges NO branch act for them (branch_local=
+            # no-repo here: the fixture workspace holds no
+            # repo-a checkout) and queues nothing. A purge
+            # charges the branch trim only for a branch proven
+            # to be the archive's own (see TestPurgeBranch).
+            self.assertIn("branch_local=no-repo", out.stdout)
             queue = (ws / "state" / "remote-pending-repo-a.txt")
-            queued = queue.read_text()
-            self.assertIn("feat/old", queued)
-            self.assertIn("feat/sib", queued)
-            self.assertNotIn("feat/fresh", queued)
+            self.assertFalse(queue.exists() and queue.read_text().strip())
 
 
 class TestTrim(Fixture):
@@ -208,7 +235,7 @@ class TestTrim(Fixture):
     def test_cut_trims_oldest_to_cap(self):
         paths = []
         for i in range(5):
-            paths.append(self.add_tree(
+            paths.append(self.add_landed_tree(
                 f"repo-a-t{i}-wt", f"feat/t{i}",
                 [(f"t{i}.txt", f"{i}\n")], NOW - 5000 + i * 1000))
         out = self.run_trim(
@@ -220,7 +247,7 @@ class TestTrim(Fixture):
         self.assertEqual(len(archived), 3)
         for ln in archived:
             self.assertIn("expires=", ln)
-            self.assertIn("note=restore-by-move-back-within-1h", ln)
+            self.assertIn("note=branch-kept-until-purge", ln)
         self.assertFalse(paths[0].exists())
         self.assertFalse(paths[2].exists())
         self.assertTrue(paths[3].exists())
@@ -229,25 +256,25 @@ class TestTrim(Fixture):
         self.assertEqual(len(manifests), 3)
         for m in manifests:
             self.assertIn(f"expiry_epoch={NOW + HOUR}", m.read_text())
+            self.assertIn("dirty=0", m.read_text())
             # the archive holds the tree itself: its file
             # moved with it, admin directory alongside
             adir = _archive_dir(m)
             self.assertEqual(len(list((adir / "tree").glob("t*.txt"))), 1)
             self.assertTrue((adir / "worktree-admin").is_dir())
-        # branches are trimmed the same way as worktrees
-        trimmed = [ln for ln in out.stdout.splitlines()
-                   if ln.startswith("BRANCH-TRIMMED")
-                   and "scope=local" in ln]
-        self.assertEqual(len(trimmed), 3)
-        for i in range(3):
-            self.assertFalse(self.branch_exists(f"feat/t{i}"))
-        self.assertTrue(self.branch_exists("feat/t3"))
+        # 2026-11-21 cure: branches are NOT trimmed while
+        # their archives stand — the branch is the restore's
+        # registration; the purge trims it (TestPurgeBranch)
+        self.assertNotIn("BRANCH-TRIMMED", out.stdout)
+        for i in range(5):
+            self.assertTrue(self.branch_exists(f"feat/t{i}"))
+        self.assertEqual(self.queue(), [])
         ledger = (self.ws / "state" / "ledger.jsonl").read_text()
         self.assertEqual(ledger.count("act=trim"), 3)
 
     def test_archive_failure_keeps_tree(self):
-        tree = self.add_tree("repo-a-x-wt", "feat/x",
-                             [("x.txt", "x\n")], NOW - 4000)
+        tree = self.add_landed_tree("repo-a-x-wt", "feat/x",
+                                    [("x.txt", "x\n")], NOW - 4000)
         blocker = self.ws / "archive-blocker"
         blocker.write_text("not a directory")
         out = self.run_trim(
@@ -260,7 +287,12 @@ class TestTrim(Fixture):
         self.assertTrue(tree.exists())
         self.assertTrue(self.branch_exists("feat/x"))
 
-    def test_dirty_tree_archived_whole_and_restores(self):
+    def test_dirty_tree_is_held(self):
+        # 2026-11-21 cure, replacing the pre-cure pin that a
+        # dirty tree archives whole: uncommitted state is the
+        # held set's first reason (the W-P3NORM-1 loss class —
+        # an uncommitted cure archived, then purged). The
+        # tree stands, unarchived, branch intact, at cap 0.
         tree = self.add_tree("repo-a-d-wt", "feat/d",
                              [("d.txt", "committed\n")], NOW - 4000)
         (tree / "d.txt").write_text("dirty change\n")
@@ -268,70 +300,87 @@ class TestTrim(Fixture):
         out = self.run_trim("--tier", "soft",
                             extra_env={"WT_TRIM_CAP_REPO_A": "0"})
         self.assertEqual(out.returncode, 0, out.stderr)
-        (manifest,) = self.archives()
-        adir = _archive_dir(manifest)
-        atree = adir / "tree"
-        # dirty and untracked state moved with the tree, as-is
-        self.assertEqual((atree / "d.txt").read_text(), "dirty change\n")
-        self.assertEqual((atree / "notes.txt").read_text(),
-                         "untracked notes\n")
-        self.assertFalse(self.branch_exists("feat/d"))
-        # restore inside the hour: move the tree and its admin
-        # directory back and recreate the branch at the
-        # recorded head — the tree stands whole, index intact
-        fields = dict(ln.split("=", 1) for ln in
-                      manifest.read_text().splitlines() if "=" in ln)
-        shutil.move(str(atree), str(tree))
-        shutil.move(str(adir / "worktree-admin"), fields["admin_path"])
-        _git(self.main, "branch", "feat/d", fields["head"],
-             env=self.env)
-        listed = _git(self.main, "worktree", "list", env=self.env).stdout
-        self.assertIn("repo-a-d-wt", listed)
+        self.assertIn("HELD repo=repo-a tree=repo-a-d-wt", out.stdout)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")][0]
+        self.assertIn("dirty", held)
+        self.assertNotIn("ARCHIVED", out.stdout)
+        self.assertTrue(tree.exists())
         self.assertEqual((tree / "d.txt").read_text(), "dirty change\n")
-        status = _git(tree, "status", "--porcelain", env=self.env).stdout
-        self.assertIn(" M d.txt", status)
-        self.assertIn("?? notes.txt", status)
+        self.assertTrue(self.branch_exists("feat/d"))
+        self.assertEqual(self.archives(), [])
 
     def test_branch_trimmed_on_origin(self):
+        # 2026-11-21 cure: the branch trim rides the PURGE,
+        # not the trim — at trim time the branch stands in
+        # both scopes; when the archive expires, the clean
+        # phase deletes the local branch (tip == recorded
+        # head, head landed) and queues the origin deletion,
+        # which the same pass drains.
         origin = self.ws / "origin.git"
         _git(self.ws, "init", "--bare", str(origin), env=self.env)
         _git(self.main, "remote", "add", "origin", str(origin),
              env=self.env)
-        self.add_tree("repo-a-o-wt", "feat/o",
-                      [("o.txt", "o\n")], NOW - 4000)
+        self.add_landed_tree("repo-a-o-wt", "feat/o",
+                             [("o.txt", "o\n")], NOW - 4000)
         _git(self.main, "push", "origin", "feat/o", env=self.env)
         out = self.run_trim("--tier", "soft",
                             extra_env={"WT_TRIM_CAP_REPO_A": "0"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("ARCHIVED repo=repo-a", out.stdout)
+        self.assertNotIn("BRANCH-TRIMMED", out.stdout)
+        self.assertTrue(self.branch_exists("feat/o"))
+        self.assertIn("feat/o", self.remote_branches())
+        self.assertEqual(self.queue(), [])
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WORKTREE_TRIM_NOW": str(NOW + HOUR + 1)})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("PURGED repo=repo-a tree=repo-a-o-wt", out.stdout)
+        self.assertIn("branch_local=trimmed", out.stdout)
         self.assertIn("BRANCH-TRIMMED repo=repo-a branch=feat/o "
                       "scope=origin", out.stdout)
+        self.assertFalse(self.branch_exists("feat/o"))
         remote = _git(self.main, "ls-remote", "--heads", "origin",
                       env=self.env).stdout
         self.assertNotIn("feat/o", remote)
         self.assertEqual(self.queue(), [])
 
     def test_remote_failure_queues_and_retries(self):
+        # The queue/drain machinery, driven through the
+        # purge: the purge queues the origin deletion locally
+        # (no origin contact); the drain then fails against
+        # the missing origin and keeps the obligation queued;
+        # the next pass with origin back drains it.
         origin = self.ws / "origin.git"
         _git(self.ws, "init", "--bare", str(origin), env=self.env)
         _git(self.main, "remote", "add", "origin", str(origin),
              env=self.env)
-        self.add_tree("repo-a-r-wt", "feat/r",
-                      [("r.txt", "r\n")], NOW - 4000)
+        self.add_landed_tree("repo-a-r-wt", "feat/r",
+                             [("r.txt", "r\n")], NOW - 4000)
         _git(self.main, "push", "origin", "feat/r", env=self.env)
-        origin.rename(self.ws / "origin-gone.git")
         out = self.run_trim("--tier", "soft",
                             extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("ARCHIVED repo=repo-a", out.stdout)
+        origin.rename(self.ws / "origin-gone.git")
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WORKTREE_TRIM_NOW": str(NOW + HOUR + 1)})
         self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn("PURGED repo=repo-a tree=repo-a-r-wt", out.stdout)
+        self.assertIn("branch_local=trimmed", out.stdout)
         self.assertIn("BRANCH-REMOTE-FAIL repo=repo-a branch=feat/r",
                       out.stdout)
-        # the tree and its local branch were still trimmed; the
+        # the local branch was trimmed at the purge; the
         # origin obligation waits in the queue
-        self.assertFalse((self.ws / "repo-a-r-wt").exists())
         self.assertFalse(self.branch_exists("feat/r"))
         self.assertEqual(self.queue(), ["feat/r"])
         # origin back: the next pass drains the queue on its own
         (self.ws / "origin-gone.git").rename(origin)
-        out = self.run_trim("--tier", "soft")
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WORKTREE_TRIM_NOW": str(NOW + HOUR + 2)})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn("BRANCH-TRIMMED repo=repo-a branch=feat/r "
                       "scope=origin", out.stdout)
@@ -342,8 +391,8 @@ class TestTrim(Fixture):
 
     def test_standdown_keeps_all_branches(self):
         self.add_origin()
-        self.add_tree("repo-a-s-wt", "feat/s",
-                      [("s.txt", "s\n")], NOW - 4000)
+        self.add_landed_tree("repo-a-s-wt", "feat/s",
+                             [("s.txt", "s\n")], NOW - 4000)
         _git(self.main, "push", "origin", "feat/s", env=self.env)
         out = self.run_trim(
             "--tier", "soft",
@@ -361,29 +410,38 @@ class TestTrim(Fixture):
         self.assertIn("act=branch-standdown", ledger)
 
     def test_pins_file_has_no_effect(self):
-        # owner's ruling 2026-11-15: no carve-out — a branch
-        # named in a .worktree-trim-pins file trims exactly
-        # like any other branch
+        # owner's ruling 2026-11-15: no carve-out by name —
+        # a branch named in a .worktree-trim-pins file is
+        # treated exactly like any other: its landed tree
+        # archives at the cut, and its branch trims at the
+        # purge. (The 2026-11-21 held set is work state, not
+        # a name list; a pins file confers no hold.)
         self.add_origin()
         (self.main / ".worktree-trim-pins").write_text("feat/p\n")
-        self.add_tree("repo-a-p-wt", "feat/p",
-                      [("p.txt", "p\n")], NOW - 4000)
+        self.add_landed_tree("repo-a-p-wt", "feat/p",
+                             [("p.txt", "p\n")], NOW - 4000)
         _git(self.main, "push", "origin", "feat/p", env=self.env)
         out = self.run_trim("--tier", "soft",
                             extra_env={"WT_TRIM_CAP_REPO_A": "0"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn("ARCHIVED repo=repo-a", out.stdout)
-        self.assertIn("BRANCH-TRIMMED repo=repo-a branch=feat/p "
-                      "scope=local", out.stdout)
         self.assertNotIn("BRANCH-EXEMPT", out.stdout)
+        self.assertNotIn("HELD repo=repo-a tree=repo-a-p-wt", out.stdout)
+        self.assertTrue(self.branch_exists("feat/p"))
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WORKTREE_TRIM_NOW": str(NOW + HOUR + 1)})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("branch_local=trimmed", out.stdout)
         self.assertFalse(self.branch_exists("feat/p"))
         self.assertNotIn("feat/p", self.remote_branches())
         self.assertEqual(self.queue(), [])
 
-    def test_dirty_tree_on_pinned_branch_archives(self):
-        # no keeper-tree hold either: a dirty tree archives
-        # whole (its state rides the archive) even when its
-        # branch is named in a pins file
+    def test_dirty_tree_is_held_pins_or_not(self):
+        # The held set binds by work state, not by name: a
+        # dirty tree on a pins-named branch is held exactly
+        # like any other dirty tree (the pre-cure pin — that
+        # it archives whole — is the defect's own specimen).
         (self.main / ".worktree-trim-pins").write_text("feat/k\n")
         tree = self.add_tree("repo-a-k-wt", "feat/k",
                              [("k.txt", "committed\n")], NOW - 4000)
@@ -391,11 +449,11 @@ class TestTrim(Fixture):
         out = self.run_trim("--tier", "soft",
                             extra_env={"WT_TRIM_CAP_REPO_A": "0"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
-        self.assertIn("ARCHIVED repo=repo-a", out.stdout)
-        self.assertNotIn("TREE-KEPT", out.stdout)
-        self.assertFalse(tree.exists())
-        self.assertEqual(len(self.archives()), 1)
-        self.assertFalse(self.branch_exists("feat/k"))
+        self.assertIn("HELD repo=repo-a tree=repo-a-k-wt", out.stdout)
+        self.assertNotIn("ARCHIVED", out.stdout)
+        self.assertTrue(tree.exists())
+        self.assertEqual(self.archives(), [])
+        self.assertTrue(self.branch_exists("feat/k"))
 
     def test_queued_branches_all_drained(self):
         self.add_origin()
@@ -443,6 +501,10 @@ class TestTrim(Fixture):
                 _git(path, "commit", "-m", f"t{i}",
                      epoch=NOW - 3000 + i * 1000, env=env)
                 _touch_tree(path, NOW - 3000 + i * 1000)
+                # landed, so the held set does not stand for
+                # it and the cut is what the report exercises
+                _git(main, "merge", "--ff-only", f"feat/t{i}",
+                     env=env)
             out = subprocess.run(
                 ["bash", str(TRIM), "--tier", "soft"],
                 capture_output=True, text=True,
@@ -462,8 +524,8 @@ class TestTrim(Fixture):
         # target set and the cap come from the deployment
         # config file in the state dir (repos.conf:
         # <slug> <soft-cap> <deep-cap>)
-        self.add_tree("repo-a-c-wt", "feat/c",
-                      [("c.txt", "c\n")], NOW - 4000)
+        self.add_landed_tree("repo-a-c-wt", "feat/c",
+                             [("c.txt", "c\n")], NOW - 4000)
         state = self.ws / "state"
         state.mkdir(parents=True, exist_ok=True)
         (state / "repos.conf").write_text("repo-a 0 0\n")
@@ -480,11 +542,13 @@ class TestTrimSecondRepo(Fixture):
     slug = "repo-b"
 
     def test_union_branch_trimmed_like_any_other(self):
-        # owner's ruling 2026-11-15: no carve-out — a
-        # form/union-* branch trims exactly like any other
+        # owner's ruling 2026-11-15: no carve-out by name —
+        # a form/union-* branch is treated exactly like any
+        # other: archived at the cut, branch trimmed at the
+        # purge (2026-11-21 timing), in both scopes
         self.add_origin()
-        self.add_tree("repo-b-u-wt", "form/union-x",
-                      [("u.txt", "u\n")], NOW - 4000)
+        self.add_landed_tree("repo-b-u-wt", "form/union-x",
+                             [("u.txt", "u\n")], NOW - 4000)
         _git(self.main, "push", "origin", "form/union-x",
              env=self.env)
         out = self.run_trim(
@@ -492,12 +556,242 @@ class TestTrimSecondRepo(Fixture):
             extra_env={"WT_TRIM_CAP_REPO_B": "0"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn("ARCHIVED repo=repo-b", out.stdout)
-        self.assertIn("BRANCH-TRIMMED repo=repo-b "
-                      "branch=form/union-x scope=local", out.stdout)
         self.assertNotIn("BRANCH-EXEMPT", out.stdout)
+        self.assertTrue(self.branch_exists("form/union-x"))
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WORKTREE_TRIM_NOW": str(NOW + HOUR + 1),
+                       "WORKTREE_TRIM_REPOS": "repo-b"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("branch_local=trimmed", out.stdout)
+        self.assertIn("BRANCH-TRIMMED repo=repo-b "
+                      "branch=form/union-x scope=origin", out.stdout)
         self.assertFalse(self.branch_exists("form/union-x"))
         self.assertNotIn("form/union-x", self.remote_branches())
         self.assertEqual(self.queue(), [])
+
+
+class TestHeldSet(Fixture):
+    """The 2026-11-21 held set, one specimen per reason."""
+
+    def test_unlanded_tree_is_held(self):
+        # The DF-NEXT-101 specimen shape: a formation tree
+        # ahead of base, unmerged, archived twice in one
+        # night by the pre-cure trim while its band gates
+        # were in flight. Now: HELD at cap 0, and a landed
+        # elder trims in the same pass — a held tree does
+        # not consume cap.
+        self.add_tree("repo-a-u-wt", "feat/u",
+                      [("u.txt", "u\n")], NOW - 2000)
+        elder = self.add_landed_tree("repo-a-e-wt", "feat/e",
+                                     [("e.txt", "e\n")], NOW - 9000)
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")]
+        self.assertEqual(len(held), 1)
+        self.assertIn("tree=repo-a-u-wt", held[0])
+        self.assertIn("unlanded", held[0])
+        self.assertIn("ARCHIVED repo=repo-a tree=repo-a-e-wt",
+                      out.stdout)
+        self.assertTrue((self.ws / "repo-a-u-wt").exists())
+        self.assertFalse(elder.exists())
+
+    def test_live_process_holds_the_tree(self):
+        tree = self.add_landed_tree("repo-a-l-wt", "feat/l",
+                                    [("l.txt", "l\n")], NOW - 4000)
+        proc = self.ws / "proc" / "4242"
+        proc.mkdir(parents=True)
+        (proc / "cwd").symlink_to(tree)
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")][0]
+        self.assertIn("live", held)
+        self.assertTrue(tree.exists())
+        self.assertEqual(self.archives(), [])
+
+    def test_nonterminal_run_record_holds_terminal_does_not(self):
+        tree = self.add_landed_tree("repo-a-r-wt", "feat/rr",
+                                    [("r.txt", "r\n")], NOW - 4000)
+        runs = self.ws / "runs"
+        runs.mkdir(parents=True)
+        (runs / "gate-1.json").write_text(
+            '{"run_id": "gate-1", "state": "polling",'
+            f' "tree": "{tree}"}}')
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")][0]
+        self.assertIn("run", held)
+        self.assertTrue(tree.exists())
+        # the same record, terminal: the hold lapses and
+        # the landed tree trims at the cut
+        (runs / "gate-1.json").write_text(
+            '{"run_id": "gate-1", "state": "complete",'
+            f' "tree": "{tree}"}}')
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("ARCHIVED repo=repo-a tree=repo-a-r-wt",
+                      out.stdout)
+        self.assertFalse(tree.exists())
+
+    def test_explicit_holds(self):
+        t1 = self.add_landed_tree("repo-a-h1-wt", "feat/h1",
+                                  [("h1.txt", "1\n")], NOW - 4000)
+        (t1 / ".trim-hold").write_text("gate in flight\n")
+        t2 = self.add_landed_tree("repo-a-h2-wt", "feat/h2",
+                                  [("h2.txt", "2\n")], NOW - 3000)
+        state = self.ws / "state"
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "holds.txt").write_text(f"{t2}\n")
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")]
+        self.assertEqual(len(held), 2)
+        for ln in held:
+            self.assertIn("held", ln)
+        self.assertTrue(t1.exists())
+        self.assertTrue(t2.exists())
+        self.assertEqual(self.archives(), [])
+
+
+class TestPurgeBranch(Fixture):
+    """The purge charges the branch trim only for a branch
+    proven to be the archive's own."""
+
+    def _hand_archive(self, branch, head, expiry):
+        """An in-dir-format archive written by hand, as the
+        trim would leave it, for a branch the trim itself
+        would now hold (unlanded) — the pre-cure archives'
+        shape."""
+        adir = (self.ws / "worktree-archive" / "2026-11-16"
+                / f"repo-a__repo-a-z-wt")
+        (adir / "tree").mkdir(parents=True)
+        (adir / "worktree-admin").mkdir(parents=True)
+        (adir / "manifest.txt").write_text(
+            f"repo=repo-a\ntree=repo-a-z-wt\n"
+            f"path={self.ws}/repo-a-z-wt\nbranch={branch}\n"
+            f"head={head}\nbase=main\nahead=1\nmerged=0\n"
+            f"expiry_epoch={expiry}\n")
+        return adir
+
+    def test_purge_keeps_unlanded_branch(self):
+        tree = self.add_tree("repo-a-z-wt", "feat/z",
+                             [("z.txt", "z\n")], NOW - 4000)
+        head = _git(tree, "rev-parse", "HEAD",
+                    env=self.env).stdout.strip()
+        # the tree itself is restored by hand (only the
+        # archive + branch state is under test here)
+        _git(self.main, "worktree", "remove", "--force",
+             str(tree), env=self.env)
+        self._hand_archive("feat/z", head, NOW - 1)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("PURGED repo=repo-a tree=repo-a-z-wt",
+                      out.stdout)
+        self.assertIn("branch_local=kept-unlanded", out.stdout)
+        self.assertTrue(self.branch_exists("feat/z"))
+        self.assertEqual(self.queue(), [])
+
+    def test_purge_keeps_moved_branch(self):
+        tree = self.add_landed_tree("repo-a-m-wt", "feat/m",
+                                    [("m.txt", "m\n")], NOW - 4000)
+        head = _git(tree, "rev-parse", "HEAD",
+                    env=self.env).stdout.strip()
+        _git(self.main, "worktree", "remove", "--force",
+             str(tree), env=self.env)
+        # the seat advances the branch after the trim
+        _git(self.main, "commit", "--allow-empty", "-m", "later",
+             epoch=NOW - 100, env=self.env)
+        _git(self.main, "branch", "-f", "feat/m", "main",
+             env=self.env)
+        self._hand_archive("feat/m", head, NOW - 1)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("branch_local=kept-moved", out.stdout)
+        self.assertTrue(self.branch_exists("feat/m"))
+        self.assertEqual(self.queue(), [])
+
+
+class TestRestore(Fixture):
+    RESTORE = OPS / "worktree_restore.sh"
+
+    def run_restore(self, adir):
+        return subprocess.run(
+            ["bash", str(self.RESTORE), str(adir)],
+            capture_output=True, text=True, env=self.env)
+
+    def test_restore_round_trip(self):
+        tree = self.add_landed_tree("repo-a-v-wt", "feat/v",
+                                    [("v.txt", "v\n")], NOW - 4000)
+        head = _git(tree, "rev-parse", "HEAD",
+                    env=self.env).stdout.strip()
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        (manifest,) = self.archives()
+        adir = _archive_dir(manifest)
+        out = self.run_restore(adir)
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("RESTORED repo=repo-a tree=repo-a-v-wt",
+                      out.stdout)
+        self.assertTrue(tree.exists())
+        self.assertEqual((tree / "v.txt").read_text(), "v\n")
+        listed = _git(self.main, "worktree", "list",
+                      env=self.env).stdout
+        self.assertIn("repo-a-v-wt", listed)
+        self.assertEqual(
+            _git(tree, "rev-parse", "HEAD", env=self.env
+                 ).stdout.strip(), head)
+        self.assertEqual(
+            _git(tree, "branch", "--show-current", env=self.env
+                 ).stdout.strip(), "feat/v")
+        self.assertFalse(adir.exists())
+
+    def test_restore_recreates_a_deleted_branch(self):
+        # a pre-cure archive: the trim deleted the branch;
+        # the restore re-creates it at the recorded head —
+        # the Stage-4 drill, mechanized
+        tree = self.add_landed_tree("repo-a-w-wt", "feat/w",
+                                    [("w.txt", "w\n")], NOW - 4000)
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        _git(self.main, "branch", "-D", "feat/w", env=self.env)
+        (manifest,) = self.archives()
+        out = self.run_restore(_archive_dir(manifest))
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("RESTORED", out.stdout)
+        self.assertTrue(self.branch_exists("feat/w"))
+        self.assertEqual(
+            _git(tree, "branch", "--show-current", env=self.env
+                 ).stdout.strip(), "feat/w")
+
+    def test_restore_refuses_a_moved_branch(self):
+        tree = self.add_landed_tree("repo-a-y-wt", "feat/y",
+                                    [("y.txt", "y\n")], NOW - 4000)
+        out = self.run_trim("--tier", "soft",
+                            extra_env={"WT_TRIM_CAP_REPO_A": "0"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        _git(self.main, "commit", "--allow-empty", "-m", "later",
+             epoch=NOW - 100, env=self.env)
+        _git(self.main, "branch", "-f", "feat/y", "main",
+             env=self.env)
+        (manifest,) = self.archives()
+        adir = _archive_dir(manifest)
+        out = self.run_restore(adir)
+        self.assertEqual(out.returncode, 2, out.stdout + out.stderr)
+        self.assertIn("RESTORE-FAIL step=branch-moved", out.stdout)
+        # the archive stands untouched as the record of truth
+        self.assertTrue((adir / "tree").exists())
+        self.assertFalse(tree.exists())
 
 
 if __name__ == "__main__":

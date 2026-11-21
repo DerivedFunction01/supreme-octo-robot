@@ -1,5 +1,5 @@
 id: worktree-trim-deep
-title: Worktree trim (12-hour, deep cap) — oldest lane worktrees that miss the deep cut are moved to the archive folder with their branches trimmed locally and on origin, and permanently removed 1 hour later
+title: Worktree trim (12-hour, deep cap) — oldest lane worktrees that miss the deep cut and are not held (dirty, unlanded, live, or explicitly held trees are never archived) are moved to the archive folder, permanently removed 1 hour later, and their branches trimmed at that purge only when provably the archive's own
 kind: scripted
 status: active
 cadence:
@@ -22,5 +22,5 @@ report:
 state_paths:
   - ${REPO}/state/worktree-trim
   - ${WS}/worktree-archive
-classification: 'fixed command sequence (two bash scripts: ops/worktree_trim.sh runs ops/worktree_archive_clean.sh first, then census, ranking, mv-archive, and branch trims per repo in one worker process per repo); every outcome branches on enumerable git/filesystem state or exit codes (cap math over last-activity stamps, mv success or failure, branch present or absent locally and on origin, origin reachable or queued for retry); speech is fully determined by those branches — silent when nothing was archived, purged, or failed, otherwise one structured line per act, with each ARCHIVED line naming the archive path and its 1-hour expiry as the owning lanes rescue window'
+classification: 'fixed command sequence (two bash scripts: ops/worktree_trim.sh runs ops/worktree_archive_clean.sh first, then census, held-set partition, ranking, and mv-archive per repo in one worker process per repo; the purge charges branch trims, the queue drain deletes origin branches); every outcome branches on enumerable git/filesystem/process state or exit codes (cap math over last-activity stamps, dirty/ahead/merged census facts, the /proc cwd+fd scan, non-terminal run records naming a tree, .trim-hold files and the state holds file, mv success or failure, branch tip vs manifest head and base ancestry at purge, origin reachable or queued for retry); speech is fully determined by those branches — silent when nothing was archived, held, purged, or failed, otherwise one structured line per act, with each ARCHIVED line naming the archive path, its 1-hour expiry as the owning lanes rescue window, and the mechanical restore verb (ops/worktree_restore.sh), and each HELD line naming the tree and its hold reasons'
 lifetime: permanent
