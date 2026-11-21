@@ -2,7 +2,7 @@
 """Run a named job on Colab: sync in, execute detached, poll,
 pull results, stop the session on every exit path.
 
-Usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--session NAME] [-- <job args>...]
+Usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]
        colab-run --poll RUN_ID | --wait RUN_ID [--max SECONDS] | --sweep | --collect-stale
        colab-run plant-git-identity --session NAME --repo ID_OR_PATH --tree SESSION_TREE [--caller TAG]
 plant-git-identity sets the source repo's configured git
@@ -22,6 +22,14 @@ Job manifest: jobs/<name>/job.json (JSON: repo code parses it, so not YAML).
 --caller TAG (or the manifest's "caller" key, or $COLAB_CALLER)
 attributes the run to its thread: it rides the lease acquire and
 is stamped on the run record.
+--daemonize fires the launch in its own session, detached from
+the firing context's process group and output pipes, and returns
+{run_id, state: "daemonized", log} as soon as the run's claim
+lands on disk: the form for firing through a bounded context
+(the scheduler ops route, a hook) whose timeout cleanup kills
+its process group — a plain or merely-nohup'd fire inside such
+a context dies with it. An unconfirmed claim exits 3 and is
+never reported as launched.
 --detach launches exactly as the foreground form and returns at
 once with {run_id, session, state}: the run's record then advances
 only when something reconciles it — --poll (one bounded reconcile:

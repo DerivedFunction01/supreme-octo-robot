@@ -85,7 +85,7 @@ def main() -> int:
     # as a job name; it bit a consumer following shorthand in a
     # message, 2026-11-05.)
     resume = caller_flag = session_flag = None
-    seed_flag = detach_flag = False
+    seed_flag = detach_flag = daemonize_flag = False
     extra_args = []
     positional = []
     i = 0
@@ -102,6 +102,9 @@ def main() -> int:
         elif args[i] == "--detach":
             detach_flag = True
             i += 1
+        elif args[i] == "--daemonize":
+            daemonize_flag = True
+            i += 1
         elif args[i] == "--resume" and i + 1 < len(args):
             resume = args[i + 1]
             i += 2
@@ -115,9 +118,59 @@ def main() -> int:
             positional.append(args[i])
             i += 1
     if not positional:
-        print("usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--session NAME] [-- <job args>...]", file=sys.stderr)
+        print("usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]", file=sys.stderr)
         return 2
     job_name = positional[0]
+    if daemonize_flag and not os.environ.get("COLAB_RUN_DAEMON_CHILD"):
+        # --daemonize: the fire must survive its firing context.
+        # A fire ridden through a bounded context — the
+        # scheduler ops route is the standing specimen — dies
+        # with that context twice over: the child inherits the
+        # context's output pipes, so the context cannot complete
+        # while the child lives; and the context's timeout
+        # cleanup kills its whole process group, the merely-
+        # nohup'd runner included (Steam DF-NEXT-111 specimens,
+        # 2026-11-21: two fires dead at the op cap, records
+        # orphaned mid-launch). The daemon form separates both:
+        # the parent mints the run id, spawns the real launch
+        # in its OWN session (start_new_session) with stdio
+        # redirected to the run's daemon log, waits only for
+        # the child's claim to land on disk, prints the claimed
+        # id, and exits — the firing context completes in
+        # seconds and its group kill can never reach the child.
+        # A claim that does not land inside the window is
+        # reported unconfirmed (exit 3), never as launched.
+        if resume:
+            print("colab-run: --daemonize is a fresh-launch form; a resumed run is already named and claimed", file=sys.stderr)
+            return 2
+        if not (JOBS / job_name / "job.json").exists():
+            print(f"no job manifest at {JOBS / job_name / 'job.json'}", file=sys.stderr)
+            return 2
+        minted = f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
+        log_path = RUNS.parent / f"{minted}.daemon.log"
+        child_env = dict(os.environ)
+        child_env["COLAB_RUN_ID"] = minted
+        child_env["COLAB_RUN_DAEMON_CHILD"] = "1"
+        child_args = [a for a in args if a != "--daemonize"]
+        with open(log_path, "w") as log_fh:
+            subprocess.Popen(
+                [sys.executable, str(REPO / "bin" / "colab-run"), *child_args],
+                stdout=log_fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                start_new_session=True, cwd=str(REPO), env=child_env)
+        claimed = None
+        deadline = time.time() + 90
+        while time.time() < deadline:
+            for cand in sorted(RUNS.glob(f"{minted}*.json")):
+                claimed = cand.stem
+                break
+            if claimed:
+                break
+            time.sleep(0.5)
+        if claimed is None:
+            print(json.dumps({"run_id": minted, "state": "daemonized-unconfirmed", "log": str(log_path)}))
+            return 3
+        print(json.dumps({"run_id": claimed, "state": "daemonized", "log": str(log_path)}))
+        return 0
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
         print(f"no job manifest at {manifest_path}", file=sys.stderr)
@@ -164,7 +217,13 @@ def main() -> int:
         print(f"colab-run: job {job_name} names no usable shape (manifest shape or config default_shape required)", file=sys.stderr)
         return 2
     shape = shapes[shape_id]
-    run_id = resume or f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
+    # A daemonized fire's parent mints the id and hands it to
+    # the child through the env (see --daemonize above); the
+    # claim below suffixes it on a collision exactly as for a
+    # self-minted id, and the parent reports the claimed name
+    # it read off disk, so the two never disagree.
+    daemon_id = os.environ.get("COLAB_RUN_ID") if os.environ.get("COLAB_RUN_DAEMON_CHILD") else None
+    run_id = resume or daemon_id or f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
     rec = None
     if resume:
         # A resume continues the run on disk: its launch facts
