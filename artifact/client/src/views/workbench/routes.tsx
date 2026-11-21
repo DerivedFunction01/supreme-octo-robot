@@ -8,14 +8,14 @@
 
 import type { ProjectSummary } from "./lib/api-types";
 import type { Appearance } from "./lib/preferences";
-import { homeHref, type Route } from "./lib/routing";
+import { type Route } from "./lib/routing";
 import { BoardSection } from "./sections/board/Board";
 import { EntriesSection } from "./sections/entries/Entries";
 import { EntryPage } from "./sections/entries/EntryPage";
 import { HomeSection, ProjectPickerSection } from "./sections/homepage/Home";
 import { OverviewSection } from "./sections/overview/Overview";
 import { PlansSection } from "./sections/plans/Plans";
-import { ReposSection } from "./sections/repos/Repos";
+import { CodeSection, LegacyReposRedirect, UnknownProjectSection } from "./sections/code/Code";
 import { SettingsSection } from "./sections/settings/Settings";
 import { TodosSection } from "./sections/todos/Todos";
 
@@ -42,28 +42,23 @@ export function WorkbenchRoutes({
     return <BoardSection slug={null} projectName={null} />;
   }
   if (route.view === "repos") {
-    return <ReposSection repoId={route.repoId} />;
+    return <LegacyReposRedirect repoId={route.repoId} />;
   }
   if (route.view === "entry-page") {
     return <EntryPage slug={route.slug} entryId={route.entryId} />;
   }
   if (route.view === "section") {
     if (selected == null && !projectsPending) {
-      return (
-        <p style={{ color: "var(--wb-content-secondary)" }}>
-          Project <span className="mono">{route.slug}</span> is not in the current sweep.{" "}
-          <a
-            href={homeHref()}
-            style={{
-              color: "var(--wb-accent)",
-              textDecoration: "underline",
-              textUnderlineOffset: "0.14em",
-            }}
-          >
-            Back to projects
-          </a>
-        </p>
-      );
+      // Not a swept project: the unified index decides
+      // what it is (SPEC §21) — a repository-only
+      // project serves its Code facet and Overview, the
+      // work sections their honest absence, and an id in
+      // neither enumeration keeps the not-in-sweep
+      // answer (rendered inside the gate).
+      return <UnknownProjectSection slug={route.slug} section={route.section} />;
+    }
+    if (route.section === "code") {
+      return <CodeSection slug={route.slug} />;
     }
     if (route.section === "overview") {
       return <OverviewSection slug={route.slug} projectName={selected?.name ?? route.slug} />;

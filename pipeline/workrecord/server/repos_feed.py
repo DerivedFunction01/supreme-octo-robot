@@ -29,7 +29,8 @@ from evaluation import repo_state as repo_state_mod  # noqa: E402
 from evaluation import repos as repos_mod  # noqa: E402
 from lib.util import fan_out, now_iso  # noqa: E402
 
-from .common import CFG, ApiError  # noqa: E402
+from .common import CFG, ApiError, get_sweep  # noqa: E402
+from lib.derived import projects as projects_mod  # noqa: E402
 
 # ----------------------------------------------------------------
 # Repos (absorption plan, steps 2-7): census, status, tree,
@@ -267,6 +268,17 @@ def _repo_or_404(repo_id: str) -> dict:
     return record
 
 
+def _id_map() -> dict:
+    """census id -> canonical project id (SPEC §21),
+    from the sweep and the shared census cache — the
+    one identity map every registry/history touch in
+    this module folds through."""
+    sweep = get_sweep()
+    census = _census_cached()
+    return projects_mod.identity_map(
+        sweep.summary()["projects"], list(census.values()))
+
+
 def _repos_registry_path():
     return cfgmod.state_file(CFG, "repos_registry_file")
 
@@ -298,6 +310,20 @@ def _compute_repos_feed() -> dict:
     data, changed = repo_state_mod.reconcile(
         data, list(census.values()),
         healthy_scan=len(census) > 0, now=now_iso())
+    # The consolidation fold (SPEC §21): registry and
+    # history keys migrate once from census ids to
+    # canonical project ids. Reconcile runs first in
+    # census-id space (it is discovery's own fold);
+    # migration then renames what reconcile settled,
+    # and is a no-op once every key is project-keyed.
+    sweep = get_sweep()
+    id_map = projects_mod.identity_map(
+        sweep.summary()["projects"], list(census.values()))
+    data, migrated = repo_state_mod.migrate_keys(data, id_map)
+    if migrated:
+        changed = True
+        repo_state_mod.migrate_history_keys(
+            _repos_history_path(), id_map)
     if changed:
         repo_state_mod.save_registry(_repos_registry_path(),
                                      data)
@@ -315,13 +341,17 @@ def _compute_repos_feed() -> dict:
                        workers=CFG["feed_pool_workers"])
     summaries = []
     for record, s in zip(records, computed):
-        s["registry"] = data["repos"].get(record["id"])
+        project_id = id_map.get(record["id"], record["id"])
+        s["registry"] = data["repos"].get(project_id)
         if not s.get("error"):
             repo_state_mod.record_history(
-                _repos_history_path(), s)
+                _repos_history_path(),
+                {**s, "id": project_id})
         summaries.append(s)
+    known_project_ids = set(id_map.values())
     for repo_id, entry in data["repos"].items():
-        if repo_id not in census:
+        if repo_id not in census \
+                and repo_id not in known_project_ids:
             summaries.append({
                 "id": repo_id, "name": repo_id,
                 "root": entry.get("root"),
@@ -423,14 +453,16 @@ def repos_feed() -> dict:
 
 
 def repo_status_feed(record) -> dict:
-    """GET /api/repos/<id>/status: the full status with
-    its registry entry; the serve records history."""
+    """One checkout's full status with its project's
+    registry entry; the serve records history under
+    the canonical project id (SPEC §21)."""
     status = repos_mod.repo_status(record)
     data = repo_state_mod.load_registry(_repos_registry_path())
-    status["registry"] = data["repos"].get(record["id"])
+    project_id = _id_map().get(record["id"], record["id"])
+    status["registry"] = data["repos"].get(project_id)
     if not status.get("error"):
-        repo_state_mod.record_history(_repos_history_path(),
-                                      status)
+        repo_state_mod.record_history(
+            _repos_history_path(), {**status, "id": project_id})
     return status
 
 

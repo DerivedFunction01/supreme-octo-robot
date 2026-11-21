@@ -17,7 +17,7 @@ export type NavTarget =
   | { section: "todos" }
   | { section: "board" }
   | { section: "inbox" }
-  | { section: "repos" }
+  | { section: "code" }
   | { section: "repo"; repo: string }
   | { section: "browse"; repo: string; path: string[] }
   | { section: "peek"; repo: string; path: string; tab?: "content" | "diff" | "table" }
@@ -77,12 +77,12 @@ export function sidebarKey(nav: NavTarget): string {
       return "board";
     case "inbox":
       return "inbox";
-    case "repos":
+    case "code":
     case "repo":
     case "browse":
     case "peek":
     case "editor":
-      return "repos";
+      return "code";
     case "settings":
       return "settings";
   }

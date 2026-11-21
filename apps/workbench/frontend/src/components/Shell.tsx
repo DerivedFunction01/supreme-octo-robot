@@ -46,7 +46,7 @@ const NAV_ITEMS: { key: string; label: string; target: NavTarget }[] = [
   { key: "todos", label: "Todos", target: { section: "todos" } },
   { key: "board", label: "Board", target: { section: "board" } },
   { key: "inbox", label: "Inbox", target: { section: "inbox" } },
-  { key: "repos", label: "Repos", target: { section: "repos" } },
+  { key: "code", label: "Code", target: { section: "code" } },
 ];
 
 const TARGETS: Record<string, NavTarget> = Object.fromEntries(
@@ -81,10 +81,10 @@ function crumbFor(
       return { left: project, bold: "Board" };
     case "inbox":
       return { left: "Workbench", bold: "Inbox" };
-    case "repos":
-      return { left: "Workbench", bold: "Repos" };
+    case "code":
+      return { left: project, bold: "Code" };
     case "repo":
-      return { left: "Repos", bold: nav.repo };
+      return { left: "Code", bold: nav.repo };
     case "browse":
       return { left: nav.repo, bold: "Files" };
     case "peek":
@@ -175,7 +175,7 @@ export function Shell({
       : nav.section === "mockup"
         ? { label: "Mockups", onClick: () => navigate({ section: "mockups" }) }
         : nav.section === "repo"
-          ? { label: "Repos", onClick: () => navigate({ section: "repos" }) }
+          ? { label: "Code", onClick: () => navigate({ section: "code" }) }
           : undefined;
 
   const [query, setQuery] = useState("");

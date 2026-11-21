@@ -12,7 +12,8 @@
 import { useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { api } from "../../lib/api";
-import type { DatasetCell, DatasetSqlResult } from "../../lib/api-types-repos";
+import { useCheckout } from "./checkoutContext";
+import type { DatasetCell, DatasetSqlResult } from "../../lib/api-types-code";
 import { metaStyle } from "../shared";
 
 const CELL_MAX = 80;
@@ -61,18 +62,19 @@ function CellValue({ value }: { value: DatasetCell }) {
 }
 
 export function DatasetConsole({
-  repoId,
+  projectId,
   path,
   table,
   kind,
 }: {
-  repoId: string;
+  projectId: string;
   path: string;
   /** The Table view's chosen table (database kinds);
    * undefined for the single-relation kinds. */
   table?: string;
   kind: string;
 }) {
+  const checkout = useCheckout();
   const [sql, setSql] = useState("");
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DatasetSqlResult | null>(null);
@@ -96,7 +98,7 @@ export function DatasetConsole({
     setRunning(true);
     setError(null);
     try {
-      const reply = await api.postRepoDatasetSql({ repoId, path, table, sql: statement });
+      const reply = await api.postCodeDatasetSql({ projectId, checkout, path, table, sql: statement });
       if (reply.status === 200 && reply.payload) {
         setResult(reply.payload as unknown as DatasetSqlResult);
       } else {

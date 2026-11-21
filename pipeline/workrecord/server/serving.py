@@ -35,13 +35,11 @@ from pathlib import Path
 
 from dispatch import messages as msg_mod  # noqa: E402
 from evaluation import datasets as datasets_mod  # noqa: E402
-from evaluation import repo_state as repo_state_mod  # noqa: E402
 from evaluation import repos as repos_mod  # noqa: E402
 from lib.registry import export as export_mod  # noqa: E402
 from lib.writes import files as files_mod  # noqa: E402
 from lib import registry as reg  # noqa: E402
 from lib.plans import parser as plan_parser  # noqa: E402
-from lib.util import now_iso  # noqa: E402
 
 from . import config as cfgmod  # noqa: E402
 from . import feedcache  # noqa: E402
@@ -68,11 +66,14 @@ from .messages_api import (effective_settings, fire_pending_notifications,  # no
                            message_create, message_done, message_send,
                            message_update_body, messages_list,
                            outbox_feed, run_message_cleanup)
-from .repos_feed import (_repo_or_404, _repos_history_path,  # noqa: E402
-                         _repos_invalidate_cache,
-                         _repos_registry_path, dataset_rows_feed,
-                         dataset_schema_feed, dataset_stats_feed,
-                         prime_census_cache, repo_status_feed,
+from .projects_feed import (code_history_feed,  # noqa: E402
+                            code_status_feed,
+                            projects_index_feed,
+                            projects_registry_feed,
+                            projects_registry_save, resolve_checkout)
+from .repos_feed import (_repos_invalidate_cache,  # noqa: E402
+                         dataset_rows_feed, dataset_schema_feed,
+                         dataset_stats_feed, prime_census_cache,
                          repos_feed)
 
 
@@ -137,6 +138,7 @@ def _warm_feeds() -> None:
     instead."""
     get_sweep()
     repos_feed()
+    projects_index_feed()
     home_feed()
     build_feeds()
 
@@ -331,21 +333,26 @@ def build_mount():
                 "application/json; charset=utf-8")
         return reply(200, build_feeds())
 
-    def repos_registry(request):
-        data = repo_state_mod.load_registry(_repos_registry_path())
-        return reply(200, {"repos": data["repos"],
-                           "captured_at": now_iso()})
-
-    def repos_dispatch(request):
-        # The repos record routes: the record id itself
-        # contains slashes, so the tail dispatches on its
-        # final segment, as the pinned server did.
+    def code_dispatch(request):
+        # The Code facet routes (SPEC §21): the project
+        # id itself may contain slashes (a repository-only
+        # project's census id), so the tail dispatches on
+        # its final segment, as the retired repos dispatch
+        # did. ?checkout=<census id> selects a linked
+        # worktree checkout; the default is the main
+        # checkout.
         parts = request.parts
         last = parts[-1]
+        checkout = request.query.get("checkout") or None
         if last in ("status", "files", "file", "history"):
-            record = _repo_or_404("/".join(parts[2:-1]))
+            project_id = "/".join(parts[3:-1])
             if last == "status":
-                return reply(200, repo_status_feed(record))
+                return reply(200, code_status_feed(
+                    project_id, checkout))
+            if last == "history":
+                return reply(200, code_history_feed(project_id))
+            record, _main, _checkouts = resolve_checkout(
+                project_id, checkout)
             if last == "files":
                 query = request.query
                 # The dir parameter's presence is read from
@@ -364,9 +371,6 @@ def build_mount():
                 include_all = query.get("all") in ("1", "true")
                 return reply(200, repos_mod.repo_files(
                     record, include_all=include_all))
-            if last == "history":
-                return reply(200, repo_state_mod.history_for(
-                    _repos_history_path(), record["id"]))
             rel = request.query.get("path")
             if not rel:
                 raise ApiError(400, "file needs ?path=")
@@ -380,12 +384,14 @@ def build_mount():
                 raise ApiError(e.status, str(e))
             return reply(200, peek)
         if last == "dataset":
-            record = _repo_or_404("/".join(parts[2:-1]))
+            record, _main, _checkouts = resolve_checkout(
+                "/".join(parts[3:-1]), checkout)
             return reply(200, dataset_schema_feed(
                 record, request.query))
-        if len(parts) >= 5 and parts[-2] == "dataset" \
+        if len(parts) >= 6 and parts[-2] == "dataset" \
                 and last in ("rows", "stats"):
-            record = _repo_or_404("/".join(parts[2:-2]))
+            record, _main, _checkouts = resolve_checkout(
+                "/".join(parts[3:-2]), checkout)
             if last == "rows":
                 return reply(200, dataset_rows_feed(
                     record, request.query))
@@ -493,27 +499,19 @@ def build_mount():
         invalidate_payload()
         return reply(200, {
             "ok": True, "projects": len(result.projects),
-            "invalidated": ["sweep", "home", "repos", "feeds"]})
+            "invalidated": ["sweep", "home", "projects", "feeds"]})
 
-    def repos_registry_save(request):
+    def projects_registry_save_route(request):
         data_body = body(request)
-        repo_id = data_body.get("id")
-        patch = data_body.get("patch")
-        if not repo_id or not isinstance(patch, dict):
-            raise ApiError(400, "need {id, patch}")
-        data = repo_state_mod.load_registry(_repos_registry_path())
-        entry, err = repo_state_mod.update_entry(data, repo_id,
-                                                 patch)
-        if err:
-            raise ApiError(400, err)
-        repo_state_mod.save_registry(_repos_registry_path(), data)
-        _repos_invalidate_cache()
+        result = projects_registry_save(
+            data_body.get("id"), data_body.get("patch"))
         _home_invalidate_cache()
-        return reply(200, {"id": repo_id, "registry": entry})
+        return reply(200, result)
 
-    def repos_save(request):
-        record = _repo_or_404(
-            "/".join(request.parts[2:-1]))
+    def code_save(request):
+        record, _main, _checkouts = resolve_checkout(
+            "/".join(request.parts[3:-1]),
+            request.query.get("checkout") or None)
         data_body = body(request)
         state = cfgmod.state_dir(CFG)
         result = files_mod.repo_save(
@@ -530,9 +528,10 @@ def build_mount():
         _home_invalidate_cache()
         return reply(200, result)
 
-    def repos_dataset_sql(request):
-        record = _repo_or_404(
-            "/".join(request.parts[2:-2]))
+    def code_dataset_sql(request):
+        record, _main, _checkouts = resolve_checkout(
+            "/".join(request.parts[3:-2]),
+            request.query.get("checkout") or None)
         data_body = body(request)
         if not data_body.get("path") or not data_body.get("sql"):
             raise ApiError(400, "sql needs {path, sql}")
@@ -546,15 +545,15 @@ def build_mount():
             raise ApiError(400, str(e))
         return reply(200, result)
 
-    def repos_post_dispatch(request):
-        # POST under /api/repos/<id...>: only the file save
-        # and the dataset sql tails exist.
+    def code_post_dispatch(request):
+        # POST under /api/projects/code/<id...>: only the
+        # file save and the dataset sql tails exist.
         parts = request.parts
         if parts[-1] == "file":
-            return repos_save(request)
-        if len(parts) >= 5 and parts[-2] == "dataset" \
+            return code_save(request)
+        if len(parts) >= 6 and parts[-2] == "dataset" \
                 and parts[-1] == "sql":
-            return repos_dataset_sql(request)
+            return code_dataset_sql(request)
         raise ApiError(
             404, f"no route: {'/' + '/'.join(parts)}")
 
@@ -615,10 +614,11 @@ def build_mount():
     r.add("GET", "/api/feeds", feeds_document)
     r.add("GET", "/api/home",
           lambda request: reply(200, home_feed()))
-    r.add("GET", "/api/repos",
-          lambda request: reply(200, repos_feed()))
-    r.add("GET", "/api/repos/registry", repos_registry)
-    r.add("GET", "/api/repos/{tail...}", repos_dispatch)
+    r.add("GET", "/api/projects-index",
+          lambda request: reply(200, projects_index_feed()))
+    r.add("GET", "/api/projects/registry",
+          lambda request: reply(200, projects_registry_feed()))
+    r.add("GET", "/api/projects/code/{tail...}", code_dispatch)
     r.add("GET", "/api/messages", messages)
     r.add("GET", "/api/outbox",
           lambda request: reply(200, outbox_feed(request.query)))
@@ -665,8 +665,10 @@ def build_mount():
           lambda request: reply(200,
                                 get_sweep(force=True).summary()))
     r.add("POST", "/api/refresh", refresh)
-    r.add("POST", "/api/repos/registry", repos_registry_save)
-    r.add("POST", "/api/repos/{tail...}", repos_post_dispatch)
+    r.add("POST", "/api/projects/registry",
+          projects_registry_save_route)
+    r.add("POST", "/api/projects/code/{tail...}",
+          code_post_dispatch)
     r.add("POST", "/api/projects/{slug}/todos",
           project_todos_post)
     r.add("POST", "/api/projects/{slug}/plan/resolve",

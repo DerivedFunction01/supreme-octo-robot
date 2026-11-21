@@ -19,7 +19,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
 import { api } from "../../lib/api";
-import type { RepoPeek } from "../../lib/api-types-repos";
+import type { RepoPeek } from "../../lib/api-types-code";
+import { useCheckout } from "./checkoutContext";
 import { formatShortHash } from "../../lib/format";
 import { highlightCode, highlightLines } from "../../lib/highlight";
 import { DatasetTable } from "./DatasetTable";
@@ -179,14 +180,15 @@ function RawDiffView({ path, diff }: { path: string; diff: string }) {
 type PeekView = "content" | "table" | "diff";
 
 export function PeekPane({
-  repoId,
+  projectId,
   path,
   onEdit,
 }: {
-  repoId: string;
+  projectId: string;
   path: string;
   onEdit: (peek: RepoPeek) => void;
 }) {
+  const checkout = useCheckout();
   // Null = no explicit choice yet: the default view is
   // derived from the peek when it lands (see below).
   const [view, setView] = useState<PeekView | null>(null);
@@ -200,8 +202,8 @@ export function PeekPane({
   // keyed by the file, mounted fresh by the parent via
   // `key`, so these initial values are the reset).
   const query = useQuery({
-    queryKey: ["repo-file", repoId, path],
-    queryFn: () => api.getRepoFile({ repoId, path }),
+    queryKey: ["code-file", projectId, checkout, path],
+    queryFn: () => api.getCodeFile({ projectId, checkout, path }),
   });
   const envelope = query.data;
   const basePeek =
@@ -212,7 +214,7 @@ export function PeekPane({
     setRevealing(true);
     setRevealError(null);
     try {
-      const reply = await api.getRepoFile({ repoId, path, reveal: true });
+      const reply = await api.getCodeFile({ projectId, checkout, path, reveal: true });
       if (reply.status === 200 && reply.payload) {
         setRevealed(reply.payload as unknown as RepoPeek);
         setConfirmingReveal(false);
@@ -333,7 +335,7 @@ export function PeekPane({
           </p>
         )
       ) : activeView === "table" && dataset ? (
-        <DatasetTable repoId={repoId} path={path} descriptor={dataset} />
+        <DatasetTable projectId={projectId} path={path} descriptor={dataset} />
       ) : peek?.withheld === "secret" ? (
         <div
           style={{

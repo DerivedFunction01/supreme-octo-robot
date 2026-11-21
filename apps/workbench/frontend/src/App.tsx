@@ -17,7 +17,7 @@ import { Todos } from "./sections/Todos";
 import { Board } from "./sections/Board";
 import { Inbox } from "./sections/Inbox";
 import { MessageThreads } from "./sections/MessageThreads";
-import { RepoDetail, Repos } from "./sections/Repos";
+import { RepoDetail } from "./sections/Repos";
 import { Browse, PeekPage } from "./sections/Explorer";
 import { Editor } from "./sections/Editor";
 import { Settings } from "./sections/Settings";
@@ -102,7 +102,7 @@ export function App() {
             <MessageThreads />
           </>
         ) : null}
-        {nav.section === "repos" ? <Repos /> : null}
+        {nav.section === "code" ? <RepoDetail key={project} repoSlug={project} /> : null}
         {nav.section === "repo" ? <RepoDetail repoSlug={nav.repo} /> : null}
         {nav.section === "browse" ? <Browse repoSlug={nav.repo} trail={nav.path} /> : null}
         {nav.section === "peek" ? <PeekPage repoSlug={nav.repo} path={nav.path} /> : null}

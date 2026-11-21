@@ -266,41 +266,23 @@ export interface FeedRepoSummary {
   [key: string]: unknown;
 }
 
-export interface FeedRepoDetail {
-  // Null when the repo's detail assembly raised (the
-  // server's error document): the adapter falls back
-  // to the census summary's branch and dirty counts.
-  status: {
-    branch: string | null;
-    dirty_counts: { staged: number; unstaged: number; untracked: number } | null;
-    worktrees?: { path?: string; root?: string; branch?: string | null; dirty_total?: number | null }[];
-    [key: string]: unknown;
-  } | null;
-  files: {
-    entries: { path: string; kind: string; hidden: boolean }[];
-    tracked: string[];
-    untracked: string[];
-    [key: string]: unknown;
-  };
-  history: {
-    records: { at: string; head: string; head_subject: string | null; [key: string]: unknown }[];
-    [key: string]: unknown;
-  };
-  peeks: Record<string, {
-    content?: string;
-    sha256?: string;
-    line_count?: number;
-    size_bytes?: number;
-    editable?: boolean;
-    editable_reason?: string | null;
-    error?: string;
-    [key: string]: unknown;
-  }>;
-  datasets: Record<string, {
-    schema: { tables: { name: string; columns: { name: string; type: string }[] }[]; [key: string]: unknown };
-    rows: { columns: string[]; rows: unknown[]; [key: string]: unknown };
-    stats: unknown;
-  }>;
+/** One row of the unified project index (SPEC §21):
+ * the canonical project with its code summary on the
+ * row. Code detail (files, peeks, datasets, history)
+ * is NOT in the document — the live adapter's live
+ * mode projects the summary only, and the real client
+ * serves detail on demand through the Code routes. */
+export interface FeedProjectIndexRow {
+  id: string;
+  slug: string | null;
+  name: string;
+  root: string | null;
+  membership: string;
+  checkouts: { id: string; root: string; is_worktree: boolean; branch?: string | null }[];
+  code: FeedRepoSummary | null;
+  registry: unknown;
+  missing: boolean;
+  [key: string]: unknown;
 }
 
 export interface FeedMessageRow {
@@ -336,8 +318,12 @@ export interface WorkbenchFeeds {
   home: { projects: FeedHomeRow[]; [key: string]: unknown };
   projects: { projects: FeedProjectSummary[]; errors: unknown[] };
   projectFeeds: Record<string, FeedProject>;
-  repos: { repos: FeedRepoSummary[]; [key: string]: unknown };
-  repoDetails: Record<string, FeedRepoDetail>;
+  projectsIndex: {
+    projects: FeedProjectIndexRow[];
+    exposure: { [key: string]: unknown };
+    excluded_scratch: number;
+    [key: string]: unknown;
+  };
   messages: { messages: FeedMessageRow[]; [key: string]: unknown };
   outbox: { events: unknown[]; last_id: number };
   settings: {

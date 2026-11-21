@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { api } from "../../lib/api";
+import { useCheckout } from "./checkoutContext";
 import type {
   DatasetCell,
   DatasetColumn,
@@ -24,7 +25,7 @@ import type {
   DatasetSchema,
   DatasetStats,
   DatasetTable as DatasetTableShape,
-} from "../../lib/api-types-repos";
+} from "../../lib/api-types-code";
 import { formatCount } from "../../lib/format";
 import { metaStyle } from "../shared";
 import { DatasetConsole } from "./DatasetConsole";
@@ -85,14 +86,15 @@ function CellValue({ value }: { value: DatasetCell }) {
 }
 
 export function DatasetTable({
-  repoId,
+  projectId,
   path,
   descriptor,
 }: {
-  repoId: string;
+  projectId: string;
   path: string;
   descriptor: DatasetDescriptor;
 }) {
+  const checkout = useCheckout();
   const isDb = descriptor.tables != null;
   const [chosenTable, setChosenTable] = useState<string | null>(null);
   const [sort, setSort] = useState<{ column: string; dir: "asc" | "desc" } | null>(null);
@@ -104,8 +106,8 @@ export function DatasetTable({
   const [showStats, setShowStats] = useState(false);
 
   const schemaQuery = useQuery({
-    queryKey: ["repo-dataset-schema", repoId, path],
-    queryFn: () => api.getRepoDataset({ repoId, path }),
+    queryKey: ["code-dataset-schema", projectId, checkout, path],
+    queryFn: () => api.getCodeDataset({ projectId, checkout, path }),
   });
   const schemaEnvelope = schemaQuery.data;
   const schema =
@@ -139,8 +141,9 @@ export function DatasetTable({
 
   const rowsQuery = useQuery({
     queryKey: [
-      "repo-dataset-rows",
-      repoId,
+      "code-dataset-rows",
+      projectId,
+      checkout,
       path,
       activeTable,
       offset,
@@ -149,8 +152,9 @@ export function DatasetTable({
       appliedFilter ? JSON.stringify(appliedFilter) : "",
     ],
     queryFn: () =>
-      api.getRepoDatasetRows({
-        repoId,
+      api.getCodeDatasetRows({
+        checkout,
+        projectId,
         path,
         table: isDb ? (activeTable ?? undefined) : undefined,
         limit: PAGE_SIZE,
@@ -172,10 +176,11 @@ export function DatasetTable({
       : null;
 
   const statsQuery = useQuery({
-    queryKey: ["repo-dataset-stats", repoId, path, activeTable],
+    queryKey: ["code-dataset-stats", projectId, checkout, path, activeTable],
     queryFn: () =>
-      api.getRepoDatasetStats({
-        repoId,
+      api.getCodeDatasetStats({
+        checkout,
+        projectId,
         path,
         table: isDb ? (activeTable ?? undefined) : undefined,
       }),
@@ -521,7 +526,7 @@ export function DatasetTable({
       {descriptor.kind === "duckdb" || !isDb || activeTable != null ? (
         <DatasetConsole
           key={`${path}::${activeTable ?? ""}`}
-          repoId={repoId}
+          projectId={projectId}
           path={path}
           table={isDb && activeTable != null ? activeTable : undefined}
           kind={descriptor.kind}

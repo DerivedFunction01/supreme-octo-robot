@@ -17,7 +17,7 @@ import { ModeControl } from "@workhorse/kit/components/ModeControl";
 import { PaletteSelect } from "@workhorse/kit/components/PaletteSelect";
 import type { Appearance, Density, Mode } from "../../lib/preferences";
 import { PALETTE_OPTIONS } from "../../lib/preferences";
-import { ReposTrackingPanel } from "./ReposTrackingPanel";
+import { ProjectsTrackingPanel } from "./ProjectsTrackingPanel";
 import { SettingsPanels } from "./SettingsPanels";
 
 const rowStyle: React.CSSProperties = {
@@ -85,7 +85,7 @@ export function SettingsSection({
         />
       </div>
       <SettingsPanels />
-      <ReposTrackingPanel />
+      <ProjectsTrackingPanel />
     </section>
   );
 }

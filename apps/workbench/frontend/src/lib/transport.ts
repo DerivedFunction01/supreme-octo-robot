@@ -152,7 +152,7 @@ export function actionForPost(
   if (path === "/api/messages/cleanup") {
     return { action: "cleanupMessages", args: { body: b } };
   }
-  if (path === "/api/repos/registry") {
+  if (path === "/api/projects/registry") {
     return {
       action: "updateReposRegistry",
       args: { id: b.id, patch: b.patch },

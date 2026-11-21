@@ -12,10 +12,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
 import type { HomePayload, HomeRow } from "../../lib/api-types";
+import type { ProjectIndexRow } from "../../lib/api-types-code";
 import { formatDate, formatRelative } from "../../lib/format";
 import { homeKey } from "../../lib/keys";
 import { planBucketLabel, todoStatusLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
+import { indexPayloadOf, useProjectIndex } from "../../lib/projectsIndex";
 import { sectionHref } from "../../lib/routing";
 import { ActivePlanLine, WorktreeChildren } from "../board/worktreeViews";
 import { EmptyWell, ErrorWell, metaStyle, SkeletonWell } from "../shared";
@@ -330,6 +332,73 @@ export function ProjectPickerSection() {
   return <HomeSection picker />;
 }
 
+/** One repository-only (or missing) project row in the
+ * unified index (SPEC §21): the same Projects list as
+ * the adopted rows — identity, branch/HEAD, dirty state
+ * — with its membership named. Its door is the
+ * Overview, which serves the Code facet. */
+function RepoOnlyRow({ row }: { row: ProjectIndexRow }) {
+  const code = row.code;
+  const dirty = code?.dirty_counts
+    ? code.dirty_counts.staged + code.dirty_counts.unstaged + code.dirty_counts.untracked
+    : 0;
+  return (
+    <li
+      style={{
+        borderBottom: "1px solid var(--wb-border-default)",
+        padding: "var(--wb-space-12) 0",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "var(--wb-space-12)",
+          flexWrap: "wrap",
+        }}
+      >
+        <a
+          href={sectionHref(row.id, "overview")}
+          style={{
+            color: "var(--wb-content-primary)",
+            textDecoration: "none",
+            fontWeight: 600,
+          }}
+        >
+          {row.name}
+        </a>
+        <span className="mono" style={metaStyle}>
+          {row.id}
+        </span>
+        <span style={countBadgeStyle}>
+          {row.membership === "missing" ? "Missing" : "Repository only"}
+        </span>
+        {code ? (
+          <span style={metaStyle}>
+            <span className="mono">{code.branch ?? "detached"}</span>
+            {code.head_short ? (
+              <>
+                {" · "}
+                <span className="mono">{code.head_short}</span>
+              </>
+            ) : null}
+          </span>
+        ) : null}
+        {code && dirty > 0 ? (
+          <span style={metaStyle}>
+            <span className="num">{dirty}</span> uncommitted
+          </span>
+        ) : null}
+        {row.missing ? (
+          <span style={{ ...metaStyle, color: "var(--wb-danger)" }}>
+            not found on disk
+          </span>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
 export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
   const isPhone = useIsPhone();
   const query = useQuery({
@@ -337,6 +406,7 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
     queryFn: () => api.getHome({}),
     refetchInterval: 30000,
   });
+  const indexQuery = useProjectIndex();
   if (query.isPending) return <SkeletonWell label="the workspace home" />;
   if (query.isError || !query.data.payload) {
     return (
@@ -348,6 +418,11 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
   }
   const feed = query.data.payload as unknown as HomePayload;
   const sweepErrors = (feed.sweep_errors ?? []) as { path?: string; reason?: string }[];
+  const index = indexPayloadOf(indexQuery.data);
+  const repoOnlyRows = (index?.projects ?? []).filter(
+    (row) => row.membership === "repository-only",
+  );
+  const missingRows = (index?.projects ?? []).filter((row) => row.membership === "missing");
   return (
     <section data-anchor={picker ? "home/project-picker" : "home/project-list"}>
       {/* The shell's H1 names this route ("Projects");
@@ -415,6 +490,37 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           {sweepErrors.map((e) => `${e.path ?? "sweep"}: ${e.reason ?? ""}`).join(" · ")}
         </p>
       ) : null}
+      {index ? (
+        <div
+          style={{
+            display: "flex",
+            gap: "var(--wb-space-24)",
+            flexWrap: "wrap",
+            marginBottom: "var(--wb-space-16)",
+            fontSize: "var(--wb-font-size-sm)",
+            color: "var(--wb-content-secondary)",
+          }}
+        >
+          <span>
+            <span className="num">{index.exposure.tracked}</span> tracked
+          </span>
+          <span>
+            <span className="num">{index.exposure.unpushed_commits}</span> unpushed commits
+          </span>
+          <span>
+            <span className="num">{index.exposure.uncommitted_files}</span> uncommitted files
+            in <span className="num">{index.exposure.uncommitted_repos}</span> projects
+          </span>
+          <span>
+            <span className="num">{index.exposure.local_only}</span> local only
+          </span>
+          {index.excluded_scratch > 0 ? (
+            <span>
+              <span className="num">{index.excluded_scratch}</span> scratch excluded
+            </span>
+          ) : null}
+        </div>
+      ) : null}
       {feed.projects.length === 0 ? (
         <EmptyWell>
           No projects in the sweep.
@@ -426,6 +532,48 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           ))}
         </ul>
       )}
+      {repoOnlyRows.length > 0 ? (
+        <>
+          <div
+            style={{
+              ...metaStyle,
+              marginTop: "var(--wb-space-24)",
+              marginBottom: "var(--wb-space-4)",
+              fontWeight: 700,
+              letterSpacing: "0.07em",
+              textTransform: "uppercase",
+            }}
+          >
+            Repository only
+          </div>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {repoOnlyRows.map((row) => (
+              <RepoOnlyRow key={row.id} row={row} />
+            ))}
+          </ul>
+        </>
+      ) : null}
+      {missingRows.length > 0 ? (
+        <>
+          <div
+            style={{
+              ...metaStyle,
+              marginTop: "var(--wb-space-24)",
+              marginBottom: "var(--wb-space-4)",
+              fontWeight: 700,
+              letterSpacing: "0.07em",
+              textTransform: "uppercase",
+            }}
+          >
+            Missing
+          </div>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {missingRows.map((row) => (
+              <RepoOnlyRow key={row.id} row={row} />
+            ))}
+          </ul>
+        </>
+      ) : null}
     </section>
   );
 }

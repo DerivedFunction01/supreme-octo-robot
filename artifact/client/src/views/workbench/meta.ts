@@ -18,6 +18,7 @@ const SECTION_LABELS: Record<string, string> = {
   plans: "Plans",
   todos: "Todos",
   board: "Board",
+  code: "Code",
 };
 
 export const workbenchMeta: Omit<AppViewModule, "Component"> = {
@@ -26,23 +27,17 @@ export const workbenchMeta: Omit<AppViewModule, "Component"> = {
     { key: "home", label: "Home", href: "#/workbench" },
     { key: "projects", label: "Projects", href: "#/workbench/projects" },
     { key: "board", label: "Board", href: "#/workbench/board" },
-    { key: "repos", label: "Repos", href: "#/workbench/repos" },
   ],
   activeKey(subroute) {
     if (subroute === "/") return "home";
     if (subroute === "/projects" || subroute.startsWith("/p/")) return "projects";
     if (subroute === "/board") return "board";
-    if (subroute === "/repos" || subroute.startsWith("/repos/")) return "repos";
     return "";
   },
   crumb(subroute) {
     if (subroute === "/") return ["Workbench", "Home"];
     if (subroute === "/projects") return ["Workbench", "Projects"];
     if (subroute === "/board") return ["Workbench", "Board"];
-    if (subroute === "/repos") return ["Workbench", "Repos"];
-    if (subroute.startsWith("/repos/")) {
-      return ["Workbench", "Repos", decodeURIComponent(subroute.slice("/repos/".length))];
-    }
     if (subroute.startsWith("/p/")) {
       const parts = subroute.split("/").filter((p) => p.length > 0);
       const slug = parts[1] ? decodeURIComponent(parts[1]) : "";

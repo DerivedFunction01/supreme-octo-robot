@@ -411,10 +411,10 @@ export function PhoneExplorer({ repoSlug, trail }: { repoSlug: string; trail: st
   const folders = items.filter((f) => f.kind === "folder");
   const files = items.filter((f) => f.kind === "file");
   const title = trail.length > 0 ? trail[trail.length - 1] : repo.name;
-  const backLabel = trail.length > 1 ? trail[trail.length - 2] : trail.length === 1 ? repo.name : "Repos";
+  const backLabel = trail.length > 1 ? trail[trail.length - 2] : trail.length === 1 ? repo.name : "Code";
   const onBack = () => {
     if (trail.length > 0) navigate({ section: "browse", repo: repoSlug, path: trail.slice(0, -1) });
-    else navigate({ section: "repos" });
+    else navigate({ section: "code" });
   };
 
   return (
@@ -594,11 +594,11 @@ export function SplitView({
       >
         <button
           type="button"
-          onClick={() => navigate({ section: "repos" })}
+          onClick={() => navigate({ section: "code" })}
           className="shrink-0 text-sm font-semibold"
           style={{ color: "var(--wb-accent)" }}
         >
-          ‹ Repos
+          ‹ Code
         </button>
         <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--wb-content-secondary)" }}>
           / {repo.name} / <b style={{ color: "var(--wb-content-primary)" }}>Files</b>

@@ -26,7 +26,7 @@ export function SectionNav({ slug, current }: { slug: string; current: SectionId
         marginBottom: "var(--wb-space-16)",
       }}
     >
-      {(["overview", "entries", "plans", "todos", "board"] as SectionId[]).map((section) => {
+      {(["overview", "entries", "plans", "todos", "board", "code"] as SectionId[]).map((section) => {
         const isCurrent = section === current;
         return (
           <a

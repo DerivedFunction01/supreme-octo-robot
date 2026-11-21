@@ -247,7 +247,7 @@ export interface WorkbenchAdapter {
   boardDone(offset: number, limit: number): { cards: BoardCard[]; total: number };
 
   // -- repo registry (W12) -----------------------------------
-  /** Save the repo's tracking record (POST /api/repos/registry). */
+  /** Save the project's tracking record (POST /api/projects/registry). */
   updateRepoTracking(
     slug: string,
     patch: Partial<NonNullable<Repo["tracking"]>> & { name?: string },

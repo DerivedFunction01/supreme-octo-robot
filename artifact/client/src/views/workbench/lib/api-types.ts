@@ -3,7 +3,7 @@
 // the call surface, these are the payloads it carries.
 // Sections import the payload types from here and the
 // client from lib/api. The repos + dataset payloads
-// live in lib/api-types-repos.
+// live in lib/api-types-code.
 
 // ---------------------------------------------------------------------------
 // Feed payload types (the companion server's shapes, SPEC §7)

@@ -9,14 +9,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { api } from "../../lib/api";
-import type { RepoFilesPayload, RepoPeek } from "../../lib/api-types-repos";
+import type { RepoFilesPayload, RepoPeek } from "../../lib/api-types-code";
 import { useIsPhone } from "../../lib/responsive";
 import { ErrorWell, SkeletonWell } from "../shared";
+import { useCheckout } from "./checkoutContext";
 import { FileTree } from "./FileTree";
 import { PeekPane } from "./PeekPane";
 import { RepoEditor } from "./RepoEditor";
 
-export function FilesTab({ repoId }: { repoId: string }) {
+export function FilesTab({ projectId }: { projectId: string }) {
+  const checkout = useCheckout();
   const isPhone = useIsPhone();
   const [selected, setSelected] = useState<string | null>(null);
   const [editing, setEditing] = useState<RepoPeek | null>(null);
@@ -27,8 +29,8 @@ export function FilesTab({ repoId }: { repoId: string }) {
   // The base lists only: the tree itself loads lazily,
   // one directory at a time (FileTree owns those queries).
   const query = useQuery({
-    queryKey: ["repo-files", repoId],
-    queryFn: () => api.getRepoFiles({ repoId }),
+    queryKey: ["code-files", projectId, checkout],
+    queryFn: () => api.getCodeFiles({ projectId, checkout }),
   });
   const payload = query.data?.payload as unknown as RepoFilesPayload | null;
 
@@ -50,7 +52,7 @@ export function FilesTab({ repoId }: { repoId: string }) {
         background: "var(--wb-surface-2)",
       }}
     >
-      <FileTree repoId={repoId} selected={selected} onSelect={setSelected} />
+      <FileTree projectId={projectId} selected={selected} onSelect={setSelected} />
     </div>
   );
 
@@ -65,8 +67,8 @@ export function FilesTab({ repoId }: { repoId: string }) {
         }}
       >
         <PeekPane
-          key={`${repoId}:${selected}:${peekSession}`}
-          repoId={repoId}
+          key={`${projectId}:${selected}:${peekSession}`}
+          projectId={projectId}
           path={selected}
           onEdit={setEditing}
         />
@@ -115,7 +117,7 @@ export function FilesTab({ repoId }: { repoId: string }) {
       )}
       {editing ? (
         <RepoEditor
-          repoId={repoId}
+          projectId={projectId}
           initialPeek={editing}
           onClose={(saved) => {
             setEditing(null);

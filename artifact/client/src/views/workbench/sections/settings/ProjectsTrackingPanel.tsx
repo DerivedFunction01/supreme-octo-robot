@@ -1,4 +1,4 @@
-// Settings → Repos tracking panel (absorption plan,
+// Settings → Projects tracking panel (SPEC §21;
 // step 9): the repo registry's editing surface. The
 // registry is the harness-owned tracking metadata for
 // browsed repos (lib/repo_state.py) — display name,
@@ -26,10 +26,10 @@ import { Button } from "@workhorse/kit/components/Button";
 import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
 import { Toggle } from "@workhorse/kit/components/Toggle";
 import { api } from "../../lib/api";
-import type { RepoRegistryEntry, ReposRegistryPayload } from "../../lib/api-types-repos";
+import type { RepoRegistryEntry, ProjectsRegistryPayload } from "../../lib/api-types-code";
 import { formatDateTime } from "../../lib/format";
 import { expectedLabel } from "../../lib/labels";
-import { reposHref } from "../../lib/routing";
+import { sectionHref } from "../../lib/routing";
 import { ErrorWell, SkeletonWell } from "../shared";
 
 const panelTitleStyle: React.CSSProperties = {
@@ -96,7 +96,7 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
   const dirty = Object.keys(patch).length > 0;
 
   const mutation = useMutation({
-    mutationFn: () => api.updateReposRegistry({ id, patch }),
+    mutationFn: () => api.updateProjectsRegistry({ id, patch }),
     onSuccess: (reply) => {
       const updated = (reply.payload as { registry?: RepoRegistryEntry } | null)?.registry;
       if (!updated) {
@@ -112,8 +112,8 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
       setIgnored(updated.ignored);
       setNotes(updated.notes);
       setResult("Saved.");
-      void queryClient.invalidateQueries({ queryKey: ["repos-registry"] });
-      void queryClient.invalidateQueries({ queryKey: ["repos"] });
+      void queryClient.invalidateQueries({ queryKey: ["projects-registry"] });
+      void queryClient.invalidateQueries({ queryKey: ["projects-index"] });
     },
     onError: () => setResult("The update call failed — nothing was written."),
   });
@@ -138,7 +138,7 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
         }}
       >
         <a
-          href={reposHref(id)}
+          href={sectionHref(id, "code")}
           className="mono"
           style={{
             color: "var(--wb-accent)",
@@ -308,21 +308,21 @@ function RegistrySummaryRow({
 const WINDOW_FIRST = 25;
 const WINDOW_STEP = 50;
 
-export function ReposTrackingPanel() {
+export function ProjectsTrackingPanel() {
   const query = useQuery({
-    queryKey: ["repos-registry"],
-    queryFn: () => api.getReposRegistry({}),
+    queryKey: ["projects-registry"],
+    queryFn: () => api.getProjectsRegistry({}),
   });
   const [search, setSearch] = useState("");
   const [windowSize, setWindowSize] = useState(WINDOW_FIRST);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
-  const payload = query.data?.payload as unknown as ReposRegistryPayload | null;
-  const ids = useMemo(() => (payload ? Object.keys(payload.repos).sort() : []), [payload]);
+  const payload = query.data?.payload as unknown as ProjectsRegistryPayload | null;
+  const ids = useMemo(() => (payload ? Object.keys(payload.projects).sort() : []), [payload]);
   const needle = search.trim().toLowerCase();
   const matched = useMemo(() => {
     if (!payload || !needle) return ids;
     return ids.filter((id) => {
-      const entry = payload.repos[id];
+      const entry = payload.projects[id];
       if (!entry) return false;
       return (
         id.toLowerCase().includes(needle) ||
@@ -342,16 +342,16 @@ export function ReposTrackingPanel() {
   };
   return (
     <>
-      <h2 style={panelTitleStyle}>Repos — tracking</h2>
+      <h2 style={panelTitleStyle}>Projects — tracking</h2>
       {query.isPending ? (
         <SkeletonWell label="the repo registry" />
       ) : query.isError || !payload ? (
         <ErrorWell
-          section="Repos tracking"
+          section="Projects tracking"
           message={query.data?.error ?? "the repo registry did not answer."}
         />
       ) : ids.length === 0 ? (
-        <p style={{ color: "var(--wb-content-muted)" }}>No repos in the registry yet.</p>
+        <p style={{ color: "var(--wb-content-muted)" }}>No projects in the registry yet.</p>
       ) : (
         <>
           <div
@@ -366,16 +366,16 @@ export function ReposTrackingPanel() {
             <input
               style={{ ...inputStyle, width: "320px", maxWidth: "100%" }}
               type="search"
-              placeholder="Search repos by name or path…"
+              placeholder="Search projects by name or path…"
               value={search}
               onChange={(event) => {
                 setSearch(event.target.value);
                 setWindowSize(WINDOW_FIRST);
               }}
-              aria-label="Search repos in the registry"
+              aria-label="Search projects in the registry"
             />
             <span style={{ color: "var(--wb-content-muted)", fontSize: "var(--wb-font-size-sm)" }}>
-              <span className="num">{ids.length}</span> repos
+              <span className="num">{ids.length}</span> projects
               {needle ? (
                 <>
                   {" · "}
@@ -389,11 +389,11 @@ export function ReposTrackingPanel() {
           </div>
           {matched.length === 0 ? (
             <p style={{ color: "var(--wb-content-muted)" }}>
-              No repos match “{search.trim()}”.
+              No projects match “{search.trim()}”.
             </p>
           ) : (
             visible.map((id) => {
-              const entry = payload.repos[id];
+              const entry = payload.projects[id];
               if (!entry) return null;
               const isOpen = expanded.has(id);
               return (
@@ -420,7 +420,7 @@ export function ReposTrackingPanel() {
                 onClick={() => setWindowSize((n) => n + WINDOW_STEP)}
               >
                 Show more — <span className="num">{matched.length - visible.length}</span> more
-                repos
+                projects
               </Button>
             </div>
           ) : null}

@@ -14,80 +14,22 @@ Per-surface notes:
 - /api/health is not here: it is process identity
   (uptime, commit, stackdump state) — the serving
   process's own surface, not app data.
-- Repo peeks and dataset feeds are pre-computed for the
-  tracked and untracked files the tree lists (ignored
-  entries — dependency trees, build output, venv
-  contents — stay listed but are never peeked: the
-  adapter reads peeks optionally and the pinned file
-  route serves one on demand), bounded by lib/files'
-  own peek caps (an over-cap or withheld file records
-  its refusal shape instead of content) — and by an
-  eager bound: a
-  file over the peek byte cap is stat-gated out of the
-  eager pass (its entry records size + the too-large
-  verdict, no content read, no dataset assembly) and is
-  served on demand by the pinned file / dataset routes
-  instead. The assembly fans out over projects, repos,
-  and each repo's files on the feed pool (lib.util's
-  fan_out, CFG's feed_pool_workers): the per-file peek
-  is a full read + sha256, and its git-diff subprocess
-  is batched per repo — the status derivation's
-  porcelain pass names the staged/unstaged paths, and
-  only those files are peeked with a diff (a clean or
-  untracked file's diff reads None either way). The
-  census runs to hundreds of repos and tens of
-  thousands of files, so a serial cold assembly — or
-  one paying a subprocess per file — never finishes at
-  production scale. A repo whose assembly
-  raises degrades to that repo's error entry (five keys
-  kept, status null so the adapter falls back to the
-  census summary); it never stalls or sinks the whole
-  document.
-- Repo detail scope: a full repo document (files,
-  peeks, datasets, history) assembles for the
-  workspace's own repos — a swept project's main
-  checkout (census root == project root, the sweep's
-  own repo identity) and every other top-level main
-  checkout the census finds (not a worktree, not
-  nested inside another census repo). A plain
-  top-level repo is a surface the Repos browser
-  opens: summary-only left it with no tree, no
-  dataset, and no saveable file, because the adapter
-  builds repo documents from this document alone
-  (the leg 7a cure, 2026-11-15). Every remaining
-  census repo rides the document as its repos-feed
-  summary only, with no repoDetails entry — the
-  linked repos' own worktrees (census parent_id)
-  and nested discoveries included: a worktree's
-  untracked data files are most of the document's
-  weight (five edgar-sec worktrees ran 314–345s each
-  in one measured assembly and swelled the persisted
-  document to ~871 MB, a write the watchdog-killed
-  unit never finished), and the adapter tolerates
-  the absence (its detail reads are optional-chained
-  with summary fallbacks — branch, dirty counts,
-  sync label — and its file tree, worktree list, and
-  history read empty), while the pinned per-repo
-  routes still serve that repo's detail on demand.
-  The census runs to hundreds of repos the
-  workbench's project surfaces never open; detailing
-  all of them is what kept the cold assembly from
-  ever finishing even after the per-file costs were
-  batched away. One exclusion stands in front of
-  both arms of the rule (the detail-scope ruling,
-  2026-11-16): a census repo under one of the
-  configured scratch roots (config
-  repos_detail_scratch_roots — the gate's scratch
-  trees, whose pristine per-gate clones are reset
-  and discarded) earns no document either, whichever
-  arm would have linked it. Scratch trees are the
-  gate's working state, not workspace repos: they
-  stay in the census and ride as summaries, honestly
-  listed, and the per-repo routes serve a scratch
-  repo's detail on demand like any other unlinked
-  repo. On the census that prompted the ruling, 477
-  of the 599 detailed repos were scratch clones
-  taking ~91% of the assembly's wall time.
+- Projects index (SPEC §21, 2026-11-20): the document
+  carries the unified project index (projects_feed —
+  adopted and repository-only projects, code summaries
+  on the rows) and NO repo detail. The retired
+  repoDetails assembly (eager per-repo files, peeks,
+  and datasets for a scoped subset of the census) is
+  deleted wholesale: Code detail is served on demand
+  by the project-scoped Code routes, which is both
+  the consolidation's shape and the end of the cold
+  assembly's long tail — the census runs to hundreds
+  of repos, and detailing any of them eagerly was
+  what kept the assembly from finishing at production
+  scale (the detail-scope history: W4 project-linked
+  only, the 2026-11-15 leg 7a extension to top-level
+  repos, the 2026-11-16 scratch exclusion — all of it
+  superseded by on-demand serving).
 - goals: contract 11's goal-record store (lib/goals)
   serves its records through server/goals; `goalsSource`
   names the store on the document's face, and an empty
@@ -221,7 +163,6 @@ from pathlib import Path
 
 from lib.plans import parser as plan_parser
 from lib.util import fan_out, now_iso
-from lib.writes import files as files_mod
 
 from . import armed as armed_mod
 from . import config as cfgmod
@@ -229,12 +170,8 @@ from . import feedcache
 from . import feeds
 from . import goals as goals_feed_mod
 from . import messages_api
-from . import repos_feed
 from . import shapestore
 from .common import CFG, ApiError, get_sweep
-
-_DATASET_SUFFIXES = {".csv", ".tsv", ".db", ".sqlite",
-                     ".sqlite3", ".jsonl", ".parquet"}
 
 
 def status_vocabulary() -> list:
@@ -298,257 +235,6 @@ def _project_document(project) -> dict:
         "worktrees": feeds.worktrees_feed(project),
         "diff": diff,
     }
-
-
-def _deferred_peek(path: str, size: int) -> dict:
-    """The eager entry for a file over the peek byte
-    cap: the fields the adapter reads (size, the
-    too-large editability verdict), no content — the
-    pinned file route serves the real peek on demand.
-    Mirrors the over-cap peek's own verdict: a file
-    that size is never editable through the caps."""
-    return {"path": path, "size_bytes": size,
-            "content": None, "sha256": None,
-            "editable": False,
-            "editable_reason": "too large",
-            "deferred": True}
-
-
-def _file_payloads(record, entry, with_diff=True) -> tuple:
-    """One file's (path, peek, dataset-or-None, size)
-    for the eager pass, contained per file: a peek
-    failure records its error shape and never sinks
-    the repo, let alone the document. with_diff is the
-    caller's per-repo batching verdict (see
-    _repo_document): False peeks without repo_peek's
-    git-diff subprocess, recording the no-diff value a
-    clean file carries. The size rides along for the
-    caller's payload budget (the deferred form a
-    past-budget file takes needs it)."""
-    from evaluation import datasets as datasets_mod
-
-    path = entry["path"]
-    root = Path(record["root"])
-    try:
-        size = (root / path).stat().st_size
-    except OSError:
-        size = None
-    if size is not None \
-            and size > files_mod.PEEK_MAX_BYTES:
-        return (path, _deferred_peek(path, size), None,
-                size)
-    try:
-        peek = files_mod.repo_peek(
-            record["root"], path,
-            editing_enabled=CFG["file_editing_enabled"],
-            with_diff=with_diff)
-    except files_mod.FileError_ as e:
-        peek = {"error": str(e), "status": e.status}
-    except Exception as e:  # contained per file
-        peek = {"error": str(e)[:200], "status": 500}
-    dataset = None
-    if Path(path).suffix.lower() in _DATASET_SUFFIXES:
-        try:
-            dataset = {
-                "schema": datasets_mod.dataset_schema(
-                    record["root"], path),
-                "rows": datasets_mod.dataset_rows(
-                    record["root"], path),
-                "stats": datasets_mod.dataset_stats(
-                    record["root"], path),
-            }
-        except Exception:
-            # Not a dataset this module reads — the
-            # schema feed stays on-demand for it.
-            pass
-    return (path, peek, dataset, size)
-
-
-def _repo_document(record) -> dict:
-    from evaluation import repo_state as repo_state_mod
-    from evaluation import repos as repos_mod
-
-    files = repos_mod.repo_files(record, include_all=True)
-    entries = [e for e in files.get("entries", [])
-               if e.get("path")
-               and e.get("kind") != "folder"]
-    # The eager payload pass covers tracked and
-    # untracked files only. Ignored entries (dependency
-    # trees, build output, venv contents) stay in the
-    # files block's listing exactly as repo_files
-    # served them, but earn no peek or dataset entry:
-    # the adapter reads peeks optionally (an absent
-    # peek renders the placeholder on open, and the
-    # pinned file route serves the real peek on
-    # demand), and peeking tens of thousands of
-    # ignored files was the cold assembly's long tail.
-    peek_entries = [e for e in entries
-                    if e.get("kind") in ("tracked",
-                                         "untracked")]
-    # The status derivation runs first because it doubles
-    # as the eager pass's dirty set: its porcelain pass
-    # names the staged and unstaged paths, and those are
-    # exactly the files whose diff against HEAD can be
-    # non-empty — so only they pay repo_peek's per-file
-    # git-diff subprocess. Every other file is clean or
-    # untracked, and both read as no diff in _repo_diff,
-    # so its peek is taken with_diff=False and records
-    # the same None. A status that comes back degraded
-    # (error) names no paths; the fallback is the old
-    # behaviour — every file pays — so such a repo's
-    # document stays faithful whatever made it degrade.
-    status = repos_feed.repo_status_feed(record)
-    if status.get("error"):
-        dirty = {e["path"] for e in peek_entries}
-    else:
-        dirty = set()
-        for group in ("staged", "unstaged"):
-            dirty.update(row["path"]
-                         for row in status.get(group, []))
-    payloads = fan_out(
-        lambda e: _file_payloads(
-            record, e, with_diff=e["path"] in dirty),
-        peek_entries, workers=CFG["feed_pool_workers"])
-    # The per-repo payload budget (config
-    # feeds_repo_document_payload_max_bytes): the
-    # per-file caps have no aggregate, so a
-    # corpus-shaped repo — thousands of capped files —
-    # outweighs the rest of the document by itself.
-    # Payloads are spent in entry order; once the
-    # running total reaches the budget, a file's peek
-    # takes the deferred form and its dataset is
-    # omitted — the listing stays whole and the pinned
-    # file/dataset routes serve the real content on
-    # demand, the same honest absence as an over-cap
-    # single file. Error peeks carry no content and
-    # stay as they are: their news is the error.
-    budget = CFG["feeds_repo_document_payload_max_bytes"]
-    spent = 0
-    peeks = {}
-    datasets = {}
-    for path, peek, dataset, size in payloads:
-        if spent >= budget:
-            if peek.get("content") is not None:
-                peek = _deferred_peek(
-                    path,
-                    size if size is not None
-                    else peek.get("size_bytes") or 0)
-            dataset = None
-        else:
-            spent += len(json.dumps(
-                peek, ensure_ascii=False).encode("utf-8"))
-            if dataset is not None:
-                spent += len(json.dumps(
-                    dataset,
-                    ensure_ascii=False).encode("utf-8"))
-        peeks[path] = peek
-        if dataset is not None:
-            datasets[path] = dataset
-    return {
-        "status": status,
-        "files": files,
-        "history": repo_state_mod.history_for(
-            repos_feed._repos_history_path(), record["id"]),
-        "peeks": peeks,
-        "datasets": datasets,
-    }
-
-
-def _repo_error_document(error: Exception) -> dict:
-    """A repo whose assembly raised, in the detail
-    shape: the five keys stay, status is null (the
-    adapter falls back to the census summary's branch
-    and dirty counts), and `error` names the failure —
-    the census summary's own error idiom, one level
-    down."""
-    return {
-        "status": None,
-        "files": {"entries": [], "tracked": [],
-                  "untracked": []},
-        "history": {"records": []},
-        "peeks": {},
-        "datasets": {},
-        "error": str(error)[:200],
-    }
-
-
-def _linked_repo_ids(sweep, census) -> set:
-    """The census ids that earn a full repo document
-    (see the scope note at the top of this module):
-    the workspace's own repos — a swept project's
-    main checkout (the census record whose root is
-    the project root, the sweep's own repo identity;
-    lib/discovery/sweep: project identity is the
-    repo, registered at its main checkout) and every
-    other top-level main checkout: not a worktree
-    (parent_id set) and not nested inside another
-    census repo's root. A plain top-level repo earns
-    one because the Repos browser opens it and the
-    adapter builds repo documents from this document
-    alone — summary-only left it unbrowsable (the
-    leg 7a cure). Worktrees and nested discoveries
-    do NOT earn one: they ride the repos-feed
-    summary, and the pinned per-repo routes serve
-    their detail on demand. A project's folded
-    also_at copies are NOT linked either: the sweep
-    registers the project at its canonical root only,
-    and an export copy is not a surface the adapter
-    opens as the project. Roots compare resolved, so
-    a symlinked or relative spelling of the same
-    checkout still matches. One exclusion stands in
-    front of both arms: a repo under a configured
-    scratch root (see _scratch_root_paths) earns no
-    document — scratch trees are the gate's working
-    state, not workspace repos, whichever arm would
-    have linked them."""
-    project_roots = {str(Path(p.root).resolve())
-                     for p in sweep.projects}
-    roots = {rid: str(Path(record["root"]).resolve())
-             for rid, record in census.items()}
-    scratch = _scratch_root_paths()
-
-    def _nested(rid):
-        root = roots[rid]
-        return any(other != rid
-                   and root.startswith(other_root + "/")
-                   for other, other_root in roots.items())
-
-    def _under_scratch(rid):
-        root = roots[rid]
-        return any(root == s or root.startswith(s + "/")
-                   for s in scratch)
-
-    linked = set()
-    for rid, record in census.items():
-        if _under_scratch(rid):
-            continue
-        if roots[rid] in project_roots:
-            linked.add(rid)
-        elif not record.get("parent_id") \
-                and not _nested(rid):
-            linked.add(rid)
-    return linked
-
-
-def _scratch_root_paths() -> list:
-    """The resolved scratch roots the detail scope
-    excludes (config repos_detail_scratch_roots):
-    the gate's scratch trees, named as configuration
-    — workspace-relative entries resolve against
-    workspace_root, absolute entries stand as
-    written — so the exclusion is path knowledge in
-    one place, never a name pattern in the scope
-    derivation. An empty config restores the full
-    top-level scope."""
-    base = Path(CFG["workspace_root"])
-    resolved = []
-    for entry in CFG.get("repos_detail_scratch_roots") \
-            or []:
-        path = Path(entry)
-        if not path.is_absolute():
-            path = base / path
-        resolved.append(str(path.resolve()))
-    return resolved
 
 
 def _projects_document(sweep) -> dict:
@@ -1053,12 +739,12 @@ def _build_feeds_compute() -> dict:
     and a successful assembly persists itself for the
     next process's prime (see _persist_document) and
     stores its one serialization in the document
-    store (see _store_payload). The census comes from
-    the repos feed's shared cached census
-    (repos_feed._census_cached): the assembly reads
-    the same enumeration every other consumer reads,
-    refreshed on the census cache's own TTL — the
-    assembly no longer walks the workspace itself."""
+    store (see _store_payload). The projects index
+    comes from projects_feed, which reads the repos
+    feed's shared cached census — the same enumeration
+    every other consumer reads, refreshed on the
+    census cache's own TTL; the assembly never walks
+    the workspace itself."""
     timer = _AssemblyTimer()
     sweep = get_sweep()
     projects = dict(fan_out(
@@ -1067,42 +753,17 @@ def _build_feeds_compute() -> dict:
         workers=CFG["feed_pool_workers"]))
     projects_doc = _projects_document(sweep)
     timer.section("sweep + project documents")
-    repos = repos_feed.repos_feed()
-    timer.section("repos summary")
-    census = repos_feed._census_cached()
-    linked = _linked_repo_ids(sweep, census)
-
-    def _detail_pair(summary):
-        record = census.get(summary["id"])
-        if record is None \
-                or summary["id"] not in linked:
-            # Not a project-linked repo: the summary
-            # above is its whole document presence (see
-            # the scope note at the top of this module).
-            return None
-        started = time.monotonic()
-        try:
-            pair = (summary["id"],
-                    _repo_document(record))
-        except Exception as e:  # contained per repo
-            pair = (summary["id"],
-                    _repo_error_document(e))
-        print(f"workbench-viewer: feeds assembly: "
-              f"repo document {summary['id']} took "
-              f"{time.monotonic() - started:.2f}s",
-              file=sys.stderr)
-        return pair
-
-    repo_details = dict(
-        pair for pair in fan_out(
-            _detail_pair, repos.get("repos", []),
-            workers=CFG["feed_pool_workers"])
-        if pair is not None)
-    timer.section("repo documents")
-    # The fan-out's per-repo intermediates (file
-    # listings, payload tuples, census records) are
-    # dead here; return their arenas before the
-    # remaining sections build on top of them.
+    # The unified project index (SPEC §21): the census
+    # summaries join the sweep into canonical project
+    # rows. The document carries NO repo detail any
+    # more — Code detail (status, files, peeks,
+    # datasets, history) is served on demand by the
+    # project-scoped Code routes, which is what retires
+    # the eager repoDetails assembly and its payload
+    # budget machinery wholesale.
+    from . import projects_feed
+    projects_index = projects_feed.projects_index_feed()
+    timer.section("projects index")
     _reclaim()
     home = feeds.home_feed()
     timer.section("home")
@@ -1125,8 +786,7 @@ def _build_feeds_compute() -> dict:
         "home": home,
         "projects": projects_doc,
         "projectFeeds": projects,
-        "repos": repos,
-        "repoDetails": repo_details,
+        "projectsIndex": projects_index,
         "messages": messages,
         "outbox": outbox,
         "settings": settings,

@@ -533,10 +533,9 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
       this.sourceClass.set(row.project, row.source.source_class);
     }
 
-    this.repoList = doc.repos.repos.map((summary) => {
-      const detail = doc.repoDetails[summary.id];
-      return this.projectRepo(summary, detail);
-    });
+    this.repoList = doc.projectsIndex.projects.map((row) =>
+      this.projectRepo(row),
+    );
 
     const cfg = doc.config.config;
     this.settingsState = {
@@ -549,119 +548,47 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
   }
 
   private projectRepo(
-    summary: WorkbenchFeeds["repos"]["repos"][number],
-    detail: WorkbenchFeeds["repoDetails"][string] | undefined,
+    row: WorkbenchFeeds["projectsIndex"]["projects"][number],
   ): Repo {
-    const status = detail?.status;
-    // Either carrier may serve null counts: the summary
-    // nulls them whenever its error is set (a git probe
-    // that failed or hit the census deadline), and a
-    // detail whose assembly raised serves a null status
-    // whose fallback is that same summary. Null is the
-    // backend's honest absence — the projection renders
-    // no dirty claim for it (modifiedCount 0 hides the
-    // modified block; the sweep chip carries "Degraded";
-    // the sync label below states the absence), never a
-    // fabricated count. Reading through the null threw
-    // inside the store constructor and the frame never
-    // rendered (step-3 composed drive, 2026-11-16).
-    const dirty = status?.dirty_counts ?? summary.dirty_counts;
+    // The index row IS the repo record now (SPEC §21):
+    // its code summary carries the census derivations.
+    // Code detail (files, peeks, datasets, history) is
+    // no longer in the document — it serves on demand
+    // through the Code routes, which this synchronous
+    // seam cannot ride — so the live projection carries
+    // the summary honestly: no files, no history, and
+    // null dirty counts stay the backend's honest
+    // absence (no dirty claim is fabricated from them;
+    // the sweep chip carries "Degraded").
+    const summary = row.code;
+    const dirty = summary?.dirty_counts ?? null;
     const modifiedCount = dirty
       ? dirty.staged + dirty.unstaged + dirty.untracked
       : 0;
-    const files: RepoFile[] = [];
-    if (detail) {
-      const byPath = new Map<string, RepoFile>();
-      const ensureFolder = (path: string): RepoFile => {
-        const existing = byPath.get(path);
-        if (existing) return existing;
-        const node: RepoFile = {
-          name: path.split("/").pop() ?? path,
-          kind: "folder",
-          children: [],
-        };
-        byPath.set(path, node);
-        const parent = path.split("/").slice(0, -1).join("/");
-        if (parent) ensureFolder(parent).children!.push(node);
-        else files.push(node);
-        return node;
-      };
-      const sorted = [...detail.files.entries].sort((a, b) => a.path.localeCompare(b.path));
-      for (const entry of sorted) {
-        if (entry.hidden) continue;
-        const parts = entry.path.split("/");
-        const name = parts[parts.length - 1];
-        const peek = detail.peeks[entry.path];
-        const dataset = detail.datasets[entry.path];
-        const node: RepoFile = {
-          name,
-          kind: "file",
-          classification: entry.kind === "tracked" ? undefined : "untracked",
-          content: peek?.content,
-          sha: peek?.sha256,
-          lines: peek?.line_count,
-          sizeLabel:
-            peek?.size_bytes != null ? `${peek.size_bytes.toLocaleString()} bytes` : undefined,
-          editable: peek?.editable ? "guarded" : "no",
-          editableNote: peek?.editable_reason ?? undefined,
-          dataset: dataset
-            ? {
-                tables: (dataset.schema.tables ?? []).map((t) => {
-                  // The document's rows payload rides one
-                  // table (the one whose columns it names);
-                  // the rest are schema-served, rows at the
-                  // rows route.
-                  const servedRows =
-                    (dataset.rows.columns ?? []).join("") ===
-                    t.columns.map((c) => c.name).join("")
-                      ? (dataset.rows.rows ?? []).map((r) =>
-                          Array.isArray(r)
-                            ? r.map((c) => String(c ?? ""))
-                            : t.columns.map((c) =>
-                                String((r as Record<string, unknown>)[c.name] ?? ""),
-                              ),
-                        )
-                      : [];
-                  return {
-                    name: t.name,
-                    columns: t.columns.map((c) => c.name),
-                    rows: servedRows,
-                  };
-                }),
-              }
-            : undefined,
-        };
-        const parent = parts.slice(0, -1).join("/");
-        if (parent) ensureFolder(parent).children!.push(node);
-        else files.push(node);
-      }
-    }
     return {
-      slug: summary.id,
-      name: summary.name,
-      path: summary.root,
-      sweep: summary.error ? "degraded" : "swept",
-      branch: status?.branch ?? summary.branch ?? "",
+      slug: row.id,
+      name: row.name,
+      path: row.root ?? "",
+      sweep: summary?.error ? "degraded" : "swept",
+      branch: summary?.branch ?? "",
       syncLabel: !dirty
         ? "Status unavailable"
-        : summary.exposure?.level === "local_only"
+        : summary?.exposure?.level === "local_only"
           ? "Local only"
           : modifiedCount > 0
             ? `${modifiedCount} modified`
             : "Synced",
       modifiedCount,
-      worktrees: (status?.worktrees ?? []).map((w) => ({
-        label: w.branch ?? w.path ?? w.root ?? "",
-        path: w.path ?? w.root ?? "",
-        branch: w.branch ?? "",
-        dirty: w.dirty_total ?? null,
-      })),
-      history: (detail?.history.records ?? []).map((rec) => ({
-        sha: (rec.head ?? "").slice(0, 7),
-        title: rec.head_subject ?? "",
-        when: dateLabel(rec.at),
-      })),
-      files,
+      worktrees: row.checkouts
+        .filter((c) => c.is_worktree)
+        .map((w) => ({
+          label: w.branch ?? w.root,
+          path: w.root,
+          branch: w.branch ?? "",
+          dirty: null,
+        })),
+      history: [],
+      files: [],
     };
   }
 
@@ -1483,7 +1410,7 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
     } else {
       let res: Response;
       try {
-        res = await fetch(this.url(`/api/repos/${repoSlug}/file`), {
+        res = await fetch(this.url(`/api/projects/code/${repoSlug}/file`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ path, content, base_sha256: baseSha }),
@@ -1562,7 +1489,7 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
       let res: Response;
       try {
         res = await fetch(
-          this.url(`/api/repos/${repoSlug}/file?path=${encodeURIComponent(path)}`),
+          this.url(`/api/projects/code/${repoSlug}/file?path=${encodeURIComponent(path)}`),
         );
       } catch (err) {
         return {
@@ -2184,7 +2111,7 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
   // -- datasets (W11) -----------------------------------------
 
   async datasetSql(repoSlug: string, path: string, sql: string): Promise<DatasetSqlResult> {
-    // The engine route first (POST /api/repos/{slug}/
+    // The engine route first (POST /api/projects/code/{slug}/
     // dataset/sql — the repos POST dispatch runs
     // run_dataset_sql server-side); a refused or
     // unreachable route falls back to the same engine
@@ -2209,7 +2136,7 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
           payload = env.payload as SqlPayload;
         }
       } else {
-        const res = await fetch(this.url(`/api/repos/${encodeURIComponent(repoSlug)}/dataset/sql`), {
+        const res = await fetch(this.url(`/api/projects/code/${encodeURIComponent(repoSlug)}/dataset/sql`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ path, sql }),
@@ -2315,9 +2242,9 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
   ): Promise<Repo> {
     const r = this.repoList.find((x) => x.slug === slug);
     if (!r) throw new Error(`unknown repo ${slug}`);
-    // POST /api/repos/registry {id, patch} — the registry
+    // POST /api/projects/registry {id, patch} — the registry
     // record is the server's store; local state follows.
-    await this.postJson("/api/repos/registry", { id: slug, patch });
+    await this.postJson("/api/projects/registry", { id: slug, patch });
     if (patch.name !== undefined && patch.name.trim()) r.name = patch.name.trim();
     const { name: _name, ...tracking } = patch;
     r.tracking = {

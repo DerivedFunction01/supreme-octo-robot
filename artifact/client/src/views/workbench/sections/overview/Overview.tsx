@@ -23,6 +23,7 @@ import type { ActiveResolution, HomePayload, HomeRow, WorktreesPayload } from ".
 import { formatDate, formatRelative } from "../../lib/format";
 import { homeKey } from "../../lib/keys";
 import { planBucketLabel, todoStatusLabel } from "../../lib/labels";
+import { indexPayloadOf, indexRow, useProjectIndex } from "../../lib/projectsIndex";
 import { sectionHref } from "../../lib/routing";
 import {
   ActivePlanLine,
@@ -32,6 +33,66 @@ import {
 } from "../board/worktreeViews";
 import { ChangesPanel } from "../plans/ChangesPanel";
 import { EmptyWell, ErrorWell, metaStyle, SkeletonWell } from "../shared";
+
+/** The Code facet's summary card (SPEC §21): the
+ * project's git headline from the unified index —
+ * branch, head, dirty and sync state, its checkouts —
+ * with the door into the Code section. Renders nothing
+ * while the index is in flight or when the project has
+ * no checkout in the census. */
+function CodeCard({ slug }: { slug: string }) {
+  const indexQuery = useProjectIndex();
+  const row = indexRow(indexPayloadOf(indexQuery.data), slug);
+  if (row == null || row.code == null) return null;
+  const code = row.code;
+  const dirty = code.dirty_counts
+    ? code.dirty_counts.staged + code.dirty_counts.unstaged + code.dirty_counts.untracked
+    : 0;
+  return (
+    <Card anchor="overview/code" title="Code">
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "var(--wb-space-12)",
+          flexWrap: "wrap",
+        }}
+      >
+        <span className="mono" style={{ fontWeight: 600 }}>
+          {code.branch ?? "detached"}
+        </span>
+        {code.head_short ? (
+          <span className="mono" style={metaStyle}>
+            {code.head_short}
+          </span>
+        ) : null}
+        <span style={metaStyle}>
+          {code.error
+            ? `state unavailable — ${code.error}`
+            : dirty > 0
+              ? `${dirty} uncommitted ${dirty === 1 ? "file" : "files"}`
+              : "clean"}
+        </span>
+        {code.sync && code.sync.unpushed_count > 0 ? (
+          <span style={metaStyle}>
+            <span className="num">{code.sync.unpushed_count}</span> unpushed
+          </span>
+        ) : null}
+        {row.checkouts.length > 1 ? (
+          <span style={metaStyle}>
+            <span className="num">{row.checkouts.length}</span> checkouts
+          </span>
+        ) : null}
+        <a
+          href={sectionHref(slug, "code")}
+          style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+        >
+          Open Code →
+        </a>
+      </div>
+    </Card>
+  );
+}
 
 function ShowcaseCard({
   slug,
@@ -252,6 +313,7 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
         }}
       >
         <ShowcaseCard slug={slug} projectName={projectName} showcase={showcase} />
+        <CodeCard slug={slug} />
         <WorktreesCard slug={slug} payload={worktreesPayload} fallback={row} />
         <Card anchor="overview/strip" title="Todos & review">
           {row == null ? (

@@ -418,5 +418,68 @@ class RealStateImportCase(unittest.TestCase):
         self.assertTrue(out["records"])
 
 
+class MigrateKeysTests(unittest.TestCase):
+    """The consolidation fold (SPEC §21): census-id
+    keys rename to canonical project ids; a worktree
+    key folds into its project, merging spans."""
+
+    def entry(self, **over):
+        base = {"display_name": "X", "project": "",
+                "expected": "untracked", "pinned": False,
+                "ignored": False, "notes": "",
+                "root": "/ws/x", "first_seen": T0,
+                "last_seen": T0}
+        base.update(over)
+        return base
+
+    def test_rename_and_fold(self):
+        data = {"repos": {
+            "alpha-repo": self.entry(
+                display_name="Alpha", pinned=True),
+            "alpha-wt": self.entry(
+                first_seen="2026-10-01T00:00:00+00:00",
+                last_seen=T1),
+            "solo": self.entry(),
+        }}
+        data, changed = repo_state.migrate_keys(
+            data, {"alpha-repo": "alpha",
+                   "alpha-wt": "alpha", "solo": "solo"})
+        self.assertTrue(changed)
+        self.assertEqual(set(data["repos"]),
+                         {"alpha", "solo"})
+        merged = data["repos"]["alpha"]
+        # The main checkout's curation wins; the
+        # worktree's wider observation span folds in.
+        self.assertTrue(merged["pinned"])
+        self.assertEqual(merged["first_seen"],
+                         "2026-10-01T00:00:00+00:00")
+        self.assertEqual(merged["last_seen"], T1)
+
+    def test_noop_when_already_project_keyed(self):
+        data = {"repos": {"alpha": self.entry()}}
+        data, changed = repo_state.migrate_keys(
+            data, {"alpha": "alpha"})
+        self.assertFalse(changed)
+
+    def test_history_keys_rewrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "history.jsonl"
+            lines = [
+                {"at": T0, "repo": "alpha-repo",
+                 "head": "h1"},
+                {"at": T1, "repo": "solo", "head": "h2"},
+            ]
+            path.write_text(
+                "".join(json.dumps(r) + "\n" for r in lines))
+            renamed = repo_state.migrate_history_keys(
+                path, {"alpha-repo": "alpha"})
+            self.assertEqual(renamed, 1)
+            out = repo_state.history_for(path, "alpha")
+            self.assertEqual(len(out["records"]), 1)
+            self.assertEqual(
+                repo_state.migrate_history_keys(
+                    path, {"alpha-repo": "alpha"}), 0)
+
+
 if __name__ == "__main__":
     unittest.main()

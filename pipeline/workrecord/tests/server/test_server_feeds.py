@@ -267,12 +267,17 @@ class ServerFeedsTest(unittest.TestCase):
     def test_assemble_document(self):
         doc = self.assemble.build_feeds()
         for key in ("config", "home", "projects",
-                    "projectFeeds", "repos", "repoDetails",
+                    "projectFeeds", "projectsIndex",
                     "messages", "outbox", "settings",
                     "armedRows", "armedSkipped",
                     "statusVocabulary", "goals",
                     "goalsSource"):
             self.assertIn(key, doc)
+        # The consolidation (SPEC §21): the document
+        # carries no repo blocks — Code detail serves
+        # on demand through the project-scoped routes.
+        self.assertNotIn("repos", doc)
+        self.assertNotIn("repoDetails", doc)
         # No pipeline goal-record store exists yet; the
         # document says so on its face instead of serving
         # invented records.
@@ -298,20 +303,21 @@ class ServerFeedsTest(unittest.TestCase):
                           "generality":
                               "deployment-specific",
                           "use_case": "work-tracking"})
-        # Detail scope (W4, cured at leg 7a):
-        # delta-repo is a plain census repo (no
-        # manifest), not project-linked — but it is a
-        # top-level main checkout, so the document
-        # carries its full repo document alongside its
-        # summary. Its dataset also still serves
-        # through the dataset derivation the pinned
-        # dataset routes use on demand.
-        summaries = {s["id"] for s in doc["repos"]["repos"]}
-        self.assertIn("delta-repo", summaries)
-        self.assertIn("delta-repo", doc["repoDetails"])
-        self.assertIn("data/filings.csv",
-                      doc["repoDetails"]["delta-repo"]
-                      ["datasets"])
+        # The unified index (SPEC §21): delta-repo is a
+        # plain census repo (no manifest) — it rides
+        # the index as a repository-only project with
+        # its code summary on the row, and its dataset
+        # still serves through the dataset derivation
+        # the Code routes use on demand.
+        index_rows = {row["id"]: row
+                      for row in doc["projectsIndex"]["projects"]}
+        self.assertIn("delta-repo", index_rows)
+        self.assertEqual(index_rows["delta-repo"]["membership"],
+                         "repository-only")
+        self.assertIsNotNone(index_rows["delta-repo"]["code"])
+        self.assertIn("alpha", index_rows)
+        self.assertEqual(index_rows["alpha"]["membership"],
+                         "adopted")
         from evaluation import datasets as datasets_mod
         dataset = datasets_mod.dataset_rows(
             str(self.info["delta"]), "data/filings.csv")

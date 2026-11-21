@@ -1,14 +1,17 @@
-// Repos + dataset payload types: the /api/repos census,
-// status, files, history shapes (absorption plan) and
-// the dataset Table/console shapes behind them. The
-// feed payload types live in lib/api-types; the client
+// Code facet + dataset payload types (SPEC §21): the
+// unified project index, the per-project status, files,
+// and history shapes behind /api/projects/code, and the
+// dataset Table/console shapes behind them. The feed
+// payload types live in lib/api-types; the client
 // itself in lib/api.
 
 // ---------------------------------------------------------------------------
-// Repos payloads (absorption plan, steps 2-7): the /api/repos
-// namespace. Shapes are lib/repos.py (census, status,
-// publication, exposure, tree), lib/files.py (repo peek /
-// save), and lib/repo_state.py (registry, history) verbatim.
+// Code payloads (SPEC §21): the /api/projects-index and
+// /api/projects/code namespaces. Shapes are
+// evaluation/repos.py (census, status, publication,
+// exposure, tree), lib/files.py (repo peek / save), and
+// evaluation/repo_state.py (registry, history) verbatim,
+// joined by lib/derived/projects.py (the index).
 // ---------------------------------------------------------------------------
 
 /** One repo-registry entry (lib/repo_state.py): the
@@ -109,6 +112,13 @@ export interface RepoWorktreeRow {
 /** GET /api/repos/<id>/status: the summary fields plus
  * the stacked groups, commits, branches, worktrees. */
 export interface RepoStatusPayload extends RepoSummary {
+  /** The Code addressing (SPEC §21): the canonical
+   * project id, the selected checkout's census id, and
+   * the project's checkout list — present on payloads
+   * from /api/projects/code/<id>/status. */
+  project_id?: string;
+  checkout?: string;
+  checkouts?: ProjectCheckout[];
   staged: RepoFileStat[];
   unstaged: RepoFileStat[];
   untracked: { path: string }[];
@@ -216,8 +226,72 @@ export interface RepoHistoryPayload {
   ahead_since: string | null;
 }
 
-export interface ReposRegistryPayload {
-  repos: Record<string, RepoRegistryEntry>;
+export interface ProjectsRegistryPayload {
+  projects: Record<string, RepoRegistryEntry>;
+  captured_at: string;
+}
+
+/** One checkout of a project in the unified index: the
+ * main checkout first, then its linked worktrees. The
+ * id is the census id — the Code routes' `checkout`
+ * selector value. */
+export interface ProjectCheckout {
+  id: string;
+  root: string;
+  is_worktree: boolean;
+  branch: string | null;
+}
+
+/** The code summary a project index row carries: the
+ * census summary's headline derivations (branch, head,
+ * dirty counts, sync, exposure), nothing re-derived. */
+export type ProjectCodeSummary = Pick<
+  RepoSummary,
+  | "branch"
+  | "head"
+  | "head_full"
+  | "head_short"
+  | "head_subject"
+  | "upstream"
+  | "ahead"
+  | "behind"
+  | "dirty_counts"
+  | "is_clean"
+  | "error"
+  | "remotes"
+  | "publication"
+  | "sync"
+  | "exposure"
+>;
+
+/** One row of GET /api/projects-index (lib/derived/
+ * projects.py): a canonical project — adopted (manifest
+ * slug), repository-only (main census id), or missing
+ * (a registry row discovery did not find). */
+export interface ProjectIndexRow {
+  id: string;
+  slug: string | null;
+  name: string;
+  root: string | null;
+  membership: "adopted" | "repository-only" | "missing";
+  sections: import("./api-types").ProjectSections | null;
+  also_at: string[];
+  checkouts: ProjectCheckout[];
+  code: ProjectCodeSummary | null;
+  registry: RepoRegistryEntry | null;
+  missing: boolean;
+}
+
+export interface ProjectsIndexPayload {
+  projects: ProjectIndexRow[];
+  exposure: {
+    tracked: number;
+    unpushed_commits: number;
+    uncommitted_repos: number;
+    uncommitted_files: number;
+    local_only: number;
+  };
+  excluded_scratch: number;
   captured_at: string;
 }
 

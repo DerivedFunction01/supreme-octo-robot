@@ -49,7 +49,7 @@ const SECTION_LABELS: Record<string, string> = {
   todos: "Todos",
   board: "Board",
   settings: "Settings",
-  repos: "Repos",
+  code: "Code",
 };
 
 /** A repo's publication posture (lib/repos.py): whether a

@@ -2,7 +2,9 @@
 
 The workbench app: the viewer sections and components over
 work-record served shapes — home, entries, plans, todos,
-board, repos, inbox, overview, settings.
+board, inbox, overview, settings, and the per-project Code
+section (git as a facet of the project; the Repos
+destination retired 2026-11-20, SPEC §21).
 
 - **Lands in:** step S8 (workbench pin `b0b9cc5`), stage
   deploy D3, on the extracted Workhorse Kit v1 (S2) and the

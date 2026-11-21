@@ -345,7 +345,7 @@ export interface Repo {
   files: RepoFile[];
   /** The repo-registry tracking record (ReposTrackingPanel:
    *  name/expected/pinned/ignored/notes → POST
-   *  /api/repos/registry). */
+   *  /api/projects/registry). */
   tracking?: {
     expected: string;
     pinned: boolean;

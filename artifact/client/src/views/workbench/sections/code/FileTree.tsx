@@ -25,20 +25,22 @@ import { useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { Toggle } from "@workhorse/kit/components/Toggle";
 import { api } from "../../lib/api";
-import type { RepoDirListing, RepoTreeFolder } from "../../lib/api-types-repos";
+import type { RepoDirListing, RepoTreeFolder } from "../../lib/api-types-code";
 import { metaStyle } from "../shared";
+import { useCheckout } from "./checkoutContext";
 
-function dirQueryKey(repoId: string, dir: string) {
-  return ["repo-dir", repoId, dir] as const;
+function dirQueryKey(projectId: string, checkout: string | undefined, dir: string) {
+  return ["code-dir", projectId, checkout, dir] as const;
 }
 
 /** One directory's listing query. Fetching is driven by
  * `enabled` (expansion); with staleTime Infinity a loaded
  * listing is served from cache for the life of the tab. */
-function useDirListing(repoId: string, dir: string, enabled: boolean) {
+function useDirListing(projectId: string, dir: string, enabled: boolean) {
+  const checkout = useCheckout();
   return useQuery({
-    queryKey: dirQueryKey(repoId, dir),
-    queryFn: () => api.getRepoFiles({ repoId, dir }),
+    queryKey: dirQueryKey(projectId, checkout, dir),
+    queryFn: () => api.getCodeFiles({ projectId, checkout, dir }),
     enabled,
     staleTime: Infinity,
   });
@@ -66,8 +68,9 @@ function errorOf(query: DirQuery): string | null {
 function listingHasVisibleContent(
   listing: RepoDirListing,
   queryClient: QueryClient,
-  repoId: string,
+  projectId: string,
   showAll: boolean,
+  checkout?: string,
 ): boolean {
   for (const entry of listing.entries) {
     if (showAll || (entry.kind !== "ignored" && !entry.hidden)) return true;
@@ -76,11 +79,11 @@ function listingHasVisibleContent(
     if (!showAll && folder.hidden) continue;
     if (folder.collapsed) return true;
     const env = queryClient.getQueryData<{ status: number; payload: unknown }>(
-      dirQueryKey(repoId, folder.path),
+      dirQueryKey(projectId, checkout, folder.path),
     );
     const sub = env && env.status === 200 ? (env.payload as unknown as RepoDirListing) : null;
     if (!sub) return true;
-    if (listingHasVisibleContent(sub, queryClient, repoId, showAll)) return true;
+    if (listingHasVisibleContent(sub, queryClient, projectId, showAll, checkout)) return true;
   }
   return false;
 }
@@ -104,7 +107,7 @@ function rowIndent(depth: number): React.CSSProperties {
  * files, each alphabetical — plus the cap notice under
  * the rows when this directory's listing truncated. */
 function DirLevel({
-  repoId,
+  projectId,
   listing,
   depth,
   showAll,
@@ -113,7 +116,7 @@ function DirLevel({
   expanded,
   onToggle,
 }: {
-  repoId: string;
+  projectId: string;
   listing: RepoDirListing;
   depth: number;
   showAll: boolean;
@@ -133,7 +136,7 @@ function DirLevel({
       {folders.map((folder) => (
         <FolderItem
           key={folder.path}
-          repoId={repoId}
+          projectId={projectId}
           folder={folder}
           depth={depth}
           showAll={showAll}
@@ -212,7 +215,7 @@ function DirLevel({
  * loaded earlier still drives the loaded-but-empty
  * visibility rule after the folder is collapsed again. */
 function FolderItem({
-  repoId,
+  projectId,
   folder,
   depth,
   showAll,
@@ -221,7 +224,7 @@ function FolderItem({
   expanded,
   onToggle,
 }: {
-  repoId: string;
+  projectId: string;
   folder: RepoTreeFolder;
   depth: number;
   showAll: boolean;
@@ -231,14 +234,15 @@ function FolderItem({
   onToggle: (path: string) => void;
 }) {
   const queryClient = useQueryClient();
+  const checkout = useCheckout();
   const open = !folder.collapsed && expanded.has(folder.path);
-  const query = useDirListing(repoId, folder.path, open);
+  const query = useDirListing(projectId, folder.path, open);
   const listing = listingOf(query);
   const error = errorOf(query);
 
   if (!showAll && folder.hidden) return null;
   if (!showAll && !folder.collapsed && listing) {
-    if (!listingHasVisibleContent(listing, queryClient, repoId, showAll)) return null;
+    if (!listingHasVisibleContent(listing, queryClient, projectId, showAll, checkout)) return null;
   }
 
   return (
@@ -314,7 +318,7 @@ function FolderItem({
             </li>
           ) : listing ? (
             <DirLevel
-              repoId={repoId}
+              projectId={projectId}
               listing={listing}
               depth={depth + 1}
               showAll={showAll}
@@ -331,18 +335,19 @@ function FolderItem({
 }
 
 export function FileTree({
-  repoId,
+  projectId,
   selected,
   onSelect,
 }: {
-  repoId: string;
+  projectId: string;
   selected: string | null;
   onSelect: (path: string) => void;
 }) {
   const queryClient = useQueryClient();
+  const checkout = useCheckout();
   const [showAll, setShowAll] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
-  const rootQuery = useDirListing(repoId, "", true);
+  const rootQuery = useDirListing(projectId, "", true);
   const rootListing = listingOf(rootQuery);
   const rootError = errorOf(rootQuery);
 
@@ -384,7 +389,7 @@ export function FileTree({
         <>
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
             <DirLevel
-              repoId={repoId}
+              projectId={projectId}
               listing={rootListing}
               depth={0}
               showAll={showAll}
@@ -394,7 +399,7 @@ export function FileTree({
               onToggle={onToggle}
             />
           </ul>
-          {!listingHasVisibleContent(rootListing, queryClient, repoId, showAll) ? (
+          {!listingHasVisibleContent(rootListing, queryClient, projectId, showAll, checkout) ? (
             <p style={{ color: "var(--wb-content-muted)", padding: "0 var(--wb-space-12)" }}>
               Nothing to show with hidden &amp; ignored files off.
             </p>
