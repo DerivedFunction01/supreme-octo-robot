@@ -164,7 +164,7 @@ class FeedsDocumentCacheTest(unittest.TestCase):
         self.assertEqual(
             self.result["shape_keys"],
             sorted(["config", "home", "projects",
-                    "projectFeeds", "repos", "repoDetails",
+                    "projectFeeds", "projectsIndex",
                     "messages", "outbox", "settings",
                     "armedRows", "armedSkipped",
                     "statusVocabulary", "goals",
