@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { adapter, useSnapshot, EMBEDDED } from "./venue";
-import { AppShell } from "@workhorse/kit/components/AppShell";
+import { AppShell } from "@workhorse/kit/components/shell/AppShell";
 import { LeasesView } from "./views/LeasesView";
 import { LeaseDetailView } from "./views/LeaseDetailView";
 import { NewLeaseView } from "./views/NewLeaseView";
@@ -8,10 +8,10 @@ import { OrphansView } from "./views/OrphansView";
 import { EventsView } from "./views/EventsView";
 import { BudgetView } from "./views/BudgetView";
 import { AccessView } from "./views/AccessView";
-import { Input } from "@workhorse/kit/components/Fields";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Input } from "@workhorse/kit/components/controls/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { ChevronLeft, Play } from "lucide-react";
 
 // No Settings destination: the appearance axes (palette ×

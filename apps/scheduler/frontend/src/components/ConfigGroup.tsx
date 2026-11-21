@@ -10,7 +10,7 @@
 // in place.
 
 import { useState } from "react";
-import { Input } from "@workhorse/kit/components/Fields";
+import { Input } from "@workhorse/kit/components/controls/Fields";
 import type { SchedulerApi } from "../api";
 import type { ConfigView } from "../types";
 import { ActionError, ActionRow, Group, GroupLabel } from "./ui";

@@ -12,9 +12,9 @@
 // adapter replaces the mock behind the same seam.
 import { useEffect, useMemo, useState } from "react";
 import { Bell, ChevronLeft, Settings } from "lucide-react";
-import { AppShell } from "@workhorse/kit/components/AppShell";
-import { ModeControl, type ModeValue } from "@workhorse/kit/components/ModeControl";
-import { PaletteSelect } from "@workhorse/kit/components/PaletteSelect";
+import { AppShell } from "@workhorse/kit/components/shell/AppShell";
+import { ModeControl, type ModeValue } from "@workhorse/kit/components/controls/ModeControl";
+import { PaletteSelect } from "@workhorse/kit/components/controls/PaletteSelect";
 import { createMockAttentionStore } from "./attention/store";
 import { DataContext, useDataSource, useStoreVersion } from "./attention/useStore";
 import { NavContext, type Route } from "./nav";

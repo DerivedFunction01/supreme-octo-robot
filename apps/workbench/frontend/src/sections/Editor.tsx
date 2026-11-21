@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Button } from "@kit/components/Button";
-import { DegradedBanner } from "@kit/components/DegradedBanner";
+import { Button } from "@kit/components/controls/Button";
+import { DegradedBanner } from "@kit/components/display/DegradedBanner";
 import { useAdapter, useStoreVersion } from "../lib/store";
 import { useNav } from "../lib/nav";
 import { findInTree } from "./Explorer";

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Checkbox } from "@kit/components/Checkbox";
-import { Toggle } from "@kit/components/Toggle";
+import { Checkbox } from "@kit/components/controls/Checkbox";
+import { Toggle } from "@kit/components/controls/Toggle";
 import { useIsPhone } from "@kit/lib/responsive";
 import {
   armedRowFilename,

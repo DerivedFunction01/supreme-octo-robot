@@ -57,7 +57,7 @@ import { LiveAttentionStore } from "./attention/live-store";
 import { RelayTransport } from "./attention/transport";
 import type { AttentionDataSource } from "./attention/types";
 import { DataContext } from "./attention/useStore";
-import type { ModeValue } from "@workhorse/kit/components/ModeControl";
+import type { ModeValue } from "@workhorse/kit/components/controls/ModeControl";
 
 /** The shell's digest row cycles the times the digest can
  * fire; each maps onto the store's digest windows so that

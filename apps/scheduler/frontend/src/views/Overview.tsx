@@ -1,4 +1,4 @@
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import type { SchedulerApi } from "../api";
 import { LargeTitle } from "../components/ui";
 import {

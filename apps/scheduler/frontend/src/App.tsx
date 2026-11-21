@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { ChevronLeft, Clock } from "lucide-react";
-import { AppShell } from "@workhorse/kit/components/AppShell";
-import { Button } from "@workhorse/kit/components/Button";
-import { Input } from "@workhorse/kit/components/Fields";
-import { Sheet } from "@workhorse/kit/components/Sheet";
+import { AppShell } from "@workhorse/kit/components/shell/AppShell";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Input } from "@workhorse/kit/components/controls/Fields";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 import type { SchedulerApi } from "./api";
 import type { OpenInTarget } from "./types";
 import { useApiTick } from "./hooks";

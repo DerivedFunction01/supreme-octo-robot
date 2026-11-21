@@ -7,14 +7,14 @@
 // or radius values. Recorded as a kit gap in the lane report.
 // The kit sheet's LogRow is NOT built here: since the
 // timeline-component study (2026-11-13) it ships in the kit
-// itself (@workhorse/kit/components/LogRow) and Events consumes
+// itself (@workhorse/kit/components/display/LogRow) and Events consumes
 // that one shared component.
 
 import { useState, type ReactNode } from "react";
 import { ChevronRight, TriangleAlert } from "lucide-react";
 import type { Tone } from "../venue/types";
-import { Button } from "@workhorse/kit/components/Button";
-import { Input } from "@workhorse/kit/components/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Input } from "@workhorse/kit/components/controls/Fields";
 
 export function GroupLabel({ children }: { children: ReactNode }) {
   return <div className="rn-glabel">{children}</div>;

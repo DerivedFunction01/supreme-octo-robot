@@ -12,7 +12,7 @@
 // re-derive the preview line from the live store counts.
 import { Fragment, useState } from "react";
 import { useDataSource, useStoreVersion } from "../attention/useStore";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { Group, GroupLabel, Row, RowText, RowValue } from "../components/groups";
 import { VerbButtons } from "../components/VerbButtons";
 import { StaleNotice, UnreachableNotice } from "../components/SurfaceNotice";

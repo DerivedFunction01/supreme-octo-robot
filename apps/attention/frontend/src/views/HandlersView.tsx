@@ -6,7 +6,7 @@
 // derivations over the programme's handles.
 import { useDataSource, useStoreVersion } from "../attention/useStore";
 import { useNav } from "../nav";
-import { Card } from "@workhorse/kit/components/Card";
+import { Card } from "@workhorse/kit/components/display/Card";
 import { Group, GroupLabel, Row, RowText } from "../components/groups";
 import { HandlerChip, HandlerDot, SeverityChip } from "../components/chips";
 import { LargeTitle } from "../components/LargeTitle";

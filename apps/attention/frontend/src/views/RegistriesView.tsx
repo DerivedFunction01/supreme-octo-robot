@@ -11,9 +11,9 @@
 import { useState, type ReactNode } from "react";
 import { useDataSource, useStoreVersion } from "../attention/useStore";
 import type { VocabResult } from "../attention/types";
-import { Button } from "@workhorse/kit/components/Button";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
-import { LabeledCheckbox } from "@workhorse/kit/components/Checkbox";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
+import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
 import { Group, GroupLabel, Row, RowText, RowValue } from "../components/groups";
 import { LargeTitle } from "../components/LargeTitle";
 

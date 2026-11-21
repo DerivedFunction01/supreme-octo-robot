@@ -13,10 +13,10 @@ import {
   RowText,
   StatusChip,
 } from "../components/ui";
-import { Button } from "@workhorse/kit/components/Button";
-import { Select } from "@workhorse/kit/components/Fields";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { Sheet } from "@workhorse/kit/components/Sheet";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Select } from "@workhorse/kit/components/controls/Fields";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 
 /** Frame 4 — Orphans: sessions with evidence but no live lease
  *  record. Adopt (under a registered caller) and Release work.

@@ -8,10 +8,10 @@
 // and nothing is stored. Preview is a dry run over the
 // open waits — it sends nothing and decides nothing.
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
-import { LabeledCheckbox } from "@workhorse/kit/components/Checkbox";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
+import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
 import { useDataSource } from "../attention/useStore";
 import type {
   RegistriesView,

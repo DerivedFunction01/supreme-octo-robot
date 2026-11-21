@@ -5,8 +5,8 @@
 // this file stays behind as the stage's demo entry.
 
 import { useEffect, useState } from "react";
-import { ModeControl, type ModeValue } from "@workhorse/kit/components/ModeControl";
-import { PaletteSelect } from "@workhorse/kit/components/PaletteSelect";
+import { ModeControl, type ModeValue } from "@workhorse/kit/components/controls/ModeControl";
+import { PaletteSelect } from "@workhorse/kit/components/controls/PaletteSelect";
 import { App } from "./App";
 import { mockApi } from "./mock/mock-adapter";
 

@@ -5,8 +5,8 @@
 // not clear at the source leaves the source's copy
 // standing. The message is the caller's served text; the
 // dialog itself carries no copy of its own.
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 
 export function ConfirmDialog({
   message,

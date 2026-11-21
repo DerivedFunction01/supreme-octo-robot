@@ -103,6 +103,25 @@ Vendoring snapshot:
   re-sync's source (the one later starter commit,
   56b11f7, touches scanners only); the manifest below
   remains the pin this repo verifies against.
+- Regrouping cure applied locally, 2026-11-21 (spec plan
+  `2026-11-21-band-grouping-cures`, Step 3): the starter's
+  own folder-density cure, applied to this copy ahead of
+  the next re-sync so both trees converge on the same
+  layout. The 29 components now live in
+  `components/controls/` (10), `components/display/` (12),
+  and `components/shell/` (7), with every relative import
+  re-pointed at the new leaf paths; KaTeX's 20 woff2 moved
+  from `assets/fonts/` to `assets/fonts/katex/`; the
+  1,219-line `assets/katex.css` split at its seams into
+  `assets/katex-fonts.css` (@font-face), `assets/katex.css`,
+  `assets/katex-sizing.css`, and `assets/katex-symbols.css`,
+  imported in that order by `components/shell/Math.tsx`;
+  and the contrast gate's census in
+  `tools/verify-contrast.mjs` now scans `components/`
+  recursively (census entry names remain basenames), its
+  output unchanged. `manifest.json` was regenerated for
+  the new tree. The dated re-sync narratives above keep
+  the paths of their day.
 
 ## Manifest
 

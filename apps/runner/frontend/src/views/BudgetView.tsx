@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Input } from "@workhorse/kit/components/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Input } from "@workhorse/kit/components/controls/Fields";
 import type { BudgetCaps, Snapshot } from "../venue/types";
 import { adapter } from "../venue";
 import {

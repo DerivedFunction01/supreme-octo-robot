@@ -12,7 +12,7 @@
 import { useState } from "react";
 import { useDataSource, useStoreVersion } from "../attention/useStore";
 import type { ItemView } from "../attention/types";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { Group, GroupLabel, Row, RowText, RowValue } from "../components/groups";
 import { AwaitingRow, DecisionRow } from "../components/rows";
 import { DecisionSheet } from "../components/DecisionSheet";
