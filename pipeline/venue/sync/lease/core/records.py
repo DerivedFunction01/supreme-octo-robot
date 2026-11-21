@@ -284,10 +284,46 @@ def live_jobs(repo: Path, rec: dict) -> list[dict]:
     return out
 
 
+def _pulse_pair_newer(disk: dict, rec: dict) -> bool:
+    """True when the on-disk record's pulse stamp is fresher
+    than the saver's copy. An unparseable or absent stamp on
+    either side is never newer — the saver's copy wins any
+    doubt, so this test can only preserve, never invent."""
+    try:
+        disk_at = foundation.parse_dt(disk.get("last_pulse_at"))
+        rec_at = foundation.parse_dt(rec.get("last_pulse_at"))
+    except (TypeError, ValueError):
+        return False
+    if disk_at is None:
+        return False
+    return rec_at is None or disk_at > rec_at
+
+
 def save_record(repo: Path, rec: dict) -> None:
     """Write one lease's record at its session path. Any other
     file holding a record for the same session is removed, so a
     stale copy can never resurrect the lease's old shape."""
+    # The pulse stamp is the reap's field, written on its own
+    # cadence into a fresh load (the 2026-11-21 reap cure);
+    # every other writer saves a whole record from a copy it
+    # loaded for its own mutation — jobs, deadline, lifecycle —
+    # and a save whose load straddled the reap's stamp used to
+    # overwrite the stamp with its stale values, every cycle
+    # (the writer-side lost update: records read pulse-stale
+    # for hours while the reap reported pulse ok). The stamp
+    # pair therefore merges at this one funnel: when the
+    # on-disk stamp is fresher, it is carried into the saver's
+    # copy (and so into the caller's dict, like the jobs
+    # pruning below) before the write. The saver's own fields
+    # are never merged — this preserves the one field whose
+    # writer is not the saver, nothing else.
+    try:
+        disk = load_record(repo, rec.get("session"))
+    except Exception:
+        disk = None
+    if disk is not None and _pulse_pair_newer(disk, rec):
+        rec["last_pulse_at"] = disk.get("last_pulse_at")
+        rec["last_pulse_result"] = disk.get("last_pulse_result")
     # The jobs list persists pruned (the projection above):
     # registrations whose backing records are gone or terminal
     # are dropped at the write, so the store self-heals with no
