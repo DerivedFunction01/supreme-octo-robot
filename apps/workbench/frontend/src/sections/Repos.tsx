@@ -20,10 +20,12 @@ import {
   Val,
 } from "../components/ui";
 
-// Frame 8 · Repos — the swept registry: each row opens the
-// repo's status surface. Frame 14 · Repo — status &
-// worktrees, with the Status / Files / History segmented
-// control the explorer frames share.
+// Frame 14 · Code — the current project's git facet
+// (SPEC §21: the Repos list destination is retired; a
+// project is entered from Home/Projects and its Code
+// section is this surface): status & worktrees, with
+// the Status / Files / History segmented control the
+// explorer frames share.
 
 function SweepChip({ sweep }: { sweep: "swept" | "degraded" | "manifest-only" }) {
   const map = {
@@ -40,54 +42,6 @@ function SweepChip({ sweep }: { sweep: "swept" | "degraded" | "manifest-only" })
       <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: s.dot }} />
       {s.label}
     </span>
-  );
-}
-
-export function Repos() {
-  useStoreVersion();
-  const a = useAdapter();
-  const { navigate } = useNav();
-  const [query, setQuery] = useState("");
-  const repos = a.repos().filter((r) => r.slug.includes(query.trim().toLowerCase()));
-  return (
-    <div className="px-[26px] py-[22px]">
-      <LargeTitle>Repos</LargeTitle>
-      <Subtitle>
-        {a.repos().length} registered · swept 12 min ago
-      </Subtitle>
-      <div className="mb-4">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search repos"
-          aria-label="Search repos"
-          className="w-[260px] rounded-[9px] px-3 py-1.5 text-[13.5px]"
-          style={{
-            backgroundColor: "var(--wb-surface-sunken)",
-            color: "var(--wb-content-primary)",
-          }}
-        />
-      </div>
-      <Group>
-        {repos.map((r, i) => (
-          <Row key={r.slug} last={i === repos.length - 1} onClick={() => navigate({ section: "repo", repo: r.slug })}>
-            <span className="min-w-0">
-              <span className="block truncate text-[14.5px] font-medium">{r.name}</span>
-              <Sub truncate>
-                <span className="font-mono">{r.path}</span>
-              </Sub>
-            </span>
-            <SweepChip sweep={r.sweep} />
-            <Chev />
-          </Row>
-        ))}
-        {repos.length === 0 ? (
-          <Row last>
-            <Lab>No repos match</Lab>
-          </Row>
-        ) : null}
-      </Group>
-    </div>
   );
 }
 
@@ -217,11 +171,11 @@ export function RepoDetail({ repoSlug }: { repoSlug: string }) {
     <div className="px-[26px] py-[22px]">
       <button
         type="button"
-        onClick={() => navigate({ section: "repos" })}
+        onClick={() => navigate({ section: "home" })}
         className="mb-3 text-sm font-semibold"
         style={{ color: "var(--wb-accent)" }}
       >
-        ‹ Repos
+        ‹ Projects
       </button>
       <LargeTitle>{repo.name}</LargeTitle>
       <Subtitle>Repo status · served from git</Subtitle>

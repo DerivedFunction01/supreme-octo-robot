@@ -152,6 +152,63 @@ def update_entry(data, repo_id, patch):
     return dict(entry), None
 
 
+def migrate_keys(data, id_map):
+    """Rename registry keys through `id_map` (old id ->
+    new id), the consolidation's one-time fold of
+    census-id keys into canonical project ids (SPEC
+    §21). A key absent from the map, or mapping to
+    itself, stands. When the target key already
+    exists, its curation wins; the folded entry
+    contributes only its first_seen (the earlier) and
+    last_seen (the later), so no observation span is
+    lost. Returns (data, changed)."""
+    repos = data.setdefault("repos", {})
+    changed = False
+    for old_id, new_id in id_map.items():
+        if old_id == new_id or old_id not in repos:
+            continue
+        entry = repos.pop(old_id)
+        existing = repos.get(new_id)
+        if existing is None:
+            repos[new_id] = entry
+        else:
+            if entry.get("first_seen") and (
+                    not existing.get("first_seen")
+                    or entry["first_seen"]
+                    < existing["first_seen"]):
+                existing["first_seen"] = entry["first_seen"]
+            if entry.get("last_seen") and (
+                    not existing.get("last_seen")
+                    or entry["last_seen"]
+                    > existing["last_seen"]):
+                existing["last_seen"] = entry["last_seen"]
+        changed = True
+    return data, changed
+
+
+def migrate_history_keys(path, id_map) -> int:
+    """Rewrite the history log at `path` with each
+    record's `repo` folded through `id_map` (SPEC §21);
+    returns the number of records renamed. The rewrite
+    rides the write seam (temp sibling + replace), and
+    a file with nothing to rename is left untouched."""
+    records = _read_records(path)
+    renamed = 0
+    for rec in records:
+        new_id = id_map.get(rec.get("repo"))
+        if new_id and new_id != rec.get("repo"):
+            rec["repo"] = new_id
+            renamed += 1
+    if not renamed:
+        return 0
+    path = Path(path)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    write_text(tmp, "".join(
+        json.dumps(rec) + "\n" for rec in records))
+    os.replace(tmp, path)
+    return renamed
+
+
 # ----------------------------------------------------------------
 # History
 

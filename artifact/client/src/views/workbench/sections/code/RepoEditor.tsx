@@ -18,7 +18,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@workhorse/kit/components/Button";
 import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
 import { api } from "../../lib/api";
-import type { RepoPeek, RepoSaveResult } from "../../lib/api-types-repos";
+import { useCheckout } from "./checkoutContext";
+import type { RepoPeek, RepoSaveResult } from "../../lib/api-types-code";
 import { formatShortHash } from "../../lib/format";
 import { detectLanguage, highlightWithLanguage } from "../../lib/highlight";
 
@@ -56,16 +57,17 @@ const layerStyle: React.CSSProperties = {
 };
 
 export function RepoEditor({
-  repoId,
+  projectId,
   initialPeek,
   onClose,
 }: {
-  repoId: string;
+  projectId: string;
   initialPeek: RepoPeek;
   /** `saved` = a save landed during the session (the
    * caller refreshes the peek either way). */
   onClose: (saved: boolean) => void;
 }) {
+  const checkout = useCheckout();
   const queryClient = useQueryClient();
   const path = initialPeek.path;
   const [base, setBase] = useState<RepoPeek>(initialPeek);
@@ -209,8 +211,9 @@ export function RepoEditor({
 
   const saveMutation = useMutation({
     mutationFn: () =>
-      api.saveRepoFile({
-        repoId,
+      api.saveCodeFile({
+        projectId,
+        checkout,
         path,
         content: draft,
         baseSha256: base.sha256 ?? "",
@@ -227,9 +230,9 @@ export function RepoEditor({
         setNotice(
           `Saved — sha ${formatShortHash(saved.sha256)}; the previous version is kept as a backup.`,
         );
-        void queryClient.invalidateQueries({ queryKey: ["repo-file", repoId, path] });
-        void queryClient.invalidateQueries({ queryKey: ["repo-status", repoId] });
-        void queryClient.invalidateQueries({ queryKey: ["repos"] });
+        void queryClient.invalidateQueries({ queryKey: ["code-file", projectId, checkout, path] });
+        void queryClient.invalidateQueries({ queryKey: ["code-status", projectId, checkout] });
+        void queryClient.invalidateQueries({ queryKey: ["projects-index"] });
       } else if (reply.status === 409) {
         setConflict(
           `${reply.error ?? "The file changed on disk since it was opened."} Nothing was written.`,
@@ -244,7 +247,7 @@ export function RepoEditor({
   const reloadCurrent = async () => {
     setError(null);
     try {
-      const reply = await api.getRepoFile({ repoId, path, reveal: isSecret || undefined });
+      const reply = await api.getCodeFile({ projectId, checkout, path, reveal: isSecret || undefined });
       if (reply.status === 200 && reply.payload) {
         const fresh = reply.payload as unknown as RepoPeek;
         setBase(fresh);
@@ -311,7 +314,7 @@ export function RepoEditor({
             color: "var(--wb-content-muted)",
           }}
         >
-          {repoId} · base sha {formatShortHash(base.sha256)}
+          {projectId} · base sha {formatShortHash(base.sha256)}
         </span>
         <span
           role="status"

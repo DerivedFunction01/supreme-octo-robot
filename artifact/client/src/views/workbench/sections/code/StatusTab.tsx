@@ -5,9 +5,9 @@
 // Worktrees. Every value is the status payload's own;
 // the tab only arranges it.
 
-import type { RepoFileStat, RepoStatusPayload } from "../../lib/api-types-repos";
+import type { RepoFileStat, RepoStatusPayload } from "../../lib/api-types-code";
 import { formatCount, formatDate, formatRelative } from "../../lib/format";
-import { reposHref } from "../../lib/routing";
+import { pickerHref } from "../../lib/routing";
 import { EmptyWell, metaStyle } from "../shared";
 
 const groupTitleStyle: React.CSSProperties = {
@@ -255,8 +255,8 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
 
       <p style={{ ...metaStyle, marginTop: "var(--wb-space-24)" }}>
         Cross-links:{" "}
-        <a href={reposHref()} style={{ color: "var(--wb-accent)" }}>
-          all repos
+        <a href={pickerHref()} style={{ color: "var(--wb-accent)" }}>
+          all projects
         </a>{" "}
         · status captured {formatDate(status.captured_at)} {formatRelative(status.captured_at)}
       </p>

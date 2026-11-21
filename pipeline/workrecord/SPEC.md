@@ -52,8 +52,11 @@ and loose to-dos until nobody can say which mockup is
 canonical, which plan is in flight, or what is blocked. The
 Workbench Viewer fixes that by structure: one always-on
 companion server reads every opt-in project's own data files
-and serves ONE artifact with five sections — **Entries,
-Plans, Todos, Board**, and the cross-project **Repos**.
+and serves ONE artifact whose per-project sections are
+**Overview, Entries, Plans, Todos, Board**, and **Code**
+(the Code facet is the consolidation of §21, 2026-11-20:
+git state is a facet of the project, never a separate
+destination).
 
 Entries is one collection for every registry item,
 whatever its kind (§4.1). Kind `artifact` names material
@@ -95,9 +98,11 @@ Out of scope:
   viewer renders work and design state, never project data.
   Repo browsing is the exception, absorbed from the git
   repo viewer (absorption plan,
-  2026-10-28-git-viewer-absorption): census, status, tree,
-  peek, and guarded edit for every repo under the workspace
-  root, manifest or not. A repo anchor (repo + path)
+  2026-10-28-git-viewer-absorption) and consolidated into
+  the project's Code facet (§21, 2026-11-20): census,
+  status, tree, peek, and guarded edit for every repo
+  under the workspace root, manifest or not, reached
+  through its project. A repo anchor (repo + path)
   legitimizes a peek and a diff against HEAD; arbitrary
   revision browsing stays out of scope.
 - **another-project is registered (owner's ruling, 2026-10-26 —
@@ -288,6 +293,20 @@ over the config file (`config.json`) wins over defaults:
 and the last sweep's project list, and `GET /api/config`
 the resolved config — "why doesn't it see my repo?" is
 answered from the server, not from guesswork.
+
+### 3.1 One identity — sweep + census (2026-11-20)
+
+Discovery runs two enumerations over the same ground —
+the manifest sweep above and the git census (every `.git`
+under the workspace root) — and §21 joins them into ONE
+identity space. The canonical key of a checkout is its
+resolved git common dir; only the main checkout carries
+the project, and linked worktrees ride as its checkouts.
+A manifest project and the census record for its main
+checkout are the same project; a census main checkout
+with no manifest is a repository-only project (§21). The
+join is a backend derivation served ready (§7,
+`/api/projects-index`); no client re-derives it.
 
 ## 4. Registry — the per-project data model
 
@@ -641,6 +660,25 @@ API (the feeds the artifact consumes):
 - `GET /api/projects/<slug>/board` (one project's board
   portion; the board screen assembles portions
   client-side)
+- `GET /api/projects-index` — the unified project index
+  (§21): adopted and repository-only projects in one list,
+  each row carrying its checkouts, its code summary, and
+  its tracking record; workspace exposure totals ride in
+  the header block
+- `GET /api/projects/registry` ·
+  `POST /api/projects/registry` — the tracking registry,
+  keyed by canonical project id (§21)
+- `GET /api/projects/code/<id>/status|files|file|history` ·
+  `GET /api/projects/code/<id>/dataset[/rows|/stats]` ·
+  `POST /api/projects/code/<id>/file` (guarded save, §7.1) ·
+  `POST /api/projects/code/<id>/dataset/sql` — the Code
+  facet (§21): `<id>` is the canonical project id (a
+  manifest slug, or the main checkout's census id for a
+  repository-only project; the id may contain slashes, so
+  the tail dispatches on its final segment), and
+  `?checkout=<census id>` selects a linked-worktree
+  checkout (default: the main checkout). The retired
+  `/api/repos` family is removed, not aliased (§21).
 
 The whole HTTP surface lives under `/api`, with ONE
 exception (byte-route plan, 2026-11-10):
@@ -714,7 +752,11 @@ scan failure reports "unknown", never mass-flags.
 - Every save is recorded in the entry's history
   (actor=viewer).
 
-## 8. The artifact — one viewer, four sections + Repos
+## 8. The artifact — one viewer, the project sections + Code
+
+(Title amended 2026-11-20 per §21: the Repos destination
+is retired; the per-project sections are Overview,
+Entries, Plans, Todos, Board, and Code.)
 
 A single self-contained artifact serves every project and
 every entry (§1.8). It reaches the server over a raw
@@ -1532,3 +1574,56 @@ SPEC. The staging project and its graduation model are
   registered files — never a second store. Peek-time
   highlight markers (`[[wb-hl:...]]`) ride the same
   read path.
+
+## 21. Consolidation — one Project, Git as its Code facet (2026-11-20)
+
+The Repos destination was a v1 artifact: the absorbed git
+repo viewer kept its own list, detail routes, API family,
+feed blocks, and registry keys inside the viewer, parallel
+to the project the same checkout already was. This
+section retires that split. The plan of record is
+`.plans/2026-11-20-workbench-project-code-consolidation.md`.
+
+- **One object.** The Project is the only top-level
+  object. Its canonical id is the manifest slug where a
+  manifest exists, else the main checkout's census id.
+  Identity is git common-dir identity (§3.1); a linked
+  worktree is a checkout of its project, never a peer.
+- **Two membership classes, one index.** An adopted
+  project carries `workbench.yaml`; a repository-only
+  project is a discovered main checkout with no manifest.
+  Both appear in the one Projects index
+  (`GET /api/projects-index`); a repository-only project's
+  work sections render honest absence, and its Overview
+  serves the Code facet. Checkouts under the scratch
+  roots are excluded from the index rows and counted in
+  its header; their Code detail stays servable by direct
+  route.
+- **Code is a section.** `#/p/<id>/code` joins the
+  per-project section grammar with Status / Files /
+  History tabs and a checkout selector where more than
+  one checkout exists. Guarded editing (§7.1) and the
+  dataset console keep their existing gates unchanged —
+  consolidation changes addressing, not authority.
+- **The backend serves the unified shape.** The index row
+  carries the code summary (branch, head, dirty counts,
+  sync, exposure) derived from the census derivations;
+  Code detail is served per project + checkout on demand
+  (`/api/projects/code/<id>/…`, §7). The feeds document
+  carries the index as `projectsIndex` and no longer
+  assembles `repos` / `repoDetails` blocks.
+- **Tracking is project-keyed.** The registry record and
+  the observation history are keyed by canonical project
+  id behind `/api/projects/registry`; the store stays the
+  harness's central state files (repository-only projects
+  have no per-project DB, and project data still never
+  migrates). Legacy census-id keys migrate once, folding
+  worktree keys into their project.
+- **Exposure totals** (repos tracked, unpushed commits,
+  uncommitted work, local-only) are computed over
+  canonical main checkouts only and ride the index
+  header — worktrees never double-count.
+- **Legacy addresses.** `#/repos/<id>` hashes map at
+  parse time to the owning project's Code section (the
+  retired-segments precedent, §7); the `/api/repos`
+  routes are deleted, not shimmed.

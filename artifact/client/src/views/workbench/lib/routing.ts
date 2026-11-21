@@ -35,19 +35,24 @@
 //   #/p/<slug>/todos             and may itself contain slashes)
 //   #/p/<slug>/board
 //   #/board                     the cross-project board
-//   #/repos                     the repo census (absorption
-//                               plan, step 8) — app-level,
-//                               like the board
-//   #/repos/<id>                one repo; the id is a
-//                               workspace-relative path and
-//                               may itself contain slashes
+//   #/p/<slug>/code             the project's Code facet
+//                               (SPEC §21): git status,
+//                               files, and history inside
+//                               the project's own grammar
+//   #/repos[/<id>]               LEGACY (SPEC §21): the
+//                               retired Repos destination;
+//                               parses so the routes layer
+//                               can resolve the id through
+//                               the project index and land
+//                               on the owning project's
+//                               Code section
 //
 // Unknown routes land on the default view, never a blank
 // (ui-context). Parsing is pure so App stays declarative.
 
-export type SectionId = "overview" | "entries" | "plans" | "todos" | "board";
+export type SectionId = "overview" | "entries" | "plans" | "todos" | "board" | "code";
 
-export const SECTION_IDS: SectionId[] = ["overview", "entries", "plans", "todos", "board"];
+export const SECTION_IDS: SectionId[] = ["overview", "entries", "plans", "todos", "board", "code"];
 
 // The retired collection segments (the 2026-11-10
 // unification): old hashes in messages and bookmarks
@@ -126,8 +131,12 @@ export function entryPageHref(slug: string, entryId: string): string {
   return `${base}/${entryId.split("/").map(encodeURIComponent).join("/")}`;
 }
 
-/** The repo census, or one repo within it (the id's
- * segments are encoded individually, like a plans item). */
+/** A legacy Repos address (SPEC §21): kept so old
+ * links and the tracking panel's row links still land —
+ * the routes layer resolves the id through the project
+ * index and redirects to the project's Code section.
+ * The id's segments are encoded individually, like a
+ * plans item. */
 export function reposHref(repoId?: string | null): string {
   if (!repoId) return "#/workbench/repos";
   return `#/workbench/repos/${repoId.split("/").map(encodeURIComponent).join("/")}`;

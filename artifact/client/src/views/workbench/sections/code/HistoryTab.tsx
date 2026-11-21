@@ -7,15 +7,16 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../../lib/api";
-import type { RepoHistoryPayload } from "../../lib/api-types-repos";
+import { useCheckout } from "./checkoutContext";
+import type { RepoHistoryPayload } from "../../lib/api-types-code";
 import { formatDateTime, formatRelative, formatShortHash } from "../../lib/format";
 import { exposureLabel, publicationLabel } from "../../lib/labels";
 import { EmptyWell, ErrorWell, metaStyle, SkeletonWell } from "../shared";
 
-export function HistoryTab({ repoId }: { repoId: string }) {
+export function HistoryTab({ projectId }: { projectId: string }) {
   const query = useQuery({
-    queryKey: ["repo-history", repoId],
-    queryFn: () => api.getRepoHistory({ repoId }),
+    queryKey: ["code-history", projectId],
+    queryFn: () => api.getCodeHistory({ projectId }),
   });
   const payload = query.data?.payload as unknown as RepoHistoryPayload | null;
 

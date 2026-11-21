@@ -7,8 +7,11 @@
 //   /                            workspace home
 //   /projects                    the project chooser
 //   /board                       the cross-project board
-//   /repos[/<id>]                repo census / one repo
-//                                (the id may contain slashes)
+//   /repos[/<id>]                LEGACY (SPEC §21): the
+//                                retired Repos destination —
+//                                resolves through the project
+//                                index to the owning
+//                                project's Code section
 //   /p/<slug>/<section>[/<item>] per-project sections:
 //                                overview | entries | plans |
 //                                todos | board (the retired
