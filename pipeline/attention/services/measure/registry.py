@@ -38,6 +38,7 @@ MEASURE_CLASSES = (
     "orphan",
     "unreported",
     "register_seam",
+    "terminal",
 )
 
 # The standing drain tail defaults (owner answer at
@@ -99,6 +100,7 @@ REQUIRED_FIELDS = (
     "staffing_contract",
     "wb_projects",
     "retired",
+    "caller_stems",
 )
 
 _VENUES = ("colab", "none")
@@ -259,6 +261,15 @@ def validate_declaration(row) -> dict:
         problems.append(f"{slug}.wb_projects: a list of workbench project slugs")
     if not isinstance(row.get("retired"), bool):
         problems.append(f"{slug}.retired: a boolean")
+    stems = row.get("caller_stems")
+    if stems is not None and (
+        not isinstance(stems, list)
+        or not all(isinstance(s, str) and s for s in stems)
+    ):
+        problems.append(
+            f"{slug}.caller_stems: a list of caller stems the "
+            "programme's runs ride under, where it declares any"
+        )
     if problems:
         raise RegistryError("supervision declaration refused: " + "; ".join(problems))
     return row
@@ -287,7 +298,14 @@ _SEED = (
         "escalation_hours": 1,
         "venue": "colab",
         "coordinator_route": {"sender": "wb", "kind": "chat", "handle": "@xbrl"},
-        "measure_classes": ["idle", "serial", "stall", "orphan", "unreported"],
+        "measure_classes": [
+            "idle",
+            "serial",
+            "stall",
+            "orphan",
+            "unreported",
+            "terminal",
+        ],
         "drain_tail": _tail(),
         "staffing_contract": copy.deepcopy(EDGAR_STAFFING_CONTRACT),
         "wb_projects": ["edgar-sec"],
@@ -328,7 +346,13 @@ _SEED = (
             "orphan",
             "unreported",
             "register_seam",
+            "terminal",
         ],
+        # The programme's venue runs ride the caller
+        # prefix "steampower" (steampower-cust and its
+        # lanes), not the slug stem "steampowernj" —
+        # declared so caller attribution stays data.
+        "caller_stems": ["steampower"],
         "drain_tail": _tail({"key": "tech-debt-paydown", "title": "Tech-debt paydown"}),
         "staffing_contract": None,
         "wb_projects": ["steampowernj"],
@@ -347,7 +371,17 @@ _SEED = (
             "kind": "chat",
             "handle": "@workhorse",
         },
-        "measure_classes": ["idle", "serial", "stall", "orphan", "unreported"],
+        "measure_classes": [
+            "idle",
+            "serial",
+            "stall",
+            "orphan",
+            "unreported",
+            "terminal",
+        ],
+        # The programme's venue runs ride the caller
+        # "workhorse", not the slug stem "supreme".
+        "caller_stems": ["workhorse"],
         "drain_tail": _tail(),
         "staffing_contract": None,
         # The programme's workbench surface answers to

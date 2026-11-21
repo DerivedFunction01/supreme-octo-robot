@@ -167,8 +167,12 @@ def attribute_slug(caller: str, declarations: list) -> str | None:
     """The active programme a caller belongs to: the
     caller base names the programme's slug outright,
     or carries its slug stem (edgar-specimen →
-    edgar-greenfield). Longest match wins; an
-    ambiguous stem attributes to no one."""
+    edgar-greenfield), or carries one of the stems
+    the programme declares in caller_stems for callers
+    that do not ride the slug (steampower-cust →
+    steampowernj, workhorse → supreme-octo-robot).
+    Longest match wins; an ambiguous stem attributes
+    to no one."""
     base = caller_base(caller)
     if not base:
         return None
@@ -176,12 +180,14 @@ def attribute_slug(caller: str, declarations: list) -> str | None:
     tied = False
     for row in declarations:
         slug = row["slug"]
-        stem = slug.split("-", 1)[0]
+        stems = [slug.split("-", 1)[0]] + list(row.get("caller_stems") or [])
         matched = 0
         if base == slug:
             matched = len(slug) + 1
-        elif base == stem or base.startswith(stem + "-"):
-            matched = len(stem)
+        else:
+            for stem in stems:
+                if base == stem or base.startswith(stem + "-"):
+                    matched = max(matched, len(stem))
         if not matched:
             continue
         if best is None or matched > best[0]:
@@ -306,6 +312,42 @@ def orphans_at(records: list, now: datetime, window_minutes: float) -> list:
     return out
 
 
+# Terminal states the terminal-unconsumed class
+# covers: failed first, per the commission — a
+# completed run is consumed by its own success, and
+# non-terminal states are the orphan class's ground.
+TERMINAL_FAILED_STATES = {"failed"}
+
+
+def terminal_failed_at(records: list, now: datetime) -> list:
+    """A programme's terminal failed runs: state
+    failed with a payload finish at or before `now`.
+    Whether the owning programme has consumed one is
+    the records measure's evidence, not the record's
+    — the collector's stamp on the record is the
+    recording, and recording is not consumption."""
+    out = []
+    for record in records:
+        if record.get("state") not in TERMINAL_FAILED_STATES:
+            continue
+        finished = record.get("finished_at")
+        if finished is None or finished > now:
+            continue
+        started = record["started_at"]
+        out.append(
+            {
+                "id": record["id"],
+                "job": record["job"],
+                "caller": record["caller"],
+                "session": record["session"],
+                "state": record["state"],
+                "started_at": started.isoformat() if started else None,
+                "finished_at": finished.isoformat(),
+            }
+        )
+    return out
+
+
 def families_at(records: list, now: datetime, window_minutes: float) -> dict:
     """One programme's family facts at an instant:
     the distinct families in flight with their
@@ -366,24 +408,43 @@ def collect(state: dict, settings: Settings, now: datetime) -> bool:
     30-minute evidence window."""
     runs_dir = settings.run_records_dir.parent / "runs"
     records = read_run_store(runs_dir, now)
-    declarations = [
-        row for row in registry.active_declarations() if row.get("venue") == "colab"
+    active = registry.active_declarations()
+    # The terminal-unconsumed class measures any
+    # programme that declares it, including one whose
+    # declaration names no venue while its runs ride
+    # the venue under a declared caller stem
+    # (steampowernj) — attribution is by caller either
+    # way, so those programmes join the snapshot with
+    # terminal facts only.
+    terminal_slugs = {
+        row["slug"]
+        for row in active
+        if "terminal" in registry.measure_classes_for(row["slug"])
+    }
+    measured = [
+        row
+        for row in active
+        if row.get("venue") == "colab" or row["slug"] in terminal_slugs
     ]
     snapshot: dict = {}
-    for row in declarations:
+    for row in measured:
         slug = row["slug"]
         attributed = [
-            r for r in records if attribute_slug(r["caller"], declarations) == slug
+            r for r in records if attribute_slug(r["caller"], active) == slug
         ]
-        contract = registry.staffing_contract_for(slug)
-        window = (
-            contract["evidence_window_minutes"]
-            if contract
-            else DEFAULT_EVIDENCE_WINDOW_MINUTES
-        )
-        facts = families_at(attributed, now, window)
+        facts: dict = {}
+        if row.get("venue") == "colab":
+            contract = registry.staffing_contract_for(slug)
+            window = (
+                contract["evidence_window_minutes"]
+                if contract
+                else DEFAULT_EVIDENCE_WINDOW_MINUTES
+            )
+            facts = families_at(attributed, now, window)
+            facts["orphans"] = orphans_at(attributed, now, window)
         facts["jobs"] = len(attributed)
-        facts["orphans"] = orphans_at(attributed, now, window)
+        if slug in terminal_slugs:
+            facts["terminal_failed"] = terminal_failed_at(attributed, now)
         snapshot[slug] = {"at": now, **facts}
     before = {
         slug: {k: v for k, v in entry.items() if k != "at"}

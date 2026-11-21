@@ -16,10 +16,22 @@ import re
 from datetime import UTC, datetime
 from pathlib import Path
 
+from attention.infra import wb_client
 from attention.paths import WORKRECORD_GOALS
 from attention.services import programmes
+from attention.settings import Settings
 
 CHECKPOINT = re.compile(r"progress-checkpoint:\s*(\S+)")
+# A run id as the runner mints it: a job stem and a
+# UTC stamp, with an optional collision suffix.
+RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9\-]*?-\d{8}T\d{6}Z(?:-\d+)?")
+# The words that make a citation a citation of the
+# run's terminal state rather than of its launch:
+# a programme record naming a run beside one of
+# these has registered how the run ended.
+TERMINAL_TOKENS = re.compile(
+    r"fail|terminal|exit|verdict|dispos|abandon|collect|orphan", re.IGNORECASE
+)
 TAIL_BYTES = 65536
 
 
@@ -84,6 +96,72 @@ def collect(state: dict, now: datetime) -> bool:
         return False
     state["record_snapshot"] = snapshot
     return True
+
+
+def cited_terminal_runs(text: str) -> set:
+    """The run ids one programme record cites in
+    their terminal state: a run id on a line that
+    also carries a terminal token. A citation of a
+    launch (the id alone, or beside start/fire words)
+    is not consumption — the gap this class answers
+    is a terminal state recorded by the runner and
+    never registered by the owning programme."""
+    found = set()
+    for line in (text or "").splitlines():
+        if not TERMINAL_TOKENS.search(line):
+            continue
+        found.update(RUN_ID.findall(line))
+    return found
+
+
+def _tail_text(path: Path) -> str:
+    try:
+        size = path.stat().st_size
+        with path.open("rb") as handle:
+            if size > TAIL_BYTES:
+                handle.seek(size - TAIL_BYTES)
+            return handle.read().decode("utf-8", errors="replace")
+    except OSError:
+        return ""
+
+
+def collect_consumption(state: dict, settings: Settings, now: datetime) -> bool:
+    """Snapshot, per declared programme, the terminal
+    runs its own records have consumed: run ids cited
+    in a terminal state across the programme's
+    workbench todo titles and bodies and its declared
+    record-location files. The runner's own records
+    are never a source here — the collector's stamp
+    is the recording, and recording is not
+    consumption. A project the workbench cannot
+    serve keeps its prior citations (the fresh set is
+    unioned over the prior, never shrunk by a failed
+    read); the same discipline as the stamp snapshot."""
+    snapshot = state.setdefault("consumption_snapshot", {})
+    changed = False
+    for programme in programmes.active_declarations(state):
+        slug = programme["slug"]
+        prior = set((snapshot.get(slug) or {}).get("consumed") or [])
+        found: set = set()
+        failed = False
+        for project in programmes.wb_projects(programme):
+            try:
+                payload = wb_client.fetch_todos(
+                    settings.wb_url, project, settings.wb_collect_timeout_s
+                )
+            except wb_client.WbUnavailable:
+                failed = True
+                continue
+            for todo in payload.get("todos") or []:
+                text = f"{todo.get('title') or ''}\n{todo.get('body') or ''}"
+                found |= cited_terminal_runs(text)
+        for path in _files(programme.get("record_locations") or []):
+            found |= cited_terminal_runs(_tail_text(path))
+        consumed = (prior | found) if failed else found
+        if consumed != prior:
+            snapshot[slug] = {"at": now, "consumed": sorted(consumed)}
+            changed = True
+    return changed
 
 
 def _goals_file() -> Path:
