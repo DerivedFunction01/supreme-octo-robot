@@ -5,6 +5,15 @@ locally against a scratch clone for verification).
 Verifies the bundle's SHA-256 against the manifest BEFORE touching git,
 fetches the snapshot commit, fast-forwards, and prints the resulting tree
 hash, which must equal the manifest's tree.
+
+The clone is a scratch copy whose only job is to become the snapshot
+tree, so before the fast-forward the apply resets it to the snapshot's
+parent and cleans untracked non-ignored files: residue a previous
+gate's overlay work left at paths the snapshot tracks would otherwise
+make the ff-merge refuse ("would be overwritten") and the apply fail
+closed on a stale clone (2026-11-21, the Wingdings seam gate). Ignored
+files — the repo venv, caches — are the gate substrate and survive
+(no -x on the clean).
 """
 
 import argparse
@@ -81,6 +90,7 @@ def main() -> int:
     # it to the snapshot's parent first — the parent object is present
     # after the fetch — then fast-forward.
     git(repo, "reset", "--hard", "FETCH_HEAD^")
+    git(repo, "clean", "-fd")
     git(repo, "merge", "--ff-only", "FETCH_HEAD")
     tree = git(repo, "rev-parse", "HEAD^{tree}")
     print(json.dumps({"applied": True, "head": git(repo, "rev-parse", "HEAD"), "tree": tree, "tree_matches_manifest": tree == manifest["tree"], "git_identity": plant_identity(repo)}))
