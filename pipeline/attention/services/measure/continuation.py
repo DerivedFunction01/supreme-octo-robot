@@ -346,6 +346,7 @@ SWEEP_CLASSES = {
     "unlanded_claim": ("stall",),
     "unarmed_work": ("orphan",),
     "orphan_record": ("orphan",),
+    "terminal_unconsumed": ("terminal",),
     "phantom_stop": ("idle", "stall"),
     "blocked_uncited": ("idle",),
     "blocked_unverified": ("idle",),
@@ -382,6 +383,11 @@ _SWEEP_NEXT_ACT = {
     "orphan_record": (
         "Next act: dispose the record — abandon the launch and "
         "re-fire the work — and verify the collecting lane."
+    ),
+    "terminal_unconsumed": (
+        "Next act: collect the failure — read the run record, "
+        "post the disposition in the programme's own record — "
+        "and verify the collecting lane."
     ),
     "phantom_stop": (
         "Next act: cite the owner's message (thread and time) with "

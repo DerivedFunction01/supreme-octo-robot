@@ -30,7 +30,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from attention.infra import wb_client  # noqa: E402
-from attention.services.measure import registry, staffing, venue  # noqa: E402
+from attention.services.measure import (  # noqa: E402
+    continuation,
+    records,
+    registry,
+    staffing,
+    venue,
+)
+from attention.services.measure import staffing_rows  # noqa: E402
 from attention.settings import Settings  # noqa: E402
 
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "venue-results"
@@ -202,7 +209,21 @@ class FamilyDerivation(unittest.TestCase):
             venue.attribute_slug("edgar-successor", declarations),
             "edgar-greenfield",
         )
-        self.assertIsNone(venue.attribute_slug("workhorse", declarations))
+        # Declared caller stems: a programme whose
+        # runs ride a caller that is not its slug stem
+        # attributes by its registry declaration.
+        self.assertEqual(
+            venue.attribute_slug("workhorse", declarations),
+            "supreme-octo-robot",
+        )
+        self.assertEqual(
+            venue.attribute_slug("steampower-cust", declarations),
+            "steampowernj",
+        )
+        self.assertEqual(
+            venue.attribute_slug("steampower-cust:emp", declarations),
+            "steampowernj",
+        )
         self.assertIsNone(venue.attribute_slug("panel", declarations))
 
 
@@ -430,6 +451,111 @@ class FrontierComparison(unittest.TestCase):
             ]
             self.assertEqual(entry["slug"], "supreme-octo-robot")
             self.assertEqual(entry["missing"], ["lane-b"])
+
+
+def _record(run_id, state, started, finished, caller="steampower-cust"):
+    return {
+        "id": run_id,
+        "job": "steampower-reformed-gate",
+        "caller": caller,
+        "session": "storm-mosaic-17",
+        "state": state,
+        "started_at": started,
+        "finished_at": finished,
+        "evidence_at": finished or started,
+    }
+
+
+class TerminalUnconsumed(unittest.TestCase):
+    """The terminal-unconsumed class (commissioned
+    2026-11-20): a terminal failed run the owning
+    programme's own records never cite in that state.
+    The specimen shape is steampower-reformed-gate-
+    20261121T005537Z — terminal FAILED, recorded by
+    the collector within seconds, unconsumed for
+    90+ minutes while its seat reported it in flight."""
+
+    def test_terminal_failed_selection(self):
+        now = at(2, 0)
+        records_in = [
+            _record("job-gate-20261119T010000Z", "failed", at(1, 0), at(1, 10)),
+            _record("job-gate-20261119T013000Z", "complete", at(1, 30), at(1, 40)),
+            _record("job-gate-20261119T015000Z", "failed", at(1, 50), None),
+            _record("job-gate-20261119T015500Z", "polling", at(1, 55), None),
+        ]
+        out = venue.terminal_failed_at(records_in, now)
+        self.assertEqual([r["id"] for r in out], ["job-gate-20261119T010000Z"])
+        self.assertEqual(out[0]["finished_at"], at(1, 10).isoformat())
+
+    def test_consumption_citation_needs_a_terminal_token(self):
+        run = "steampower-reformed-gate-20261121T005537Z"
+        self.assertEqual(
+            records.cited_terminal_runs(f"gate {run} FAILED at 01:09Z; re-forming"),
+            {run},
+        )
+        self.assertEqual(
+            records.cited_terminal_runs(f"collected {run}: exit 1, evidence missing"),
+            {run},
+        )
+        # A launch citation is not consumption.
+        self.assertEqual(records.cited_terminal_runs(f"fired {run} on storm"), set())
+        self.assertEqual(records.cited_terminal_runs(f"{run} in flight"), set())
+        # A terminal word with no run id cites nothing.
+        self.assertEqual(records.cited_terminal_runs("the gate failed"), set())
+
+    def _state(self, now, finished, consumed=()):
+        return {
+            "venue_snapshot": {
+                "steampowernj": {
+                    "at": now,
+                    "jobs": 1,
+                    "terminal_failed": [
+                        {
+                            "id": "steampower-reformed-gate-20261121T005537Z",
+                            "job": "steampower-reformed-gate",
+                            "caller": "steampower-cust",
+                            "session": "storm-mosaic-17",
+                            "state": "failed",
+                            "started_at": (finished - timedelta(minutes=14)).isoformat(),
+                            "finished_at": finished.isoformat(),
+                        }
+                    ],
+                }
+            },
+            "consumption_snapshot": {
+                "steampowernj": {"at": now, "consumed": sorted(consumed)}
+            },
+        }
+
+    def test_row_raises_after_one_interval_and_clears_on_consumption(self):
+        now = at(2, 0)
+        finished = now - timedelta(minutes=90)
+        rows = staffing_rows._terminal_rows(self._state(now, finished), now)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["kind"], "terminal_unconsumed")
+        self.assertEqual(rows[0]["idle_minutes"], 90)
+        self.assertEqual(
+            rows[0]["run_id"], "steampower-reformed-gate-20261121T005537Z"
+        )
+        consumed = self._state(
+            now, finished, consumed=["steampower-reformed-gate-20261121T005537Z"]
+        )
+        self.assertEqual(staffing_rows._terminal_rows(consumed, now), [])
+
+    def test_actuation_maps_to_the_terminal_class(self):
+        self.assertEqual(
+            continuation.SWEEP_CLASSES["terminal_unconsumed"], ("terminal",)
+        )
+        self.assertIn(
+            "collect the failure", continuation._SWEEP_NEXT_ACT["terminal_unconsumed"]
+        )
+
+    def test_row_waits_one_cadence_interval(self):
+        now = at(2, 0)
+        finished = now - timedelta(minutes=10)
+        self.assertEqual(
+            staffing_rows._terminal_rows(self._state(now, finished), now), []
+        )
 
 
 if __name__ == "__main__":

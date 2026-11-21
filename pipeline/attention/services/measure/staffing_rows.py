@@ -46,6 +46,7 @@ KIND_LABELS = {
     "unlanded_claim": "Done claimed — worktree unlanded",
     "unarmed_work": "Worktree standing — unarmed",
     "orphan_record": "Orphaned run record",
+    "terminal_unconsumed": "Terminal failure — unconsumed",
     "serial_staffing": "Serial staffing",
     "frontier_shortfall": "Frontier shortfall",
 }
@@ -524,6 +525,71 @@ def _orphan_rows(state: dict, now: datetime) -> list:
                     f"verify the collecting lane.",
                     idle_minutes=age,
                     key=f"orphan_record:{slug}:{entry['id']}",
+                    extra={
+                        "run_id": entry["id"],
+                        "job": entry.get("job"),
+                        "session": entry.get("session"),
+                    },
+                )
+            )
+    return rows
+
+
+def _terminal_rows(state: dict, now: datetime) -> list:
+    """The terminal-unconsumed class, from the venue
+    snapshot and the consumption snapshot: a run that
+    reached a terminal failed state at least one
+    cadence interval ago whose owning programme's own
+    records nowhere cite it in that state. The
+    recording is not consumption — the runner's
+    collector stamped the record within seconds in
+    every specimen; what never happened was the
+    owning seat registering the failure. The row
+    names the run, its job and session, and the
+    terminal age; it clears when consumption evidence
+    lands in the programme's own record (a todo, a
+    pass record, a lane record citing the run in its
+    terminal state) or the record ages out of the
+    measure window. Gated on the programme declaring
+    the terminal class."""
+    snapshot = state.get("venue_snapshot") or {}
+    if not snapshot:
+        return []
+    consumption = state.get("consumption_snapshot") or {}
+    rows = []
+    for declaration in registry.active_declarations():
+        slug = declaration["slug"]
+        if "terminal" not in registry.measure_classes_for(slug):
+            continue
+        facts = snapshot.get(slug)
+        if not facts:
+            continue
+        consumed = set((consumption.get(slug) or {}).get("consumed") or [])
+        cadence = float(declaration.get("cadence_minutes") or 15)
+        handle = (declaration.get("handles") or [slug])[0]
+        for entry in facts.get("terminal_failed") or []:
+            if entry["id"] in consumed:
+                continue
+            finished = _as_dt(entry.get("finished_at"))
+            age = int((now - finished).total_seconds() // 60) if finished else None
+            if age is None or age < cadence:
+                continue
+            rows.append(
+                _row(
+                    slug,
+                    handle,
+                    declaration["label"],
+                    "terminal_unconsumed",
+                    f"Run {entry['id']} ({entry.get('job') or 'unnamed job'}) "
+                    f"on {entry.get('session') or 'no session'} reached a "
+                    f"terminal failed state {age} minutes ago, and no record "
+                    f"of this programme cites it in that state — the failure "
+                    f"is recorded by the runner and unconsumed by its owner. "
+                    f"Next act: collect the failure — read the run record, "
+                    f"post the disposition in the programme's own record — "
+                    f"and verify the collecting lane.",
+                    idle_minutes=age,
+                    key=f"terminal_unconsumed:{slug}:{entry['id']}",
                     extra={
                         "run_id": entry["id"],
                         "job": entry.get("job"),

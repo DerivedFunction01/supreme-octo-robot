@@ -149,6 +149,31 @@ class SweepClassesAndRoutes(unittest.TestCase):
             for core in ("idle", "serial", "stall", "orphan"):
                 self.assertIn(core, classes, f"{slug} missing {core}")
 
+    def test_terminal_class_is_enabled_for_every_active_programme(self):
+        # The terminal-unconsumed class (2026-11-20):
+        # every active programme declares it; the
+        # retired row does not gain it retroactively.
+        for row in registry.active_declarations():
+            self.assertIn(
+                "terminal",
+                registry.measure_classes_for(row["slug"]),
+                f"{row['slug']} missing terminal",
+            )
+        self.assertNotIn("terminal", registry.measure_classes_for("edgar-sec"))
+
+    def test_caller_stems_are_declared_where_the_caller_is_not_the_slug(self):
+        self.assertEqual(
+            registry.for_slug("steampowernj").get("caller_stems"), ["steampower"]
+        )
+        self.assertEqual(
+            registry.for_slug("supreme-octo-robot").get("caller_stems"),
+            ["workhorse"],
+        )
+        bad = registry.for_slug("steampowernj")
+        bad["caller_stems"] = "steampower"
+        with self.assertRaises(registry.RegistryError):
+            registry.validate_declaration(bad)
+
     def test_register_seam_is_steam_powers_alone(self):
         self.assertIn(
             "register_seam", registry.measure_classes_for("steampowernj")
