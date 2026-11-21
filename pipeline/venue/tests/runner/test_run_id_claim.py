@@ -36,8 +36,8 @@ def load_records(runs: Path):
     foundation.now = lambda: STARTED
     # Mega's records leaf binds the venue key and the unified
     # writer from its foundation; the stub binds both so the
-    # import surface is satisfied (the claim never calls the
-    # writer — exclusivity is a direct write).
+    # import surface is satisfied (the claim stages its bytes
+    # through the writer, then claims the name by hard link).
     foundation.VENUE = "test-venue"
     foundation.staged_write = lambda path, data: Path(path).write_bytes(data)
     sys.modules["runner_claim_unit.foundation"] = foundation
@@ -97,3 +97,51 @@ def test_exhaustion_raises_and_restores_the_base_id(tmp_path):
     with pytest.raises(RuntimeError):
         records.claim_first_save(rec)
     assert rec["run_id"] == BASE
+
+
+def test_denied_claim_consumes_no_id_and_leaves_no_file(tmp_path, monkeypatch):
+    """2026-11-21 atomicity cure: the pre-cure claim wrote
+    directly into the claimed file, so a write denied
+    mid-write left a 0-byte record at the claimed name —
+    the id consumed, the record a phantom. The link claim
+    denied creates nothing: no file, no stage residue, and
+    the same id answers the launch's retry."""
+    runs = tmp_path / "runs"
+    records = load_records(runs)
+    monkeypatch.setattr(records, "CLAIM_LINK_RETRY_S", 0)
+
+    def denied(src, dst):
+        raise PermissionError(1, "Operation not permitted")
+
+    monkeypatch.setattr(records.os, "link", denied)
+    with pytest.raises(PermissionError):
+        records.claim_first_save(fresh_rec())
+    assert not (runs / f"{BASE}.json").exists()
+    assert list(runs.iterdir()) == []
+    monkeypatch.undo()
+    assert records.claim_first_save(fresh_rec()) == BASE
+    assert json.loads((runs / f"{BASE}.json").read_text())["run_id"] == BASE
+
+
+def test_transient_link_denial_retries_the_same_candidate(tmp_path, monkeypatch):
+    """The wave denies single operations: a link refused
+    twice and then allowed still claims the base id —
+    the retries spend no suffixes."""
+    runs = tmp_path / "runs"
+    records = load_records(runs)
+    monkeypatch.setattr(records, "CLAIM_LINK_RETRY_S", 0)
+    real_link = records.os.link
+    attempts = {"n": 0}
+
+    def flaky(src, dst):
+        attempts["n"] += 1
+        if attempts["n"] <= 2:
+            raise PermissionError(1, "Operation not permitted")
+        return real_link(src, dst)
+
+    monkeypatch.setattr(records.os, "link", flaky)
+    assert records.claim_first_save(fresh_rec()) == BASE
+    assert attempts["n"] == 3
+    assert not (runs / f"{BASE}-2.json").exists()
+    # No stage residue survives a settled claim.
+    assert [p.name for p in runs.iterdir()] == [f"{BASE}.json"]

@@ -53,13 +53,31 @@ def save_record(rec: dict) -> None:
 # never overwrites an existing record file (live, terminal,
 # or torn), suffixing -2, -3, … until a free id answers. The
 # claim is the first save — no placeholder window — and the
-# common case keeps the unsuffixed id byte-identical. The
-# claim writes directly, not through the unified writer:
-# exclusivity is the mechanism, a claim creates a new file
-# (there is no standing record for a staged rename to
-# protect), and a rename would silently overwrite the very
-# occupant the claim exists to refuse.
+# common case keeps the unsuffixed id byte-identical.
+#
+# The claim itself is atomic (2026-11-21 cure, Chair VIII
+# commission): the original exclusive-create wrote the bytes
+# directly into the claimed file, so a write denied mid-write
+# by the host's flap — or a process killed mid-write — left
+# a 0-byte or torn file AT the claimed name: the id stayed
+# consumed, the record read as a phantom run, and a
+# dispositioned record zeroed this way had to be
+# reconstructed by hand (specimens: steampower-df109-gate
+# …T072747Z born 0-byte; this seat's clone-probe …T092512Z
+# likewise). The claim now stages the complete bytes beside
+# the target through the unified writer, then claims the
+# name with os.link — a hard link is an exclusive create
+# whose content is already complete: the name either appears
+# with the full record or not at all. A rename would
+# silently overwrite the very occupant the claim exists to
+# refuse; a link refuses it (FileExistsError) exactly as
+# O_EXCL did. A DENIED link creates nothing and consumes no
+# id — the same candidate retries a few times against the
+# wave's single-operation denials, then the launch fails
+# loudly with the id still free for its retry.
 CLAIM_ATTEMPTS = 100
+CLAIM_LINK_RETRIES = 3
+CLAIM_LINK_RETRY_S = 0.3
 
 
 def claim_first_save(rec: dict) -> str:
@@ -73,12 +91,25 @@ def claim_first_save(rec: dict) -> str:
     for n in range(1, CLAIM_ATTEMPTS + 1):
         candidate = base if n == 1 else f"{base}-{n}"
         rec["run_id"] = candidate
+        payload = json.dumps(rec, indent=2).encode()
+        stage = RUNS / f".{candidate}.json.claim-{os.getpid()}"
+        target = RUNS / f"{candidate}.json"
         try:
-            fd = os.open(RUNS / f"{candidate}.json", os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            staged_write(stage, payload)
+            for attempt in range(CLAIM_LINK_RETRIES + 1):
+                try:
+                    os.link(stage, target)
+                    break
+                except FileExistsError:
+                    raise
+                except PermissionError:
+                    if attempt == CLAIM_LINK_RETRIES:
+                        raise
+                    time.sleep(CLAIM_LINK_RETRY_S)
         except FileExistsError:
             continue
-        with os.fdopen(fd, "w") as fh:
-            fh.write(json.dumps(rec, indent=2))
+        finally:
+            stage.unlink(missing_ok=True)
         return candidate
     rec["run_id"] = base
     raise RuntimeError(f"no free run id for {base} in {CLAIM_ATTEMPTS} attempts")
