@@ -10,16 +10,18 @@ failed loud on a healthy service (three false "server down"
 wakes on 2026-11-21 alone; the same shape as the 2026-11-20
 outage's empty --check classifications).
 
-The write method that survives the wave is the platform's
-own staged discipline: write a sibling temp file, then
-rename it over the target (rename-over was never denied in
-any probe), retrying the whole act on PermissionError with
-a short backoff — the denial is per-operation and
-intermittent, so a retry a moment later lands. The result
-is byte-identical to a plain write; only the tolerance
-differs. Attempts and base delay are env seams
-(DURABLE_WRITE_ATTEMPTS / DURABLE_WRITE_BASE_DELAY_S) so
-tests can exercise the give-up path without real waits.
+The write itself is the platform's unified writer
+(pipeline/platform/writer.py — the one home of the staged
+protocol: sibling temp, flush + fsync, read back and
+compare, rename over). This module adds only the tolerance
+the ops context needs: retry the writer's act on
+PermissionError with a short backoff — the denial is
+per-operation and intermittent, so a retry a moment later
+lands. The result is byte-identical to the writer's own
+output; only the tolerance differs. Attempts and base
+delay are env seams (DURABLE_WRITE_ATTEMPTS /
+DURABLE_WRITE_BASE_DELAY_S) so tests can exercise the
+give-up path without real waits.
 
 This writer shrinks the denial surface; it does not carry
 the classification verdict alone — a wave at its peak
@@ -30,6 +32,7 @@ dies without classifying is re-run through the scheduler
 ops route, whose server process is never denied.
 """
 
+import importlib.util
 import os
 import time
 
@@ -38,25 +41,51 @@ _BASE_DELAY_S = float(os.environ.get("DURABLE_WRITE_BASE_DELAY_S", "0.3"))
 _MAX_DELAY_S = 5.0
 
 
+def _load_writer():
+    """The platform writer, loaded by path from this file's
+    own location (ops/cutover -> platform/writer.py): the
+    ops tools run with only their own directory importable,
+    so the writer is reached by derivation, never by an
+    assumed sys.path."""
+    writer_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__)))), "writer.py")
+    spec = importlib.util.spec_from_file_location(
+        "platform_writer", writer_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_WRITER = _load_writer()
+
+
+def _is_denial(exc):
+    """A denial reaches this seam in two forms: a bare
+    PermissionError, or the writer's WriterError wrapping
+    one (staged_write re-raises every OSError as
+    WriterError('io_error') with the original as cause).
+    Only denials retry; every other failure is the
+    caller's to hear about, unretried."""
+    if isinstance(exc, PermissionError):
+        return True
+    cause = getattr(exc, "__cause__", None)
+    return isinstance(cause, PermissionError)
+
+
 def write_text(path, text, encoding="utf-8"):
-    """Write text to path via a staged sibling + rename-over,
-    retrying PermissionError with backoff. Raises the last
-    PermissionError when the attempts run out; any other
-    OSError propagates immediately."""
-    tmp = f"{path}.tmp-{os.getpid()}"
+    """Write text to path through the unified writer,
+    retrying denials with backoff. Raises the last denial
+    when the attempts run out; any other error propagates
+    immediately."""
+    data = text.encode(encoding)
     delay = _BASE_DELAY_S
     for attempt in range(_ATTEMPTS):
         try:
-            with open(tmp, "w", encoding=encoding) as fh:
-                fh.write(text)
-            os.replace(tmp, path)
+            _WRITER.staged_write(path, data)
             return
-        except PermissionError:
-            try:
-                os.unlink(tmp)
-            except OSError:
-                pass
-            if attempt == _ATTEMPTS - 1:
+        except Exception as exc:
+            if not _is_denial(exc) or attempt == _ATTEMPTS - 1:
                 raise
             time.sleep(delay)
             delay = min(delay * 2, _MAX_DELAY_S)

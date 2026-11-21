@@ -1581,8 +1581,7 @@ The Repos destination was a v1 artifact: the absorbed git
 repo viewer kept its own list, detail routes, API family,
 feed blocks, and registry keys inside the viewer, parallel
 to the project the same checkout already was. This
-section retires that split. The plan of record is
-`.plans/2026-11-20-workbench-project-code-consolidation.md`.
+section retires that split.
 
 - **One object.** The Project is the only top-level
   object. Its canonical id is the manifest slug where a
