@@ -190,6 +190,13 @@ class WatchdogLadderTests(unittest.TestCase):
         shutil.copytree(
             OPS_DIR, cls.ops,
             ignore=shutil.ignore_patterns("__pycache__"))
+        # the ops tree's durable writer reaches the
+        # platform writer through the paths spine; the
+        # fixture tree carries both at their production
+        # relative locations
+        for name in ("paths.py", "writer.py"):
+            shutil.copy2(OPS_DIR.parent / name,
+                         cls.ops.parent / name)
         cls.units_dir = cls.tmp / "units"
         cls.units_dir.mkdir()
         cls.stub_dir = cls.tmp / "stub"
