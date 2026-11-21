@@ -85,6 +85,49 @@ def test_reap_pulses_kernel_when_due_and_skips_when_fresh(repo, tmp_path, monkey
     assert not [c for c in calls if c and c[0] == "exec" and any("lease-pulse" in str(x) for x in c)]
 
 
+def test_reap_pulse_precedes_identity_and_stamps_the_fresh_record(repo, tmp_path, monkeypatch):
+    """2026-11-21 liveness cure, two pins. (1) Order: the
+    kernel pulse is the liveness heartbeat — under a sick
+    CLI every furniture dial burns tens of seconds, and
+    queued behind the identity exec the pulse starved for
+    hours while the sessions executed fine; the pulse exec
+    must precede the identity probe. (2) Freshness: the
+    stamp lands on a fresh load of the record, not the
+    pass's minutes-old copy — a concurrent writer's change
+    made during the pulse exec must survive the stamp's
+    save (the 07:23Z pass reported a pulse ok whose stamp
+    never persisted)."""
+    seed_record(repo)
+    calls = []
+
+    def stub(*a, **k):
+        calls.append(a)
+        if a and a[0] == "sessions":
+            return cp('["standard"]')
+        if a and a[0] == "exec" and any("lease-pulse" in str(x) for x in a):
+            # A concurrent writer lands its change while
+            # the pulse is in flight.
+            current = lease.load_record(repo)
+            current["deadline"] = "2030-01-01T00:00:00+00:00"
+            lease.save_record(repo, current)
+            return cp("")
+        if a and a[0] == "download":
+            return cp("", rc=1)
+        return cp("")
+
+    out = lease.reap(stub, repo, now_dt=NOW)
+    assert out["action"] == "kept"
+    assert out["pulse"] == "ok"
+    exec_files = [next((str(x) for x in c if "probe" in str(x) or "pulse" in str(x)), "") for c in calls if c and c[0] == "exec"]
+    pulse_at = next(i for i, f in enumerate(exec_files) if "lease-pulse" in f)
+    ident_at = next(i for i, f in enumerate(exec_files) if "identity-probe" in f)
+    assert pulse_at < ident_at
+    saved = lease.load_record(repo)
+    assert saved["last_pulse_at"] == NOW.isoformat()
+    assert saved["last_pulse_result"] == "ok"
+    assert saved["deadline"] == "2030-01-01T00:00:00+00:00"
+
+
 def test_release_keeps_record_when_stop_fails(repo, tmp_path, monkeypatch):
     seed_record(repo)
 

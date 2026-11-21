@@ -135,12 +135,49 @@ def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None,
 
 
 def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: datetime) -> bool:
-    """One kept record's liveness furniture: the runtime
-    identity check, the keepalive freshness read, and the
-    kernel pulse. Returns True when the keepalive read found
+    """One kept record's liveness furniture: the kernel
+    pulse, the keepalive freshness read, and the runtime
+    identity check. Returns True when the keepalive read found
     the loop stale and a launch is owed — the launch itself is
     the caller's act (the pass defers it to its own phase; a
-    stalled launch then starves nothing)."""
+    stalled launch then starves nothing).
+
+    The pulse runs FIRST (2026-11-21 cure): it is the
+    liveness heartbeat the whole layer reads, and under a
+    sick CLI every dial in this function burns tens of
+    seconds — queued behind the identity exec and the
+    heartbeat read, the pulse starved for hours while the
+    sessions executed fine (no reap pass completed between
+    07:23Z and the cure; both live records read pulse-stale /
+    pulse-failing to the liveness checker the whole time).
+    The stamp lands on a FRESH load of the record, not the
+    pass's copy: the pass loaded its copy minutes earlier
+    under slow dials, and a save from a stale copy is a
+    lost update waiting for the next concurrent writer —
+    the 07:23Z pass reported a pulse ok for one record
+    whose stamp never persisted."""
+    launch_owed = False
+    if cfg.get("keepalive", {}).get("enabled"):
+        pulse_every = float(cfg["keepalive"].get("pulse_seconds", 600))
+        last_pulse = rec.get("last_pulse_at")
+        due = last_pulse is None or (now_dt - foundation.parse_dt(last_pulse)).total_seconds() >= pulse_every
+        if due:
+            result = keepalive.kernel_pulse(colab, repo, rec["session"])
+            fresh_rec = records.load_record(repo, rec["session"]) or rec
+            fresh_rec["last_pulse_at"] = now_dt.isoformat()
+            fresh_rec["last_pulse_result"] = result
+            records.save_record(repo, fresh_rec)
+            rec["last_pulse_at"] = fresh_rec["last_pulse_at"]
+            rec["last_pulse_result"] = result
+            out["pulse"] = result
+        else:
+            out["pulse"] = "not-due"
+        fresh, age = keepalive.keepalive_fresh(colab, repo, rec["session"])
+        if fresh:
+            out["keepalive"] = "ok"
+            out["heartbeat_age_s"] = round(age, 1)
+        else:
+            launch_owed = True
     # Runtime identity, on this pass's cadence: a runtime
     # replaced under this lease's name surfaces here (the
     # check spools the event and re-stamps; an unreadable
@@ -152,25 +189,6 @@ def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: 
         out["runtime_identity"] = "replaced"
         out["runtime_jobs"] = ident.get("jobs", [])
         out["runtime_runs"] = ident.get("runs", [])
-    launch_owed = False
-    if cfg.get("keepalive", {}).get("enabled"):
-        fresh, age = keepalive.keepalive_fresh(colab, repo, rec["session"])
-        if fresh:
-            out["keepalive"] = "ok"
-            out["heartbeat_age_s"] = round(age, 1)
-        else:
-            launch_owed = True
-        pulse_every = float(cfg["keepalive"].get("pulse_seconds", 600))
-        last_pulse = rec.get("last_pulse_at")
-        due = last_pulse is None or (now_dt - foundation.parse_dt(last_pulse)).total_seconds() >= pulse_every
-        if due:
-            result = keepalive.kernel_pulse(colab, repo, rec["session"])
-            rec["last_pulse_at"] = now_dt.isoformat()
-            rec["last_pulse_result"] = result
-            records.save_record(repo, rec)
-            out["pulse"] = result
-        else:
-            out["pulse"] = "not-due"
     return launch_owed
 
 
