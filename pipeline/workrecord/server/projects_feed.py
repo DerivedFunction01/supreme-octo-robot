@@ -14,6 +14,7 @@ evaluation.repos / lib.writes.files / evaluation
 called them; only the addressing changed.
 """
 
+import threading
 from pathlib import Path
 
 from evaluation import repo_state as repo_state_mod  # noqa: E402
@@ -59,6 +60,35 @@ def projects_index_feed() -> dict:
         now_iso())
 
 
+_root_map_cache = {"at": None, "map": None}
+_root_map_lock = threading.Lock()
+
+
+def _main_id_by_root(census) -> dict:
+    """resolved root string -> main census record id,
+    built lazily per census state (keyed by the census
+    cache's stored timestamp, the _id_map memo's key
+    discipline): resolve_checkout used to Path-resolve
+    every census record's root on every call to find
+    the one main checkout under a swept project's
+    root; the map resolves each root once per census.
+    First record wins, in census order — the same
+    record the per-call loop's break settled on."""
+    at = repos_feed._census_cache["at"]
+    with _root_map_lock:
+        if _root_map_cache["map"] is not None \
+                and _root_map_cache["at"] == at:
+            return _root_map_cache["map"]
+        by_root = {}
+        for record in census.values():
+            if not record.get("is_worktree"):
+                by_root.setdefault(
+                    str(Path(record["root"]).resolve()),
+                    record["id"])
+        _root_map_cache.update(at=at, map=by_root)
+        return by_root
+
+
 def resolve_checkout(project_id: str, checkout_id=None):
     """Resolve (project_id, checkout) to the census
     record the Code derivations read.
@@ -84,11 +114,7 @@ def resolve_checkout(project_id: str, checkout_id=None):
         project = sweep.by_slug(project_id)
         if project is not None:
             root = str(Path(project.root).resolve())
-            for record in census.values():
-                if not record.get("is_worktree") and str(
-                        Path(record["root"]).resolve()) == root:
-                    main_id = record["id"]
-                    break
+            main_id = _main_id_by_root(census).get(root)
     if main_id is None:
         raise ApiError(404, f"unknown project: {project_id}")
     checkouts = [{"id": main_id,

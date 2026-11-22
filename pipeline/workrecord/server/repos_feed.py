@@ -268,15 +268,35 @@ def _repo_or_404(repo_id: str) -> dict:
     return record
 
 
+_id_map_cache = {"key": None, "result": None}
+_id_map_lock = threading.Lock()
+
+
 def _id_map() -> dict:
     """census id -> canonical project id (SPEC §21),
     from the sweep and the shared census cache — the
     one identity map every registry/history touch in
-    this module folds through."""
+    this module folds through. Memoized on (the sweep
+    result's identity, the census cache's stored
+    timestamp): the derivation Path-resolves every
+    census root (~seconds over the real census), and
+    neither input can change without one of those two
+    moving — a sweep recompute replaces the result
+    object, a census refresh re-stores its timestamp —
+    so the memoized map is the map a fresh derivation
+    would return, until one does."""
     sweep = get_sweep()
     census = _census_cached()
-    return projects_mod.identity_map(
-        sweep.summary()["projects"], list(census.values()))
+    key = (id(sweep), _census_cache["at"])
+    with _id_map_lock:
+        if _id_map_cache["key"] == key \
+                and _id_map_cache["result"] is not None:
+            return _id_map_cache["result"]
+        result = projects_mod.identity_map(
+            sweep.summary()["projects"],
+            list(census.values()))
+        _id_map_cache.update(key=key, result=result)
+        return result
 
 
 def _repos_registry_path():
@@ -393,6 +413,7 @@ def _repos_invalidate_cache() -> None:
     with _repos_state_lock:
         _repos_generation += 1
         _repos_cache.update(at=0.0, result=None)
+    _status_invalidate_cache()
 
 
 def _repos_store(result, generation: int) -> None:
@@ -452,10 +473,13 @@ def repos_feed() -> dict:
         return result
 
 
-def repo_status_feed(record) -> dict:
+def _compute_repo_status_feed(record) -> dict:
     """One checkout's full status with its project's
-    registry entry; the serve records history under
-    the canonical project id (SPEC §21)."""
+    registry entry; the compute records history under
+    the canonical project id (SPEC §21). Expensive —
+    the full git derivation, fresh — so the request
+    path goes through the cache below, never straight
+    here."""
     status = repos_mod.repo_status(record)
     data = repo_state_mod.load_registry(_repos_registry_path())
     project_id = _id_map().get(record["id"], record["id"])
@@ -464,6 +488,102 @@ def repo_status_feed(record) -> dict:
         repo_state_mod.record_history(
             _repos_history_path(), {**status, "id": project_id})
     return status
+
+
+# ----------------------------------------------------------------
+# Per-checkout status cache
+#
+# The Code status serve paid the full derivation on
+# EVERY request (measured: the status route was the
+# slow tail of the projects surface), so the request
+# path serves the last computed payload per checkout,
+# in the repos feed cache's idiom above: within
+# repos_ttl_s as-is; past the TTL the stale payload
+# while ONE background thread recomputes that
+# checkout; only a never-filled entry computes on the
+# request path, single-flighted under the compute
+# lock so a burst of cold requests shares one
+# derivation. History recording rides the compute,
+# exactly as the repos feed's does — a cached serve
+# records nothing. Registry saves invalidate through
+# _repos_invalidate_cache (which clears this cache
+# too), and the generation counter keeps a payload
+# computed across an invalidation from being stored.
+# ----------------------------------------------------------------
+
+_status_cache = {}
+_status_state_lock = threading.Lock()
+_status_compute_lock = threading.Lock()
+_status_refreshing = set()
+_status_generation = 0
+
+
+def _status_invalidate_cache() -> None:
+    global _status_generation
+    with _status_state_lock:
+        _status_generation += 1
+        _status_cache.clear()
+
+
+def _status_store(record_id, result, generation: int) -> None:
+    with _status_state_lock:
+        if generation == _status_generation:
+            _status_cache[record_id] = {
+                "at": time.monotonic(), "result": result}
+
+
+def _status_refresh_background(record) -> None:
+    try:
+        with _status_state_lock:
+            generation = _status_generation
+        _status_store(record["id"],
+                      _compute_repo_status_feed(record),
+                      generation)
+    except Exception as e:
+        # The stale payload keeps serving; the next
+        # stale request kicks another refresh.
+        print(f"workbench-viewer: repo status refresh "
+              f"failed: {e}", file=sys.stderr)
+    finally:
+        with _status_state_lock:
+            _status_refreshing.discard(record["id"])
+
+
+def _status_kick_refresh(record) -> None:
+    with _status_state_lock:
+        if record["id"] in _status_refreshing:
+            return
+        _status_refreshing.add(record["id"])
+    threading.Thread(target=_status_refresh_background,
+                     args=(record,), daemon=True).start()
+
+
+def repo_status_feed(record) -> dict:
+    """GET one checkout's full status: the cached
+    payload (see the cache note above); the derivation
+    and its history recording happen per compute, not
+    per request."""
+    record_id = record["id"]
+    with _status_state_lock:
+        entry = _status_cache.get(record_id)
+    if entry is not None:
+        if time.monotonic() - entry["at"] \
+                < CFG["repos_ttl_s"]:
+            return entry["result"]
+        _status_kick_refresh(record)
+        return entry["result"]
+    with _status_compute_lock:
+        # A racing request may have filled the entry
+        # while this one waited.
+        with _status_state_lock:
+            entry = _status_cache.get(record_id)
+        if entry is not None:
+            return entry["result"]
+        with _status_state_lock:
+            generation = _status_generation
+        result = _compute_repo_status_feed(record)
+        _status_store(record_id, result, generation)
+        return result
 
 
 def _dataset_call(fn, *args, **kwargs):
