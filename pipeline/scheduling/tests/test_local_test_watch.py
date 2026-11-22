@@ -759,17 +759,18 @@ class LedgerConsultCase(unittest.TestCase):
     def _scratch_db(self, rows):
         import json as _json
         import sqlite3
-        db = os.path.join(self.tmp, "scheduler.db")
+        # One file per call: two scratch ledgers, two distinct DBs.
+        fd, db = tempfile.mkstemp(dir=self.tmp, suffix=".db")
+        os.close(fd)
         con = sqlite3.connect(db)
-        con.executescript("DROP TABLE IF EXISTS events; CREATE TABLE events "
-                          "(id INTEGER, ts TEXT, ts_epoch REAL, kind TEXT, "
-                          "job_id TEXT, status TEXT, record TEXT)")
+        con.executescript("CREATE TABLE events (id INTEGER, ts TEXT, "
+                          "ts_epoch REAL, kind TEXT, job_id TEXT, "
+                          "status TEXT, record TEXT)")
         for op_id, epoch, target in rows:
             con.execute("INSERT INTO events VALUES (?, ?, ?, 'op', "
                         "NULL, 'ok', ?)",
                         (op_id, "2026-11-21T15:55:12+00:00", epoch,
-                         _json.dumps({"caller": "workhorse",
-                                      "target": target})))
+                         _json.dumps({"caller": "workhorse", "target": target})))
         con.commit()
         con.close()
         return db
