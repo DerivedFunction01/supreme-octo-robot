@@ -3,7 +3,7 @@
 // trail) and the full history (every mutation, actor + ts).
 // Nothing here writes; the log is the record.
 
-import { Card } from "@workhorse/kit/components/Card";
+import { Card } from "@workhorse/kit/components/display/Card";
 import { formatDateTime, formatShortHash } from "../../lib/format";
 import type { HistoryRow, ReviewPayload } from "./types";
 

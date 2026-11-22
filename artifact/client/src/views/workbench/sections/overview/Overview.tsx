@@ -16,8 +16,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
 import { api } from "../../lib/api";
 import type { ActiveResolution, HomePayload, HomeRow, WorktreesPayload } from "../../lib/api-types";
 import { formatDate, formatRelative } from "../../lib/format";

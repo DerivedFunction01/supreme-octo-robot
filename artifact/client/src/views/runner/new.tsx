@@ -8,10 +8,10 @@
 // note — revocation lives on the grant card (Leases view).
 
 import { useEffect, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { GroupedList, RadioRow } from "@workhorse/kit/components/GroupedList";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { GroupedList, RadioRow } from "@workhorse/kit/components/display/GroupedList";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import { api } from "../../lib/actions";
 import { fmtNum, fmtTime, specById, type Spec } from "./model";
 import {

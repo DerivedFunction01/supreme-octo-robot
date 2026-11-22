@@ -22,8 +22,8 @@
 
 import { type QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { api } from "../../lib/api";
 import type { RepoDirListing, RepoTreeFolder } from "../../lib/api-types-code";
 import { metaStyle } from "../shared";

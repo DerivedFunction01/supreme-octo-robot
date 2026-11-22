@@ -7,7 +7,7 @@
 // changed and will not wait out a TTL or a poll.
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../lib/api";
 
 export function RefreshButton({ style }: { style?: React.CSSProperties }) {

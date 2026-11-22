@@ -7,7 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../../lib/api";
 import type { RepoFilesPayload, RepoPeek } from "../../lib/api-types-code";
 import { useIsPhone } from "../../lib/responsive";

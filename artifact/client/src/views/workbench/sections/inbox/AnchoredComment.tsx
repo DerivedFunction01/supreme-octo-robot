@@ -6,7 +6,7 @@
 // thing it is about.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { MessageComposer } from "./MessageComposer";
 
 export function AnchoredComment({

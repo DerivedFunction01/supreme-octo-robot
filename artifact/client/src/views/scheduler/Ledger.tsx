@@ -11,13 +11,13 @@
 // independent of the snapshot's failure ladder.
 
 import { useQuery } from "@tanstack/react-query";
-import { DegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { DegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   GroupLabel,
   GroupedList,
-} from "@workhorse/kit/components/GroupedList";
-import { LogRow } from "@workhorse/kit/components/LogRow";
+} from "@workhorse/kit/components/display/GroupedList";
+import { LogRow } from "@workhorse/kit/components/display/LogRow";
 import { api } from "../../lib/actions";
 import {
   LEDGER_VIEW_LIMIT,

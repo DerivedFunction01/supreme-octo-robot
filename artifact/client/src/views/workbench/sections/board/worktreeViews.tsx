@@ -15,7 +15,7 @@
 // section-level component; Home does not opt in).
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import type { ActiveResolution, WorktreeItem } from "../../lib/api-types";
 import { formatDate, formatRelative } from "../../lib/format";
 import { activeSourceLabel, planBucketLabel } from "../../lib/labels";

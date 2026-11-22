@@ -15,7 +15,7 @@
 // settings section mounted in Settings (storyboard
 // frame 4).
 
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 
 export type PresenceState = "active" | "focus" | "away";
 

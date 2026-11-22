@@ -10,7 +10,7 @@
 // to one relation, so they are browse-only.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../../lib/api";
 import { useCheckout } from "./checkoutContext";
 import type { DatasetCell, DatasetSqlResult } from "../../lib/api-types-code";

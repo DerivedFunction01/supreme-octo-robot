@@ -8,13 +8,13 @@
 // substance).
 
 import { useState, type ReactNode } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { LabeledCheckbox } from "@workhorse/kit/components/Checkbox";
-import { DataTable } from "@workhorse/kit/components/DataTable";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
+import { DataTable } from "@workhorse/kit/components/display/DataTable";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import type { RegistriesPayload } from "./model";
 import { api, call, staleText, usePortion } from "./transport";
 import { BandHead, PageColumn, ScopeLine, useAttentionUi } from "./ui";

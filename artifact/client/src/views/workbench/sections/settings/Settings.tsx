@@ -12,9 +12,9 @@
 // switching over the shipped themes bundle, SPEC §11.2) and
 // persisted client-side by the caller (lib/preferences).
 
-import { DensityToggle } from "@workhorse/kit/components/DensityToggle";
-import { ModeControl } from "@workhorse/kit/components/ModeControl";
-import { PaletteSelect } from "@workhorse/kit/components/PaletteSelect";
+import { DensityToggle } from "@workhorse/kit/components/controls/DensityToggle";
+import { ModeControl } from "@workhorse/kit/components/controls/ModeControl";
+import { PaletteSelect } from "@workhorse/kit/components/controls/PaletteSelect";
 import type { Appearance, Density, Mode } from "../../lib/preferences";
 import { PALETTE_OPTIONS } from "../../lib/preferences";
 import { ProjectsTrackingPanel } from "./ProjectsTrackingPanel";

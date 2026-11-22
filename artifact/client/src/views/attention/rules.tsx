@@ -7,17 +7,17 @@
 // the original's collect() did; the backend validates.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { LabeledCheckbox } from "@workhorse/kit/components/Checkbox";
-import { DataTable } from "@workhorse/kit/components/DataTable";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
+import { DataTable } from "@workhorse/kit/components/display/DataTable";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
 import {
   GroupLabel,
   NoticeRow,
-} from "@workhorse/kit/components/GroupedList";
-import { Sheet } from "@workhorse/kit/components/Sheet";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+} from "@workhorse/kit/components/display/GroupedList";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import {
   type AttentionRule,
   type PreviewPayload,

@@ -38,10 +38,10 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { api } from "../../lib/api";
 import type { PlanDoc, PlanQuestion } from "../../lib/api-types";
 import { plansKey } from "../../lib/keys";

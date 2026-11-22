@@ -18,10 +18,10 @@
 //     through the note toast, and refreshes the view.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { Input } from "@workhorse/kit/components/Fields";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { Input } from "@workhorse/kit/components/controls/Fields";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { day, type AttentionItem } from "./model";
 import { call, idem, api } from "./transport";
 import { SlotDot, useAttentionUi } from "./ui";

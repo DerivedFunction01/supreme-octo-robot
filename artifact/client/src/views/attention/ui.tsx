@@ -13,8 +13,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 import { PRESENCE_HUES, slotHue, type PresenceMode } from "./model";
 
 export interface AttentionUi {

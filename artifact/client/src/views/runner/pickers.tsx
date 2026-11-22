@@ -6,11 +6,11 @@
 // landing never loses a pick or collapses a picker.
 
 import { useState, type ReactNode } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { DegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { Input } from "@workhorse/kit/components/Fields";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { DegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { Input } from "@workhorse/kit/components/controls/Fields";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import {
   EXT_DURATIONS,
   fmtAgeAgo,

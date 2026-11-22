@@ -20,7 +20,7 @@
 // machine counts failures exactly as app.js's refresh()
 // did.
 
-import type { LogRowEntry, LogRowTone } from "@workhorse/kit/components/LogRow";
+import type { LogRowEntry, LogRowTone } from "@workhorse/kit/components/display/LogRow";
 import { api } from "../../lib/actions";
 
 /** The common envelope every scheduler action returns. */

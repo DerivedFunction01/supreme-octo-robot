@@ -35,8 +35,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Sheet } from "@workhorse/kit/components/Sheet";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 import { api } from "../../lib/api";
 import { formatDate } from "../../lib/format";
 import { kindLabel, ruledStatusLabel } from "../../lib/labels";

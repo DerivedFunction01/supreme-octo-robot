@@ -1,7 +1,7 @@
 // The drill-in's metadata pieces: the shared label
 // style and row, and the Metadata card itself.
 
-import { Card } from "@workhorse/kit/components/Card";
+import { Card } from "@workhorse/kit/components/display/Card";
 import { formatDate, formatDateTime, formatShortHash } from "../../lib/format";
 import { kindLabel, ruledStatusLabel } from "../../lib/labels";
 import type { DerivedStaleness, FullEntry } from "./types";

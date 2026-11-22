@@ -2,10 +2,10 @@
 // archive, and supersede actions for one entry.
 
 import type { Dispatch, SetStateAction } from "react";
-import { ArmConfirm } from "@workhorse/kit/components/ArmConfirm";
-import { Card } from "@workhorse/kit/components/Card";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { ArmConfirm } from "@workhorse/kit/components/shell/ArmConfirm";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { ruledStatusLabel } from "../../lib/labels";
 import { labelStyle } from "./meta";
 import type { DerivedStaleness, FullEntry } from "./types";

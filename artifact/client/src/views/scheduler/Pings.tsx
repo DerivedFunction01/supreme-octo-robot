@@ -14,14 +14,14 @@
 // the pings payload's own served_at skew.
 
 import { useQuery } from "@tanstack/react-query";
-import { DegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { DegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   GroupLabel,
   GroupedList,
   Row,
-} from "@workhorse/kit/components/GroupedList";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+} from "@workhorse/kit/components/display/GroupedList";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { api } from "../../lib/actions";
 import {
   PINGS_RECENT_LIMIT,

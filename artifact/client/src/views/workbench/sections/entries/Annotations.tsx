@@ -15,8 +15,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnnotationBadge, annotationMarkStyle } from "@workhorse/kit/components/AnnotationBadge";
-import { Button } from "@workhorse/kit/components/Button";
+import { AnnotationBadge, annotationMarkStyle } from "@workhorse/kit/components/display/AnnotationBadge";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../../lib/api";
 import type {
   MessageItem,

@@ -14,15 +14,15 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Chip } from "@workhorse/kit/components/Chip";
-import { DegradedBanner as KitDegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { Field, Input, Select } from "@workhorse/kit/components/Fields";
-import { Frame } from "@workhorse/kit/components/Frame";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { Toggle } from "@workhorse/kit/components/Toggle";
-import { TriageRow } from "@workhorse/kit/components/TriageRow";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Chip } from "@workhorse/kit/components/controls/Chip";
+import { DegradedBanner as KitDegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
+import { Frame } from "@workhorse/kit/components/shell/Frame";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
+import { TriageRow } from "@workhorse/kit/components/display/TriageRow";
 import { api } from "../../lib/api";
 import { entriesKey } from "../../lib/keys";
 import { kindLabel, ruledStatusLabel } from "../../lib/labels";

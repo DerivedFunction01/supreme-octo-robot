@@ -12,11 +12,11 @@
 // NOTES X-1).
 
 import type { ReactNode } from "react";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { GroupedList } from "@workhorse/kit/components/GroupedList";
-import { LogRow } from "@workhorse/kit/components/LogRow";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
+import { LogRow } from "@workhorse/kit/components/display/LogRow";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import {
   fmtBytes,
   fmtTime,

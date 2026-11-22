@@ -7,16 +7,16 @@
 // section waits on another portion's read.
 
 import type { ReactNode } from "react";
-import { ArmConfirm } from "@workhorse/kit/components/ArmConfirm";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { ArmConfirm } from "@workhorse/kit/components/shell/ArmConfirm";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   GroupedList,
   Row,
   StatRow,
-} from "@workhorse/kit/components/GroupedList";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+} from "@workhorse/kit/components/display/GroupedList";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { api } from "../../lib/actions";
 import {
   countdownText,

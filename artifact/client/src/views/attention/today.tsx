@@ -16,10 +16,10 @@
 // absence beside the portion that did load.
 
 import { useEffect, useRef } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { DegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { DegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { ItemCard } from "./item-card";
 import {
   clock,

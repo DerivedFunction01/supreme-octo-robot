@@ -12,9 +12,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { memo, useEffect, useRef, useState } from "react";
-import { Badge } from "@workhorse/kit/components/Badge";
-import { DegradedBanner as KitBanner } from "@workhorse/kit/components/DegradedBanner";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { Badge } from "@workhorse/kit/components/display/Badge";
+import { DegradedBanner as KitBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import { api } from "../../lib/api";
 import type { BundleItem, PlanDoc, PlanSummary, TextSelection } from "../../lib/api-types";
 import { highlightWithLanguage } from "../../lib/highlight";

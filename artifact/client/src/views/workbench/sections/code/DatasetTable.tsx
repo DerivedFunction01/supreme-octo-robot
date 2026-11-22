@@ -13,7 +13,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
+import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../../lib/api";
 import { useCheckout } from "./checkoutContext";
 import type {

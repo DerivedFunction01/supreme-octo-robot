@@ -10,19 +10,19 @@
 // becomes the drawer's fact list.
 
 import { useMemo, useState } from "react";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   GroupLabel,
   GroupedList,
-} from "@workhorse/kit/components/GroupedList";
+} from "@workhorse/kit/components/display/GroupedList";
 import {
   LogRow,
   LogRowDrawer,
   type LogRowEntry,
   type LogRowFact,
   type LogRowTone,
-} from "@workhorse/kit/components/LogRow";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+} from "@workhorse/kit/components/display/LogRow";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import {
   LOG_KINDS,
   fmtAgeAgo,

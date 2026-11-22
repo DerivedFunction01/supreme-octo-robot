@@ -29,7 +29,7 @@ import {
   RadioRow,
   StatRow,
   SwitchRow,
-} from "@workhorse/kit/components/GroupedList";
+} from "@workhorse/kit/components/display/GroupedList";
 import type { PresenceState } from "../../shell/PresenceControl";
 import {
   clock,

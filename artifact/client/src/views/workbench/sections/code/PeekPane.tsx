@@ -16,8 +16,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import { api } from "../../lib/api";
 import type { RepoPeek } from "../../lib/api-types-code";
 import { useCheckout } from "./checkoutContext";

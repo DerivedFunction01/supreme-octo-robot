@@ -17,10 +17,10 @@
 // lease is never cut off by a cap change.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { Field, Input } from "@workhorse/kit/components/Fields";
-import { GroupedList, StatRow } from "@workhorse/kit/components/GroupedList";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { Field, Input } from "@workhorse/kit/components/controls/Fields";
+import { GroupedList, StatRow } from "@workhorse/kit/components/display/GroupedList";
 import { api } from "../../lib/actions";
 import {
   capText,

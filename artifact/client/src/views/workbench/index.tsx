@@ -39,7 +39,7 @@
 // ./SectionNav (the original's PhoneSectionNav form).
 
 import { useEffect, useMemo } from "react";
-import { SectionBoundary } from "@workhorse/kit/components/SectionBoundary";
+import { SectionBoundary } from "@workhorse/kit/components/shell/SectionBoundary";
 import { useAppearance as useShellAppearance } from "../../lib/appearance";
 import type { AppViewModule, NavBadges, ViewProps } from "../../lib/view-contract";
 import { type Appearance } from "./lib/preferences";

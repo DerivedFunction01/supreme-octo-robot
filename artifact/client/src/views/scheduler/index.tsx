@@ -30,10 +30,10 @@
 // client's own initiative.
 
 import { useEffect, type ReactNode } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { NoticeRow } from "@workhorse/kit/components/GroupedList";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { NoticeRow } from "@workhorse/kit/components/display/GroupedList";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import type { AppViewModule, ViewProps } from "../../lib/view-contract";
 import { JobDetail } from "./JobDetail";
 import { Jobs } from "./Jobs";

@@ -9,11 +9,11 @@
 // live outside the poll-driven render, keyed by session.
 
 import { useState, type ReactNode } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { GroupedList, RadioRow } from "@workhorse/kit/components/GroupedList";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { GroupedList, RadioRow } from "@workhorse/kit/components/display/GroupedList";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { api } from "../../lib/actions";
 import {
   adoptRefusalText,

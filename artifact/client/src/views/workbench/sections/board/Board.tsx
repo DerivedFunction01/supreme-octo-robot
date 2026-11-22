@@ -13,8 +13,8 @@
 
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Lane } from "@workhorse/kit/components/Lane";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Lane } from "@workhorse/kit/components/display/Lane";
 import { api } from "../../lib/api";
 import type {
   BoardPlan,

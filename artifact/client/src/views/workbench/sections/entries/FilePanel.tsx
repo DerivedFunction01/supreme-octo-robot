@@ -7,8 +7,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
 import { api } from "../../lib/api";
 import { formatShortHash } from "../../lib/format";
 import type { EntryFile, Envelope, PeekResult } from "./types";

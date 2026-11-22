@@ -19,8 +19,8 @@
 // decision row that opens Attention.
 
 import { useEffect, useState } from "react";
-import { Card } from "@workhorse/kit/components/Card";
-import { GroupedList, Row } from "@workhorse/kit/components/GroupedList";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { GroupedList, Row } from "@workhorse/kit/components/display/GroupedList";
 import { appHref, settingsHref } from "../lib/router";
 import type { AppId } from "../lib/view-contract";
 import { clock } from "../views/attention/model";

@@ -7,8 +7,8 @@
 // content in the drill-in's Files panel.
 
 import type { ReactNode } from "react";
-import { Badge } from "@workhorse/kit/components/Badge";
-import { Chip, type RuledStatus } from "@workhorse/kit/components/Chip";
+import { Badge } from "@workhorse/kit/components/display/Badge";
+import { Chip, type RuledStatus } from "@workhorse/kit/components/controls/Chip";
 import { formatShortHash } from "../../lib/format";
 import { kindLabel } from "../../lib/labels";
 import type { ApprovalCoverage, DerivedStaleness, FullEntry } from "./types";

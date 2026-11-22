@@ -7,7 +7,7 @@
 // thread. The same list also closes the Leases view, as it
 // closed the panel's leases section.
 
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { AccessList } from "./leases";
 import { DegradedCard, PartStatus } from "./pickers";
 import { useRunner } from "./state";

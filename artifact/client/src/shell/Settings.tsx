@@ -20,10 +20,10 @@ import {
   GroupedList,
   Row,
   StatRow,
-} from "@workhorse/kit/components/GroupedList";
-import { DensityToggle } from "@workhorse/kit/components/DensityToggle";
-import { ModeControl } from "@workhorse/kit/components/ModeControl";
-import { PaletteSelect } from "@workhorse/kit/components/PaletteSelect";
+} from "@workhorse/kit/components/display/GroupedList";
+import { DensityToggle } from "@workhorse/kit/components/controls/DensityToggle";
+import { ModeControl } from "@workhorse/kit/components/controls/ModeControl";
+import { PaletteSelect } from "@workhorse/kit/components/controls/PaletteSelect";
 import {
   PALETTE_OPTIONS,
   type Appearance,

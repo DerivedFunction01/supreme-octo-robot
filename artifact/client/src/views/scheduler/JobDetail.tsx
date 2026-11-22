@@ -14,9 +14,9 @@
 // read-only by design.
 
 import type { ReactNode } from "react";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import {
   fmtDur,
   fmtTime,

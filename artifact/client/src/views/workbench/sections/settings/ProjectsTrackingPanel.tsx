@@ -22,9 +22,9 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { Toggle } from "@workhorse/kit/components/Toggle";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { Toggle } from "@workhorse/kit/components/controls/Toggle";
 import { api } from "../../lib/api";
 import type { RepoRegistryEntry, ProjectsRegistryPayload } from "../../lib/api-types-code";
 import { formatDateTime } from "../../lib/format";

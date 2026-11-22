@@ -12,9 +12,9 @@
 
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Badge } from "@workhorse/kit/components/Badge";
-import { Button } from "@workhorse/kit/components/Button";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { Badge } from "@workhorse/kit/components/display/Badge";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import { api } from "../../lib/api";
 import type { TodoItem, TodosFeed } from "../../lib/api-types";
 import { boardRootKey, plansRootKey, projectsKey, todosKey, todosRootKey } from "../../lib/keys";

@@ -5,11 +5,11 @@
 // says so plainly.
 
 import { useState, type ReactNode } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { DegradedBanner } from "@workhorse/kit/components/DegradedBanner";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { DegradedBanner } from "@workhorse/kit/components/display/DegradedBanner";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { HandlerVerbButton } from "./item-card";
 import { day, type DigestPayload } from "./model";
 import { api, call, staleText, usePortion } from "./transport";

@@ -26,8 +26,8 @@
 // removed 2026-11-17 on the owner's ruling — he does
 // not use it; the backend records are untouched.)
 
-import { Button } from "@workhorse/kit/components/Button";
-import { Frame } from "@workhorse/kit/components/Frame";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Frame } from "@workhorse/kit/components/shell/Frame";
 import { useIsPhone } from "../../lib/responsive";
 import { entryPageHref } from "../../lib/routing";
 import { useDisposition } from "./Disposition";

@@ -13,7 +13,7 @@
 // open plan, under the checklist strip.
 
 import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@workhorse/kit/components/Badge";
+import { Badge } from "@workhorse/kit/components/display/Badge";
 import { api } from "../../lib/api";
 import type { BundleItem, PlanSummary } from "../../lib/api-types";
 import { formatDate, formatRelative } from "../../lib/format";

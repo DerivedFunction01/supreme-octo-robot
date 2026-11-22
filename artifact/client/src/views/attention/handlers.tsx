@@ -15,19 +15,19 @@
 // decisions — the ledgers on the kit's LogRow.
 
 import { useState } from "react";
-import { Button } from "@workhorse/kit/components/Button";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import {
   GroupedList,
   Row,
-} from "@workhorse/kit/components/GroupedList";
+} from "@workhorse/kit/components/display/GroupedList";
 import {
   LogRow,
   LogRowDrawer,
   type LogRowEntry,
-} from "@workhorse/kit/components/LogRow";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+} from "@workhorse/kit/components/display/LogRow";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { HandlerVerbButton, ItemCard } from "./item-card";
 import {
   clock,

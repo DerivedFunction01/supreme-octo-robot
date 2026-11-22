@@ -9,7 +9,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
 import { api } from "../../lib/api";
 import type {
   ProjectIndexRow,

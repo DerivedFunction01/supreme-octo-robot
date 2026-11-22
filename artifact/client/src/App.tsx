@@ -46,11 +46,11 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { AppShell } from "@workhorse/kit/components/AppShell";
+import { AppShell } from "@workhorse/kit/components/shell/AppShell";
 import { useIsPhone } from "@workhorse/kit/lib/responsive";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { Input } from "@workhorse/kit/components/Fields";
-import { SectionBoundary } from "@workhorse/kit/components/SectionBoundary";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { Input } from "@workhorse/kit/components/controls/Fields";
+import { SectionBoundary } from "@workhorse/kit/components/shell/SectionBoundary";
 import { useAppearance } from "./lib/appearance";
 import { launcherHref, navigate, settingsHref, useHashRoute } from "./lib/router";
 import type { AppId, AppViewModule, NavBadges, ViewProps } from "./lib/view-contract";

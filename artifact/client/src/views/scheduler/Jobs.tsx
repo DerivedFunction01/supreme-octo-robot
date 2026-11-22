@@ -44,10 +44,10 @@
 // so desktop keeps its untreated sizing.
 
 import { useState, type ReactNode } from "react";
-import { Card } from "@workhorse/kit/components/Card";
-import { EmptyState } from "@workhorse/kit/components/EmptyState";
-import { SegmentedControl } from "@workhorse/kit/components/SegmentedControl";
-import { StatusChip } from "@workhorse/kit/components/StatusChip";
+import { Card } from "@workhorse/kit/components/display/Card";
+import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import { SegmentedControl } from "@workhorse/kit/components/controls/SegmentedControl";
+import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import {
   fmtDur,
   fmtTime,
