@@ -39,6 +39,34 @@ class TestHeldSet(Fixture):
         self.assertTrue((self.ws / "repo-a-u-wt").exists())
         self.assertFalse(elder.exists())
 
+    def test_drain_act_pass_archives_unlanded_but_dirty_still_holds(self):
+        # The drain act's seam (supervision plan Step 4):
+        # the workbench drain detector rides this worker
+        # on a drained transition — the programme's own
+        # evidence its unlanded commits are finished — so
+        # under WORKTREE_TRIM_DRAIN_ACT the unlanded reason
+        # does not stand and the tree archives. Dirty state
+        # is invisible to the drain's precondition, so the
+        # dirty hold still binds the same pass.
+        self.add_tree("repo-a-u-wt", "feat/u",
+                      [("u.txt", "u\n")], NOW - 2000)
+        dirty = self.add_tree("repo-a-d-wt", "feat/d",
+                              [("d.txt", "d\n")], NOW - 3000)
+        (dirty / "scratch.txt").write_text("uncommitted\n")
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WT_TRIM_CAP_REPO_A": "0",
+                       "WORKTREE_TRIM_DRAIN_ACT": "1"})
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("ARCHIVED repo=repo-a tree=repo-a-u-wt",
+                      out.stdout)
+        held = [ln for ln in out.stdout.splitlines()
+                if ln.startswith("HELD")]
+        self.assertEqual(len(held), 1)
+        self.assertIn("tree=repo-a-d-wt", held[0])
+        self.assertIn("dirty", held[0])
+        self.assertTrue(dirty.exists())
+
     def test_live_process_holds_the_tree(self):
         tree = self.add_landed_tree("repo-a-l-wt", "feat/l",
                                     [("l.txt", "l\n")], NOW - 4000)

@@ -11,7 +11,14 @@ most recently active extra) through the existing
 archive/trim lifecycle (pipeline/scheduling/ops/
 worktree_trim.sh), indiscriminately: the 1-hour archive
 grace window is the only recovery path, so this module
-builds no per-tree exception machinery of its own.
+builds no per-tree exception machinery of its own. The
+one seam it rides is the trim's drain-act flag
+(WORKTREE_TRIM_DRAIN_ACT): the trim's standing census
+holds unlanded trees, but a drained transition is the
+programme's own evidence that its trees' unlanded
+commits are finished work, so the unlanded hold does
+not stand for a drain pass; the trim's dirty, live, and
+explicit holds still bind it.
 
 A lane's progress checkpoint is the lane's own act: the
 detector mints plain todos and never writes a checkpoint
@@ -256,6 +263,13 @@ def archive_trees(main_dir, *, now_epoch: int,
     env = dict(os.environ)
     env["SCHEDULER_WORKSPACE"] = str(main_dir.parent)
     env["WORKTREE_TRIM_NOW"] = str(int(now_epoch))
+    # The drain act's seam in the trim worker: this pass
+    # fires on a drained transition — the programme's own
+    # record that its work is finished — so the census's
+    # unlanded hold does not stand for it (the archive
+    # stays recoverable inside its grace window). The
+    # trim's dirty/live/explicit holds still bind.
+    env["WORKTREE_TRIM_DRAIN_ACT"] = "1"
     env[cap_var] = str(keep_extra)
     if scope_paths is not None:
         env["WORKTREE_TRIM_SCOPE_PATHS"] = ":".join(scope_paths)
