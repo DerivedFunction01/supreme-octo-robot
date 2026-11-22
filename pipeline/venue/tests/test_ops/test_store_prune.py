@@ -77,3 +77,26 @@ def test_records_and_in_flight_work_are_never_candidates(tmp_path):
     assert "var/stray.bundle.part-000" not in chosen
     assert "results/run-live" not in chosen
     assert not any(c.startswith("results/runs") or c.startswith("results/xfers") for c in chosen)
+
+
+def test_job_payload_archives_and_staging_tarballs_past_48h(tmp_path):
+    root = _sandbox(tmp_path)
+    job = root / "adapters" / "colab" / "jobs" / "some-job"
+    _write(job / "job.json")                                   # the job's definition: never a candidate
+    _write(job / "wrap.py")                                    # likewise retained (2026-11-18 precedent)
+    _write(job / "payload-old.tar.gz", age_s=49 * 3600)        # past the 48h floor: prunable
+    _write(job / "payload-fresh.tar.gz", age_s=3600)           # inside the floor: kept
+    _write(job / "seed-old.bundle", age_s=49 * 3600)           # bundles ride the same class
+    staging = root / "var" / "steampower-gates"
+    _write(staging / "run1-tree.tar.gz", age_s=49 * 3600)      # launch staging past the floor: prunable
+    _write(staging / "run2-tree.tar.gz", age_s=3600)           # fresh staging: kept
+    _write(root / "var" / "loose-tree.tar.gz", age_s=49 * 3600)  # top-level var is not the subdir class
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/some-job/payload-old.tar.gz" in chosen
+    assert "adapters/colab/jobs/some-job/seed-old.bundle" in chosen
+    assert "var/steampower-gates/run1-tree.tar.gz" in chosen
+    assert "adapters/colab/jobs/some-job/job.json" not in chosen
+    assert "adapters/colab/jobs/some-job/wrap.py" not in chosen
+    assert "adapters/colab/jobs/some-job/payload-fresh.tar.gz" not in chosen
+    assert "var/steampower-gates/run2-tree.tar.gz" not in chosen
+    assert "var/loose-tree.tar.gz" not in chosen

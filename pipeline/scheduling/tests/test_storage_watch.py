@@ -9,12 +9,14 @@ empty so no du runs.
 
 import importlib.util
 import io
+import json
 import os
 import shutil
 import tempfile
 import unittest
 from collections import namedtuple
 from contextlib import redirect_stdout
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +51,7 @@ class EpisodeCase(unittest.TestCase):
             "STORAGE_WATCH_HOME_PATH": "/fakehome",
             "STORAGE_WATCH_TMP_PATH": "/faketmp",
             "STORAGE_WATCH_STORES": "",
+            "STORAGE_WATCH_TRASH_DIR": os.path.join(self.tmp, "trash"),
         }
 
     def run_watch(self):
@@ -118,3 +121,115 @@ class EpisodeCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class RegisterCase(unittest.TestCase):
+    """The register leg: re-measure every run, a row grown
+    past the bound reports as an owning-thread defect, and
+    the new figure is written back in the same run."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.state = os.path.join(self.tmp, "state")
+        os.makedirs(self.state)
+        self.store = os.path.join(self.tmp, "store")
+        os.makedirs(self.store)
+        self.register = {
+            "measured_at": "2026-11-18T05:20Z",
+            "rows": [
+                {"path": self.store, "bytes_gb": 2.0,
+                 "owner": "some thread", "class": "fixture", "prunable": "yes"},
+                {"path": os.path.join(self.tmp, "absent"), "bytes_gb": 1.0,
+                 "owner": "ghost", "class": "fixture", "prunable": "no"},
+            ],
+        }
+        with open(os.path.join(self.state, "register.json"), "w") as fh:
+            json.dump(self.register, fh)
+
+    def run_pass(self, measured_bytes):
+        def fake_run(argv, **kwargs):
+            lines = []
+            for path in argv[3:]:
+                if path == self.store:
+                    lines.append(f"{measured_bytes}\t{path}")
+            return namedtuple("done", "stdout")(stdout="\n".join(lines))
+
+        with mock.patch.object(sw.subprocess, "run", fake_run):
+            return sw.register_pass(self.state, self.tmp, 5)
+
+    def test_growth_reports_and_rewrites_the_figure(self):
+        lines = self.run_pass(5 * GB)
+        self.assertEqual(len(lines), 1)
+        self.assertIn("STORAGE REGISTER GROWTH", lines[0])
+        self.assertIn("some thread", lines[0])
+        with open(os.path.join(self.state, "register.json")) as fh:
+            data = json.load(fh)
+        self.assertEqual(data["rows"][0]["bytes_gb"], 5.0)
+        self.assertIn("measured_at", data["rows"][0])
+        # The unmeasurable row keeps its recorded figure.
+        self.assertEqual(data["rows"][1]["bytes_gb"], 1.0)
+
+    def test_small_growth_is_silent_but_remeasured(self):
+        lines = self.run_pass(2 * GB + GB // 2)
+        self.assertEqual(lines, [])
+        with open(os.path.join(self.state, "register.json")) as fh:
+            data = json.load(fh)
+        self.assertEqual(data["rows"][0]["bytes_gb"], 2.5)
+
+    def test_missing_register_is_inert(self):
+        os.unlink(os.path.join(self.state, "register.json"))
+        self.assertEqual(sw.register_pass(self.state, self.tmp, 5), [])
+
+
+class TrashCase(unittest.TestCase):
+    """The trash leg: below the low tier, the contents of
+    entries older than 7 days are purged; the entry shell
+    and its .trashinfo stay; fresh entries are untouched."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
+        self.trash = os.path.join(self.tmp, "trash")
+        old_stamp = (datetime.now(timezone.utc) - timedelta(days=8)).strftime("%Y%m%d-%H%M%S")
+        fresh_stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+        self.old_entry = os.path.join(self.trash, f"{old_stamp}-aaaa")
+        self.fresh_entry = os.path.join(self.trash, f"{fresh_stamp}-bbbb")
+        for entry in (self.old_entry, self.fresh_entry):
+            os.makedirs(os.path.join(entry, "files", "sub"))
+            with open(os.path.join(entry, ".trashinfo"), "w") as fh:
+                fh.write("meta")
+            with open(os.path.join(entry, "files", "sub", "x.bin"), "wb") as fh:
+                fh.write(b"x" * 2048)
+        self.env = {
+            "STORAGE_WATCH_STATE_DIR": os.path.join(self.tmp, "state"),
+            "STORAGE_WATCH_HOME_PATH": "/fakehome",
+            "STORAGE_WATCH_TMP_PATH": "/faketmp",
+            "STORAGE_WATCH_STORES": "",
+            "STORAGE_WATCH_TRASH_DIR": self.trash,
+        }
+
+    def run_watch(self, home_free):
+        def fake_usage(path):
+            free = home_free if path == "/fakehome" else 512 * MB
+            return Usage(total=free * 2, used=free, free=free)
+
+        buf = io.StringIO()
+        with mock.patch.dict(os.environ, self.env, clear=False):
+            with mock.patch.object(shutil, "disk_usage", fake_usage):
+                with redirect_stdout(buf):
+                    rc = sw.main()
+        return rc, buf.getvalue()
+
+    def test_purge_below_low_keeps_metadata_and_fresh_entries(self):
+        rc, out = self.run_watch(47 * GB)
+        self.assertEqual(rc, 0)
+        self.assertIn("STORAGE TRASH PURGE", out)
+        self.assertEqual(os.listdir(os.path.join(self.old_entry, "files")), [])
+        self.assertTrue(os.path.exists(os.path.join(self.old_entry, ".trashinfo")))
+        self.assertTrue(os.path.exists(os.path.join(self.fresh_entry, "files", "sub", "x.bin")))
+
+    def test_no_purge_at_a_healthy_level(self):
+        rc, out = self.run_watch(60 * GB)
+        self.assertNotIn("TRASH PURGE", out)
+        self.assertTrue(os.path.exists(os.path.join(self.old_entry, "files", "sub", "x.bin")))

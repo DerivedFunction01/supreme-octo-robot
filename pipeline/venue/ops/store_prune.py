@@ -19,7 +19,16 @@ in order:
      failed transfer's parts are resume state, kept a day;
   4. results/<run-id>/ payload dirs of terminal runs;
   5. gate scratch bundles/patches in the workspace's
-     tmp-gate directory.
+     tmp-gate directory;
+  6. payload archives inside adapters job dirs
+     (adapters/colab/jobs/*/*.tar.gz, *.bundle) past a
+     48 h floor — the job's definition (job.json, wrap.py)
+     is never a candidate, only the staged payload
+     archives beside it (2026-11-18 precedent);
+  7. launch-staging tree tarballs in named var/ subdirs
+     (var/*/*-tree.tar.gz) past the same 48 h floor —
+     formation staging a lane dropped in the store's own
+     namespace (the steampower-gates pattern).
 
 Never touched: run and transfer RECORDS (results/runs,
 results/xfers — metadata and verdicts are the evidence the
@@ -59,6 +68,7 @@ TMP_GATE = REPO.parent / "tmp-gate"
 GB = 1024**3
 
 BUNDLE_AGE_FLOOR_S = 2 * 3600
+ARCHIVE_AGE_FLOOR_S = 48 * 3600
 RESUME_WINDOW_S = 24 * 3600
 FRESH_XFER_S = 3600
 SCRATCH_AGE_FLOOR_S = 3600
@@ -196,6 +206,19 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         for scratch in list(TMP_GATE.glob("*.bundle")) + list(TMP_GATE.glob("*.patch")):
             if now - scratch.stat().st_mtime > SCRATCH_AGE_FLOOR_S:
                 add(5, scratch, "gate scratch")
+    jobs_root = REPO / "adapters" / "colab" / "jobs"
+    if jobs_root.exists():
+        for archive in list(jobs_root.glob("*/*.tar.gz")) + list(jobs_root.glob("*/*.bundle")):
+            if archive.name in protected:
+                continue
+            if now - archive.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
+                add(6, archive, "job payload archives past the 48h floor")
+    if VAR.exists():
+        for staging in VAR.glob("*/*-tree.tar.gz"):
+            if staging.name in protected:
+                continue
+            if now - staging.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
+                add(7, staging, "launch-staging tree tarballs past the 48h floor")
 
     candidates.sort(key=lambda c: (c[0], -c[2]))
     free_now = shutil.disk_usage(REPO).free

@@ -22,5 +22,5 @@ report:
     - 0
 state_paths:
   - ${WS}/supreme-octo-robot/pipeline/venue/var/prune-log.jsonl
-classification: 'fixed command (one Python script): every pass reads free space and, only when it is below 45 GB, deletes from enumerable classes under fixed bounds (parts of complete transfers, snapshot bundles and unrecorded transfer staging past a 2h floor, failed-transfer parts past a 24h resume window, payload dirs of terminal runs, gate scratch; run/transfer records and anything in flight or fresh are never candidates) until 60 GB free; speech is fully determined by the branches - silent above the threshold, one JSON report when a prune fires, non-zero exit on failure'
+classification: 'fixed command (one Python script): every pass reads free space and, only when it is below 45 GB, deletes from enumerable classes under fixed bounds (parts of complete transfers, snapshot bundles and unrecorded transfer staging past a 2h floor, failed-transfer parts past a 24h resume window, payload dirs of terminal runs, gate scratch, job payload archives and launch-staging tree tarballs past a 48h floor; run/transfer records and anything in flight or fresh are never candidates) until 60 GB free; speech is fully determined by the branches - silent above the threshold, one JSON report when a prune fires, non-zero exit on failure'
 lifetime: permanent

@@ -50,14 +50,36 @@ tiers in GB, set by the engine from the entry's config block at
 fire time; absent or unparseable → the compiled constants).
 Paths derive from this script's own location; nothing is
 hardcoded to this machine.
+
+Register leg (2026-11-22): the per-owner holdings register in
+the state dir (register.json) is re-measured every run — a
+register that is not re-measured rots (the 2026-11-18 baseline
+still stood while two rows grew past 20 GB between them, so
+the growth rule could never fire). A row measured more than
+1 GB above its recorded figure reports as an owning-thread
+defect; measured rows are written back with their new figure
+in the same run. A row that cannot be measured this run keeps
+its recorded figure and stays silent.
+
+Trash leg (2026-11-22): the recoverable trash has no other
+watcher — cleanup waves "deleted" through it for zero relief
+while gigabytes accumulated awaiting expiry. While the home
+filesystem is below its low tier, the leg purges the CONTENTS
+of trash entries older than 7 days (each entry's files/
+subtree; the entry shell and its .trashinfo metadata are
+retained, so the trash stays restorable as a record) and
+reports what it reclaimed. STORAGE_WATCH_TRASH_DIR names the
+trash root; the default is the per-user trash store.
 """
 
+import glob as _glob
 import importlib.util as _importlib_util
 import json
 import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 
 _here = os.path.dirname(os.path.abspath(__file__))
 _paths_spec = _importlib_util.spec_from_file_location(
@@ -78,8 +100,12 @@ TMP_CRIT = 32 * MB
 
 HOME_LOW_ENV = "STORAGE_WATCH_HOME_LOW_GB"
 HOME_CRIT_ENV = "STORAGE_WATCH_HOME_CRIT_GB"
+TRASH_DIR_ENV = "STORAGE_WATCH_TRASH_DIR"
 
 LEVEL_NAMES = {1: "LOW", 2: "CRITICAL"}
+
+REGISTER_GROWTH_BYTES = 1 * GB
+TRASH_PURGE_AGE_S = 7 * 24 * 3600
 
 
 def home_tier_bytes(env_name: str, default: int) -> int:
@@ -161,6 +187,149 @@ def top_stores(stores: list[str], timeout: int, limit: int = 8) -> list[str]:
     ]
 
 
+def resolve_row_paths(row_path: str, repo_root: str) -> list[str]:
+    """A register row's measure targets: ~ expands, a glob
+    row expands to its files, a bare relative path resolves
+    against the repo root, then against the venue subtree
+    the register's relative rows were written from."""
+    expanded = os.path.expanduser(row_path)
+    if any(ch in expanded for ch in "*?["):
+        parent = os.path.dirname(expanded)
+        if not os.path.isabs(parent):
+            parent = os.path.join(repo_root, parent)
+        pattern = os.path.join(parent, os.path.basename(expanded))
+        found: set[str] = set()
+        for variant in {pattern, pattern.replace("(.gz)", ".gz"), pattern.replace("(.gz)", "")}:
+            found.update(p for p in _glob.glob(variant) if os.path.isfile(p))
+        return sorted(found)
+    if os.path.isabs(expanded):
+        return [expanded] if os.path.exists(expanded) else []
+    for base in (repo_root, os.path.join(repo_root, "pipeline", "venue")):
+        candidate = os.path.join(base, expanded)
+        if os.path.exists(candidate):
+            return [candidate]
+    return []
+
+
+def measure_paths(paths: list[str], timeout: int) -> dict[str, int]:
+    """du -s over every target in one call; a timeout or a
+    failed run measures nothing (the caller keeps the
+    recorded figures — suppression never rides a failed
+    read)."""
+    if not paths:
+        return {}
+    try:
+        out = subprocess.run(
+            ["du", "-s", "-B1", *paths],
+            capture_output=True, text=True, timeout=timeout,
+        )
+    except (subprocess.TimeoutExpired, OSError):
+        return {}
+    sizes: dict[str, int] = {}
+    for line in out.stdout.splitlines():
+        size, _, path = line.partition("\t")
+        if size.strip().isdigit():
+            sizes[path] = int(size)
+    return sizes
+
+
+def register_pass(state_dir: str, repo_root: str, timeout: int) -> list[str]:
+    """Re-measure the holdings register; report any row
+    grown more than the growth bound above its recorded
+    figure as an owning-thread defect, and write the new
+    figures back in the same run."""
+    register_file = os.path.join(state_dir, "register.json")
+    try:
+        with open(register_file) as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return []
+    rows = data.get("rows") or []
+    targets: dict[int, list[str]] = {}
+    all_paths: list[str] = []
+    for idx, row in enumerate(rows):
+        found = resolve_row_paths(str(row.get("path", "")), repo_root)
+        if found:
+            targets[idx] = found
+            all_paths.extend(found)
+    sizes = measure_paths(sorted(set(all_paths)), timeout)
+    if not sizes:
+        return []
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    lines: list[str] = []
+    changed = False
+    for idx, found in targets.items():
+        if not all(p in sizes for p in found):
+            continue
+        measured = sum(sizes[p] for p in found)
+        row = rows[idx]
+        recorded = row.get("bytes_gb")
+        if isinstance(recorded, (int, float)) and measured - int(recorded * GB) > REGISTER_GROWTH_BYTES:
+            lines.append(
+                f"STORAGE REGISTER GROWTH: {row.get('path')} grew "
+                f"{fmt_bytes(measured - int(recorded * GB))} since its last measure "
+                f"({recorded} GB -> {measured / GB:.2f} GB) — owning-thread defect: "
+                f"{row.get('owner', 'unnamed owner')}"
+            )
+        row["bytes_gb"] = round(measured / GB, 2)
+        row["measured_at"] = now_iso
+        changed = True
+    if changed:
+        data["measured_at"] = now_iso
+        paths.staged_write(
+            register_file, (json.dumps(data, indent=4) + "\n").encode("utf-8"))
+    return lines
+
+
+def trash_purge(trash_dir: str, now: datetime) -> tuple[int, int]:
+    """Purge the contents of trash entries older than the
+    purge age: the entry's files/ subtree is emptied, the
+    entry shell and its .trashinfo are retained. Returns
+    (entries purged, bytes reclaimed); an entry already
+    empty is not counted, so a continuing episode does not
+    re-report."""
+    if not os.path.isdir(trash_dir):
+        return (0, 0)
+    purged = 0
+    reclaimed = 0
+    for name in sorted(os.listdir(trash_dir)):
+        entry = os.path.join(trash_dir, name)
+        if not os.path.isdir(entry):
+            continue
+        try:
+            stamp = datetime.strptime(name[:15], "%Y%m%d-%H%M%S").replace(tzinfo=timezone.utc)
+        except ValueError:
+            stamp = datetime.fromtimestamp(os.path.getmtime(entry), tz=timezone.utc)
+        if (now - stamp).total_seconds() <= TRASH_PURGE_AGE_S:
+            continue
+        files_dir = os.path.join(entry, "files")
+        if not os.path.isdir(files_dir):
+            continue
+        size = 0
+        held = False
+        for root, _dirs, files in os.walk(files_dir):
+            for fname in files:
+                held = True
+                try:
+                    size += os.path.getsize(os.path.join(root, fname))
+                except OSError:
+                    pass
+        if not held:
+            continue
+        for child in os.listdir(files_dir):
+            child_path = os.path.join(files_dir, child)
+            try:
+                if os.path.isdir(child_path) and not os.path.islink(child_path):
+                    shutil.rmtree(child_path)
+                else:
+                    os.unlink(child_path)
+            except OSError:
+                continue
+        purged += 1
+        reclaimed += size
+    return (purged, reclaimed)
+
+
 def main() -> int:
     repo_root = paths.REPO_ROOT
     state_dir = os.environ.get(
@@ -200,6 +369,20 @@ def main() -> int:
     paths.staged_write(
         state_file, (json.dumps(current) + "\n").encode("utf-8"))
 
+    du_timeout = int(os.environ.get("STORAGE_WATCH_DU_TIMEOUT_SECS", "90"))
+    for line in register_pass(state_dir, repo_root, du_timeout):
+        print(line)
+    if current["home"] >= 1:
+        trash_dir = os.environ.get(
+            TRASH_DIR_ENV, os.path.expanduser("~/.local/share/Trash/hatch"))
+        purged, reclaimed = trash_purge(trash_dir, datetime.now(timezone.utc))
+        if purged:
+            print(
+                f"STORAGE TRASH PURGE: purged the contents of {purged} "
+                f"trash entries older than 7 days ({fmt_bytes(reclaimed)} "
+                f"reclaimed) — entry metadata retained"
+            )
+
     if recorded is None:
         return 0  # baseline adoption is silent (detector discipline)
 
@@ -216,7 +399,6 @@ def main() -> int:
         stores = [s for s in stores_env.split(os.pathsep) if s]
     else:
         stores = default_stores(repo_root)
-    du_timeout = int(os.environ.get("STORAGE_WATCH_DU_TIMEOUT_SECS", "90"))
 
     for name, low_label, crit_label in crossed:
         level = current[name]

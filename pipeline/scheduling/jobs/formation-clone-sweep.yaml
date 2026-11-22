@@ -11,7 +11,6 @@ run:
   argv:
     - python3
     - ${REPO}/ops/watches/clone_sweep.py
-    - --dry-run
 timeout_secs: 900
 report:
   when: on_output
@@ -19,7 +18,7 @@ report:
     - 0
     - 3
 state_paths: []
-classification: 'fixed command (one Python script): every cycle lists the top level of the four workspace scratch roots (tmp-gate, tmp-gate2, .tmp-parent-gate, tmp-s7), selects directories whose names carry the formation stamp (<job>-<UTC yyyymmddThhmmssZ>, parsed strictly from the name, never mtime), and removes those older than the 1-hour reconciliation window that no live process holds open (the /proc fd scan) and no non-terminal runner run record names; non-matching names, files, bundles and run records are never candidates. Outcomes branch on enumerable filesystem, proc and record state alone: silent when nothing qualifies, one CLONE-SWEEP line per reap (per would-reap and per guard-keep while the entry carries --dry-run), exit 3 when a root is unreadable or a removal fails. Speaking is fully determined by those branches.'
+classification: 'fixed command (one Python script): every cycle lists the top level of the four workspace scratch roots (tmp-gate, tmp-gate2, .tmp-parent-gate, tmp-s7), selects directories whose names carry the formation stamp (<job>-<UTC yyyymmddThhmmssZ>, parsed strictly from the name, never mtime), and removes those older than the 1-hour reconciliation window that no live process holds open (the /proc fd scan) and no non-terminal runner run record names; non-matching names, files, bundles and run records are never candidates. Outcomes branch on enumerable filesystem, proc and record state alone: silent when nothing qualifies, one CLONE-SWEEP line per reap (and per guard-keep), exit 3 when a root is unreadable or a removal fails. Speaking is fully determined by those branches. (The admitted --dry-run was removed 2026-11-22: a permanently report-only sweeper named the same two clones "would reap" for 19+ hours while storage crossed its tiers — the sweep now reaps what it selects.)'
 lifetime: permanent
 catalog:
   origin: hand

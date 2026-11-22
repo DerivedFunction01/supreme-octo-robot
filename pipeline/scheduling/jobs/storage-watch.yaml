@@ -20,7 +20,7 @@ report:
     - 3
 state_paths:
   - ${REPO}/state/storage-watch
-classification: fixed command (one Python script); every outcome branches on two disk_usage reads against fixed thresholds — silent baseline adoption, silent healthy match, one report per threshold crossing (low, then critical), silent de-escalation and recovery, exit 3 when a filesystem is unreadable; speaking is fully determined by those branches and the recorded episode levels
+classification: fixed command (one Python script); every outcome branches on two disk_usage reads against fixed thresholds — silent baseline adoption, silent healthy match, one report per threshold crossing (low, then critical), silent de-escalation and recovery, exit 3 when a filesystem is unreadable; speaking is fully determined by those branches and the recorded episode levels. Two further legs ride the same script (2026-11-22): the holdings register in its state dir is re-measured every run and a row grown more than 1 GB over its recorded figure reports as an owning-thread defect (measured figures are written back in the same run; an unmeasurable row stays silent at its recorded figure), and while home is below the low tier the contents of recoverable-trash entries older than 7 days are purged with their metadata retained, reported once per run that reclaims.
 source:
   catalog: example-storage-watch
   catalog_version: 1
