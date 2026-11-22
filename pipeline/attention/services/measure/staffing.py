@@ -22,6 +22,7 @@ from attention.services.measure.staffing_rows import (
     _record_rows,
     _row,
     _terminal_rows,
+    _unlanded_rows,
     _unrouted_rows,
     _worktree_rows,
 )
@@ -253,6 +254,7 @@ def build_staffing(
         + _record_rows(state, now, cadence_of)
         + _orphan_rows(state, now)
         + _terminal_rows(state, now)
+        + _unlanded_rows(state, now)
     )
     owait = _owner_waiting_rows(state, now, cadence_of)
     snapshot = state.get("capacity_snapshot")

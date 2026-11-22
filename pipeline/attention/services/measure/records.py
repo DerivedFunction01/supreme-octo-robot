@@ -32,6 +32,20 @@ RUN_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9\-]*?-\d{8}T\d{6}Z(?:-\d+)?")
 TERMINAL_TOKENS = re.compile(
     r"fail|terminal|exit|verdict|dispos|abandon|collect|orphan", re.IGNORECASE
 )
+# The words that make a checkpoint line a completion
+# claim about a build: the unlanded class measures the
+# claim against main's ancestry, never against the
+# claim's own word — a line claiming "landed" for a
+# commit main does not carry is the sharpest specimen.
+# A gate FIRE claims nothing; a gate verdict (pass /
+# complete / green) claims the build it gated.
+COMPLETION_TOKENS = re.compile(
+    r"complet|built|landed|gate[ -](pass|complete|green)|\bPASS\b", re.IGNORECASE
+)
+# A commit token in a claim line: hex, 7-40 chars,
+# carrying at least one a-f letter (a bare digit run
+# is a date or a count, not a commit).
+SHA_TOKEN = re.compile(r"\b(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")
 TAIL_BYTES = 65536
 
 
@@ -160,6 +174,160 @@ def collect_consumption(state: dict, settings: Settings, now: datetime) -> bool:
         consumed = (prior | found) if failed else found
         if consumed != prior:
             snapshot[slug] = {"at": now, "consumed": sorted(consumed)}
+            changed = True
+    return changed
+
+
+def claimed_builds(text: str) -> list:
+    """The completion claims one programme record
+    makes: a progress-checkpoint line carrying a
+    completion token and naming a commit. The claim's
+    instant is the line's own checkpoint stamp — the
+    interval runs from the claim, not from the build.
+    A checkpoint line with no completion token, or a
+    completion word with no commit named, claims
+    nothing this class can measure."""
+    found = []
+    for line in (text or "").splitlines():
+        match = CHECKPOINT.search(line)
+        if match is None or not COMPLETION_TOKENS.search(line):
+            continue
+        stamp = _parse_stamp(match.group(1))
+        if stamp is None:
+            continue
+        for sha in SHA_TOKEN.findall(line):
+            found.append({"sha": sha, "claimed_at": stamp})
+    return found
+
+
+def _repo_for(path: Path):
+    """The git repo enclosing a record file, or None:
+    the ancestry a claim is measured against is its
+    own repo's main, derived from where the record
+    lives — attribution stays filesystem truth, never
+    a measure-side table."""
+    import subprocess
+
+    try:
+        done = subprocess.run(
+            ["git", "-C", str(path.parent), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except Exception:
+        return None
+    if done.returncode != 0:
+        return None
+    return done.stdout.strip() or None
+
+
+def _is_landed(repo: str, sha: str):
+    """True when main carries the commit, False when
+    the commit exists and main does not, None when the
+    object is unknown locally — unmeasurable is honest
+    absence, never a row."""
+    import subprocess
+
+    try:
+        exists = subprocess.run(
+            ["git", "-C", repo, "cat-file", "-e", f"{sha}^{{commit}}"],
+            capture_output=True,
+            timeout=10,
+        )
+        if exists.returncode != 0:
+            return None
+        done = subprocess.run(
+            ["git", "-C", repo, "merge-base", "--is-ancestor", sha, "main"],
+            capture_output=True,
+            timeout=10,
+        )
+    except Exception:
+        return None
+    if done.returncode == 0:
+        return True
+    if done.returncode == 1:
+        return False
+    return None
+
+
+def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
+    """Snapshot, per declared programme, the builds
+    its own records claim complete, each measured
+    against main: the unlanded class's facts. The
+    claim is the programme's checkpoint word; the
+    landed flag is git ancestry at collect time, so
+    a row clears on the landing itself, never on a
+    later checkpoint's say-so. The earliest claim of
+    a commit starts its clock. A programme whose
+    workbench read fails keeps its prior claims (the
+    consumption collector's discipline); a claim
+    whose repo cannot be derived stays unmeasured."""
+    snapshot = state.setdefault("unlanded_snapshot", {})
+    changed = False
+    for programme in programmes.active_declarations(state):
+        slug = programme["slug"]
+        prior = (snapshot.get(slug) or {}).get("claims") or []
+        claims: dict = {}
+        repos: dict = {}
+
+        def _note(claim):
+            # The earliest claim of a commit starts
+            # its clock; a re-claim never resets it.
+            sha = claim["sha"]
+            if sha not in claims or claim["claimed_at"] < claims[sha]:
+                claims[sha] = claim["claimed_at"]
+
+        failed = False
+        for project in programmes.wb_projects(programme):
+            try:
+                payload = wb_client.fetch_todos(
+                    settings.wb_url, project, settings.wb_collect_timeout_s
+                )
+            except wb_client.WbUnavailable:
+                failed = True
+                continue
+            for todo in payload.get("todos") or []:
+                text = f"{todo.get('title') or ''}\n{todo.get('body') or ''}"
+                for claim in claimed_builds(text):
+                    _note(claim)
+        for path in _files(programme.get("record_locations") or []):
+            repo = _repo_for(path)
+            for claim in claimed_builds(_tail_text(path)):
+                _note(claim)
+                if repo is not None:
+                    repos[claim["sha"]] = repo
+        if failed and not claims:
+            continue
+        if failed:
+            for entry in prior:
+                _note(
+                    {"sha": entry["sha"], "claimed_at": _parse_stamp(entry["claimed_at"])}
+                )
+                if entry.get("repo"):
+                    repos[entry["sha"]] = entry["repo"]
+        # wb-only claims measure against the repo of
+        # any record file the programme declares.
+        fallback_repo = next(iter(repos.values()), None)
+        entries = []
+        for sha, claimed_at in sorted(claims.items(), key=lambda kv: kv[1]):
+            repo = repos.get(sha) or fallback_repo
+            entries.append(
+                {
+                    "sha": sha,
+                    "claimed_at": claimed_at.isoformat(),
+                    "repo": repo,
+                    "landed": _is_landed(repo, sha) if repo else None,
+                }
+            )
+        before = [
+            {k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in prior
+        ]
+        after = [
+            {k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in entries
+        ]
+        if after != before:
+            snapshot[slug] = {"at": now, "claims": entries}
             changed = True
     return changed
 

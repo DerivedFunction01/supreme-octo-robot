@@ -64,6 +64,7 @@ SWEEP_CLASSES = {
     "unarmed_work": ("orphan",),
     "orphan_record": ("orphan",),
     "terminal_unconsumed": ("terminal",),
+    "unlanded_build": ("unlanded",),
     "phantom_stop": ("idle", "stall"),
     "blocked_uncited": ("idle",),
     "blocked_unverified": ("idle",),
@@ -105,6 +106,10 @@ _SWEEP_NEXT_ACT = {
         "Next act: collect the record — read it, post the "
         "disposition in the programme's own record — and "
         "verify the collecting lane."
+    ),
+    "unlanded_build": (
+        "Next act: land the build on main — a gate verdict is "
+        "not a landing — or correct the checkpoint's claim."
     ),
     "phantom_stop": (
         "Next act: cite the owner's message (thread and time) with "

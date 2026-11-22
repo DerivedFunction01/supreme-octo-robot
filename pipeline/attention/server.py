@@ -634,6 +634,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
         trees_changed = worktrees.collect(fresh, now)
         records_changed = records.collect(fresh, now)
         consumption_changed = records.collect_consumption(fresh, settings, now)
+        unlanded_changed = records.collect_unlanded(fresh, settings, now)
         goals_changed = records.collect_goals(fresh, now)
         stamps_changed = stamps.collect(fresh, settings, now)
         venue_changed = venue.collect(fresh, settings, now)
@@ -646,6 +647,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
             or trees_changed
             or records_changed
             or consumption_changed
+            or unlanded_changed
             or goals_changed
             or contracts_changed
             or stamps_changed
@@ -663,6 +665,8 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
                     state["record_snapshot"] = fresh["record_snapshot"]
                 if consumption_changed:
                     state["consumption_snapshot"] = fresh["consumption_snapshot"]
+                if unlanded_changed:
+                    state["unlanded_snapshot"] = fresh["unlanded_snapshot"]
                 if goals_changed:
                     state["goal_snapshot"] = fresh["goal_snapshot"]
                 if stamps_changed:

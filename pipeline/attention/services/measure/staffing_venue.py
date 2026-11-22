@@ -155,6 +155,62 @@ def _terminal_rows(state: dict, now: datetime) -> list:
     return rows
 
 
+def _unlanded_rows(state: dict, now: datetime) -> list:
+    """The unlanded class, from the unlanded
+    snapshot: a build the programme's own record
+    claimed complete — a checkpoint line naming the
+    commit beside a completion word — at least one
+    cadence interval ago, whose commit main still
+    does not carry. The claim is the checkpoint's;
+    the measure is ancestry, so the row clears on
+    the landing itself and never on a later
+    checkpoint's word. A claim whose commit cannot
+    be measured locally raises nothing. Gated on
+    the programme declaring the unlanded class."""
+    snapshot = state.get("unlanded_snapshot") or {}
+    if not snapshot:
+        return []
+    rows = []
+    for declaration in registry.active_declarations():
+        slug = declaration["slug"]
+        if "unlanded" not in registry.measure_classes_for(slug):
+            continue
+        facts = snapshot.get(slug)
+        if not facts:
+            continue
+        cadence = float(declaration.get("cadence_minutes") or 15)
+        handle = (declaration.get("handles") or [slug])[0]
+        for entry in facts.get("claims") or []:
+            if entry.get("landed") is not False:
+                continue
+            claimed = _as_dt(entry.get("claimed_at"))
+            age = int((now - claimed).total_seconds() // 60) if claimed else None
+            if age is None or age < cadence:
+                continue
+            rows.append(
+                _row(
+                    slug,
+                    handle,
+                    declaration["label"],
+                    "unlanded_build",
+                    f"Build {entry['sha']} was checkpointed complete "
+                    f"{age} minutes ago and is still not on main — "
+                    f"built, unlanded: the claim measured against "
+                    f"main's ancestry, not the checkpoint's word. "
+                    f"Next act: land it on main — a gate verdict is "
+                    f"not a landing — or correct the checkpoint's "
+                    f"claim.",
+                    idle_minutes=age,
+                    key=f"unlanded_build:{slug}:{entry['sha']}",
+                    extra={
+                        "sha": entry["sha"],
+                        "claimed_at": entry.get("claimed_at"),
+                    },
+                )
+            )
+    return rows
+
+
 def _programme_armed(state: dict, row: dict) -> list:
     """The armed rows a registry declaration owns,
     matched through its declared wb projects (the

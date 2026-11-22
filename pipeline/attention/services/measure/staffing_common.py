@@ -40,6 +40,7 @@ KIND_LABELS = {
     "unarmed_work": "Worktree standing — unarmed",
     "orphan_record": "Orphaned run record",
     "terminal_unconsumed": "Terminal run — unconsumed",
+    "unlanded_build": "Build claimed complete — unlanded",
     "serial_staffing": "Serial staffing",
     "frontier_shortfall": "Frontier shortfall",
 }

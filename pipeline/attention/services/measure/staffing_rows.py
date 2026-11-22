@@ -47,6 +47,7 @@ from .staffing_venue import (  # noqa: F401
     _orphan_rows,
     _programme_armed,
     _terminal_rows,
+    _unlanded_rows,
 )
 from .staffing_waits import (  # noqa: F401
     _armed_rows,

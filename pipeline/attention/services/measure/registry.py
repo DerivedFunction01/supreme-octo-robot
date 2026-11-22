@@ -39,6 +39,7 @@ MEASURE_CLASSES = (
     "unreported",
     "register_seam",
     "terminal",
+    "unlanded",
 )
 
 # The standing drain tail defaults (owner answer at
@@ -309,6 +310,7 @@ _SEED = (
             "orphan",
             "unreported",
             "terminal",
+            "unlanded",
         ],
         "drain_tail": _tail(),
         "staffing_contract": copy.deepcopy(EDGAR_STAFFING_CONTRACT),
@@ -351,6 +353,7 @@ _SEED = (
             "unreported",
             "register_seam",
             "terminal",
+            "unlanded",
         ],
         # The programme's venue runs ride the caller
         # prefix "steampower" (steampower-cust and its
@@ -382,6 +385,7 @@ _SEED = (
             "orphan",
             "unreported",
             "terminal",
+            "unlanded",
         ],
         # The programme's venue runs ride the caller
         # "workhorse", not the slug stem "supreme".

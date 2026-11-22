@@ -164,6 +164,19 @@ class SweepClassesAndRoutes(unittest.TestCase):
             )
         self.assertNotIn("terminal", registry.measure_classes_for("edgar-sec"))
 
+    def test_unlanded_class_is_enabled_for_every_active_programme(self):
+        # The unlanded class (2026-11-22): seeded with
+        # the terminal declarers — every active
+        # programme declares it; the retired row does
+        # not gain it retroactively.
+        for row in registry.active_declarations():
+            self.assertIn(
+                "unlanded",
+                registry.measure_classes_for(row["slug"]),
+                f"{row['slug']} missing unlanded",
+            )
+        self.assertNotIn("unlanded", registry.measure_classes_for("edgar-sec"))
+
     def test_caller_stems_are_declared_where_the_caller_is_not_the_slug(self):
         self.assertEqual(
             registry.for_slug("steampowernj").get("caller_stems"), ["steampower"]
