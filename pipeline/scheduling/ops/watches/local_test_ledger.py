@@ -26,15 +26,26 @@ Stdlib only; the database opens read-only, in the same form
 as the sibling census watch.
 """
 
+import importlib.util as _importlib_util
 import json
 import os
 import sqlite3
-from datetime import datetime
 
 WINDOW_BEFORE_S = 1200
 WINDOW_AFTER_S = 120
 
+# The parse intent's home for this cluster is the
+# workrecord lib's util (the date-family map: scheduling
+# ops bind it by derived path) — the tolerant instant
+# parse lives there, never copied here.
 _HERE = os.path.dirname(os.path.abspath(__file__))
+_util_spec = _importlib_util.spec_from_file_location(
+    "workrecord_lib_util",
+    os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(_HERE))),
+        "workrecord", "lib", "util.py"))
+_util = _importlib_util.module_from_spec(_util_spec)
+_util_spec.loader.exec_module(_util)
 
 
 def ledger_path(state_dir=None):
@@ -47,10 +58,8 @@ def ledger_path(state_dir=None):
 def _epoch(at):
     if isinstance(at, (int, float)):
         return float(at)
-    try:
-        return datetime.fromisoformat(at).timestamp()
-    except (TypeError, ValueError):
-        return None
+    parsed = _util.parse_instant(at)
+    return parsed.timestamp() if parsed is not None else None
 
 
 def _distinctive_tokens(argv):
