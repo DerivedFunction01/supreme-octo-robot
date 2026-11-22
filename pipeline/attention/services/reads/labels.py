@@ -132,21 +132,45 @@ def handler_order(state: dict) -> dict:
     return {h["handle"]: i for i, h in enumerate(state["handlers"])}
 
 
+def _presence_expiry(state: dict) -> datetime | None:
+    expires = state["presence"].get("expires_at")
+    if isinstance(expires, str):
+        return datetime.fromisoformat(expires)
+    return expires
+
+
+def _declaration_lapsed(state: dict, now: datetime) -> bool:
+    """The declared presence window has passed: the
+    declaration as a whole no longer holds, whatever
+    mode it named."""
+    expires = _presence_expiry(state)
+    return expires is not None and expires <= now
+
+
 def effective_mode(state: dict, now: datetime) -> str:
     """The served presence mode: a declared mode whose
     expiry has passed no longer holds — the owner is
     back, and no surface keeps withholding for it."""
     mode = state["presence"]["mode"]
-    expires = state["presence"].get("expires_at")
-    if isinstance(expires, str):
-        expires = datetime.fromisoformat(expires)
-    if mode != "active" and expires is not None and expires <= now:
+    if mode != "active" and _declaration_lapsed(state, now):
         return "active"
     return mode
 
 
 def presence_view(state: dict, now: datetime) -> dict:
     presence = state["presence"]
+    if _declaration_lapsed(state, now):
+        # An expired declaration serves the default: the
+        # stale expiry and the expectation it carried are
+        # the declaration's, and it has ended — an "active
+        # until T" record past T must not keep serving T
+        # and its expectation as the current presence.
+        return {
+            "mode": "active",
+            "mode_label": MODE_LABELS["active"],
+            "expires_at": None,
+            "expectation": "",
+        }
     mode = effective_mode(state, now)
     return {
         "mode": mode,
