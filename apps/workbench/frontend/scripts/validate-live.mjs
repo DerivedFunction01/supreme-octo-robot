@@ -530,12 +530,21 @@ check(
     ? `${degradedRepo.sweep}/${degradedRepo.syncLabel}/${degradedRepo.modifiedCount}`
     : "no repo projected",
 );
-const healthyRepo = degradedAdapter?.repos().find((r) => r.slug !== "alpha");
+const healthyRepo = degradedAdapter
+  ?.repos()
+  .find((r) => r.sweep === "swept" && r.syncLabel !== "Status unavailable");
 check(
   "healthy repos in the same document project normally",
-  healthyRepo !== undefined && healthyRepo.sweep === "swept" &&
-    healthyRepo.syncLabel !== "Status unavailable",
+  healthyRepo !== undefined,
   healthyRepo ? `${healthyRepo.slug}/${healthyRepo.syncLabel}` : "none found",
+);
+const betaRepo = degradedAdapter?.repos().find((r) => r.slug === "beta");
+check(
+  "a manifest-only project projects its honest absence",
+  betaRepo !== undefined &&
+    betaRepo.syncLabel === "Status unavailable" &&
+    betaRepo.modifiedCount === 0,
+  betaRepo ? `${betaRepo.slug}/${betaRepo.syncLabel}` : "no beta projected",
 );
 
 console.log(`\n${passes} passed, ${failures} failed`);

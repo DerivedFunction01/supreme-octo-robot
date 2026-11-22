@@ -101,9 +101,14 @@ export async function guardedSave(h: LiveHost, repoSlug: string, path: string, c
  *  content for answers from the snapshot. */
 export async function repoFileContent(h: LiveHost, repoSlug: string, path: string): Promise<EntryFileResult> {
   const repo = h.repo(repoSlug);
-  const file = repo ? findFileInTree(repo.files, path) : undefined;
-  if (!repo || !file) return { ok: false, reason: `No such file: ${path}` };
-  if (file.content !== undefined && file.sha) {
+  if (!repo) return { ok: false, reason: `No such file: ${path}` };
+  // The document no longer carries the file tree (SPEC
+  // §21: code detail serves on demand), so absence from
+  // the tree is not absence from the repo — the peek
+  // route itself answers for a missing file. The tree
+  // node, when one exists, is the content cache.
+  const file = findFileInTree(repo.files, path);
+  if (file && file.content !== undefined && file.sha) {
     return { ok: true, body: file.content, sha: file.sha };
   }
   // The peek: over HTTP, GET …/file; in the frame form,
@@ -164,13 +169,33 @@ export async function repoFileContent(h: LiveHost, repoSlug: string, path: strin
       reason: peek.editable_reason ?? "The server does not serve this file's content.",
     };
   }
-  file.content = peek.content;
-  file.sha = peek.sha256;
-  if (peek.line_count != null) file.lines = peek.line_count;
-  if (peek.size_bytes != null) {
-    file.sizeLabel = `${peek.size_bytes.toLocaleString()} bytes · ${peek.line_count ?? file.lines ?? 0} lines`;
+  // Cache the peek on the repo's tree — upserting the
+  // node when the document served no tree (SPEC §21):
+  // the tree is a cache the peeks populate, and the
+  // guarded save's lookup + editable gate read it.
+  let node = file;
+  if (!node) {
+    const parts = path.split("/").filter(Boolean);
+    let level = repo.files;
+    for (const part of parts.slice(0, -1)) {
+      let folder = level.find((f) => f.name === part);
+      if (!folder) {
+        folder = { name: part, kind: "folder", children: [] };
+        level.push(folder);
+      }
+      folder.children ??= [];
+      level = folder.children;
+    }
+    node = { name: parts[parts.length - 1] ?? path, kind: "file" };
+    level.push(node);
   }
-  file.editable = peek.editable ? "guarded" : "no";
+  node.content = peek.content;
+  node.sha = peek.sha256;
+  if (peek.line_count != null) node.lines = peek.line_count;
+  if (peek.size_bytes != null) {
+    node.sizeLabel = `${peek.size_bytes.toLocaleString()} bytes · ${peek.line_count ?? node.lines ?? 0} lines`;
+  }
+  node.editable = peek.editable ? "guarded" : "no";
   h.emit();
   return { ok: true, body: peek.content, sha: peek.sha256 };
 }

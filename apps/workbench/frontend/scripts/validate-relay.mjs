@@ -133,6 +133,18 @@ const stubChannel = async (action, args = {}) => {
         },
         error: null,
       };
+    case "getRepoFile": {
+      // The Code-facet peek (SPEC §21): the document no
+      // longer serves file content, so the open rides
+      // this route and its sha256 is the save's CAS base.
+      const sha = "e".repeat(64);
+      repoShas.set(`${args.repoId}|${args.path}`, sha);
+      return {
+        status: 200,
+        payload: { content: "# Delta\n", sha256: sha, editable: true },
+        error: null,
+      };
+    }
     case "saveRepoFile": {
       const key = `${args.repoId}|${args.path}`;
       const current = repoShas.get(key);
@@ -237,10 +249,12 @@ check(
 );
 
 // -- the guarded repo save rides saveRepoFile (CAS) -------
-const readme = adapter
-  .repo("delta-repo")
-  ?.files.find((f) => f.name === "README.md");
-check("delta README served with its sha", Boolean(readme?.sha));
+// The README's content and sha serve on demand through
+// the Code route now (SPEC §21) — the document carries
+// no file tree — so the open rides repoFileContent and
+// the peek's sha256 is the save's CAS base.
+const readme = await adapter.repoFileContent("delta-repo", "README.md");
+check("delta README served with its sha", readme.ok && Boolean(readme.sha));
 const servedSha = readme.sha;
 repoShas.set("delta-repo|README.md", servedSha);
 const saved = await adapter.guardedSave(
