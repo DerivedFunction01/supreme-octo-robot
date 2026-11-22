@@ -5,7 +5,7 @@ delivery never gates the decision."""
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import datetime
 
 from attention.domain import attention as dom
 from attention.errors import Conflict, NotFound, Validation
