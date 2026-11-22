@@ -7,14 +7,14 @@
 //   node client/parity-check.mjs        (from artifact/)
 //
 // Asserts, over client/src and the built client/dist:
-//   (a) dist holds exactly one HTML document, and the
-//       one JS bundle in its split form (per-view split,
-//       perf lane L-D): the document loads exactly one
-//       script (the entry chunk) and exactly one
-//       stylesheet, and every other staged JS asset is
-//       a lazy chunk reachable in the entry's chunk
-//       graph — never a second entry, a second document,
-//       or an orphan bundle;
+//   (a) dist holds exactly one HTML document and
+//       exactly one JS bundle (the canonical single
+//       bundle — the per-view split retired 2026-11-22;
+//       the CVM publish stage accepts no split): the
+//       document loads exactly one script (the bundle)
+//       and exactly one stylesheet, and no other JS
+//       asset is staged — never a second entry, a
+//       second document, or an orphan bundle;
 //   (b) no frame-shell iframes and no `workhorse:`
 //       postMessage relay markers in src or in the
 //       bundle — the frame shell's transport never
@@ -91,14 +91,13 @@ check(
   htmlFiles.length === 1 && htmlFiles[0].endsWith("index.html"),
   `found ${htmlFiles.map(rel).join(", ") || "(none)"}`,
 );
-// The one bundle, in its split form (per-view split,
-// perf lane L-D): the document loads exactly one script
-// (the entry chunk) and exactly one stylesheet; the
-// entry's dynamic imports pull one lazy chunk per app
-// view plus the sub-chunks they share. Every other JS
-// asset staged must be reachable in that chunk graph
-// (referenced by name from another asset) — an orphan
-// JS file would be a second bundle by another name.
+// The one bundle, in its canonical single-bundle form:
+// the document loads exactly one script and exactly one
+// stylesheet, and that script is the only JS asset
+// staged — the mount seam's dynamic imports are inlined
+// into it by the canonical build. Any other JS asset
+// would be a second bundle by another name (the orphan
+// test below still applies, trivially).
 const documentText = htmlFiles.length === 1 ? read(htmlFiles[0]) : "";
 const scriptRefs = [...documentText.matchAll(/<script[^>]+src="\.\/assets\/([^"]+\.js)"/g)].map(
   (m) => m[1],
@@ -123,8 +122,8 @@ const orphanJs = jsFiles.filter((f) => {
   return !jsTexts.some((text) => text.includes(`./${name}`));
 });
 check(
-  "dist: the split staged per-view chunks, no orphan JS",
-  jsFiles.length >= 5 && orphanJs.length === 0,
+  "dist: exactly one JS bundle staged, no orphan JS",
+  jsFiles.length === 1 && orphanJs.length === 0,
   `js assets: ${jsFiles.length}; orphans: ${orphanJs.map(rel).join(", ") || "(none)"}`,
 );
 

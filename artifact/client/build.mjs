@@ -3,39 +3,43 @@
 // integrated frontend shell; the four apps are views of
 // this client).
 //
-// The bundle is split per view (perf lane L-D,
-// 2026-11-16): the entry chunk stages the shell and the
-// Launcher, and each app view's component tree is a lazy
-// chunk loaded on first navigation (the dynamic imports
-// at src/App.tsx's mount seam). One build graph, one
-// entry document, one router, one action layer — the
-// split moves bytes between chunks of the same bundle;
-// it creates no per-app document, page build, or relay.
-//
 // This module performs the SDK's canonical build
 // (@hatch/space-sdk's buildClient, mirrored
-// parameter-for-parameter below) with ONE deliberate
-// delta — `splitting: true` — because buildClient
-// exposes no options (its BuildClientOptions is an empty
-// interface) and code splitting is a bundler-level
-// property: without it the bundler inlines dynamic
-// imports and no per-view chunk exists. Everything else
-// — the driver guard, the production define, the
-// platform version, the asset naming, the tailwind
-// plugin (the SDK's own, resolved from this install as
-// the SDK resolves it), the asset-URL re-prefixing, the
-// pdfjs staging — is the SDK's build, unchanged. If the
-// SDK grows a splitting option, this file returns to
-// calling buildClient and the delta retires.
+// parameter-for-parameter below): ONE bundle — the
+// bundler inlines the dynamic imports at src/App.tsx's
+// mount seam into the single entry chunk. One build
+// graph, one entry document, one router, one action
+// layer; no per-app document, page build, or relay.
+//
+// The per-view split this build carried from the
+// 2026-11-20 remake (perf lane L-D's `splitting: true`
+// delta, one lazy chunk per app view) is RETIRED
+// (2026-11-22): the platform's CVM publish stage
+// requires exactly one JS bundle in the staged client,
+// and the split build failed that stage with 85 JS
+// files on the 2026-11-22 republish attempt — a split
+// bundle cannot be published at all, so the delta's
+// perf intent has no served surface to act on. The
+// canonical single bundle is the form the 2026-11-20
+// published build carries. The mount seam's dynamic
+// imports stay in the source; if the platform grows a
+// split-capable publish stage, the delta can return
+// behind this file's shape check.
+//
+// Everything else — the driver guard, the production
+// define, the platform version, the asset naming, the
+// tailwind plugin (the SDK's own, resolved from this
+// install as the SDK resolves it), the asset-URL
+// re-prefixing, the pdfjs staging — is the SDK's build,
+// unchanged.
 //
 // The shape check at the end keeps the ruled form: the
-// staging holds exactly ONE document (no frame pages, no
-// sibling documents — the daemon's sibling-document
-// mechanism the frame shell rode stays unused), and the
-// split must actually have happened — an entry chunk
-// plus at least one lazy chunk per app view — so a build
-// that silently inlined the views again fails here
-// instead of shipping the regression.
+// staging holds exactly ONE document (no frame pages,
+// no sibling documents — the daemon's sibling-document
+// mechanism the frame shell rode stays unused), and
+// exactly ONE JS bundle, so a build that silently
+// split again fails here instead of at the publish
+// stage.
 import { cp, readFile, rm } from "node:fs/promises";
 import { readdirSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -78,11 +82,6 @@ const result = await Bun.build({
   entrypoints: [ENTRY],
   outdir: OUTDIR,
   minify: true,
-  // THE delta from the SDK's buildClient: code splitting,
-  // so the dynamic imports at the mount seam emit one
-  // lazy chunk per app view instead of inlining into the
-  // entry chunk.
-  splitting: true,
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
     __HATCH_SPACE_PLATFORM_VERSION__: JSON.stringify(
@@ -157,13 +156,13 @@ if (documents.length !== 1 || documents[0] !== "index.html") {
     `one-client build must stage exactly one document (index.html); staged documents: ${documents.join(", ") || "(none)"}`,
   );
 }
-const jsAssets = assets.filter((f) => f.endsWith(".js"));
-if (jsAssets.length < 5) {
+const jsFiles = [...staged, ...assets].filter((f) => f.endsWith(".js"));
+if (jsFiles.length !== 1) {
   throw new Error(
-    `per-view split must stage an entry chunk plus a lazy chunk per app view (>= 5 JS assets); staged: ${jsAssets.join(", ") || "(none)"}`,
+    `canonical build must stage exactly one JS bundle (the CVM publish stage accepts no split); staged: ${jsFiles.join(", ") || "(none)"}`,
   );
 }
 
 console.log(
-  `client staged: dist/index.html + assets/{${assets.join(", ")}} — one bundle (entry + per-view chunks), one document`,
+  `client staged: dist/index.html + assets/{${assets.join(", ")}} — one bundle, one document`,
 );

@@ -22,16 +22,20 @@ scheduler `pages/scheduler/RESTORE-NOTES.md`; attention
 ## 1. Shape
 
 - Entry: `client/index.html` → `src/main.tsx` → `src/App.tsx`.
-  `build.mjs` runs the SDK's `buildClient()` with
-  `splitting: true` and a shape guard: the staging must
-  contain exactly ONE document (`dist/index.html`), one
-  entry chunk carrying the shell and the Launcher, and at
-  least one lazy chunk per app view; a silent re-inline
-  fails the build. Each view's shell-facing half (nav,
-  active key, search declaration, crumb — the H1/title
-  source) lives in `views/<app>/meta.ts` and is imported
-  statically, so the chrome is complete from the first
-  paint; the view's component tree is the lazy chunk,
+  `build.mjs` runs the SDK's canonical `buildClient()`
+  form with a shape guard: the staging must contain
+  exactly ONE document (`dist/index.html`) and exactly
+  ONE JS bundle carrying the shell, the Launcher, and
+  every view (the mount seam's dynamic imports inlined);
+  a split build fails the guard, because the platform's
+  CVM publish stage accepts exactly one JS bundle (the
+  per-view split retired 2026-11-22). Each view's
+  shell-facing half (nav, active key, search declaration,
+  crumb — the H1/title source) lives in
+  `views/<app>/meta.ts` and is imported statically, so
+  the chrome is complete from the first paint; the
+  view's component tree joins the one bundle through
+  the mount seam,
   mounted in the kit `SectionBoundary` — a chunk in
   flight shows the kit `EmptyState` pending form, and a
   failed chunk lands in the boundary's error form inside

@@ -20,11 +20,12 @@
 // and no per-app documents — the composition this file
 // replaced (the frame shell) is deleted, not extended.
 //
-// The one bundle is split per view (perf lane L-D,
-// 2026-11-16): the entry chunk carries the shell and the
-// Launcher; each app view's component tree is a lazy
-// chunk the bundler emits from the dynamic imports below,
-// loaded on first navigation to the app. What the shell
+// The one bundle carries every view (the per-view
+// split of perf lane L-D retired 2026-11-22 — the CVM
+// publish stage accepts exactly one JS bundle): the
+// dynamic imports below are inlined into the single
+// entry chunk by the canonical build, so each app
+// view's component tree arrives with the bundle. What the shell
 // needs synchronously — each mount's nav, active key,
 // search declaration, and crumb — lives in the views'
 // meta modules (views/<app>/meta.ts: pure data and pure
@@ -75,13 +76,14 @@ const VIEW_META: Record<AppId, Omit<AppViewModule, "Component">> = {
   runner: runnerMeta,
 };
 
-/** Each app view's component tree, loaded on first
- *  navigation to the app (the per-view split): the
- *  dynamic imports are the bundler's chunk seams, one
- *  chunk per app. React.lazy caches the loaded module,
- *  so a return visit mounts synchronously; a chunk that
- *  fails to load throws into the SectionBoundary at the
- *  mount (below) and renders its fallback — the client's
+/** Each app view's component tree, mounted on first
+ *  navigation to the app: the dynamic imports are the
+ *  mount seam — under the canonical single-bundle build
+ *  the bundler inlines them into the one entry chunk, so
+ *  the module is already present and React.lazy resolves
+ *  it in place. A module that fails to load throws into
+ *  the SectionBoundary at the mount (below) and renders
+ *  its fallback — the client's
  *  error form — never a blank. The assembled AppViewModule
  *  each view exports stays the contract of record; the
  *  shell takes only its Component from the lazy module,
@@ -429,9 +431,9 @@ export default function App() {
         >
           {sectionName}
         </h1>
-        {/* The view mount (per-view split): the kit's
+        {/* The view mount: the kit's
             SectionBoundary is the shell's backstop — a
-            chunk that fails to load, or a render that
+            module that fails to load, or a render that
             throws, lands in its fallback inside intact
             chrome, never a blank root. It is keyed by app
             so navigating to another app clears a stuck
