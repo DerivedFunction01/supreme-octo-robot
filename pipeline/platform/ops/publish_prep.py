@@ -33,21 +33,22 @@ mirror or published:
 - the composed client build runs from an empty
   client/dist, through the repo build.mjs's own build —
   build.mjs carries the SDK buildClient's Bun.build
-  call inline (its own mirror, with the one deliberate
-  delta splitting: true), so the prep's local build is
-  build.mjs itself with only its driver guard (the
-  check reserving builds to the artifact tools)
+  call inline (its own mirror, in the canonical
+  single-bundle form — the splitting: true delta is
+  retired, 2026-11-22: the platform's CVM publish stage
+  accepts exactly one JS bundle), so the prep's local
+  build is build.mjs itself with only its driver guard
+  (the check reserving builds to the artifact tools)
   neutralized, mechanically transformed — if
   build.mjs's shape moves, the transform's anchors
   fail and the prep stops rather than building wrong.
 - dist hygiene: the staged dist contains EXACTLY the
   referenced set — the one entry document and its
-  split bundle: the entry chunk and stylesheet the
-  document names, plus the lazy per-view chunks and
-  their stylesheets (fonts ride inside the stylesheets
-  as data URIs) — and a same-bundle assertion runs
-  over the staged document: it names the one entry
-  chunk and the one stylesheet. (Step 3's run 3
+  canonical single bundle: the one JS bundle and the
+  stylesheet the document names (fonts ride inside the
+  stylesheet as data URIs) — and a same-bundle
+  assertion runs over the staged document: it names
+  the one bundle and the one stylesheet. (Step 3's run 3
   drove a stale frame document against a fresh bundle;
   the exactly-the-referenced-set half of this assertion
   is that lesson mechanized.)
@@ -109,8 +110,8 @@ WRONG_REACTS = ["18.3.1", "19.3.1"]
 # refuses non-builder runs, so the prep substituted a
 # replica of its Bun.build call. build.mjs now carries
 # that call inline — its own mirror of buildClient,
-# parameter-for-parameter, with the one deliberate
-# delta splitting: true — so there is no call left to
+# parameter-for-parameter, in the canonical
+# single-bundle form — so there is no call left to
 # substitute: the local build is build.mjs itself with
 # its driver guard (the check reserving builds to the
 # artifact tools, the refusal's new home) neutralized.
@@ -120,6 +121,10 @@ WRONG_REACTS = ["18.3.1", "19.3.1"]
 # lacked splitting when the split landed. Each anchor
 # is counted exactly; a build.mjs whose shape has moved
 # fails the prep rather than staging a wrongly built
+# bundle. The splitting anchor is counted in reverse:
+# the retired delta must be ABSENT — a build.mjs that
+# splits again fails the prep here rather than at the
+# platform's CVM stage, which accepts exactly one JS
 # bundle.
 GUARD_ANCHOR = ('if (process.env.HATCH_SPACES_BUILD_DRIVER'
                 ' !== "1") {')
@@ -280,12 +285,13 @@ class Prep:
         source = open(build_mjs_path, encoding="utf-8").read()
         if source.count(GUARD_ANCHOR) != 1 or \
                 source.count(BUILD_CALL_ANCHOR) != 1 or \
-                source.count(SPLIT_ANCHOR) != 1:
+                source.count(SPLIT_ANCHOR) != 0:
             raise PrepError(
                 "artifact/client/build.mjs no longer has the "
                 "shape the local-build transform anchors on "
                 "(one driver guard, one inline Bun.build call "
-                "carrying splitting: true) — the prep refuses "
+                "in the canonical single-bundle form — no "
+                "splitting: true) — the prep refuses "
                 "to guess a new shape")
         local = source.replace(GUARD_ANCHOR, GUARD_NEUTRALIZED)
         local_path = os.path.join(artifact, "client",
@@ -297,9 +303,9 @@ class Prep:
             shutil.rmtree(dist)
         code, out = _run("bun ./client/build-local.mjs", artifact)
         self.check("composed client build", code == 0,
-                   "exit 0; split bundle staged through "
+                   "exit 0; single bundle staged through "
                    "build.mjs's own build + staging code and "
-                   "its one-document / split shape check"
+                   "its one-document / one-bundle shape check"
                    if code == 0
                    else "exit " + str(code) + " — tail: "
                    + out[-600:].replace("\n", " "))
@@ -320,15 +326,14 @@ class Prep:
         expected = sorted(docs + bundles + styles)
         self.check("dist hygiene: exactly the referenced set",
                    files == expected and docs == ["index.html"]
-                   and len(bundles) >= 5,
+                   and len(bundles) == 1,
                    f"dist = {files}")
         if docs != ["index.html"] or not bundles or not styles:
             return
-        # The one document names the split bundle's entry
-        # chunk and its one stylesheet; every other staged
-        # JS asset is a lazy chunk the entry's graph pulls
-        # at runtime (parity-check.mjs proves the graph —
-        # no orphans, no second entry).
+        # The one document names the canonical single
+        # bundle and its one stylesheet (parity-check.mjs
+        # proves the shape — exactly one JS bundle, no
+        # orphans, no second entry).
         text = open(os.path.join(dist, "index.html"),
                     encoding="utf-8").read()
         scripts = [os.path.basename(s) for s in
@@ -343,15 +348,15 @@ class Prep:
                  and len(links) == 1 and links[0] in style_names)
         self.check("same bundle + stylesheet over every document",
                    named,
-                   f"the document names entry chunk {scripts[0]} "
-                   f"+ stylesheet {links[0]} of the split bundle "
-                   f"({len(bundles)} JS assets, {len(styles)} "
-                   f"stylesheets staged)"
+                   f"the document names the bundle {scripts[0]} "
+                   f"+ stylesheet {links[0]} of the canonical "
+                   f"single bundle ({len(bundles)} JS bundle, "
+                   f"{len(styles)} stylesheets staged)"
                    if named else
                    f"document names scripts {scripts}, styles "
                    f"{links}; staged bundle names {bundle_names}, "
                    f"style names {style_names}")
-        # One React, in whichever chunk the split placed it.
+        # One React, in the single bundle.
         bundle_text = "\n".join(
             open(os.path.join(dist, b), encoding="utf-8",
                  errors="replace").read() for b in bundles)
@@ -367,7 +372,7 @@ class Prep:
                    f"react pin {REACT_PIN} "
                    f"{'present' if REACT_PIN in versions else 'ABSENT'}; "
                    f"foreign react versions {wrong or 'none'}; "
-                   f"searched all {len(bundles)} chunks; "
+                   f"searched the {len(bundles)} bundle; "
                    f"entry sha256 {entry_sha}…")
         # Fonts inlined, none referenced as files.
         css_text = "\n".join(
