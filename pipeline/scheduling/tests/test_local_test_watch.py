@@ -761,9 +761,9 @@ class LedgerConsultCase(unittest.TestCase):
         import sqlite3
         db = os.path.join(self.tmp, "scheduler.db")
         con = sqlite3.connect(db)
-        con.execute("CREATE TABLE events (id INTEGER, ts TEXT, "
-                    "ts_epoch REAL, kind TEXT, job_id TEXT, "
-                    "status TEXT, record TEXT)")
+        con.executescript("DROP TABLE IF EXISTS events; CREATE TABLE events "
+                          "(id INTEGER, ts TEXT, ts_epoch REAL, kind TEXT, "
+                          "job_id TEXT, status TEXT, record TEXT)")
         for op_id, epoch, target in rows:
             con.execute("INSERT INTO events VALUES (?, ?, ?, 'op', "
                         "NULL, 'ok', ?)",

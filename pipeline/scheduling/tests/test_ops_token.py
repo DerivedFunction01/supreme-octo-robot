@@ -228,7 +228,8 @@ class MintStoreMirrorTest(unittest.TestCase):
         rc, out, _err = self._run(
             ["--caller", "test-actor", "boot-caller",
              "--scopes", "send"],
-            None)  # server unreachable: the bootstrap path
+            ops_client.UNREACHABLE)  # the _ops_post contract's
+        # unreachable shape (the sentinel, never None): bootstrap
         self.assertEqual(rc, 0)
         self.assertIn("wrote the live config directly", out)
         with open(self.config_path) as fh:
@@ -262,7 +263,8 @@ class MintStoreMirrorTest(unittest.TestCase):
         rc, out, err = self._run(
             ["--caller", "test-actor", "new-caller",
              "--scopes", "read"],
-            None)  # bootstrap: the config write is a real file
+            ops_client.UNREACHABLE)  # bootstrap: the config
+        # write is a real file
         self.assertEqual(rc, 1)
         self.assertIn("OUT OF SYNC", err)
         # The config landed — the failure is the mirror's,

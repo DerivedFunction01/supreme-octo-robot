@@ -74,6 +74,12 @@ class ReportCase(unittest.TestCase):
         self.assertEqual(code, 4)
         self.assertIn("nothing was performed", err)
 
+    def test_null_payload_reports_unknown(self):
+        code, err = self.report(None)
+        self.assertEqual(code, 4)
+        self.assertIn("UNKNOWN", err)
+        self.assertNotIn("nothing was performed", err)
+
     def test_unknown_never_claims_non_performance(self):
         code, err = self.report(ops_client.UNKNOWN)
         self.assertEqual(code, 4)
