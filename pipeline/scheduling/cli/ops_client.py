@@ -137,6 +137,11 @@ def _ops_report(op, payload):
         print(f"sched {op}: server unreachable — nothing was performed",
               file=sys.stderr)
         return 4
+    if not isinstance(payload, dict):
+        # A response that parsed to a non-object (a JSON
+        # null body is the reachable case) is a lost
+        # outcome, reported as UNKNOWN — never a crash.
+        payload = UNKNOWN
     if payload == UNKNOWN:
         print(f"sched {op}: the request was sent but the response "
               "was lost — the outcome is UNKNOWN and the op may "
