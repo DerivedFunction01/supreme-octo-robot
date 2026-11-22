@@ -12,6 +12,14 @@ by hand. The scheduler ledger (state/scheduler.db, events
 kind 'op') is the discriminating record: an op's record
 carries its caller and its full command target.
 
+Locator, pinned (Edgar coordinator's Instance 14
+disposition, 2026-11-22): the discriminating store is
+state/scheduler.db, table events — the state/ledger.db
+beside it is a 0-byte stub that answers nothing, and a
+check pointed there reads empty and misreads as
+no-covering-op. Three probes found the right store
+once; this note is so no check pays that again.
+
 This module is the consult: given a finding (argv + cwd) and
 the sighting instant, it answers whether a ledger op covers
 the sampled process — the op started inside the window
@@ -49,6 +57,9 @@ _util_spec.loader.exec_module(_util)
 
 
 def ledger_path(state_dir=None):
+    # scheduler.db is the ledger of record; the
+    # ledger.db stub beside it answers nothing (see
+    # the module docstring's locator note).
     if state_dir is None:
         state_dir = os.path.join(
             os.path.dirname(os.path.dirname(_HERE)), "state")
