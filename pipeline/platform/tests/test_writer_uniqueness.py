@@ -55,7 +55,11 @@ WRITER_NAME = "pipeline_platform_writer"
 # own stores, dispatch's state seams, the platform
 # package's own two stores, and the platform cutover's
 # config provisioning (commission 14's cure of the gate
-# leg's provision_config finding).
+# leg's provision_config finding). The scheduler-keeper
+# durable-write cure added two more scheduling seams —
+# the ops spine's own staged-write home and the ops
+# client's token store — which the census did not count
+# until the 2026-11-22 drift cure below.
 SEAMS = (
     ("platform release store",
      "pipeline/platform/releases.py",
@@ -84,8 +88,14 @@ SEAMS = (
     ("scheduling file registry watch",
      "pipeline/scheduling/ops/watches/file_registry.py",
      "pipeline/scheduling/ops/paths.py", "PLATFORM_WRITER"),
+    ("scheduling ops staged-write home",
+     "pipeline/scheduling/ops/paths.py",
+     "pipeline/scheduling/ops/paths.py", "PLATFORM_WRITER"),
     ("scheduling connector token",
      "pipeline/scheduling/cli/connector_token.py",
+     "pipeline/scheduling/cli/paths.py", "PLATFORM_WRITER"),
+    ("scheduling ops client token store",
+     "pipeline/scheduling/cli/ops_client.py",
      "pipeline/scheduling/cli/paths.py", "PLATFORM_WRITER"),
     ("venue lease foundation (S5)",
      "pipeline/venue/sync/lease/core/foundation.py",
