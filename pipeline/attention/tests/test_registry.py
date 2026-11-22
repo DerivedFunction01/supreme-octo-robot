@@ -191,9 +191,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
             registry.validate_declaration(bad)
 
     def test_register_seam_is_steam_powers_alone(self):
-        self.assertIn(
-            "register_seam", registry.measure_classes_for("steampowernj")
-        )
+        self.assertIn("register_seam", registry.measure_classes_for("steampowernj"))
         for slug in ("edgar-greenfield", "edgar-sec", "supreme-octo-robot"):
             self.assertNotIn("register_seam", registry.measure_classes_for(slug))
 
@@ -208,9 +206,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
 class DrainTail(unittest.TestCase):
     def test_standing_defaults_seed_every_programme(self):
         default_keys = {item["key"] for item in registry.DEFAULT_DRAIN_TAIL}
-        self.assertEqual(
-            default_keys, {"consolidation", "doc-updates", "performance"}
-        )
+        self.assertEqual(default_keys, {"consolidation", "doc-updates", "performance"})
         for slug in EXPECTED_SLUGS:
             keys = {item["key"] for item in registry.drain_tail_for(slug)}
             self.assertTrue(default_keys <= keys, slug)
@@ -225,9 +221,7 @@ class DrainTail(unittest.TestCase):
 
 class Accessors(unittest.TestCase):
     def test_for_handle_prefers_the_active_programme(self):
-        self.assertEqual(
-            registry.for_handle("@xbrl")["slug"], "edgar-greenfield"
-        )
+        self.assertEqual(registry.for_handle("@xbrl")["slug"], "edgar-greenfield")
         self.assertEqual(
             registry.for_handle("@workhorse")["slug"], "supreme-octo-robot"
         )

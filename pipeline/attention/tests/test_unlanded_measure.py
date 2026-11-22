@@ -37,14 +37,26 @@ class ClaimedBuildsCase(unittest.TestCase):
         self.assertEqual(
             [c["sha"] for c in claims], ["78ec0ef", "4f620b07", "73c5bbbb"]
         )
-        self.assertEqual(claims[0]["claimed_at"], records._parse_stamp("2026-11-22T02:35:00Z"))
+        self.assertEqual(
+            claims[0]["claimed_at"],
+            records._parse_stamp("2026-11-22T02:35:00Z"),
+        )
 
     def test_no_completion_token_no_claim(self):
         # A gate fire is a launch, not a completion; a
         # gate verdict claims the build it gated.
-        fired = "progress-checkpoint: 2026-11-22T02:35:00Z — gate fired for 78ec0ef, polling."
-        flight = "progress-checkpoint: 2026-11-22T02:35:00Z — fired 78ec0ef on sunny, in flight."
-        passed = "progress-checkpoint: 2026-11-22T02:35:00Z — gate PASS for 78ec0ef in both runs."
+        fired = (
+            "progress-checkpoint: 2026-11-22T02:35:00Z — "
+            "gate fired for 78ec0ef, polling."
+        )
+        flight = (
+            "progress-checkpoint: 2026-11-22T02:35:00Z — "
+            "fired 78ec0ef on sunny, in flight."
+        )
+        passed = (
+            "progress-checkpoint: 2026-11-22T02:35:00Z — "
+            "gate PASS for 78ec0ef in both runs."
+        )
         self.assertEqual(records.claimed_builds(fired), [])
         self.assertEqual(records.claimed_builds(flight), [])
         self.assertEqual(len(records.claimed_builds(passed)), 1)

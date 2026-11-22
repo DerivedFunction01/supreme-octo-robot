@@ -302,7 +302,10 @@ def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
         if failed:
             for entry in prior:
                 _note(
-                    {"sha": entry["sha"], "claimed_at": _parse_stamp(entry["claimed_at"])}
+                    {
+                        "sha": entry["sha"],
+                        "claimed_at": _parse_stamp(entry["claimed_at"]),
+                    }
                 )
                 if entry.get("repo"):
                     repos[entry["sha"]] = entry["repo"]
@@ -320,9 +323,7 @@ def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
                     "landed": _is_landed(repo, sha) if repo else None,
                 }
             )
-        before = [
-            {k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in prior
-        ]
+        before = [{k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in prior]
         after = [
             {k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in entries
         ]
