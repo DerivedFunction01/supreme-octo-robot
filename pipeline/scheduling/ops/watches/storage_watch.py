@@ -374,7 +374,8 @@ def main() -> int:
         print(line)
     if current["home"] >= 1:
         trash_dir = os.environ.get(
-            TRASH_DIR_ENV, os.path.expanduser("~/.local/share/Trash/hatch"))
+            TRASH_DIR_ENV,
+            os.path.join(os.path.expanduser("~"), ".local", "share", "Trash", "hatch"))
         purged, reclaimed = trash_purge(trash_dir, datetime.now(timezone.utc))
         if purged:
             print(
