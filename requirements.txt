@@ -1,0 +1,15 @@
+# The mega repo's root driver toolchain, installed by the
+# root init_venv.py into .venv.
+#
+# The root interpreter is a driver, not an import surface:
+# check.py orchestrates the packages' own venvs for their
+# suites, and the venue's colab-check gate route needs one
+# pinned interpreter at the repo root to refuse-or-run under
+# (its gate refuses the system python by design). The pins
+# are the toolchain every package already declares — the
+# same four, at the same versions, so the gate behaves
+# identically on every machine.
+pytest==9.1.1
+pytest-timeout==2.4.0
+pytest-xdist==3.8.0
+ruff==0.17.2
