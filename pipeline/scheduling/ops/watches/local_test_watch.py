@@ -60,7 +60,12 @@ programme, the process, and the venue state at flag
 time, and it clears only by a disposition recorded
 through this watcher's `disposition` verb (reason,
 actor, stamp in the record), never by an ack or by the
-episode ending. A reappearing episode whose signature
+episode ending. Before any of that, a first sighting is
+consulted against the scheduler ledger (local_test_ledger.py):
+a process covered by a kind-'op' ledger entry — a scheduler-
+server child executing through the ops route — is recorded
+as ops-route on the cycle line and never warned; an
+unreadable ledger leaves the warning standing. A reappearing episode whose signature
 carries a closed, reasoned disposition is the same
 explained process: it raises nothing and prints one
 line saying so. A failed or unconfigured send never
@@ -114,6 +119,18 @@ _defects_spec = _importlib_util.spec_from_file_location(
     os.path.join(_here, "local_test_defects.py"))
 defects = _importlib_util.module_from_spec(_defects_spec)
 _defects_spec.loader.exec_module(defects)
+
+_ledger_spec = _importlib_util.spec_from_file_location(
+    "local_test_ledger",
+    os.path.join(_here, "local_test_ledger.py"))
+ledger = _importlib_util.module_from_spec(_ledger_spec)
+_ledger_spec.loader.exec_module(ledger)
+
+_episodes_spec = _importlib_util.spec_from_file_location(
+    "local_test_episodes",
+    os.path.join(_here, "local_test_episodes.py"))
+episodes_mod = _importlib_util.module_from_spec(_episodes_spec)
+_episodes_spec.loader.exec_module(episodes_mod)
 
 REPO = paths.REPO_ROOT
 # The harness connector client lives with the bridge cluster
@@ -587,7 +604,7 @@ def default_sender():
 
 def run(proc_root, workspace, procs=None, load=None, at=None,
         live_count=None, routes=None, sender=None,
-        item_poster=None, dispositions=None):
+        item_poster=None, dispositions=None, ledger_lookup=None):
     """One cycle: returns (exit_code, report_lines).
 
     `item_poster` is the defect-item seam (a callable
@@ -613,6 +630,8 @@ def run(proc_root, workspace, procs=None, load=None, at=None,
         routes = load_routes()
     if dispositions is None:
         dispositions = defects.load_dispositions(DISPOSITIONS)
+    if ledger_lookup is None:
+        ledger_lookup = ledger.covered_by_op
     current = {}
     for argv, cwd, pid, _ppid in procs:
         if strict:
@@ -633,89 +652,20 @@ def run(proc_root, workspace, procs=None, load=None, at=None,
             continue
         episodes[sig] = {"first_seen": at, "runner": finding["runner"],
                          "cwd": finding["cwd"], "argv": finding["argv"]}
-        argv_text = " ".join(finding["argv"])
-        derived_mark = " cwd-derived=argv" if finding.get("derived") \
-            else ""
         route = route_for(finding["cwd"], workspace, routes)
         label = (route or {}).get("label", "unmapped")
         programme = defects.repo_segment(finding["cwd"], workspace)
-        if defects.is_explained(dispositions, sig):
-            # The same explained process, on the record:
-            # no defect item, no sends — one line per
-            # episode names the standing disposition.
-            lines.append(
-                "LOCAL-EXEC EXPLAINED kind=%s runner=%s cwd=%s%s "
-                "argv=%s load=%s sessions_live=%d thread=%s "
-                "sig=%s disposition=closed-legitimate-tooling "
-                "first-seen=%s"
-                % (finding.get("kind", "test"), finding["runner"],
-                   finding["cwd"], derived_mark, argv_text, load,
-                   live_count, label, sig, at))
-            continue
-        # The defect item: one per episode, deduped at the
-        # surface by handle + source_ref.
-        if item_poster is None:
-            item_outcome = "unconfigured"
-        else:
-            try:
-                payload = defects.build_item_payload(
-                    sig, finding, programme, label, mode,
-                    live_count, load, at)
-                item_outcome = "posted" if item_poster(payload, at) \
-                    else "failed"
-            except Exception:
-                item_outcome = "failed"
-        # The main copy: the routes file's `main` key is
-        # the destination; absent route or sender, the
-        # outcome on the line is print-only.
-        main_route = routes.get("main") or None
-        main_outcome = "print-only"
-        if main_route and sender is not None:
-            main_outcome = defects.send_outcome(
-                sender, main_route["chat_id"],
-                "LOCAL-EXEC WARNING (local-test-watch, first "
-                "sighting): %s execution on the local box, "
-                "programme %s (%s). cwd=%s argv=%s load=%s "
-                "mode=%s sessions_live=%d. Defect item %s "
-                "raised on the attention surface; disposition "
-                "sig=%s." % (
-                    finding.get("kind", "test"), programme, label,
-                    finding["cwd"], argv_text, load, mode,
-                    live_count, defects.item_id(sig), sig),
-                "local-test-watch-main-" + sig)
-        routed = "print-only"
-        if strict and route and sender is not None:
-            text = (
-                "LOCAL-EXEC WARNING (local-test-watch, first "
-                "sighting): %s execution on the local box while "
-                "%d High-RAM session(s) are live. cwd=%s argv=%s "
-                "load=%s. Venue rule: no checks or code run "
-                "locally while the fleet is up — re-route to a "
-                "High-RAM session." % (
-                    finding["kind"], live_count, finding["cwd"],
-                    argv_text, load))
-            routed = defects.send_outcome(sender, route["chat_id"], text,
-                           "local-test-watch-" + sig)
-        outcomes = {"thread": routed, "main": main_outcome,
-                    "item": item_outcome}
-        defects.open_entry(
-            dispositions, sig, finding, programme, at, outcomes)
-        disp_dirty = True
-        if not strict:
-            lines.append(
-                "LOCAL-TEST %s cwd=%s%s argv=%s load=%s sig=%s "
-                "thread=%s main=%s item=%s first-seen=%s"
-                % (finding["runner"], finding["cwd"], derived_mark,
-                   argv_text, load, sig, label, main_outcome,
-                   item_outcome, at))
-            continue
-        lines.append(
-            "LOCAL-EXEC WARNING kind=%s runner=%s cwd=%s%s argv=%s "
-            "load=%s sessions_live=%d thread=%s routed=%s "
-            "sig=%s main=%s item=%s first-seen=%s"
-            % (finding["kind"], finding["runner"], finding["cwd"],
-               derived_mark, argv_text, load, live_count, label,
-               routed, sig, main_outcome, item_outcome, at))
+        line, dirty = episodes_mod.handle_first_sighting({
+            "finding": finding, "sig": sig, "at": at,
+            "defects": defects, "dispositions": dispositions,
+            "ledger_lookup": ledger_lookup,
+            "item_poster": item_poster, "routes": routes,
+            "sender": sender, "route": route, "label": label,
+            "programme": programme, "mode": mode,
+            "strict": strict, "live_count": live_count,
+            "load": load})
+        lines.append(line)
+        disp_dirty = disp_dirty or dirty
     save_state(episodes)
     if disp_dirty:
         defects.save_dispositions(DISPOSITIONS, dispositions)
@@ -735,13 +685,30 @@ def disposition_main(argv):
     parser.add_argument("signature")
     parser.add_argument("--reason", required=True)
     parser.add_argument("--actor", required=True)
+    parser.add_argument("--ledger-op", type=int, default=None,
+                        help="scheduler ledger op id cited as "
+                             "clearance evidence; stored with "
+                             "the disposition")
     args = parser.parse_args(argv)
     at = now()
+    citation = None
+    if args.ledger_op is not None:
+        citation = ledger.op_citation(args.ledger_op)
+        if citation is None:
+            print("DISPOSITION REFUSED: ledger op %d does not "
+                  "resolve" % args.ledger_op)
+            return 2
     ok, detail = defects.record_disposition(
         DISPOSITIONS, args.signature, args.reason, args.actor, at)
     if not ok:
         print("DISPOSITION REFUSED: " + detail)
         return 2
+    if citation is not None:
+        record = defects.load_dispositions(DISPOSITIONS)
+        entry = (record.get("dispositions") or {}).get(args.signature)
+        if entry is not None and entry.get("disposition"):
+            entry["disposition"]["ledger_op"] = citation
+            defects.save_dispositions(DISPOSITIONS, record)
     resolver = defects.default_item_resolver(REPO)
     item = "unconfigured"
     if resolver is not None:

@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""Ledger consult for the local-test watch.
+
+The watch samples processes; its argv/cwd signature cannot
+distinguish a scheduler-server child from a shell run — agent
+work routed through the server's ops channel executes ON this
+box, as the server's children, and flags as local execution.
+Three flags on 2026-11-21 (a full-gate cluster, two repo-leg
+runs) all proved ops-route executions on manual ledger
+verification, and their dispositions had to be recalibrated
+by hand. The scheduler ledger (state/scheduler.db, events
+kind 'op') is the discriminating record: an op's record
+carries its caller and its full command target.
+
+This module is the consult: given a finding (argv + cwd) and
+the sighting instant, it answers whether a ledger op covers
+the sampled process — the op started inside the window
+before the sighting, its target names the finding's cwd, and
+every distinctive argv token (a path or a script filename)
+appears in the target. The match is deliberately strict: a
+loose match would clear real violations. Any failure to read
+the ledger — missing file, locked, schema drift — answers
+None, leaving the warning standing (fail-safe).
+
+Stdlib only; the database opens read-only, in the same form
+as the sibling census watch.
+"""
+
+import json
+import os
+import sqlite3
+from datetime import datetime
+
+WINDOW_BEFORE_S = 1200
+WINDOW_AFTER_S = 120
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def ledger_path(state_dir=None):
+    if state_dir is None:
+        state_dir = os.path.join(
+            os.path.dirname(os.path.dirname(_HERE)), "state")
+    return os.path.join(state_dir, "scheduler.db")
+
+
+def _epoch(at):
+    if isinstance(at, (int, float)):
+        return float(at)
+    try:
+        return datetime.fromisoformat(at).timestamp()
+    except (TypeError, ValueError):
+        return None
+
+
+def _distinctive_tokens(argv):
+    return [a for a in argv
+            if "/" in a or a.endswith((".py", ".sh", ".mjs"))]
+
+
+def _connect(db_path):
+    return sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+
+
+def covered_by_op(finding, at, db_path=None):
+    """The covering op's citation {op_id, caller, ts}, or
+    None — no op covers the finding, or the ledger could not
+    be read (the warning then stands)."""
+    epoch = _epoch(at)
+    tokens = _distinctive_tokens(finding.get("argv") or [])
+    cwd = finding.get("cwd") or ""
+    if epoch is None or not tokens or not cwd:
+        return None
+    db_path = db_path or ledger_path()
+    try:
+        con = _connect(db_path)
+        try:
+            rows = con.execute(
+                "SELECT id, ts, ts_epoch, record FROM events "
+                "WHERE kind = 'op' AND ts_epoch BETWEEN ? AND ? "
+                "ORDER BY ts_epoch DESC",
+                (epoch - WINDOW_BEFORE_S, epoch + WINDOW_AFTER_S),
+            ).fetchall()
+        finally:
+            con.close()
+    except Exception:
+        return None
+    for op_id, ts, _ts_epoch, raw in rows:
+        try:
+            record = json.loads(raw)
+        except (TypeError, ValueError):
+            continue
+        target = record.get("target") or ""
+        if cwd in target and all(t in target for t in tokens):
+            return {"op_id": op_id, "caller": record.get("caller"),
+                    "ts": ts}
+    return None
+
+
+def op_citation(op_id, db_path=None):
+    """One op's citation by id, for the disposition verb: a
+    cited op that does not resolve must not close an episode,
+    so an unknown id answers None."""
+    db_path = db_path or ledger_path()
+    try:
+        con = _connect(db_path)
+        try:
+            row = con.execute(
+                "SELECT id, ts, record FROM events "
+                "WHERE kind = 'op' AND id = ?", (op_id,),
+            ).fetchone()
+        finally:
+            con.close()
+    except Exception:
+        return None
+    if row is None:
+        return None
+    try:
+        record = json.loads(row[2])
+    except (TypeError, ValueError):
+        record = {}
+    return {"op_id": row[0], "caller": record.get("caller"),
+            "ts": row[1]}
