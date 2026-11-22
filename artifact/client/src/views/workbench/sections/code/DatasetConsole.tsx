@@ -10,11 +10,15 @@
 // to one relation, so they are browse-only.
 
 import { useState } from "react";
+import { actionFields } from "@hatch/space-sdk/fields" with { type: "macro" };
+import type { Actions } from "../../../../../../server/src/actions";
 import { Button } from "@workhorse/kit/components/controls/Button";
 import { api } from "../../lib/api";
 import { useCheckout } from "./checkoutContext";
 import type { DatasetCell, DatasetSqlResult } from "../../lib/api-types-code";
 import { metaStyle } from "../shared";
+
+const FIELDS = actionFields<Actions>();
 
 const CELL_MAX = 80;
 
@@ -126,6 +130,7 @@ export function DatasetConsole({
         Console
       </h4>
       <textarea
+        {...FIELDS.postCodeDatasetSql.sql}
         aria-label="SQL query"
         placeholder="SELECT … FROM data"
         rows={4}
