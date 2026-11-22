@@ -316,10 +316,14 @@ export function PresenceSection({
             ))}
           </div>
           <Field label="End date">
-            <Input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} />
+            {(id) => (
+              <Input id={id} type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} />
+            )}
           </Field>
           <Field label="End time">
-            <Input type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} />
+            {(id) => (
+              <Input id={id} type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} />
+            )}
           </Field>
           <Button
             variant="primary"
@@ -427,15 +431,18 @@ export function DigestSection() {
       <div>
         {(editedTimes ?? times).map((time, i) => (
           <Field key={i} label={windowName(times, i) || `Window ${i + 1}`}>
-            <Input
-              type="time"
-              value={time}
-              onChange={(e) => {
-                const next = [...(editedTimes ?? times)];
-                next[i] = e.target.value;
-                setEditedTimes(next);
-              }}
-            />
+            {(id) => (
+              <Input
+                id={id}
+                type="time"
+                value={time}
+                onChange={(e) => {
+                  const next = [...(editedTimes ?? times)];
+                  next[i] = e.target.value;
+                  setEditedTimes(next);
+                }}
+              />
+            )}
           </Field>
         ))}
         <Button
