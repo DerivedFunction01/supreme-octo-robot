@@ -1,9 +1,18 @@
 """The /ops client core shared by every command that rides
 the server endpoint (adopt, write, patch, exec,
 connector-token): caller resolution, token resolution, the
-POST, the report, and flag taking. Exit 4 means the server
-was unreachable and nothing was performed — the client
-never falls back to a direct write.
+POST, the report, and flag taking. Exit 4 means no
+CONFIRMED performance, in two named faces: the server was
+unreachable before the request was sent (connection
+refused or unresolvable — nothing was performed), or the
+request was sent but its response was lost (a timeout, a
+reset, a truncated body — the outcome is UNKNOWN and the
+op may have performed; verify before repeating). The
+earlier form collapsed both into "nothing was performed",
+which was unsound for the second face and was attested
+three times in one night (2026-11-21/22) by callers who
+repeated work that had in fact run. The client never
+falls back to a direct write in either face.
 
 Authentication (§10.1; contract 04): /ops rides the /tools
 token model. The raw token lives client-side only, in the
@@ -74,10 +83,28 @@ def store_ops_token(caller, token, env=None):
     return path
 
 
+UNREACHABLE = "unreachable"
+UNKNOWN = "unknown"
+
+
+def _pre_send(reason) -> bool:
+    """True when a transport failure provably happened
+    before the request was sent: the connection was
+    refused, or the host name did not resolve. Every other
+    failure (a timeout at any stage, a reset, a dropped
+    connection) may postdate the send."""
+    import socket
+
+    return isinstance(reason, (ConnectionRefusedError, socket.gaierror))
+
+
 def _ops_post(req, http_timeout):
-    """POST one op to the server. Returns the payload dict, or
-    None when the server could not be reached (nothing was
-    performed — the client never falls back to a direct write)."""
+    """POST one op to the server. Returns the payload dict
+    when the server answered (any HTTP status); UNREACHABLE
+    when the request provably never left (refused or
+    unresolvable — nothing was performed); UNKNOWN when
+    the request was sent but the response was lost (the
+    outcome is unknown — the op may have performed)."""
     import urllib.error
     import urllib.request
 
@@ -99,13 +126,21 @@ def _ops_post(req, http_timeout):
         except Exception:  # noqa: BLE001 - shape below covers it
             return {"ok": False, "error": "bad_response",
                     "detail": f"HTTP {exc.code} with no JSON body"}
-    except (urllib.error.URLError, OSError, ValueError):
-        return None
+    except urllib.error.URLError as exc:
+        return UNREACHABLE if _pre_send(exc.reason) else UNKNOWN
+    except (OSError, ValueError):
+        return UNKNOWN
 
 
 def _ops_report(op, payload):
-    if payload is None:
+    if payload == UNREACHABLE:
         print(f"sched {op}: server unreachable — nothing was performed",
+              file=sys.stderr)
+        return 4
+    if payload == UNKNOWN:
+        print(f"sched {op}: the request was sent but the response "
+              "was lost — the outcome is UNKNOWN and the op may "
+              "have performed; verify before repeating",
               file=sys.stderr)
         return 4
     if not payload.get("ok"):

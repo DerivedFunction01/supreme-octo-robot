@@ -37,7 +37,7 @@ import sys
 from cli import paths as _paths
 from cli.common import ROOT
 from cli.ops_client import (
-    _ops_caller, _ops_post, _ops_report, _take_flag,
+    UNREACHABLE, _ops_caller, _ops_post, _ops_report, _take_flag,
     resolve_ops_token, store_ops_token)
 
 VALID_SCOPES = ("read", "write-state", "send", "bridge", "exec")
@@ -181,7 +181,7 @@ def cmd_connector_token(argv):
         # authenticate at all: unreachable server, or an
         # unauthenticated refusal while holding no token.
         unauthenticated = (
-            result is None
+            result == UNREACHABLE
             or (isinstance(result, dict)
                 and result.get("error") == "unauthenticated"))
         if unauthenticated and resolve_ops_token(caller) is None:

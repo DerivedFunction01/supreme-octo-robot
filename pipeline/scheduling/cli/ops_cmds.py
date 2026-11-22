@@ -73,7 +73,7 @@ def cmd_exec(argv):
         http_timeout = req["timeout"] + 30
     payload = _ops_post(req, http_timeout=http_timeout)
     code = _ops_report("exec", payload)
-    if payload is None or not payload.get("ok"):
+    if not isinstance(payload, dict) or not payload.get("ok"):
         return code
     sys.stdout.write(payload.get("stdout_tail", ""))
     sys.stdout.flush()
