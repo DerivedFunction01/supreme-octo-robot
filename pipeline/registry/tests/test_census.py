@@ -1,16 +1,25 @@
 """The S7 done-evidence census: the merged registry,
-seeded from the S1 overlay capture (never from tracked
-examples), validates every caller the captured live
+seeded from an S1-shaped overlay capture (never from
+tracked examples), validates every caller the captured
 registries carry — the runner thread callers, the
 connector token callers, both routing tables of contract
 01 (plus the restart-reconcile table), and the handler /
 programme directory rows.
 
-The capture is in-repo (docs/overlay/holding), so this
-census runs anywhere the repo does.
+The capture the census consumes is a fixture this suite
+builds in its own scratch (see _write_fixture_capture):
+the live holding (docs/overlay/holding) is untracked
+operator state and exists only where an operator captured
+it, so a suite that read it failed in every clean clone.
+The fixture carries the capture's exact directory layout
+and file forms with invented names and values, sized and
+shaped so every assertion below keeps its meaning; the
+production seed-capture path still reads the live holding
+through the seed CLI — it is not a test input.
 """
 
-import re
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -20,7 +29,6 @@ from registry.callers import callers, routing, tokens
 from registry.store import Registry
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
-HOLDING = REPO_ROOT / "docs" / "overlay" / "holding"
 FIXTURES = REPO_ROOT / "contracts" / "fixtures"
 
 # The captured thread callers (S1 capture, 2026-11-13),
@@ -53,8 +61,126 @@ TOKEN_CALLERS = {
 MAIN_CHAT = "00000000-0000-4000-8000-000000000001"
 SCHEDULER_CHAT = "00000000-0000-4000-8000-000000000002"
 
+# The fixture capture's thread callers, in the capture's
+# own invented names: positionally paired with
+# THREAD_CALLERS, suffix for suffix, family head for
+# family head, exactly as the held capture paired with
+# the stand-ins when the census was written against it.
+CAPTURED_CALLERS = [
+    "cap-xbrl", "capforms", "cap-remplan", "cap-packaging",
+    "cap-era-attribution", "cap-successor", "cap-formation",
+    "pine-monitor", "bram-main", "bram-cust", "bram-emp",
+    "wb-viewer", "ss-starter", "oa-attention", "sc-cron",
+]
+CAPTURED_ACTIVE = ["bram-main", "bram-cust", "bram-emp"]
 
-def _genericized_seed():
+WAKE_CHAT = "00000000-0000-4000-8000-000000000003"
+NOTIFY_XBRL_CHAT = "00000000-0000-4000-8000-000000000004"
+NOTIFY_PANEL_CHAT = "00000000-0000-4000-8000-000000000005"
+RESTART_FAMILY_CHAT = "00000000-0000-4000-8000-000000000006"
+RESTART_NAMESPACE_CHAT = "00000000-0000-4000-8000-000000000007"
+
+
+def _write_fixture_capture(holding):
+    """Build the S1 capture's directory shape in scratch:
+    every file seed_from_capture reads, in its held form,
+    with invented values carrying the census's assertions.
+
+    - colab-runner/config/callers.json: the 15 thread
+      callers above, the brambleford three active.
+    - scheduler/config.json: the connector token callers
+      of TOKEN_CALLERS, hashes only (invented digests).
+    - scheduler/bodies/bridge-wake-owners.yaml: the
+      sweeper-venue wake owner and the drain chat; no
+      entry for the xbrl caller (unresolved by design).
+    - colab-runner/config/notify-routes.json: routes for
+      the xbrl caller, the panel, and the scheduler
+      caller, with MAIN_CHAT as the table's main.
+    - scheduler/bodies/restart-reconcile-owners.yaml:
+      the scheduler caller as an exact owner, the
+      successor caller as a namespace, the brambleford
+      family as a prefix; the monitor caller in none.
+    - owner-attention/var/data/state.json: 10 handler
+      rows and 3 programme rows, programme handles
+      resolving against the handlers.
+    """
+    holding = Path(holding)
+
+    def put(rel, text):
+        path = holding / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+
+    def put_json(rel, data):
+        put(rel, json.dumps(data, indent=2) + "\n")
+
+    put_json("colab-runner/config/callers.json", {
+        "callers": CAPTURED_CALLERS,
+        "active": CAPTURED_ACTIVE,
+    })
+    put_json("scheduler/config.json", {
+        "connector": {"callers": {
+            "home-bridge": {
+                "token_sha256": "a" * 64,
+                "scopes": ["bridge", "read"]},
+            "sweeper-venue": {
+                "token_sha256": "b" * 64,
+                "scopes": ["read", "send", "write-state"]},
+            "local-test-watch": {
+                "token_sha256": "c" * 64,
+                "scopes": ["send"]},
+            "attention-dispatch": {
+                "token_sha256": "d" * 64,
+                "scopes": ["send"]},
+        }},
+    })
+    put("scheduler/bodies/bridge-wake-owners.yaml",
+        "version: 1\n"
+        "owners:\n"
+        "  sweeper-venue:\n"
+        f'    chat: "{WAKE_CHAT}"\n'
+        "drain:\n"
+        f'  chat: "{SCHEDULER_CHAT}"\n')
+    put_json("colab-runner/config/notify-routes.json", {
+        "main": MAIN_CHAT,
+        "routes": {
+            "cap-xbrl": NOTIFY_XBRL_CHAT,
+            "panel": NOTIFY_PANEL_CHAT,
+            "sc-cron": MAIN_CHAT,
+        },
+    })
+    put("scheduler/bodies/restart-reconcile-owners.yaml",
+        "owners:\n"
+        "  sc-cron:\n"
+        f'    chat: "{SCHEDULER_CHAT}"\n'
+        "namespaces:\n"
+        "  cap-successor:\n"
+        f'    chat: "{RESTART_NAMESPACE_CHAT}"\n'
+        "prefixes:\n"
+        "  bram-:\n"
+        f'    chat: "{RESTART_FAMILY_CHAT}"\n')
+    handlers = [{
+        "handle": f"fixture-handler-{n:02d}",
+        "label": f"Fixture handler {n:02d}",
+    } for n in range(1, 11)]
+    programmes = [{
+        "slug": f"fixture-programme-{part}",
+        "label": f"Fixture programme {part}",
+        "handles": handles,
+        "venue": "none",
+    } for part, handles in (
+        ("a", ["fixture-handler-01", "fixture-handler-02"]),
+        ("b", ["fixture-handler-03"]),
+        ("c", []),
+    )]
+    put_json("owner-attention/var/data/state.json", {
+        "handlers": handlers,
+        "programmes": programmes,
+    })
+    return holding
+
+
+def _genericized_seed(holding):
     """The census's seed: the capture's store data with
     its caller names renamed to the stand-ins above.
 
@@ -69,7 +195,7 @@ def _genericized_seed():
     the restart table's family prefixes through the
     family half of it. The capture files and the seed
     module's verbatim build are untouched."""
-    data = seed.seed_from_capture(HOLDING)
+    data = seed.seed_from_capture(holding)
     captured = data["thread_callers"]["callers"]
     if len(captured) != len(THREAD_CALLERS):
         raise AssertionError(
@@ -114,7 +240,13 @@ def _genericized_seed():
 class CensusTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.registry = Registry(_genericized_seed())
+        cls._holding = tempfile.TemporaryDirectory()
+        cls.registry = Registry(_genericized_seed(
+            _write_fixture_capture(cls._holding.name)))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._holding.cleanup()
 
     def test_every_captured_thread_caller_validates(self):
         self.assertEqual(
