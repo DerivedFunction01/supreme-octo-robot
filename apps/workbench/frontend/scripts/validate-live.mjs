@@ -175,16 +175,9 @@ check(
     note?.target.bundle === "2026-10-25-fixture-work",
 );
 const repo = adapter.repo("delta-repo");
-const csv = repo?.files
-  .flatMap(function walk(f) {
-    return f.kind === "file" ? [f] : (f.children ?? []).flatMap(walk);
-  })
-  .find((f) => f.dataset);
 check(
-  "repo tree + dataset projected",
-  repo?.branch === "main" && (repo?.modifiedCount ?? 0) >= 2 &&
-    csv?.dataset?.tables[0]?.columns.join(",") === "form,cik,filed" &&
-    csv?.dataset?.tables[0]?.rows.length === 2,
+  "repo summary projected",
+  repo?.branch === "main" && (repo?.modifiedCount ?? 0) >= 2,
 );
 const summary = adapter.homeSummary();
 check(
@@ -207,15 +200,36 @@ check(
 // adapter.
 const { createHash } = await import("node:crypto");
 const sha256Hex = (s) => createHash("sha256").update(s).digest("hex");
-const readme = repo?.files.find((f) => f.name === "README.md");
-let readmeNow = { content: readme?.content ?? "", sha: readme?.sha ?? "" };
+// The fixture server holds the README's working-tree
+// bytes (the fixture repo modifies it after the commit);
+// the peek serves them with their sha256, and the CAS
+// below compares against that served sha.
+const README_SERVED =
+  "# Delta fixture repo\n\nA plain repo the census finds.\n\nModified after the commit.\n";
+let readmeNow = { content: README_SERVED, sha: sha256Hex(README_SERVED) };
 const flowRealFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
   const u = String(url);
   if (u === "/api/projects/alpha/todos" && init?.method === "POST") {
     return Response.json({ todo: {} });
   }
-  if (u === "/api/repos/delta-repo/file" && init?.method === "POST") {
+  if (u.startsWith("/api/projects/code/delta-repo/file") && init?.method !== "POST") {
+    return Response.json({
+      content: readmeNow.content,
+      sha256: readmeNow.sha,
+      editable: true,
+    });
+  }
+  if (u === "/api/projects/code/delta-repo/dataset/sql" && init?.method === "POST") {
+    return Response.json({
+      columns: ["form", "cik", "filed"],
+      rows: [
+        ["10-K", "12345", "2026-10-01"],
+        ["10-Q", "12345", "2026-10-02"],
+      ],
+    });
+  }
+  if (u === "/api/projects/code/delta-repo/file" && init?.method === "POST") {
     const body = JSON.parse(init.body);
     if (body.base_sha256 !== readmeNow.sha) {
       return Response.json(
@@ -229,6 +243,27 @@ globalThis.fetch = async (url, init) => {
   throw new Error(`fixture write server: unexpected ${init?.method ?? "GET"} ${u}`);
 };
 const flow = new LiveWorkbenchAdapter(structuredClone(doc));
+// Code detail serves on demand (SPEC §21): the file
+// peeks through the file route, and the dataset
+// projects through the dataset route — neither rides
+// the document anymore.
+const readmePeek = await flow.repoFileContent("delta-repo", "README.md");
+check(
+  "repo file peeks on demand",
+  readmePeek.ok === true && readmePeek.sha === readmeNow.sha,
+);
+const readme = { sha: readmePeek.sha };
+const ds = await flow.datasetSql(
+  "delta-repo",
+  "data/filings.csv",
+  "select form, cik, filed from filings",
+);
+check(
+  "repo dataset projected through the dataset route",
+  ds.ok === true &&
+    ds.table.columns.join(",") === "form,cik,filed" &&
+    ds.table.rows.length === 2,
+);
 const armedBefore = flow.armedRows().length;
 const moved = await flow.writeTodo(fx.open_todo, { status: "doing" });
 check(
