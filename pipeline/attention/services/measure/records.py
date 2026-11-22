@@ -251,6 +251,14 @@ def _is_landed(repo: str, sha: str):
     return None
 
 
+def _note_claim(claims: dict, claim) -> None:
+    # The earliest claim of a commit starts its
+    # clock; a re-claim never resets it.
+    sha = claim["sha"]
+    if sha not in claims or claim["claimed_at"] < claims[sha]:
+        claims[sha] = claim["claimed_at"]
+
+
 def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
     """Snapshot, per declared programme, the builds
     its own records claim complete, each measured
@@ -270,14 +278,6 @@ def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
         prior = (snapshot.get(slug) or {}).get("claims") or []
         claims: dict = {}
         repos: dict = {}
-
-        def _note(claim):
-            # The earliest claim of a commit starts
-            # its clock; a re-claim never resets it.
-            sha = claim["sha"]
-            if sha not in claims or claim["claimed_at"] < claims[sha]:
-                claims[sha] = claim["claimed_at"]
-
         failed = False
         for project in programmes.wb_projects(programme):
             try:
@@ -290,22 +290,23 @@ def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
             for todo in payload.get("todos") or []:
                 text = f"{todo.get('title') or ''}\n{todo.get('body') or ''}"
                 for claim in claimed_builds(text):
-                    _note(claim)
+                    _note_claim(claims, claim)
         for path in _files(programme.get("record_locations") or []):
             repo = _repo_for(path)
             for claim in claimed_builds(_tail_text(path)):
-                _note(claim)
+                _note_claim(claims, claim)
                 if repo is not None:
                     repos[claim["sha"]] = repo
         if failed and not claims:
             continue
         if failed:
             for entry in prior:
-                _note(
+                _note_claim(
+                    claims,
                     {
                         "sha": entry["sha"],
                         "claimed_at": _parse_stamp(entry["claimed_at"]),
-                    }
+                    },
                 )
                 if entry.get("repo"):
                     repos[entry["sha"]] = entry["repo"]
