@@ -56,3 +56,32 @@ def test_script_file_variant(tmp_path):
 def test_empty_script_is_refused(tmp_path):
     r, _ = run_job(tmp_path, stdin_text="\n")
     assert r.returncode == 2
+
+
+def test_per_run_env_from_out_name(tmp_path):
+    # The runner's out dir is <job>-out-<run_id>: the payload
+    # receives the run id, a per-run port base, and the work
+    # root, so two runs sharing a session never share state
+    # (the fixed-state half of the 2026-11-21 twin execution).
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("shell_job_unit", SNIPPET)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    run_id = "gate-20261121T200238Z"
+    out = tmp_path / f"gate-out-{run_id}"
+    r = subprocess.run(
+        [sys.executable, str(SNIPPET), "--out", str(out), "--cwd", str(tmp_path)],
+        input='echo "rid=$SHELL_JOB_RUN_ID base=$SHELL_JOB_PORT_BASE work=$SHELL_JOB_WORK"\n',
+        capture_output=True, text=True, timeout=60,
+    )
+    assert r.returncode == 0
+    log = (out / "heartbeat.log").read_text()
+    assert f"rid={run_id}" in log
+    assert f"base={mod.port_base_for(run_id)}" in log
+    assert f"work={out}" in log
+    base = mod.port_base_for(run_id)
+    assert 20000 <= base < 40000 and base % 10 == 0
+    assert mod.port_base_for(run_id) == base
+    assert mod.run_id_for(out) == run_id
+    assert mod.run_id_for(tmp_path / "job") is None

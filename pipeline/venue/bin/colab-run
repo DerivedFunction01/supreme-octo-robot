@@ -24,12 +24,18 @@ attributes the run to its thread: it rides the lease acquire and
 is stamped on the run record.
 --daemonize fires the launch in its own session, detached from
 the firing context's process group and output pipes, and returns
-{run_id, state: "daemonized", log} as soon as the run's claim
-lands on disk: the form for firing through a bounded context
-(the scheduler ops route, a hook) whose timeout cleanup kills
-its process group — a plain or merely-nohup'd fire inside such
-a context dies with it. An unconfirmed claim exits 3 and is
-never reported as launched.
+{run_id, state: "daemonized", log} at once: the form for firing
+through a bounded context (the scheduler ops route, a hook)
+whose timeout cleanup kills its process group — a plain or
+merely-nohup'd fire inside such a context dies with it. The
+parent claims the run record itself, in a "claiming" state,
+before spawning the child, so the run is pollable from the
+moment the parent prints and no claim can land late behind a
+"dead" verdict (single-flight, sync/runner/claims.py); a claim
+whose child never adopts becomes decidable as lost at its
+claim deadline, and a --resume of an outstanding claim or a
+confirmed launch attaches to the live execution instead of
+relaunching it.
 --detach launches exactly as the foreground form and returns at
 once with {run_id, session, state}: the run's record then advances
 only when something reconciles it — --poll (one bounded reconcile:

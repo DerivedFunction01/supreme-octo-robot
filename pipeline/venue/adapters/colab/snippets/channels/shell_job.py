@@ -21,12 +21,34 @@ short work. VM-side only in practice — it runs wherever it is started.
 """
 
 import argparse
+import hashlib
 import json
 import os
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+
+def port_base_for(run_id: str) -> int:
+    """A per-run port base in [20000, 40000), aligned to 10:
+    deterministic in the run id, so two runs sharing a session
+    hold disjoint port ranges with overwhelming probability
+    and a payload can key its servers on $SHELL_JOB_PORT_BASE
+    instead of a fixed per-mode port — the fixed-port half of
+    the 2026-11-21 twin-execution collision."""
+    digest = hashlib.sha256(run_id.encode()).hexdigest()
+    return 20000 + (int(digest[:8], 16) % 2000) * 10
+
+
+def run_id_for(out: Path):
+    """The runner's remote out dir is <job>-out-<run_id>
+    (per-run by construction); recover the run id from it, or
+    None when the name carries none."""
+    name = out.name
+    if "-out-" not in name:
+        return None
+    return name.rsplit("-out-", 1)[1] or None
 
 
 def main() -> int:
@@ -86,6 +108,16 @@ def main() -> int:
         log.flush()
         env = dict(os.environ)
         env["SHELL_JOB_OUT"] = str(out)
+        # Per-run session state (2026-11-21 twin-execution
+        # cure): the payload keys its work dir and ports on
+        # these instead of fixed per-mode names, so two runs
+        # sharing a session never share state. SHELL_JOB_WORK
+        # is the per-run scratch root (the out dir itself).
+        env["SHELL_JOB_WORK"] = str(out)
+        run_id = run_id_for(out)
+        if run_id:
+            env["SHELL_JOB_RUN_ID"] = run_id
+            env["SHELL_JOB_PORT_BASE"] = str(port_base_for(run_id))
         r = subprocess.run(["bash", str(job), *payload_args], cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env)
         log.write(f"complete exit_code={r.returncode} t={time.time():.1f}\n")
         log.flush()

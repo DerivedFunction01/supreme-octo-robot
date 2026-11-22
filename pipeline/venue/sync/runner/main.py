@@ -19,6 +19,7 @@ from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
+from .claims import adopt, attach_verdict, spawn_daemon, stamp_takeover
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
@@ -134,45 +135,24 @@ def main() -> int:
         # included — read in the ops code and proven by the
         # daemon-proof run of 2026-11-21, which outlived its
         # op's timeout kill and completed. The daemon form
-        # separates both:
-        # the parent mints the run id, spawns the real launch
-        # in its OWN session (start_new_session) with stdio
-        # redirected to the run's daemon log, waits only for
-        # the child's claim to land on disk, prints the claimed
-        # id, and exits — the firing context completes in
-        # seconds and its group kill can never reach the child.
-        # A claim that does not land inside the window is
-        # reported unconfirmed (exit 3), never as launched.
+        # separates both, and claims single-flight (claims.py):
+        # the parent claims the record itself, in the claiming
+        # state, BEFORE spawning the child in its own session —
+        # the run is pollable from the instant the parent
+        # prints, and an unadopted claim's loss becomes
+        # decidable at its deadline instead of reading as dead.
         if resume:
             print("colab-run: --daemonize is a fresh-launch form; a resumed run is already named and claimed", file=sys.stderr)
             return 2
         if not (JOBS / job_name / "job.json").exists():
             print(f"no job manifest at {JOBS / job_name / 'job.json'}", file=sys.stderr)
             return 2
-        minted = f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
-        log_path = RUNS.parent / f"{minted}.daemon.log"
-        child_env = dict(os.environ)
-        child_env["COLAB_RUN_ID"] = minted
-        child_env["COLAB_RUN_DAEMON_CHILD"] = "1"
-        child_args = [a for a in args if a != "--daemonize"]
-        with open(log_path, "w") as log_fh:
-            subprocess.Popen(
-                [sys.executable, str(REPO / "bin" / "colab-run"), *child_args],
-                stdout=log_fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                start_new_session=True, cwd=str(REPO), env=child_env)
-        claimed = None
-        deadline = time.time() + 90
-        while time.time() < deadline:
-            for cand in sorted(RUNS.glob(f"{minted}*.json")):
-                claimed = cand.stem
-                break
-            if claimed:
-                break
-            time.sleep(0.5)
-        if claimed is None:
-            print(json.dumps({"run_id": minted, "state": "daemonized-unconfirmed", "log": str(log_path)}))
-            return 3
-        print(json.dumps({"run_id": claimed, "state": "daemonized", "log": str(log_path)}))
+        try:
+            claimed, log_path = spawn_daemon(job_name, args)
+        except Exception as exc:
+            print(f"colab-run: daemonize pre-claim failed for {job_name}: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps({"run_id": claimed, "state": "daemonized", "log": log_path}))
         return 0
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
@@ -244,6 +224,17 @@ def main() -> int:
                 # every later entry on the damaged file.
                 print(f"colab-run: prior record for {run_id} is unreadable (torn); starting fresh", file=sys.stderr)
             else:
+                # Single-flight (claims.py): a resume attaches
+                # to a possibly-live execution — an outstanding
+                # claim or a confirmed launch — and never
+                # relaunches it; only a decidable-lost claim
+                # proceeds, stamped as a takeover.
+                attach = attach_verdict(rec)
+                if attach is not None:
+                    print(json.dumps({"run_id": run_id, **attach}))
+                    return 0
+                if rec.get("state") == "claiming":
+                    stamp_takeover(rec)
                 # A resurrected run announces its NEW terminal state
                 # afresh: the sweep's orphan event is history, not
                 # this run's outcome.
@@ -263,11 +254,17 @@ def main() -> int:
                     rec.update(resumed=True, resumed_at=now())
                 else:
                     rec.update(state="starting", resumed=True, resumed_at=now())
+    preclaimed = False
+    if rec is None and daemon_id:
+        # A daemonized child adopts its parent's pre-claim
+        # (claims.py) instead of claiming for itself.
+        rec = adopt(run_id, shape_id)
+        preclaimed = rec is not None
     if rec is None:
         rec = {"run_id": run_id, "job": job_name, "shape": shape_id, "state": "starting", "started_at": now(), "resumed": bool(resume)}
     if caller:
         rec["caller"] = caller
-    if resume:
+    if resume or preclaimed:
         save_record(rec)
     else:
         # A fresh launch claims its id with this first save:
