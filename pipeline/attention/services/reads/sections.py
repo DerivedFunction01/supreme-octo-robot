@@ -27,6 +27,7 @@ from .labels import (
     _iso,
     _kind_label,
     class_label,
+    digest_window_tz,
     digest_windows,
     effective_mode,
     handler_map,
@@ -76,7 +77,13 @@ def build_glance(
         "clock": {
             "now": _iso(now),
             "next_window_at": (
-                _iso(dom.next_window(now, tuple(digest_windows(state, settings))))
+                _iso(
+                    dom.next_window(
+                        now,
+                        tuple(digest_windows(state, settings)),
+                        digest_window_tz(state),
+                    )
+                )
                 if digest_windows(state, settings)
                 else None
             ),

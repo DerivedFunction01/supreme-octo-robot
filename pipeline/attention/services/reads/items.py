@@ -17,6 +17,7 @@ from .labels import (
     TIER_LABELS,
     _iso,
     _kind_label,
+    digest_window_tz,
     digest_windows,
     handler_map,
     handler_presentation,
@@ -81,7 +82,15 @@ def item_view(
                     + timedelta(days=1)
                 ),
                 *(
-                    [_iso(dom.next_window(now, tuple(digest_windows(state, settings))))]
+                    [
+                        _iso(
+                            dom.next_window(
+                                now,
+                                tuple(digest_windows(state, settings)),
+                                digest_window_tz(state),
+                            )
+                        )
+                    ]
                     if digest_windows(state, settings)
                     else []
                 ),

@@ -13,10 +13,13 @@
 //   body {mode, expires_at, expectation: ""}.
 //   Frame 5 · Digest — the windows as switches over the
 //   digest's served times (enabled state from the
-//   digest's enabled_times), the Next window line, and
+//   digest's enabled_times), the Next window line, the
+//   owner's own window-times editor (times + the
+//   browser's timezone, the hardcoded-time cure), and
 //   the Include switches; writes ride postDigestPrefs
-//   ({window_time, window_enabled} / {include_key,
-//   include_enabled} — the backend's stored prefs).
+//   ({window_time, window_enabled} / {window_times,
+//   window_tz} / {include_key, include_enabled} — the
+//   backend's stored prefs).
 //
 // These sections render inside the shell's Settings view,
 // outside the attention mount's provider: failures surface
@@ -40,7 +43,11 @@ import {
   type DigestPayload,
   type GlancePayload,
 } from "./model";
+import { Button } from "@workhorse/kit/components/Button";
+import { Field, Input } from "@workhorse/kit/components/Fields";
 import {
+  customExpiryDate,
+  customExpiryFields,
   expiryDateFor,
   expiryOptions,
   expirySelectionFor,
@@ -94,6 +101,21 @@ export function PresenceSection({
   const [postedExpiry, setPostedExpiry] = useState<string | null | undefined>(undefined);
   const [lastPostedIso, setLastPostedIso] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+  // The custom expiry editor (owner commission 2026-11-15,
+  // restored): open state + the wall date/time fields. The
+  // fields seed from the served expiry when one stands,
+  // else from two hours out.
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customDate, setCustomDate] = useState("");
+  const [customTime, setCustomTime] = useState("");
+
+  function openCustom() {
+    const seed = servedExpiryIso ? new Date(servedExpiryIso) : new Date(Date.now() + 2 * 3_600_000);
+    const fields = customExpiryFields(seed);
+    setCustomDate(fields.date);
+    setCustomTime(fields.time);
+    setCustomOpen(true);
+  }
   const served = glance.data?.presence;
   const delegated = onSetPresence != null;
   // The served expiry this section represents: delegated,
@@ -170,17 +192,19 @@ export function PresenceSection({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [served, delegated]);
 
-  async function post(mode: PresenceState, selection: ExpirySelection) {
+  async function post(mode: PresenceState, selection: ExpirySelection, customDate?: Date | null) {
     // "current" posts the served expiry itself: the
     // selection carries the served value, so choosing it
     // — or changing the mode while it stands — preserves
     // the real expiry instead of clearing it.
     const expiryDate =
-      selection === "current"
-        ? servedExpiryIso
-          ? new Date(servedExpiryIso)
-          : null
-        : expiryDateFor(selection, new Date());
+      selection === "custom"
+        ? (customDate ?? null)
+        : selection === "current"
+          ? servedExpiryIso
+            ? new Date(servedExpiryIso)
+            : null
+          : expiryDateFor(selection, new Date());
     if (delegated) {
       // One write path: the shell's served-presence
       // state posts (mode, expiry) together and its
@@ -247,8 +271,11 @@ export function PresenceSection({
           <RadioRow
             label={`Current — ${dayWord(servedExpiryIso)} · ${clock(servedExpiryIso)}`}
             sub="The expiry in force"
-            selected
-            onSelect={() => void post(value, "current")}
+            selected={!customOpen}
+            onSelect={() => {
+              setCustomOpen(false);
+              void post(value, "current");
+            }}
           />
         ) : null}
         {options.map((option) => (
@@ -256,14 +283,59 @@ export function PresenceSection({
             key={option.value}
             label={option.label}
             sub={option.sub}
-            selected={expiry === option.value}
+            selected={expiry === option.value && !customOpen}
             onSelect={() => {
+              setCustomOpen(false);
               if (!delegated) setLocalExpiry(option.value);
               void post(value, option.value);
             }}
           />
         ))}
+        <RadioRow
+          label="Custom"
+          sub="A duration, or an end date and time"
+          selected={customOpen}
+          onSelect={openCustom}
+        />
           </GroupedList>
+      {customOpen ? (
+        <div className="mt-2">
+          <div className="flex flex-wrap gap-1.5">
+            {[2, 4, 8, 24].map((hours) => (
+              <Button
+                key={hours}
+                variant="secondary"
+                onClick={() => {
+                  const fields = customExpiryFields(new Date(Date.now() + hours * 3_600_000));
+                  setCustomDate(fields.date);
+                  setCustomTime(fields.time);
+                }}
+              >
+                {hours}h
+              </Button>
+            ))}
+          </div>
+          <Field label="End date">
+            <Input type="date" value={customDate} onChange={(e) => setCustomDate(e.target.value)} />
+          </Field>
+          <Field label="End time">
+            <Input type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} />
+          </Field>
+          <Button
+            variant="primary"
+            disabled={!customExpiryDate(customDate, customTime)}
+            onClick={() => {
+              const at = customExpiryDate(customDate, customTime);
+              if (!at) return;
+              if (!delegated) setLocalExpiry("custom");
+              setCustomOpen(false);
+              void post(value, "custom", at);
+            }}
+          >
+            Set expiry
+          </Button>
+        </div>
+      ) : null}
         </>
       )}
       {served?.expires_at ? (
@@ -292,6 +364,12 @@ const INCLUDE_ROWS: { key: "decisions" | "waiting" | "fyi"; label: string }[] = 
 export function DigestSection() {
   const digest = usePortion<DigestPayload>("digest", () => call(api.getDigest({})), 0);
   const [error, setError] = useState<string | null>(null);
+  // The window-times editor (hardcoded-time cure): the
+  // owner's own times, posted with the browser's timezone
+  // — the zone the wall times are read in. null = the
+  // editor has not been touched; the fields then follow
+  // the served times.
+  const [editedTimes, setEditedTimes] = useState<string[] | null>(null);
   const d = digest.data;
 
   async function post(body: Record<string, unknown>) {
@@ -345,6 +423,38 @@ export function DigestSection() {
         ))}
         <StatRow label="Next window">{nextLabel}</StatRow>
       </GroupedList>
+      <GroupLabel>Window times</GroupLabel>
+      <div>
+        {(editedTimes ?? times).map((time, i) => (
+          <Field key={i} label={windowName(times, i) || `Window ${i + 1}`}>
+            <Input
+              type="time"
+              value={time}
+              onChange={(e) => {
+                const next = [...(editedTimes ?? times)];
+                next[i] = e.target.value;
+                setEditedTimes(next);
+              }}
+            />
+          </Field>
+        ))}
+        <Button
+          variant="primary"
+          disabled={
+            editedTimes == null ||
+            editedTimes.some((t) => !/^([01]\d|2[0-3]):[0-5]\d$/.test(t))
+          }
+          onClick={() => {
+            if (!editedTimes) return;
+            void post({
+              window_times: editedTimes,
+              window_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            }).then(() => setEditedTimes(null));
+          }}
+        >
+          Set window times
+        </Button>
+      </div>
       <GroupLabel>Include</GroupLabel>
       <GroupedList>
         {INCLUDE_ROWS.map((row) => (

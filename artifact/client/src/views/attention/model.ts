@@ -128,7 +128,7 @@ export interface DigestTopic {
 }
 
 export interface DigestPayload {
-  window: { next_at: string | null; times: string[]; enabled_times: string[] };
+  window: { next_at: string | null; times: string[]; tz?: string | null; enabled_times: string[] };
   include: { decisions: boolean; waiting: boolean; fyi: boolean };
   sections: DigestSection[];
   stalls: DigestStall[];

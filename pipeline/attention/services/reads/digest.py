@@ -455,11 +455,18 @@ def build_digest(
         "generated_at": _iso(now),
         "window": {
             "next_at": (
-                _iso(dom.next_window(now, tuple(enabled_windows)))
+                _iso(
+                    dom.next_window(
+                        now,
+                        tuple(enabled_windows),
+                        model.digest_window_tz(state),
+                    )
+                )
                 if enabled_windows
                 else None
             ),
-            "times": list(settings.digest_windows),
+            "times": model.digest_window_times(state, settings),
+            "tz": (state.get("digest_prefs") or {}).get("window_tz"),
             "enabled_times": enabled_windows,
         },
         "include": model.digest_include(state),

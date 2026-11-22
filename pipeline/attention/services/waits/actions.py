@@ -587,17 +587,12 @@ def _apply_effects(state, item, wait, verb, option_id, picks, note, payload, now
         _send_verdict(state, item, verb, note, now)
 
 
-def _window_start(now: datetime, windows: tuple) -> datetime:
+def _window_start(now: datetime, windows: tuple, tz=None) -> datetime:
     """The most recent digest window at or before now —
-    the ping cooldown's unit (D-A4)."""
-    starts = []
-    for text in windows:
-        hour, minute = (int(part) for part in text.split(":"))
-        at = datetime.combine(now.date(), time(hour, minute), tzinfo=now.tzinfo)
-        if at > now:
-            at -= timedelta(days=1)
-        starts.append(at)
-    return max(starts)
+    the ping cooldown's unit (D-A4). The computation's
+    home is the domain (window_start); this delegate
+    keeps the waits modules' import shape."""
+    return dom.window_start(now, windows, tz)
 
 
 def apply_handler_action(
@@ -606,6 +601,8 @@ def apply_handler_action(
     """Handler-level verbs: status ping, parallelize,
     the pass commissions, directed control. Each records
     an owner action and dispatches."""
+    from attention.services.reads import model as _reads_model
+
     if handle not in {h["handle"] for h in state["handlers"]}:
         raise NotFound("No such handler.")
     verb = payload.get("verb")
@@ -622,7 +619,11 @@ def apply_handler_action(
         pings = state.setdefault("pings", {})
         mine = pings.setdefault(handle, {"count": 0, "last_at": None})
         last = mine.get("last_at")
-        if last is not None and last >= _window_start(now, settings.digest_windows):
+        if last is not None and last >= _window_start(
+            now,
+            tuple(_reads_model.digest_window_times(state, settings)),
+            _reads_model.digest_window_tz(state),
+        ):
             raise Conflict("A status ping already went out this digest window.")
         mine["count"] += 1
         mine["last_at"] = now

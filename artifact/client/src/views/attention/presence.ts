@@ -96,12 +96,35 @@ export function expiryValueFor(expiresAt: string | null, now: Date): PresenceExp
  *  made the group contradict the served state on the
  *  same screen (critic M-6) and made a mode change post
  *  a null expiry, silently clearing the real one. */
-export type ExpirySelection = PresenceExpiry | "current";
+export type ExpirySelection = PresenceExpiry | "current" | "custom";
 
 export function expirySelectionFor(expiresAt: string | null, now: Date): ExpirySelection {
   if (!expiresAt) return "none";
   const matched = expiryValueFor(expiresAt, now);
   return matched === "none" ? "current" : matched;
+}
+
+/** The custom expiry's field form (owner commission
+ *  2026-11-15, restored): a wall date + time in the
+ *  owner's own zone — the browser's — composed into the
+ *  instant the presence write posts. The backend's
+ *  set_presence accepts any instant; the integrated
+ *  client had dropped the custom option the original
+ *  client carried, leaving only the baked presets. */
+export function customExpiryDate(dateValue: string, timeValue: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue) || !/^\d{2}:\d{2}$/.test(timeValue)) return null;
+  const d = new Date(`${dateValue}T${timeValue}:00`);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+/** A Date as the custom editor's field values (local
+ *  wall form). */
+export function customExpiryFields(d: Date): { date: string; time: string } {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+  };
 }
 
 /** The concrete Date a chosen option posts right now. */

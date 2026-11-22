@@ -93,6 +93,34 @@ def handler_map(state: dict) -> dict:
     return {h["handle"]: h for h in state["handlers"]}
 
 
+def digest_window_times(state: dict, settings: Settings) -> list:
+    """The digest window times in force: the owner's own
+    times from the digest prefs when they set them
+    (set_digest_prefs' window_times), else the settings
+    times. The times are wall times in digest_window_tz."""
+    stored = (state.get("digest_prefs") or {}).get("window_times")
+    if stored:
+        return list(stored)
+    return list(settings.digest_windows)
+
+
+def digest_window_tz(state: dict):
+    """The timezone the window times are wall times in:
+    the owner's, stored with their times (window_tz);
+    None when the owner never set times — the settings
+    form then reads them in the server's frame, as
+    before."""
+    name = (state.get("digest_prefs") or {}).get("window_tz")
+    if not name:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo(name)
+    except Exception:  # noqa: BLE001 - a stored bad name reads as unset
+        return None
+
+
 def digest_windows(state: dict, settings: Settings) -> list:
     """The digest windows in force (AC-8): the configured
     times minus any the owner switched off on state
@@ -102,7 +130,7 @@ def digest_windows(state: dict, settings: Settings) -> list:
     all read windows through here, so a disabled window
     disappears from every surface at once."""
     prefs = (state.get("digest_prefs") or {}).get("windows") or {}
-    return [t for t in settings.digest_windows if prefs.get(t, True)]
+    return [t for t in digest_window_times(state, settings) if prefs.get(t, True)]
 
 
 def digest_include(state: dict) -> dict:

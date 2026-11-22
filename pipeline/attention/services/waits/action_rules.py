@@ -133,6 +133,7 @@ def _r1(state: dict, rule: dict, now: datetime) -> list:
 
 
 def _r2(state: dict, rule: dict, settings: Settings, now: datetime) -> list:
+    from attention.services.reads import model as _reads_model
     events = []
     shadow = rule.get("mode") == "shadow"
     for handle, record in state.get("handler_status", {}).items():
@@ -146,7 +147,11 @@ def _r2(state: dict, rule: dict, settings: Settings, now: datetime) -> list:
         pings = state.setdefault("pings", {})
         mine = pings.setdefault(handle, {"count": 0, "last_at": None})
         last = mine.get("last_at")
-        if last is not None and last >= _window_start(now, settings.digest_windows):
+        if last is not None and last >= _window_start(
+            now,
+            tuple(_reads_model.digest_window_times(state, settings)),
+            _reads_model.digest_window_tz(state),
+        ):
             continue
         if mine["count"] >= 3:
             continue

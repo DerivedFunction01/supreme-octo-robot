@@ -7,6 +7,7 @@ record, never an echo of the request.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 
 from attention.domain import attention as dom
@@ -56,14 +57,56 @@ def mute_type(state: dict, handle: str, payload: dict) -> dict:
     return {"handle": handle, "kind": kind, "muted": True}
 
 
+_WINDOW_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def _window_time_ok(text) -> bool:
+    return isinstance(text, str) and bool(_WINDOW_TIME_RE.match(text))
+
+
 def set_digest_prefs(state: dict, payload: dict) -> dict:
     """The digest switches' write (AC-8): window enablement
     and the include flags, stored on state so every client
     reads the same digest the owner configured. Windows
     are keyed by their served time; an unlisted time keeps
-    its default (enabled)."""
+    its default (enabled).
+
+    The owner may also set the window TIMES themselves
+    (window_times, 1-6 HH:MM wall times) with the timezone
+    they are wall times in (window_tz, an IANA name) —
+    the hardcoded-time cure: the times stop being a
+    settings constant read in the server's frame and
+    become the owner's, read in the owner's timezone.
+    Setting the times prunes the enablement map to the
+    new list (a renamed window starts enabled)."""
     prefs = state.setdefault("digest_prefs", {"windows": {}, "include": {}})
     errors: list = []
+    if "window_times" in payload or "window_tz" in payload:
+        times = payload.get("window_times")
+        tz_name = payload.get("window_tz")
+        if (
+            not isinstance(times, list)
+            or not 1 <= len(times) <= 6
+            or not all(_window_time_ok(t) for t in times)
+        ):
+            errors.append(
+                {"field": "window_times", "message": "1-6 HH:MM times required"}
+            )
+        if not isinstance(tz_name, str) or not tz_name:
+            errors.append({"field": "window_tz", "message": "is required"})
+        else:
+            try:
+                from zoneinfo import ZoneInfo
+
+                ZoneInfo(tz_name)
+            except Exception:  # noqa: BLE001 - any failure names the field
+                errors.append({"field": "window_tz", "message": "unknown timezone"})
+        if not errors:
+            prefs["window_times"] = sorted(set(times))
+            prefs["window_tz"] = tz_name
+            prefs["windows"] = {
+                t: on for t, on in prefs["windows"].items() if t in prefs["window_times"]
+            }
     if "window_time" in payload or "window_enabled" in payload:
         time = payload.get("window_time")
         if not isinstance(time, str) or not time:
@@ -80,6 +123,8 @@ def set_digest_prefs(state: dict, payload: dict) -> dict:
         raise Validation("Digest preferences failed validation.", errors)
     return {
         "windows": dict(prefs["windows"]),
+        "window_times": prefs.get("window_times"),
+        "window_tz": prefs.get("window_tz"),
         "include": {
             key: prefs["include"].get(key, True)
             for key in ("decisions", "waiting", "fyi")

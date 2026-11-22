@@ -214,16 +214,37 @@ def waiting_label(waiting_since: datetime, now: datetime) -> str:
     return f"{days} day" if days == 1 else f"{days} days"
 
 
-def next_window(now: datetime, windows: tuple[str, ...]) -> datetime:
-    """The next digest window at or after now (settings times)."""
+def next_window(now: datetime, windows: tuple[str, ...], tz=None) -> datetime:
+    """The next digest window at or after now. The window
+    times are wall times in `tz` when one is given (the
+    owner's timezone, from the digest prefs), else in
+    now's own frame (the settings form)."""
+    frame = tz or now.tzinfo
+    local = now.astimezone(frame)
     candidates = []
     for text in windows:
         hour, minute = (int(part) for part in text.split(":"))
-        at = datetime.combine(now.date(), time(hour, minute), tzinfo=now.tzinfo)
-        if at <= now:
+        at = datetime.combine(local.date(), time(hour, minute), tzinfo=frame)
+        if at <= local:
             at += timedelta(days=1)
         candidates.append(at)
     return min(candidates)
+
+
+def window_start(now: datetime, windows: tuple, tz=None) -> datetime:
+    """The most recent digest window at or before now —
+    the ping cooldown's unit (D-A4). Wall times read in
+    `tz` when given, else in now's own frame."""
+    frame = tz or now.tzinfo
+    local = now.astimezone(frame)
+    starts = []
+    for text in windows:
+        hour, minute = (int(part) for part in text.split(":"))
+        at = datetime.combine(local.date(), time(hour, minute), tzinfo=frame)
+        if at > local:
+            at -= timedelta(days=1)
+        starts.append(at)
+    return max(starts)
 
 
 def scope_matches(scope: str, mode: str, focus_scope: str) -> bool:
