@@ -40,6 +40,22 @@
 # Every held tree prints one HELD line naming its reasons;
 # a lane reading the ping learns its tree was at risk and
 # why it stands.
+#   - the drain act exception (supervision plan Step 4):
+#     the workbench drain detector rides this worker for a
+#     programme's archive act (WORKTREE_TRIM_DRAIN_ACT=1),
+#     and under that caller the unlanded reason does not
+#     stand. The drain fires only on a drained transition
+#     — every todo on the programme's bundle done, nothing
+#     doing, on the programme's own record — which is the
+#     evidence the trees' unlanded commits are finished
+#     work, and the archive stays recoverable inside its
+#     grace window (the branch stands while the archive
+#     stands; restore is the verb above). The census never
+#     sets the flag, so the hold binds it exactly as cured;
+#     dirty, live, and explicit holds still bind a drain
+#     pass — uncommitted state and in-flight processes are
+#     invisible to the drain's precondition, so they keep
+#     their protection under every caller.
 #   3. trim = move the worktree directory itself into the
 #      archive folder with mv, together with its git admin
 #      directory (.git/worktrees/<id> — it holds the index,
@@ -141,7 +157,9 @@
 # WORKTREE_TRIM_PROC_ROOT (the live-process scan's /proc),
 # WORKTREE_TRIM_RUNS_DIR (venue run records for the
 # live-run hold; default: the venue package's results/runs
-# derived from this script's location in the mega repo).
+# derived from this script's location in the mega repo),
+# WORKTREE_TRIM_DRAIN_ACT (the drain act's seam: the
+# unlanded hold reason does not stand for that pass).
 #
 # Configuration: the target set and its per-repo caps are
 # deployment data, not code — they live in the untracked
@@ -177,6 +195,12 @@ REPO_TIMEOUT="${WT_TRIM_REPO_TIMEOUT_SECS:-1200}"
 # affected. Stood down briefly on 2026-11-15 after an
 # incident report, then lifted; the default is on.
 BRANCH_TRIM="${WT_TRIM_BRANCH_TRIM:-on}"
+# The drain act's seam (supervision plan Step 4):
+# WORKTREE_TRIM_DRAIN_ACT=1 marks a pass as the workbench
+# drain detector's archive act rather than the standing
+# census. Under it the unlanded hold reason does not
+# stand — see the held-set note in the header.
+DRAIN_ACT="${WORKTREE_TRIM_DRAIN_ACT:-}"
 CONFIG_FILE="${WORKTREE_TRIM_CONFIG:-$STATE_DIR/repos.conf}"
 if [ -n "${WORKTREE_TRIM_REPOS:-}" ]; then
   REPOS="$WORKTREE_TRIM_REPOS"
@@ -406,7 +430,7 @@ run_worker() {
     local hp_path="$1" hp_branch="$2" hp_ahead="$3" hp_merged="$4" hp_dirty="$5"
     local reasons=""
     [ "$hp_dirty" = "1" ] && reasons="dirty"
-    if [ "$hp_ahead" != "-1" ] && [ "$hp_ahead" -gt 0 ] && [ "$hp_merged" != "1" ]; then
+    if [ -z "$DRAIN_ACT" ] && [ "$hp_ahead" != "-1" ] && [ "$hp_ahead" -gt 0 ] && [ "$hp_merged" != "1" ]; then
       reasons="${reasons:+$reasons,}unlanded"
     fi
     if grep -Fxq "$hp_path" "$proc_targets" || grep -Fq "$hp_path/" "$proc_targets"; then
