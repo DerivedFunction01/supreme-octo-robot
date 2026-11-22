@@ -407,6 +407,15 @@ def _default_branch(names):
     return None
 
 
+# The fan-out width for _branch_details' per-branch
+# derivations (each branch pays two to three git
+# subprocesses — the rev-list count, _unpushed, and the
+# merge-base probe): subprocess-bound, so the pool's
+# threads genuinely help — the census parent's width,
+# where the module's other fan-out already runs.
+_BRANCH_DETAILS_WORKERS = 8
+
+
 def _branch_details(root) -> tuple:
     """(rows, default_branch): one row per local branch —
     upstream, ahead/behind against it, unpushed count and
@@ -423,8 +432,9 @@ def _branch_details(root) -> tuple:
         parsed.append((name.strip(), upstream.strip() or None))
         names.append(name.strip())
     default = _default_branch(names)
-    rows = []
-    for name, upstream in parsed:
+
+    def _derive(pair):
+        name, upstream = pair
         ahead = behind = None
         if upstream:
             try:
@@ -446,11 +456,14 @@ def _branch_details(root) -> tuple:
         if default and name != default:
             contained = _git_ok(root, "merge-base",
                                 "--is-ancestor", name, default)
-        rows.append({"name": name, "upstream": upstream,
-                     "ahead": ahead, "behind": behind,
-                     "unpushed_commits": unpushed,
-                     "oldest_unpushed_at": oldest,
-                     "contained_in_default": contained})
+        return {"name": name, "upstream": upstream,
+                "ahead": ahead, "behind": behind,
+                "unpushed_commits": unpushed,
+                "oldest_unpushed_at": oldest,
+                "contained_in_default": contained}
+
+    rows = fan_out(_derive, parsed,
+                   workers=_BRANCH_DETAILS_WORKERS)
     return rows, default
 
 

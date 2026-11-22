@@ -346,6 +346,80 @@ class TestFullStatus(unittest.TestCase):
         self.assertIsNone(gone["ahead"])
         self.assertIsNone(gone["behind"])
 
+    def test_branch_details_parallel_rows_match_serial(self):
+        # The parallel derivation's proof burden: a
+        # multi-branch fixture (tracked branches in sync
+        # and ahead, a vanished upstream, a local-only
+        # unpushed branch) pins the full rows — content
+        # AND for-each-ref order — equal to the expected
+        # serial result.
+        origin, clone = make_tracked_pair(self.root)
+        git(clone, "checkout", "-b", "feature/live")
+        write(clone / "file.txt", "live\n")
+        git(clone, "add", "file.txt")
+        git(clone, "commit", "-m", "live commit")
+        git(clone, "push", "-u", "origin", "feature/live")
+        git(clone, "checkout", "main")
+        git(clone, "checkout", "-b", "feature/ahead")
+        write(clone / "file.txt", "ahead base\n")
+        git(clone, "add", "file.txt")
+        git(clone, "commit", "-m", "ahead base")
+        git(clone, "push", "-u", "origin", "feature/ahead")
+        write(clone / "file.txt", "ahead extra\n")
+        git(clone, "add", "file.txt")
+        git(clone, "commit", "-m", "ahead extra")
+        git(clone, "checkout", "main")
+        git(clone, "checkout", "-b", "form/gone")
+        git(clone, "push", "-u", "origin", "form/gone")
+        git(clone, "checkout", "main")
+        git(clone, "checkout", "-b", "local-only")
+        write(clone / "file.txt", "local\n")
+        git(clone, "add", "file.txt")
+        git(clone, "commit", "-m", "local commit")
+        git(clone, "checkout", "main")
+        git(origin, "branch", "-D", "form/gone")
+        git(clone, "fetch", "--prune", "origin")
+        ahead_oldest = git(
+            clone, "log", "-1", "--format=%aI",
+            "feature/ahead").strip()
+        local_oldest = git(
+            clone, "log", "-1", "--format=%aI",
+            "local-only").strip()
+        rows, default = repos_mod._branch_details(clone)
+        self.assertEqual(default, "main")
+        self.assertEqual(rows, [
+            {"name": "feature/ahead",
+             "upstream": "origin/feature/ahead",
+             "ahead": 1, "behind": 0,
+             "unpushed_commits": 1,
+             "oldest_unpushed_at": ahead_oldest,
+             "contained_in_default": False},
+            {"name": "feature/live",
+             "upstream": "origin/feature/live",
+             "ahead": 0, "behind": 0,
+             "unpushed_commits": 0,
+             "oldest_unpushed_at": None,
+             "contained_in_default": False},
+            {"name": "form/gone",
+             "upstream": "origin/form/gone",
+             "ahead": None, "behind": None,
+             "unpushed_commits": 0,
+             "oldest_unpushed_at": None,
+             "contained_in_default": True},
+            {"name": "local-only",
+             "upstream": None,
+             "ahead": None, "behind": None,
+             "unpushed_commits": 1,
+             "oldest_unpushed_at": local_oldest,
+             "contained_in_default": False},
+            {"name": "main",
+             "upstream": "origin/main",
+             "ahead": 0, "behind": 0,
+             "unpushed_commits": 0,
+             "oldest_unpushed_at": None,
+             "contained_in_default": None},
+        ])
+
     def test_full_tree_collapses_pruned_directories(self):
         repo = make_repo(self.root / "treeful")
         write(repo / "venv" / "lib" / "x.py", "x\n")
