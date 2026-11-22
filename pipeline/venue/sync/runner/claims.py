@@ -29,9 +29,10 @@ payload keyed on it. The cure removes both faces:
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timedelta, timezone
 
-from .foundation import REPO, RUNS, now
+from .foundation import REPO, RUNS, epoch, now
 from .records import claim_first_save, load_run_record, save_record
 
 CLAIM_DEADLINE_S = 180
@@ -52,13 +53,6 @@ def pid_alive(pid) -> bool:
     except OSError:
         return False
     return True
-
-
-def _parse(stamp):
-    try:
-        return datetime.fromisoformat(stamp)
-    except (TypeError, ValueError):
-        return None
 
 
 def pre_claim(job_name: str, run_id: str, shape_id, caller) -> dict:
@@ -91,8 +85,8 @@ def claim_lost(rec: dict) -> bool:
     claim is not a dead one."""
     if rec.get("state") != "claiming":
         return False
-    deadline = _parse(rec.get("claim_deadline"))
-    if deadline is None or datetime.now(timezone.utc) <= deadline:
+    deadline = epoch(rec.get("claim_deadline"))
+    if deadline is None or time.time() <= deadline:
         return False
     return not pid_alive(rec.get("daemon_child_pid"))
 
