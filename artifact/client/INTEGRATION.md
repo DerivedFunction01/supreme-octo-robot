@@ -502,7 +502,7 @@ the kit landed: `[data-palette=olive|teal]`,
 and the AppShell sidebar width (224px) all present;
 the kit fonts inlined as data URIs; no frame/relay
 markers anywhere in the bundle. (Local authoring checks
-only — the publish pipeline is main's.)
+only — the publish pipeline is the workhorse successor seat's: the seat manages the app end-to-end, tests/gates and publish included.)
 
 ## 11. Deviations from the kit sheet / storyboard forms
 
