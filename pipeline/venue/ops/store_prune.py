@@ -78,8 +78,14 @@ SCRATCH_AGE_FLOOR_S = 3600
 # Terminal alone is not cold: a run's payload dir is a
 # candidate only once its last activity — collector
 # heartbeat first, the record's own stamps as fallback —
-# is older than this grace.
-OUTPUT_GRACE_S = 2 * 3600
+# is older than this grace. The grace is a day, not two
+# hours: gate outputs are landing evidence, cited and
+# re-read across the working day that lands them — on
+# 2026-11-21/22 the two-hour grace swept a whole evening's
+# gate pulls (gates A–U, the wd-diag verdict log) during
+# the low-free window before their consumers re-read
+# them, invisibly, because the prune log named no paths.
+OUTPUT_GRACE_S = 24 * 3600
 
 
 _foundation_spec = _ilu.spec_from_file_location(
@@ -233,7 +239,21 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         summary[cls] = summary.get(cls, {"files": 0, "bytes": 0})
         summary[cls]["files"] += 1
         summary[cls]["bytes"] += size
-    return chosen, {"free_before": free_now, "projected_free": projected, "classes": summary}
+    # The payload dirs a pass removes are named in the
+    # report (bounded): an aggregate-only log made the
+    # 2026-11-21/22 sweeps invisible to their consumers.
+    payload_dirs = sorted(
+        p.name
+        for _o, p, _s, cls in chosen
+        if cls == "payload dirs of terminal runs"
+    )
+    return chosen, {
+        "free_before": free_now,
+        "projected_free": projected,
+        "classes": summary,
+        "payload_dirs": payload_dirs[:100],
+        "payload_dirs_total": len(payload_dirs),
+    }
 
 
 def main() -> int:

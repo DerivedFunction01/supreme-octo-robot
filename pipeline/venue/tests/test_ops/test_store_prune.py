@@ -54,7 +54,7 @@ def test_records_and_in_flight_work_are_never_candidates(tmp_path):
     _record(root, "runs", "run-live.json", {"state": "polling", "session": "s1"})
     _record(root, "runs", "run-done.json", {"state": "complete", "session": "s1", "last_evidence_at": "2026-11-09T00:00:00+00:00"})
     done_rec = root / "results" / "runs" / "run-done.json"
-    old = time.time() - 3 * 3600
+    old = time.time() - 25 * 3600
     os.utime(done_rec, (old, old))  # terminal AND cold: past the output grace
     _record(root, "runs", "run-fresh.json", {"state": "complete", "session": "s1"})  # terminal but fresh: a collector may be mid-verdict
     _record(root, "xfers", "up-1.json", {
@@ -77,6 +77,40 @@ def test_records_and_in_flight_work_are_never_candidates(tmp_path):
     assert "var/stray.bundle.part-000" not in chosen
     assert "results/run-live" not in chosen
     assert not any(c.startswith("results/runs") or c.startswith("results/xfers") for c in chosen)
+
+
+def test_terminal_payload_inside_a_day_is_kept_and_removed_dirs_are_named(tmp_path):
+    # The 2026-11-21/22 specimen: a whole evening's gate
+    # pulls swept at the two-hour grace during a low-free
+    # window, invisibly. Inside a day a terminal payload
+    # is evidence, not cold storage; past it, the pass
+    # names what it removed.
+    import importlib.util
+
+    root = _sandbox(tmp_path)
+    _record(root, "runs", "run-evening.json", {"state": "complete", "session": "s1"})
+    evening_rec = root / "results" / "runs" / "run-evening.json"
+    aged = time.time() - 3 * 3600
+    os.utime(evening_rec, (aged, aged))  # terminal, 3h cold: inside the day grace
+    _write(root / "results" / "run-evening" / "gate.log")
+    _record(root, "runs", "run-old.json", {"state": "complete", "session": "s1"})
+    old_rec = root / "results" / "runs" / "run-old.json"
+    aged = time.time() - 25 * 3600
+    os.utime(old_rec, (aged, aged))  # terminal, past the day grace
+    _write(root / "results" / "run-old" / "gate.log")
+    os.environ["COLAB_RUNNER_HOME"] = str(root)
+    try:
+        spec = importlib.util.spec_from_file_location("store_prune_under_test", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        chosen, report = module.plan(1e15)
+    finally:
+        os.environ.pop("COLAB_RUNNER_HOME", None)
+    paths = {str(p.relative_to(root)) for _o, p, _s, _c in chosen}
+    assert "results/run-evening" not in paths
+    assert "results/run-old" in paths
+    assert report["payload_dirs"] == ["run-old"]
+    assert report["payload_dirs_total"] == 1
 
 
 def test_job_payload_archives_and_staging_tarballs_past_48h(tmp_path):
