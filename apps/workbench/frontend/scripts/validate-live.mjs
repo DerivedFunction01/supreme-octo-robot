@@ -493,23 +493,21 @@ check(
 );
 
 // The degraded repo document: the backend's error form
-// (evaluation/repos.py) — a repo whose git probe failed
-// serves error set with dirty_counts null, and a repo
-// whose detail assembly raised serves a null status
-// over the same summary. The store must project the
-// honest absence, never throw on it: the step-3
+// (the projects index's code summary, SPEC §21) — a repo
+// whose git probe failed serves error set with
+// dirty_counts null. Code detail is no longer in the
+// document (it serves on demand through the Code
+// routes), so the old composition's detail-null half
+// has no document face anymore. The store must project
+// the honest absence, never throw on it: the step-3
 // composed drive met a document whose every repo
 // carried this form (all probes timed out under load)
 // and the old store died in its constructor on the
 // first one.
 const degradedDoc = structuredClone(doc);
-const degradedSummary = degradedDoc.repos.repos.find((r) => r.id === "alpha");
-degradedSummary.error = "git timed out";
-degradedSummary.dirty_counts = null;
-degradedSummary.is_clean = null;
-if (degradedDoc.repoDetails.alpha) {
-  degradedDoc.repoDetails.alpha.status = null;
-}
+const degradedRow = degradedDoc.projectsIndex.projects.find((r) => r.id === "alpha");
+degradedRow.code.error = "git timed out";
+degradedRow.code.dirty_counts = null;
 let degradedAdapter = null;
 let degradedThrow = null;
 try {
