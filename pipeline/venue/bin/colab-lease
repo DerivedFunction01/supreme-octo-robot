@@ -158,6 +158,30 @@ def _reap_command_budget_s() -> float:
         return _REAP_COMMAND_BUDGET_DEFAULT_S
 
 
+def _chain_log(event: dict) -> None:
+    """One line on the reap chain log (var/rc120-chain.jsonl):
+    the exit-120 instrument. The reap command has died at
+    exit 120 with zero output in flap-peak windows; the
+    chain log bounds the next death — enter without
+    pass-done dies inside the lease pass, pass-done without
+    a collector line dies in or around the collector child,
+    and the collector's own returncode is recorded whenever
+    the parent lives to see it. Evidence only, swallow-
+    guarded like the last-reap stamp it rides beside."""
+    try:
+        import datetime
+
+        var = REPO / "var"
+        var.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(
+            {"at": datetime.datetime.now(datetime.UTC).isoformat(), **event}
+        )
+        with open(var / "rc120-chain.jsonl", "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except Exception:  # noqa: BLE001 — evidence only, never the duty
+        pass
+
+
 def _reap_with_collector() -> dict:
     """The reap duty: the lease pass, then the standing
     collector — stale detached run records get the poll their
@@ -168,7 +192,9 @@ def _reap_with_collector() -> dict:
     import time
 
     started = time.monotonic()
+    _chain_log({"phase": "enter"})
     result = lease.reap(cr.colab, REPO)
+    _chain_log({"phase": "pass-done", "elapsed_s": round(time.monotonic() - started, 1)})
     try:
         var = REPO / "var"
         var.mkdir(parents=True, exist_ok=True)
@@ -177,17 +203,28 @@ def _reap_with_collector() -> dict:
         pass
     remaining = _reap_command_budget_s() - (time.monotonic() - started)
     if remaining < _COLLECT_MIN_REMAINING_S:
+        _chain_log({"phase": "exit", "collect": "skipped-budget"})
         result["collect"] = {"skipped": "command-budget", "remaining_s": round(remaining, 1)}
         return result
     env = dict(os.environ)
     env["COLAB_COLLECT_BUDGET_S"] = str(max(0.0, remaining - 5.0))
     try:
         child = subprocess.run([sys.executable, str(REPO / "bin" / "colab-run"), "--collect-stale"], capture_output=True, text=True, timeout=remaining, env=env)
+        _chain_log(
+            {
+                "phase": "collector-done",
+                "returncode": child.returncode,
+                "stderr_tail": (child.stderr or "")[-200:],
+            }
+        )
         result["collect"] = json.loads(child.stdout)
     except subprocess.TimeoutExpired:
+        _chain_log({"phase": "collector-timeout", "budget_s": round(remaining, 1)})
         result["collect"] = {"error": "command-budget", "budget_s": round(remaining, 1)}
     except Exception as exc:  # noqa: BLE001
+        _chain_log({"phase": "collector-error", "error": type(exc).__name__})
         result["collect"] = {"error": type(exc).__name__}
+    _chain_log({"phase": "exit"})
     return result
 
 
