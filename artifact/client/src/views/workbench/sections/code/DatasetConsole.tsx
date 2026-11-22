@@ -18,7 +18,7 @@ import { useCheckout } from "./checkoutContext";
 import type { DatasetCell, DatasetSqlResult } from "../../lib/api-types-code";
 import { metaStyle } from "../shared";
 
-const FIELDS = actionFields<Actions>();
+const FIELDS = actionFields<typeof Actions>();
 
 const CELL_MAX = 80;
 
