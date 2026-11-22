@@ -145,6 +145,14 @@ EXCEPTIONS = (
     {"path": "pipeline/workrecord/lib/util.py",
      "kind": "standalone fallback seam — the workrecord "
              "staged_write_bytes seam"},
+    {"path": "pipeline/venue/bin/colab-lease",
+     "kind": "append-only evidence log — the rc120 chain "
+             "log (var/rc120-chain.jsonl) is diagnostic "
+             "evidence, not a state store: one O_APPEND "
+             "line per stamp; a torn final line loses one "
+             "evidence line and corrupts nothing, so the "
+             "staged-write protocol has nothing to "
+             "protect there"},
 )
 
 STATE_SEGMENTS = {"var", "state"}
