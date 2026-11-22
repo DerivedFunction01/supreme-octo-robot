@@ -427,10 +427,20 @@ def _branch_details(root) -> tuple:
     for name, upstream in parsed:
         ahead = behind = None
         if upstream:
-            counts = _git(root, "rev-list", "--left-right",
-                          "--count",
-                          f"{name}...{upstream}").split()
-            ahead, behind = int(counts[0]), int(counts[1])
+            try:
+                counts = _git(root, "rev-list", "--left-right",
+                              "--count",
+                              f"{name}...{upstream}").split()
+                ahead, behind = int(counts[0]), int(counts[1])
+            except RepoError:
+                # A vanished upstream is a state, not an
+                # error: the branch's upstream config can
+                # outlive its remote-tracking ref (landed,
+                # remote branch deleted, refs pruned), and
+                # the rev-list then cannot resolve. This
+                # row's ahead/behind read as unavailable
+                # (None); every other branch still derives.
+                pass
         unpushed, oldest = _unpushed(root, name)
         contained = None
         if default and name != default:

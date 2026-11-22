@@ -320,6 +320,32 @@ class TestFullStatus(unittest.TestCase):
         self.assertFalse(detail["side"]
                          ["contained_in_default"])
 
+    def test_vanished_upstream_is_a_branch_state(self):
+        # A branch's upstream config can outlive its
+        # remote-tracking ref (landed, remote branch
+        # deleted, refs pruned). That row's ahead/behind
+        # read as unavailable; the status still derives
+        # every branch and never raises.
+        origin, clone = make_tracked_pair(self.root)
+        git(clone, "checkout", "-b", "feature/live")
+        git(clone, "push", "-u", "origin", "feature/live")
+        git(clone, "checkout", "-b", "form/gone")
+        git(clone, "push", "-u", "origin", "form/gone")
+        git(clone, "checkout", "main")
+        git(origin, "branch", "-D", "form/gone")
+        git(clone, "fetch", "--prune", "origin")
+        s = self.status("clone")
+        self.assertIsNone(s["error"])
+        detail = {d["name"]: d for d in s["branch_details"]}
+        self.assertEqual(set(detail),
+                         {"main", "feature/live", "form/gone"})
+        self.assertEqual(detail["feature/live"]["ahead"], 0)
+        self.assertEqual(detail["feature/live"]["behind"], 0)
+        gone = detail["form/gone"]
+        self.assertEqual(gone["upstream"], "origin/form/gone")
+        self.assertIsNone(gone["ahead"])
+        self.assertIsNone(gone["behind"])
+
     def test_full_tree_collapses_pruned_directories(self):
         repo = make_repo(self.root / "treeful")
         write(repo / "venv" / "lib" / "x.py", "x\n")
