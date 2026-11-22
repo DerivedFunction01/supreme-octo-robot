@@ -70,8 +70,11 @@
     "themes/olive.css": "81b33892ca49c4acf01ce0dd613c392308d42ebd768e3050e606d70c4dab887c",
     "themes/teal.css": "4666e615980bd1998c589c955dcd3d04104addac70b8583106c5e6c26509d884",
     "tokens/tokens.json": "b3d11f1ed65bb79f445318a23410bc226c6397397908ada874372a983816168b",
+    "tools/contrast/census6.mjs": "eaccd983a944a8a9f41e65bda28333b75850f99d5b44b8aa66cb40799320ddb2",
+    "tools/contrast/core.mjs": "1534109b7736e11a98b1ca0294aea897266d69055cd63395bed1efb4c7f0639a",
+    "tools/contrast/part6-pairs.mjs": "3e7e351fb1236041489e93feeec2a59663590c78227c53578bd676ec32e5dddd",
     "tools/gen-tokens.mjs": "e281860fcad02180fb0217afb3bd89f2e589dd0468d29ea26b9994cf49e64f6e",
-    "tools/verify-contrast.mjs": "710560d8cd21add9a7ce669a132a2980096b65fc566c36c0577d290ac307158a",
+    "tools/verify-contrast.mjs": "960c9211a99ab49e20bb30b768d2ca4a1721f2c27db25249c7115e29380d171d",
     "tools/verify-log-payload.mjs": "71cf3ebdc9fcf572cf4e39723b67dec80afc04a8043e91577d06fcb99bc3f605"
   }
 }

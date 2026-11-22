@@ -122,6 +122,17 @@ Vendoring snapshot:
   output unchanged. `manifest.json` was regenerated for
   the new tree. The dated re-sync narratives above keep
   the paths of their day.
+- Contrast-gate decomposition carried locally, 2026-11-22
+  (line-cap cure `b81a473`): the 1,178-line
+  `tools/verify-contrast.mjs` split along its part seams
+  into `tools/contrast/core.mjs` (tokens, colour math,
+  resolvers), `tools/contrast/part6-pairs.mjs`, and
+  `tools/contrast/census6.mjs`; the entry keeps the
+  header record and Parts 1–5 and runs the parts in the
+  original order, its output and exit code unchanged.
+  The decomposition landed without its manifest carry;
+  `manifest.json` is regenerated for the decomposed tree
+  (74 files pinned).
 
 ## Manifest
 
