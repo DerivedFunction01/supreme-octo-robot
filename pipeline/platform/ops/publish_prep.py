@@ -42,6 +42,11 @@ mirror or published:
   neutralized, mechanically transformed — if
   build.mjs's shape moves, the transform's anchors
   fail and the prep stops rather than building wrong.
+- the staged server keeps its tracked .generated (the
+  privileged contract): the build's actionFields macro
+  requires the server actions, whose @space/privileged
+  import resolves only through that contract (see
+  _ignore_artifact).
 - dist hygiene: the staged dist contains EXACTLY the
   referenced set — the one entry document and its
   canonical single bundle: the one JS bundle and the
@@ -135,11 +140,25 @@ GUARD_NEUTRALIZED = (
     "guard is neutralized in this generated copy only "
     "(publish_prep.py); build.mjs itself is untouched")
 
-def _ignore_artifact(_dir, names):
+def _ignore_artifact(dirpath, names):
+    # server/.generated stages: its one tracked file is
+    # the privileged contract (@space/privileged, mapped
+    # by server/tsconfig.json's paths) that the server
+    # actions resolve through — and the composed client
+    # build's actionFields macro requires those actions,
+    # so a staging without the contract fails the build
+    # inside the macro (Bun reports the macro's
+    # resolution error as an AST coercion error at the
+    # macro call site). Every other .generated is
+    # builder output and stays excluded.
+    stage_contract = os.path.normpath(dirpath).endswith(
+        os.path.join("artifact", "server"))
     out = []
     for name in names:
         if name in ("node_modules", ".bun-cache", "dist",
-                    "dist-cvm", ".generated", "app.db"):
+                    "dist-cvm", "app.db"):
+            out.append(name)
+        elif name == ".generated" and not stage_contract:
             out.append(name)
         elif "tsbuildinfo" in name:
             out.append(name)
