@@ -38,6 +38,8 @@ import importlib.util as _importlib_util
 import json
 import os
 import sqlite3
+import sys as _sys
+import types as _types
 
 WINDOW_BEFORE_S = 1200
 WINDOW_AFTER_S = 120
@@ -45,14 +47,25 @@ WINDOW_AFTER_S = 120
 # The parse intent's home for this cluster is the
 # workrecord lib's util (the date-family map: scheduling
 # ops bind it by derived path) — the tolerant instant
-# parse lives there, never copied here.
+# parse lives there, never copied here. util is a package
+# module (it imports its sibling paths relatively), so it
+# is loaded under a synthetic package rooted at the lib
+# dir: a flat standalone load gives its relative import
+# no parent and the watch dies at startup in the job's
+# own context (2026-11-22 — the package gate's context
+# masked it; the job runs this file as a bare script).
 _HERE = os.path.dirname(os.path.abspath(__file__))
+_LIB_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(_HERE))),
+    "workrecord", "lib")
+if "workrecord_lib" not in _sys.modules:
+    _pkg = _types.ModuleType("workrecord_lib")
+    _pkg.__path__ = [_LIB_DIR]
+    _sys.modules["workrecord_lib"] = _pkg
 _util_spec = _importlib_util.spec_from_file_location(
-    "workrecord_lib_util",
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(_HERE))),
-        "workrecord", "lib", "util.py"))
+    "workrecord_lib.util", os.path.join(_LIB_DIR, "util.py"))
 _util = _importlib_util.module_from_spec(_util_spec)
+_sys.modules["workrecord_lib.util"] = _util
 _util_spec.loader.exec_module(_util)
 
 
