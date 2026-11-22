@@ -73,16 +73,28 @@ PLATFORM_WRITER = os.path.join(
     os.path.dirname(REPO_ROOT), "platform", "writer.py")
 
 
+class _Spine:
+    """This module as the ops tree's paths spine, for its
+    own writer seam: _load_writer below is a seam over
+    this spine (spine and seam share the module), and it
+    consumes the spine's PLATFORM_WRITER through the
+    spine object — the standing seam form, in which a
+    seam reads its spine's constant as an attribute —
+    rather than as a bare module global."""
+
+    PLATFORM_WRITER = PLATFORM_WRITER
+
+
 def _load_writer():
     """The pipeline's unified writer (contract 15), loaded
     by path from PLATFORM_WRITER — the file_registry seam's
     pattern. None when the ops tree runs standalone,
     outside the mega repo."""
-    if not os.path.isfile(PLATFORM_WRITER):
+    if not os.path.isfile(_Spine.PLATFORM_WRITER):
         return None
     import importlib.util
     spec = importlib.util.spec_from_file_location(
-        "pipeline_platform_writer", PLATFORM_WRITER)
+        "pipeline_platform_writer", _Spine.PLATFORM_WRITER)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
