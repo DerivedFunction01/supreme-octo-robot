@@ -134,6 +134,7 @@ def _r1(state: dict, rule: dict, now: datetime) -> list:
 
 def _r2(state: dict, rule: dict, settings: Settings, now: datetime) -> list:
     from attention.services.reads import model as _reads_model
+
     events = []
     shadow = rule.get("mode") == "shadow"
     for handle, record in state.get("handler_status", {}).items():

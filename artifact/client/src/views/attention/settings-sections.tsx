@@ -43,8 +43,8 @@ import {
   type DigestPayload,
   type GlancePayload,
 } from "./model";
-import { Button } from "@workhorse/kit/components/Button";
-import { Field, Input } from "@workhorse/kit/components/Fields";
+import { Button } from "@workhorse/kit/components/controls/Button";
+import { Field, Input } from "@workhorse/kit/components/controls/Fields";
 import {
   customExpiryDate,
   customExpiryFields,

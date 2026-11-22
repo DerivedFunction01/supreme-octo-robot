@@ -6,7 +6,7 @@ attention.domain.attention re-exports this surface.
 
 from __future__ import annotations
 
-from datetime import datetime, time, timedelta
+from datetime import datetime
 
 from .catalogs import class_is_hard_stop, default_status_codes
 from .rules import normalize_rule, ordered_rules

@@ -105,7 +105,9 @@ def set_digest_prefs(state: dict, payload: dict) -> dict:
             prefs["window_times"] = sorted(set(times))
             prefs["window_tz"] = tz_name
             prefs["windows"] = {
-                t: on for t, on in prefs["windows"].items() if t in prefs["window_times"]
+                t: on
+                for t, on in prefs["windows"].items()
+                if t in prefs["window_times"]
             }
     if "window_time" in payload or "window_enabled" in payload:
         time = payload.get("window_time")

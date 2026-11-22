@@ -30,8 +30,14 @@ NOW = datetime(2026, 11, 21, 12, 0, tzinfo=UTC)
 
 
 def prefs_state(times=("08:00", "13:00", "18:30"), tz="America/New_York"):
-    return {"digest_prefs": {"windows": {}, "include": {},
-                             "window_times": list(times), "window_tz": tz}}
+    return {
+        "digest_prefs": {
+            "windows": {},
+            "include": {},
+            "window_times": list(times),
+            "window_tz": tz,
+        }
+    }
 
 
 class TimesInForceCase(unittest.TestCase):
@@ -49,9 +55,7 @@ class TimesInForceCase(unittest.TestCase):
     def test_enablement_applies_over_owner_times(self):
         state = prefs_state()
         state["digest_prefs"]["windows"] = {"13:00": False}
-        self.assertEqual(
-            labels.digest_windows(state, SETTINGS), ["08:00", "18:30"]
-        )
+        self.assertEqual(labels.digest_windows(state, SETTINGS), ["08:00", "18:30"])
 
     def test_tz_resolves_and_bad_name_reads_unset(self):
         self.assertEqual(labels.digest_window_tz(prefs_state()), NY)
@@ -82,7 +86,10 @@ class WriteCase(unittest.TestCase):
         state = {}
         out = writes.set_digest_prefs(
             state,
-            {"window_times": ["18:30", "08:00", "08:00"], "window_tz": "America/New_York"},
+            {
+                "window_times": ["18:30", "08:00", "08:00"],
+                "window_tz": "America/New_York",
+            },
         )
         self.assertEqual(out["window_times"], ["08:00", "18:30"])
         self.assertEqual(out["window_tz"], "America/New_York")
