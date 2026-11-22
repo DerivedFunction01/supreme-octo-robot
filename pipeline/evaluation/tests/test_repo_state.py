@@ -9,6 +9,7 @@ round-trips copies of its real state when present.
 """
 
 import json
+import os
 import shutil
 import tempfile
 import unittest
@@ -286,6 +287,141 @@ class HistoryCase(unittest.TestCase):
         self.assertEqual(out["timeline"], [])
         self.assertIsNone(out["dirty_since"])
         self.assertIsNone(out["ahead_since"])
+
+
+class RecordHistoryIndexCase(unittest.TestCase):
+    """The per-path last-record index behind record_history:
+    decisions must match the scan-based behaviour exactly,
+    an external replace/truncate must force a rebuild, and
+    distinct paths keep distinct indexes."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.path = self.tmp / "history.jsonl"
+
+    def lines(self, path=None):
+        path = path or self.path
+        if not path.is_file():
+            return []
+        with open(path, encoding="utf-8") as f:
+            return [json.loads(l) for l in f if l.strip()]
+
+    def _scan_expected(self, path, summ, moment):
+        """The pre-cure decision, computed by scanning the
+        file exactly as the old record_history did."""
+        repo_id = summ.get("id")
+        if not repo_id or summ.get("error"):
+            return False
+        rec = repo_state._summary_record(
+            summ, moment.isoformat())
+        last = None
+        for existing in repo_state._read_records(path):
+            if existing.get("repo") == repo_id:
+                last = existing
+        if last is not None:
+            same = all(last.get(f) == rec[f]
+                       for f in repo_state.HEADLINE_FIELDS)
+            if same:
+                try:
+                    age = moment - repo_state.parse_iso(
+                        last["at"])
+                except (KeyError, ValueError):
+                    age = repo_state.HEARTBEAT
+                if age < repo_state.HEARTBEAT:
+                    return False
+        return True
+
+    def test_decisions_match_scan_based_behaviour(self):
+        dirty = summary(
+            dirty_counts={"staged": 1, "unstaged": 2,
+                          "untracked": 0},
+            exposure={"level": "uncommitted_work",
+                      "commits": 0, "files": 3})
+        steps = [
+            # First sighting: append.
+            (summary(), at(0), True),
+            # Unchanged within the heartbeat: no append.
+            (summary(), at(30), False),
+            # Changed headline field: append.
+            (dirty, at(35), True),
+            # The new headline, unchanged, within heartbeat.
+            (dirty, at(40), False),
+            # Error summary: nothing, whatever the state.
+            (summary(error="git failed"), at(45), False),
+            # Unchanged past the heartbeat: append.
+            (dirty, at(35 + 61), True),
+            # A second repo is decided on its own last record.
+            (summary("beta"), at(100), True),
+            (summary("beta"), at(110), False),
+            # alpha's headline reverts: a change vs its last.
+            (summary(), at(115), True),
+        ]
+        for summ, moment, want in steps:
+            expected = self._scan_expected(
+                self.path, summ, moment)
+            self.assertEqual(expected, want, (summ, moment))
+            self.assertEqual(
+                repo_state.record_history(
+                    self.path, summ, now=moment),
+                want, (summ, moment))
+        self.assertEqual(len(self.lines()), 5)
+
+    def test_index_rebuilds_after_external_truncate(self):
+        self.assertTrue(repo_state.record_history(
+            self.path, summary(), now=at(0)))
+        # External truncation: the file the index saw is gone.
+        with open(self.path, "w", encoding="utf-8"):
+            pass
+        # Scan-based behaviour has no last record, so the
+        # same summary inside the heartbeat appends again;
+        # a stale index would suppress it.
+        self.assertTrue(repo_state.record_history(
+            self.path, summary(), now=at(30)))
+        self.assertEqual(len(self.lines()), 1)
+
+    def test_index_rebuilds_after_external_replace(self):
+        self.assertTrue(repo_state.record_history(
+            self.path, summary(), now=at(0)))
+        # External replace (temp sibling + os.replace, the
+        # migrate_history_keys shape): the last record now
+        # carries a different head and a longer subject.
+        replacement = {
+            "at": at(0).isoformat(), "repo": "alpha",
+            "head": "b" * 40,
+            "head_subject": "a much longer subject line",
+            "branch": "main", "ahead": 0,
+            "publication": "tracking", "dirty_total": 0,
+            "exposure_level": "backed_up",
+            "exposed_commits": 0}
+        tmp = self.path.with_suffix(".jsonl.tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            f.write(json.dumps(replacement) + "\n")
+        os.replace(tmp, self.path)
+        # Vs the replaced last record the headline differs,
+        # so this appends; a stale index (head a*40, same,
+        # within heartbeat) would suppress it.
+        self.assertTrue(repo_state.record_history(
+            self.path, summary(), now=at(30)))
+        recs = self.lines()
+        self.assertEqual(len(recs), 2)
+        self.assertEqual(recs[-1]["head"], "a" * 40)
+
+    def test_separate_paths_keep_separate_indexes(self):
+        other = self.tmp / "other.jsonl"
+        self.assertTrue(repo_state.record_history(
+            self.path, summary(), now=at(0)))
+        # The same repo + summary on a different path has
+        # no last record there: it appends, and does not
+        # disturb the first path's no-append decision.
+        self.assertTrue(repo_state.record_history(
+            other, summary(), now=at(30)))
+        self.assertFalse(repo_state.record_history(
+            self.path, summary(), now=at(30)))
+        self.assertFalse(repo_state.record_history(
+            other, summary(), now=at(35)))
+        self.assertEqual(len(self.lines()), 1)
+        self.assertEqual(len(self.lines(other)), 1)
 
 
 def legacy_registry():

@@ -19,6 +19,7 @@ Stdlib only.
 
 import json
 import os
+import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -283,6 +284,50 @@ def _append_line(path, line: str) -> bool:
     return True
 
 
+# In-process index of the last record per repo id, per
+# history path: {path_str: {"last_by_repo": {repo_id: rec},
+# "sig": (size, mtime_ns) | None}}. Built lazily by one
+# full read on first use for a path, then maintained
+# incrementally by record_history's own appends. The
+# stored signature is the file's (size, mtime_ns) as seen
+# before the building read, so any change during or after
+# that read — an external replace, truncate, or append —
+# mismatches on the next call and forces a rebuild from a
+# fresh full read. Semantics never depend on the index
+# being current: a stale signature only costs a rebuild.
+_HISTORY_INDEX: dict = {}
+_HISTORY_INDEX_LOCK = threading.Lock()
+
+
+def _file_signature(path):
+    """(size, mtime_ns) for `path`, or None when the file
+    is missing or unreadable."""
+    try:
+        st = Path(path).stat()
+    except OSError:
+        return None
+    return (st.st_size, st.st_mtime_ns)
+
+
+def _index_for(path, key):
+    """The index entry for `path`, (re)built by one full
+    read when absent or when the file's signature no
+    longer matches what the index last saw. Caller holds
+    _HISTORY_INDEX_LOCK."""
+    sig = _file_signature(path)
+    entry = _HISTORY_INDEX.get(key)
+    if entry is not None and entry["sig"] == sig:
+        return entry
+    last_by_repo = {}
+    for existing in _read_records(path):
+        repo_id = existing.get("repo")
+        if repo_id:
+            last_by_repo[repo_id] = existing
+    entry = {"last_by_repo": last_by_repo, "sig": sig}
+    _HISTORY_INDEX[key] = entry
+    return entry
+
+
 def record_history(path, summary, *, now=None) -> bool:
     """Append one compact record for a repo_summary-shaped
     dict when a headline field changed vs the repo's last
@@ -295,21 +340,25 @@ def record_history(path, summary, *, now=None) -> bool:
         return False
     moment = _as_datetime(now)
     rec = _summary_record(summary, moment.isoformat())
-    last = None
-    for existing in _read_records(path):
-        if existing.get("repo") == repo_id:
-            last = existing
-    if last is not None:
-        same = all(last.get(f) == rec[f]
-                   for f in HEADLINE_FIELDS)
-        if same:
-            try:
-                age = moment - parse_iso(last["at"])
-            except (KeyError, ValueError):
-                age = HEARTBEAT
-            if age < HEARTBEAT:
-                return False
-    return _append_line(path, json.dumps(rec) + "\n")
+    key = str(Path(path))
+    with _HISTORY_INDEX_LOCK:
+        entry = _index_for(path, key)
+        last = entry["last_by_repo"].get(repo_id)
+        if last is not None:
+            same = all(last.get(f) == rec[f]
+                       for f in HEADLINE_FIELDS)
+            if same:
+                try:
+                    age = moment - parse_iso(last["at"])
+                except (KeyError, ValueError):
+                    age = HEARTBEAT
+                if age < HEARTBEAT:
+                    return False
+        appended = _append_line(path, json.dumps(rec) + "\n")
+        if appended:
+            entry["last_by_repo"][repo_id] = rec
+            entry["sig"] = _file_signature(path)
+        return appended
 
 
 def _streak(records, field):
