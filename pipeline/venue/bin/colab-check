@@ -3,6 +3,13 @@
 run check.py remotely with the probed worker count. Returns verdict + wall
 time.
 
+This wrapper ships the working tree as it stands — the bundle form,
+for a genuinely uncommitted tree. A committed, pushed tree is gated
+in branch form instead: name it in a job manifest's transport
+declaration and fire it with bin/colab-run (docs/README-runner.md) —
+branches are throwaway working surfaces, and the main lineage
+carries finalized clean work only.
+
 Usage: colab-check <check.py paths...> [--repo ID] [--variant NAME]
        [--shape SHAPE] [--caller TAG]
 The caller claim resolves exactly as colab-run's does, minus the
