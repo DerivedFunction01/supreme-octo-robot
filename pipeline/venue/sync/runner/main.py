@@ -13,8 +13,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now, repo_registry, transfer
-from .launch import orphan_notes, session_launch_lock, upload_one
+from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now, transfer
+from .launch import build_seed_ctx, drive_branch_window, orphan_notes, session_launch_lock, stamp_transport_span, transport_error, transport_setup, upload_one
 from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, pull_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
@@ -166,7 +166,9 @@ def main() -> int:
     # field and the entry — the shapes have no tolerance
     # semantics, and discovering that mid-launch cost a
     # consumer a crashed run (2026-11-12).
-    shape_err = manifest_shape_error(job)
+    # The transport declaration settles at the same load point
+    # (branch transport plan, Step 1): a malformed branch form refuses here.
+    shape_err = manifest_shape_error(job) or transport_error(job)
     if shape_err:
         print(f"colab-run: job {job_name}: {shape_err}", file=sys.stderr)
         return 2
@@ -276,45 +278,29 @@ def main() -> int:
         run_id = claim_first_save(rec)
     # Bundle seed (--seed — env-build's private-repo route): the
     # job's target repo reaches the VM as a snapshot bundle, never
-    # as a VM-side clone. A private repo's plain HTTPS clone
+    # as a VM-side clone — a private repo's plain HTTPS clone
     # cannot authenticate on the VM (no credential lives there by
-    # design), so before launch the runner builds the bundle from
-    # the registry entry's local checkout (the same builder
-    # colab-check ships), uploads it, and seeds the dest from it
-    # (sync/apply_bundle_remote.py's seed mode); the job then runs
-    # with --skip-clone. Built here, before any session is held,
-    # so a local build failure holds nothing.
+    # design). The bundle is built locally before any session is
+    # held (launch.build_seed_ctx), uploaded in the window below,
+    # and seeded into the dest (sync/apply_bundle_remote.py's seed
+    # mode); the job then runs with --skip-clone.
     seed_ctx = None
     if seed_flag and not resume:
-        def _extra(flag):
-            return extra_args[extra_args.index(flag) + 1] if flag in extra_args and extra_args.index(flag) + 1 < len(extra_args) else None
-        try:
-            registry = repo_registry.load_local_registry(REPO)
-            seed_repo_id, seed_entry = repo_registry.get_entry(registry, _extra("--repo"))
-            seed_dest = repo_registry.variant_dest(seed_entry, _extra("--variant"))
-        except ValueError as exc:
-            rec.update(state="failed", error=f"bundle seed: {exc}")
+        seed_err, seed_ctx = build_seed_ctx(extra_args, rec)
+        if seed_err is not None:
+            rec.update(state="failed", error=seed_err)
             save_record(rec)
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
-        bundle_env = dict(os.environ)
-        bundle_env["COLAB_REPO_SRC"] = str(Path(os.path.expanduser(seed_entry["local_path"])))
-        bundle = subprocess.run(["bash", str(REPO / "sync" / "make_snapshot_bundle.sh")], capture_output=True, text=True, env=bundle_env)
-        if bundle.returncode != 0:
-            rec.update(state="failed", error=f"bundle seed: snapshot build failed: {bundle.stderr[-300:]}")
-            save_record(rec)
-            print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
-            return 1
-        seed_manifest = json.loads(bundle.stdout)
-        # The git identity plant: the seeded tree carries the
-        # source repo's own configured identity (its repo-local
-        # user.name/user.email), never the forming shell's
-        # inheritance. No complete pair at the source → no
-        # plant, and the record says so.
-        seed_identity = git_identity.repo_identity(seed_entry["local_path"])
-        seed_ctx = {"repo": seed_repo_id, "dest": seed_dest, "clone_url": seed_entry["clone_url"], "bundle_path": Path(seed_manifest["bundle"]), "manifest": seed_manifest, "git_identity": seed_identity}
-        rec["bundle_seed"] = {"repo": seed_repo_id, "dest": seed_dest, "sha256": seed_manifest["sha256"], "bytes": seed_manifest["bytes"], "snapshot_commit": seed_manifest["snapshot_commit"], "tree": seed_manifest["tree"], "git_identity": seed_identity}
         save_record(rec)
+    # Transport (branch transport plan, 2026-11-23): stamp the
+    # record's transport, resolve any branch declaration (launch.transport_setup).
+    transport, branch_err, branch_ctx = transport_setup(rec, job, seed_ctx)
+    if branch_err is not None:
+        rec.update(state="failed", error=branch_err)
+        save_record(rec)
+        print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
+        return 1
     try:
         usage_before = colab("usage", timeout=120).stdout.strip()
     except subprocess.TimeoutExpired:
@@ -435,6 +421,7 @@ def main() -> int:
             save_record(rec)
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
+        rec["transport"]["bytes_moved"] = rec["transport"].get("bytes_moved", 0) + script.stat().st_size
         # Manifest-declared extra uploads land at /content/<name>
         # before launch: a shell_job payload names its script in
         # args (--script /content/env_build.sh) and the registry it
@@ -453,6 +440,16 @@ def main() -> int:
             err = upload_one(session, src, src.name, run_id)
             if err is not None:
                 rec.update(state="failed", error=f"manifest upload failed: {extra}: {err}")
+                save_record(rec)
+                print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
+                return 1
+            rec["transport"]["bytes_moved"] = rec["transport"].get("bytes_moved", 0) + src.stat().st_size
+        if branch_ctx is not None:
+            # Branch transport: drive the base clone to the declared
+            # tip before any launch (launch.drive_branch_window).
+            err = drive_branch_window(session, rec, transport, branch_ctx, run_id)
+            if err is not None:
+                rec.update(state="failed", error=err)
                 save_record(rec)
                 print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
                 return 1
@@ -626,6 +623,9 @@ def main() -> int:
             rec["last_poll_error"] = _confirm_error
             stamp_collector(rec, rec.get("caller"))
             save_record(rec)
+        # The claim→launch span (branch transport plan; launch.stamp_transport_span).
+        stamp_transport_span(rec)
+        save_record(rec)
         # The launch attempt has concluded on every branch
         # above (the one branch that returned already exited
         # the process, releasing the flock with it): the
