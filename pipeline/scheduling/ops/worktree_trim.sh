@@ -83,7 +83,16 @@
 #      since is left standing, and the PURGED line says
 #      so). The queue drains at worker start and end — a
 #      failed origin deletion stays queued and is retried
-#      next pass. The queue seeds from archive manifests
+#      next pass. Queue line forms (2026-11-23): a guarded
+#      charge is branch<TAB>evaluated-tip<TAB>class, class
+#      sweep, seed, or cap; a bare branch name is the
+#      purge's legacy charge — the clean script's form —
+#      and drains unconditionally, as it always has. One
+#      outstanding charge per branch: a fresh enqueue
+#      replaces any older line for the same branch, and
+#      the drain takes the first standing line for a
+#      branch as its governing charge. The queue seeds
+#      from archive manifests
 #      only when the archive itself no longer stands (the
 #      crash window: a tree removed by hand without a
 #      purge); a standing archive's manifest seeds nothing.
@@ -157,6 +166,37 @@
 #      provenance, no held set, no name carve-outs: an
 #      uncontained branch is not trim material, a contained
 #      one trims.
+#      Two refinements bind the sweep's verdict to the
+#      moment of the act (2026-11-23):
+#      - tip-equal exclusion: a branch whose tip EQUALS
+#        the default branch's tip at census is not swept
+#        at all, on either side — the exclusion keys on
+#        the ref's position, not its name. A tip-equal ref
+#        is where the default branch itself stands (in a
+#        dev-flow repo, the standing integration point);
+#        the sweep's 'landed and spent' assertion does not
+#        hold there. It draws a BRANCH-CONTAINED-SKIP-EQUAL
+#        line and stays in the cap census, cap-eligible
+#        exactly as any other branch. A branch that moves
+#        off tip-equal is judged by plain containment at
+#        the next census.
+#      - drain re-verification: a containment verdict is
+#        computed against a census-time snapshot, and a
+#        branch can advance before the drain discharges
+#        its charge. The queue therefore carries the
+#        evaluated tip with each guarded charge, and the
+#        drain (and the local deletion path) re-evaluates
+#        containment against the LIVE tip whenever the
+#        ref has moved: a branch is deleted only when the
+#        tip actually deleted is itself contained, and
+#        every BRANCH-TRIMMED record carries that tip as
+#        sha=. A moved, no-longer-contained branch is
+#        kept and draws a BRANCH-DRAIN-SKIP line naming
+#        both tips. Charges whose preservation already
+#        happened by another mechanism — the cap phase's
+#        archive-before-delete, the purge's bare queue
+#        lines — carry no containment verdict and drain
+#        as they always have.
 #   7. branch cap (2026-11-22, owner's correction:
 #      containment is not the end state): the configured
 #      max binds the branch POPULATION — 10 branches per
@@ -371,10 +411,25 @@ run_worker() {
   queue_file() { echo "$STATE_DIR/remote-pending-$slug.txt"; }
 
   enqueue_branch() {
+    # $1 = branch, $2 = evaluated tip (optional), $3 =
+    # charge class (sweep|seed|cap, default sweep). With
+    # a tip, the line is the guarded form
+    # branch<TAB>tip<TAB>class; without one it is the
+    # bare legacy line. One outstanding charge per
+    # branch: any older line for the same branch (a bare
+    # purge line included) is replaced — the freshest
+    # evaluation governs.
     local qf; qf="$(queue_file)"
     mkdir -p "$STATE_DIR"
     touch "$qf"
-    grep -Fxq "$1" "$qf" || echo "$1" >>"$qf"
+    local tmp; tmp="$(mktemp)"
+    awk -F'\t' -v b="$1" '$1 != b' "$qf" >"$tmp"
+    if [ -n "${2:-}" ]; then
+      printf '%s\t%s\t%s\n' "$1" "$2" "${3:-sweep}" >>"$tmp"
+    else
+      echo "$1" >>"$tmp"
+    fi
+    mv "$tmp" "$qf"
   }
 
   # The push target for origin deletions: the origin URL with
@@ -394,12 +449,38 @@ run_worker() {
     esac
   }
 
+  # Set by trim_local_branch when it keeps a moved branch:
+  # the ref's live tip, for the caller's survivor census.
+  TLB_LIVE_SHA=""
+
   trim_local_branch() {
-    # $1 = branch. Silent success when the ref is already gone.
-    $GIT -C "$main_dir" show-ref --verify --quiet "refs/heads/$1" || return 0
+    # $1 = branch, $2 = evaluated tip (optional): the tip
+    # a containment verdict was computed against. Silent
+    # success when the ref is already gone. When the ref
+    # has moved since that verdict, containment is
+    # re-evaluated against the live tip before any
+    # delete — a branch is never deleted on a stale tip's
+    # verdict (2026-11-23). Returns 0 deleted (or already
+    # gone), 1 delete failed, 2 kept: moved and no longer
+    # contained (BRANCH-DRAIN-SKIP emitted, TLB_LIVE_SHA
+    # set). With no evaluated tip the delete is the
+    # caller's own charge (the cap phase's archived
+    # excess) and proceeds as it always has. Every
+    # deletion records the tip actually deleted as sha=.
+    TLB_LIVE_SHA=""
+    local cur
+    cur="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$1" 2>/dev/null)"
+    [ -z "$cur" ] && return 0
+    if [ -n "${2:-}" ] && [ "$cur" != "$2" ]; then
+      if ! $GIT -C "$main_dir" merge-base --is-ancestor "refs/heads/$1" "refs/heads/$base_branch" 2>/dev/null; then
+        TLB_LIVE_SHA="$cur"
+        echo "BRANCH-DRAIN-SKIP repo=$slug branch=$1 scope=local reason=tip-moved-not-contained evaluated=$2 live=$cur" >>"$RESULT_FILE"
+        return 2
+      fi
+    fi
     if $GIT -C "$main_dir" branch -D "$1" >/dev/null 2>&1; then
-      echo "BRANCH-TRIMMED repo=$slug branch=$1 scope=local" >>"$RESULT_FILE"
-      echo "act=branch-trim repo=$slug branch=$1 scope=local epoch=$NOW" >>"$LEDGER_FILE"
+      echo "BRANCH-TRIMMED repo=$slug branch=$1 scope=local sha=$cur" >>"$RESULT_FILE"
+      echo "act=branch-trim repo=$slug branch=$1 scope=local sha=$cur epoch=$NOW" >>"$LEDGER_FILE"
       return 0
     fi
     echo "BRANCH-LOCAL-FAIL repo=$slug branch=$1 reason=branch-delete-failed" >>"$RESULT_FILE"
@@ -412,26 +493,81 @@ run_worker() {
     local url; url="$(push_url)"
     if [ -z "$url" ]; then : >"$qf"; return 0; fi
     local keep; keep="$(mktemp)"
-    local b out rc
-    while IFS= read -r b; do
-      [ -z "$b" ] && continue
+    # One charge per branch: the first standing line for
+    # a branch governs; later lines for the same branch
+    # (a bare purge charge beside a guarded line, in
+    # either order of writing) are subsumed by its
+    # outcome. A charge that cannot discharge is kept
+    # verbatim for the next pass.
+    local -a q_lines=()
+    local ql qb
+    declare -A q_seen=()
+    while IFS= read -r ql; do
+      [ -z "$ql" ] && continue
+      qb="${ql%%$'\t'*}"
+      [ -n "${q_seen[$qb]:-}" ] && continue
+      q_seen["$qb"]=1
+      q_lines+=("$ql")
+    done <"$qf"
+    local line b sha class rest live out rc out2 vb vbase contained
+    for line in "${q_lines[@]:-}"; do
+      [ -z "$line" ] && continue
+      b="${line%%$'\t'*}"; rest="${line#*$'\t'}"
+      if [ "$rest" = "$line" ]; then
+        sha=""; class=""
+      else
+        sha="${rest%%$'\t'*}"; class="${rest#*$'\t'}"
+        [ "$class" = "$rest" ] && class=""
+      fi
       out="$(timeout 60 $GIT -C "$main_dir" ls-remote --heads "$url" "refs/heads/$b" 2>/dev/null)"; rc=$?
       if [ "$rc" -ne 0 ]; then
-        echo "$b" >>"$keep"
+        echo "$line" >>"$keep"
         echo "BRANCH-REMOTE-FAIL repo=$slug branch=$b reason=origin-unreachable" >>"$RESULT_FILE"
         partial=3
         continue
       fi
       if [ -z "$out" ]; then continue; fi  # already gone on origin
+      live="${out%%[[:space:]]*}"
+      case "$class" in
+        sweep|seed)
+          if [ -n "$sha" ] && [ "$live" != "$sha" ]; then
+            # The tip moved after the containment
+            # verdict: re-evaluate against the LIVE tip
+            # and the LIVE base before deleting — never
+            # delete on a stale verdict (2026-11-23).
+            vb="refs/trim-drain/$b"; vbase="refs/trim-drain/$base_branch"
+            if ! timeout 120 $GIT -C "$main_dir" fetch --quiet "$url" "+refs/heads/$b:$vb" "+refs/heads/$base_branch:$vbase" >/dev/null 2>&1; then
+              # a ref that vanished mid-drain is simply
+              # gone; anything else is an unreachable
+              # origin at re-verification: keep the
+              # charge, mark the pass partial
+              out2="$(timeout 60 $GIT -C "$main_dir" ls-remote --heads "$url" "refs/heads/$b" 2>/dev/null)"
+              [ -z "$out2" ] && continue
+              echo "$line" >>"$keep"
+              echo "BRANCH-REMOTE-FAIL repo=$slug branch=$b reason=origin-unreachable" >>"$RESULT_FILE"
+              partial=3
+              continue
+            fi
+            contained=0
+            $GIT -C "$main_dir" merge-base --is-ancestor "$vb" "$vbase" 2>/dev/null && contained=1
+            $GIT -C "$main_dir" update-ref -d "$vb" 2>/dev/null
+            $GIT -C "$main_dir" update-ref -d "$vbase" 2>/dev/null
+            if [ "$contained" -eq 0 ]; then
+              echo "BRANCH-DRAIN-SKIP repo=$slug branch=$b scope=origin reason=tip-moved-not-contained evaluated=$sha live=$live" >>"$RESULT_FILE"
+              continue
+            fi
+          fi
+          ;;
+      esac
       if timeout 120 $GIT -C "$main_dir" push "$url" --delete "$b" >/dev/null 2>&1; then
-        echo "BRANCH-TRIMMED repo=$slug branch=$b scope=origin" >>"$RESULT_FILE"
-        echo "act=branch-trim repo=$slug branch=$b scope=origin epoch=$NOW" >>"$LEDGER_FILE"
+        echo "BRANCH-TRIMMED repo=$slug branch=$b scope=origin sha=$live" >>"$RESULT_FILE"
+        echo "act=branch-trim repo=$slug branch=$b scope=origin sha=$live epoch=$NOW" >>"$LEDGER_FILE"
       else
-        echo "$b" >>"$keep"
+        echo "$line" >>"$keep"
         echo "BRANCH-REMOTE-FAIL repo=$slug branch=$b reason=origin-delete-failed" >>"$RESULT_FILE"
         partial=3
       fi
-    done <"$qf"
+    done
     mv "$keep" "$qf"
   }
 
@@ -445,25 +581,46 @@ run_worker() {
   # nothing happens). Survivors are recorded as
   # epoch|name|sha rows (tip committer epoch, tip sha) —
   # the cap phase's activity ranking and archive record.
+  # A tip-equal branch (its tip is the base's tip) is a
+  # survivor by position, drawn as BRANCH-CONTAINED-SKIP-
+  # EQUAL, and enters the cap census like any survivor.
   branch_sweep() {
     local swept_local=0 swept_origin=0 kept=0
     local -a checked_out=()
     local -a l_surv=() o_surv=()
     local origin_ok=0 have_base=0
     local wl lb ob oname url lsha lepoch osha oepoch
+    local base_lsha base_osha trc lep2
     while IFS= read -r wl; do
       case "$wl" in
         "branch refs/heads/"*) checked_out+=("${wl#branch refs/heads/}") ;;
       esac
     done < <($GIT -C "$main_dir" worktree list --porcelain 2>/dev/null)
+    base_lsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$base_branch" 2>/dev/null)"
     while IFS=$'\t' read -r lb lsha lepoch; do
       [ -z "$lb" ] && continue
       [ "$lb" = "$base_branch" ] && continue
+      if [ -n "$base_lsha" ] && [ "$lsha" = "$base_lsha" ]; then
+        echo "BRANCH-CONTAINED-SKIP-EQUAL repo=$slug branch=$lb sha=$lsha" >>"$RESULT_FILE"
+        kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
+      fi
       if is_in "$lb" "${checked_out[@]:-}"; then
         kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
       fi
       if $GIT -C "$main_dir" merge-base --is-ancestor "refs/heads/$lb" "refs/heads/$base_branch" 2>/dev/null; then
-        if trim_local_branch "$lb"; then swept_local=$((swept_local+1)); else partial=3; fi
+        trim_local_branch "$lb" "$lsha"; trc=$?
+        case "$trc" in
+          0) swept_local=$((swept_local+1)) ;;
+          2)
+            # moved under the pass and no longer
+            # contained: it stands, and enters the cap
+            # census at its live tip
+            kept=$((kept+1))
+            lep2="$($GIT -C "$main_dir" for-each-ref --format='%(committerdate:unix)' "refs/heads/$lb" 2>/dev/null)"
+            l_surv+=("$lep2|$lb|$TLB_LIVE_SHA")
+            ;;
+          *) partial=3 ;;
+        esac
       else
         kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha")
       fi
@@ -476,11 +633,19 @@ run_worker() {
       else
         origin_ok=1
         $GIT -C "$main_dir" show-ref --verify --quiet "refs/remotes/origin/$base_branch" && have_base=1
+        base_osha=""
+        if [ "$have_base" -eq 1 ]; then
+          base_osha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/remotes/origin/$base_branch" 2>/dev/null)"
+        fi
         while IFS=$'\t' read -r ob osha oepoch; do
           oname="${ob#origin/}"
           case "$oname" in ""|HEAD|"$base_branch") continue ;; esac
+          if [ "$have_base" -eq 1 ] && [ -n "$base_osha" ] && [ "$osha" = "$base_osha" ]; then
+            echo "BRANCH-CONTAINED-SKIP-EQUAL repo=$slug branch=$oname sha=$osha" >>"$RESULT_FILE"
+            kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha"); continue
+          fi
           if [ "$have_base" -eq 1 ] && $GIT -C "$main_dir" merge-base --is-ancestor "refs/remotes/origin/$oname" "refs/remotes/origin/$base_branch" 2>/dev/null; then
-            enqueue_branch "$oname"; swept_origin=$((swept_origin+1))
+            enqueue_branch "$oname" "$osha" sweep; swept_origin=$((swept_origin+1))
           else
             kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha")
           fi
@@ -712,8 +877,8 @@ run_worker() {
     done
     for e in "${cap_o_excess[@]:-}"; do
       [ -z "$e" ] && continue
-      rest="${e#*|}"; nm="${rest%%|*}"
-      enqueue_branch "$nm"
+      rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
+      enqueue_branch "$nm" "$sha" cap
     done
     if [ "${#cap_l_excess[@]}" -gt 0 ]; then
       echo "BRANCH-CAP repo=$slug side=local live=$live_local cap=$bcap archived=${#cap_l_excess[@]}" >>"$RESULT_FILE"
@@ -740,7 +905,7 @@ run_worker() {
   # census path set, so it executes after the census
   # below; declared here with the helpers.
   seed_branch_queue() {
-    local mf b mp adir
+    local mf b mp mh adir src
     for mf in "$ARCHIVE_ROOT"/*/"${slug}__"*/manifest.txt "$ARCHIVE_ROOT"/*/"${slug}__"*.manifest.txt; do
       [ -f "$mf" ] || continue
       case "$mf" in
@@ -750,10 +915,21 @@ run_worker() {
       [ -d "$adir" ] && continue  # archive stands: rescue window open
       b="$(sed -n 's/^branch=//p' "$mf" | head -1)"
       mp="$(sed -n 's/^path=//p' "$mf" | head -1)"
+      mh="$(sed -n 's/^head=//p' "$mf" | head -1)"
       case "$b" in ""|DETACHED|"$base_branch"|main) continue ;; esac
       if [ -n "$mp" ] && is_in "$mp" "${census_paths[@]:-}"; then continue; fi
-      trim_local_branch "$b" || partial=3
-      enqueue_branch "$b"
+      if [ -n "$mh" ]; then
+        # the manifest's recorded head is the evaluation
+        # the trim is charged against: the local delete
+        # re-verifies a moved ref against it, and the
+        # origin charge carries it as a guarded seed
+        trim_local_branch "$b" "$mh"; src=$?
+        if [ "$src" -ne 0 ] && [ "$src" -ne 2 ]; then partial=3; fi
+        enqueue_branch "$b" "$mh" seed
+      else
+        trim_local_branch "$b" || partial=3
+        enqueue_branch "$b"
+      fi
     done
   }
 

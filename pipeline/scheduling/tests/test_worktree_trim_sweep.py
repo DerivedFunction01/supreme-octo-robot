@@ -22,7 +22,19 @@ its worktree's HEAD at the same tip, then deleted.
 
 import unittest
 
-from tests.test_worktree_trim import NOW, Fixture, _git
+from tests.test_worktree_trim import HOUR, NOW, Fixture, _git
+
+
+def _advance_main(fx, epoch=NOW - 3000):
+    """One more commit on main after a landing, so a
+    landed branch stands STRICTLY contained — main has
+    moved past its tip, the production shape a day after
+    a landing. (A branch left exactly at main's tip is
+    the tip-equal case, pinned in TestTipEqual.)"""
+    (fx.main / "post-landing.txt").write_text("post\n")
+    _git(fx.main, "add", ".", env=fx.env)
+    _git(fx.main, "commit", "-m", "post-landing",
+         epoch=epoch, env=fx.env)
 
 
 class TestBranchSweep(Fixture):
@@ -30,10 +42,14 @@ class TestBranchSweep(Fixture):
         """A landed branch with no worktree and no archive
         manifest: grown in a tree, fast-forwarded into main,
         then the tree is removed — the branch stands alone,
-        exactly the shape the pre-cure trim never charged."""
+        exactly the shape the pre-cure trim never charged.
+        Main then advances one commit, so the branch stands
+        strictly contained (a branch left at main's exact
+        tip is the tip-equal case, pinned in TestTipEqual)."""
         path = self.add_landed_tree(
             f"repo-a-{branch.replace('/', '-')}-wt", branch,
             [(fname, "x\n")], NOW - 4000)
+        _advance_main(self)
         _git(self.main, "worktree", "remove", str(path),
              env=self.env)
         return path
@@ -91,6 +107,7 @@ class TestBranchSweep(Fixture):
         self.add_origin()
         self.add_landed_tree("repo-a-k-wt", "feat/kept",
                              [("k.txt", "k\n")], NOW - 4000)
+        _advance_main(self)
         _git(self.main, "push", "origin", "main", "feat/kept",
              env=self.env)
         out = self.run_trim("--tier", "soft")
@@ -335,6 +352,300 @@ class TestBranchCap(Fixture):
         tip = _git(self.main, "rev-parse", f"refs/heads/{branch}",
                    env=self.env).stdout.strip()
         self.assertEqual(tip, sha)
+
+
+class TestTipEqual(Fixture):
+    """The tip-equal exclusion (2026-11-23): a branch
+    whose tip EQUALS the default branch's tip at census
+    is not swept, on either side — the exclusion keys on
+    the ref's position, not its name (a tip-equal ref is
+    where the default branch itself stands; in a dev-flow
+    repo, the standing integration point). The branch
+    stays in the cap census, cap-eligible as any other."""
+
+    def add_tip_equal(self, branch, fname):
+        """A branch landed by fast-forward and never
+        advanced past: its tip is main's tip exactly."""
+        path = self.add_landed_tree(
+            f"repo-a-{branch.replace('/', '-')}-wt", branch,
+            [(fname, "x\n")], NOW - 4000)
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        return _git(self.main, "rev-parse", branch,
+                    env=self.env).stdout.strip()
+
+    def test_tip_equal_survives_sweep_both_sides(self):
+        self.add_origin()
+        tip = self.add_tip_equal("feat/eq", "eq.txt")
+        _git(self.main, "push", "origin", "main", "feat/eq",
+             env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        line = ("BRANCH-CONTAINED-SKIP-EQUAL repo=repo-a "
+                f"branch=feat/eq sha={tip}")
+        # one disposition line per side: local and origin
+        self.assertEqual(out.stdout.count(line), 2)
+        self.assertNotIn("BRANCH-TRIMMED repo=repo-a "
+                         "branch=feat/eq", out.stdout)
+        self.assertTrue(self.branch_exists("feat/eq"))
+        self.assertIn("feat/eq", self.remote_branches())
+        self.assertEqual(self.queue(), [])
+
+    def test_branch_leaving_tip_equal_trims_next_pass(self):
+        # composition at the boundary: the exclusion is a
+        # census-time disposition. Once main advances, the
+        # same branch is strictly contained and the sweep
+        # takes it by plain containment, in both scopes.
+        self.add_origin()
+        tip = self.add_tip_equal("feat/eq2", "eq2.txt")
+        _git(self.main, "push", "origin", "main", "feat/eq2",
+             env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("BRANCH-CONTAINED-SKIP-EQUAL", out.stdout)
+        self.assertTrue(self.branch_exists("feat/eq2"))
+        _advance_main(self)
+        _git(self.main, "push", "origin", "main", env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("BRANCH-TRIMMED repo=repo-a "
+                      "branch=feat/eq2 "
+                      f"scope=local sha={tip}", out.stdout)
+        self.assertIn("BRANCH-TRIMMED repo=repo-a "
+                      "branch=feat/eq2 "
+                      f"scope=origin sha={tip}", out.stdout)
+        self.assertFalse(self.branch_exists("feat/eq2"))
+        self.assertNotIn("feat/eq2", self.remote_branches())
+        self.assertEqual(self.queue(), [])
+
+    def test_tip_equal_branch_is_cap_excess_when_oldest(self):
+        # the exclusion is from the sweep only: the
+        # tip-equal branch stands in the cap census, and
+        # ranked oldest — its tip ties the base's epoch
+        # and the name tiebreak puts 'dev' ahead of
+        # 'main' — it is the excess: archived into the
+        # verified bundle and deleted on both sides, like
+        # any excess (cap behaviour unchanged).
+        self.add_origin()
+        dev_tip = self.add_tip_equal("dev", "dev.txt")
+        orphans = ["feat/o1", "feat/o2"]
+        for i, name in enumerate(orphans):
+            p = self.add_tree(
+                f"repo-a-{name.replace('/', '-')}-wt", name,
+                [(f"{name.split('/')[1]}.txt", "x\n")],
+                NOW - 3000 + i * 1000)
+            _git(self.main, "worktree", "remove", str(p),
+                 env=self.env)
+        _git(self.main, "push", "origin", "main", "dev",
+             *orphans, env=self.env)
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "3"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("BRANCH-CONTAINED-SKIP-EQUAL repo=repo-a "
+                      f"branch=dev sha={dev_tip}", out.stdout)
+        self.assertIn("BRANCH-ARCHIVED repo=repo-a branch=dev "
+                      "sides=local,origin", out.stdout)
+        self.assertIn("BRANCH-CAP repo=repo-a side=local live=4 "
+                      "cap=3 archived=1", out.stdout)
+        self.assertIn("BRANCH-CAP repo=repo-a side=origin live=4 "
+                      "cap=3 archived=1", out.stdout)
+        self.assertFalse(self.branch_exists("dev"))
+        self.assertNotIn("dev", self.remote_branches())
+        self.assertTrue(self.branch_exists("feat/o1"))
+        self.assertIn("feat/o2", self.remote_branches())
+        cap_dirs = sorted((self.ws / "worktree-archive").glob(
+            "*/repo-a-branch-cap"))
+        self.assertEqual(len(cap_dirs), 1)
+        rows = [ln.split("\t") for ln in
+                (cap_dirs[0] / "manifest.tsv")
+                .read_text().splitlines()
+                if ln and not ln.startswith("#")
+                and not ln.startswith("branch\t")]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], "dev")
+        self.assertEqual(rows[0][1], dev_tip)
+        self.assertEqual(self.queue(), [])
+
+
+class TestDrainReverify(Fixture):
+    """Drain re-verification (2026-11-23): a guarded queue
+    charge carries the tip its containment verdict was
+    computed against; at discharge the LIVE tip governs.
+    A branch that advanced to unlanded work after its
+    verdict survives with a BRANCH-DRAIN-SKIP naming both
+    tips; one that advanced within main is deleted, and
+    the record carries the tip actually deleted."""
+
+    def seed_queue(self, *lines):
+        state = self.ws / "state"
+        state.mkdir(parents=True, exist_ok=True)
+        (state / f"remote-pending-{self.slug}.txt").write_text(
+            "\n".join(lines) + "\n")
+
+    def add_contained(self, branch, fname):
+        """A landed branch main has since advanced past:
+        strictly contained in both scopes, no worktree."""
+        path = self.add_landed_tree(
+            f"repo-a-{branch.replace('/', '-')}-wt", branch,
+            [(fname, "x\n")], NOW - 4000)
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        _advance_main(self)
+        _git(self.main, "push", "origin", "main", branch,
+             env=self.env)
+        return _git(self.main, "rev-parse", branch,
+                    env=self.env).stdout.strip()
+
+    def grow_tip(self, branch, fname, push):
+        """Advance a branch by one unlanded commit grown
+        in a scratch tree (removed after); returns the
+        new tip."""
+        tree = self.ws / f"repo-a-{branch.replace('/', '-')}-move"
+        _git(self.main, "worktree", "add", str(tree), branch,
+             env=self.env)
+        (tree / fname).write_text("more\n")
+        _git(tree, "add", ".", env=self.env)
+        _git(tree, "commit", "-m", "more work",
+             epoch=NOW - 2000, env=self.env)
+        tip = _git(tree, "rev-parse", "HEAD",
+                   env=self.env).stdout.strip()
+        if push:
+            _git(self.main, "push", "origin", branch,
+                 env=self.env)
+        _git(self.main, "worktree", "remove", str(tree),
+             env=self.env)
+        return tip
+
+    def write_sibling_manifest(self, branch, path, head):
+        """A dead archive's sibling manifest: the crash
+        window the seed phase charges, carrying the
+        head the branch trim is evaluated against."""
+        cap = self.ws / "worktree-archive" / "2026-01-01"
+        cap.mkdir(parents=True, exist_ok=True)
+        (cap / f"{self.slug}__gone.manifest.txt").write_text(
+            f"repo={self.slug}\ntree=gone\nbranch={branch}\n"
+            f"path={path}\nhead={head}\n"
+            f"expiry_epoch={NOW + HOUR}\n")
+
+    def test_origin_tip_moved_uncontained_survives(self):
+        # (a) the charge was enqueued against the old,
+        # contained tip; the branch then advanced to
+        # unlanded work. The drain re-evaluates the live
+        # tip, keeps the branch, and drops the charge.
+        self.add_origin()
+        evaluated = self.add_contained("feat/mv", "mv.txt")
+        self.seed_queue(f"feat/mv\t{evaluated}\tsweep")
+        live = self.grow_tip("feat/mv", "more.txt", push=True)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(
+            "BRANCH-DRAIN-SKIP repo=repo-a branch=feat/mv "
+            "scope=origin reason=tip-moved-not-contained "
+            f"evaluated={evaluated} live={live}", out.stdout)
+        self.assertNotIn("BRANCH-TRIMMED repo=repo-a "
+                         "branch=feat/mv", out.stdout)
+        self.assertIn("feat/mv", self.remote_branches())
+        self.assertTrue(self.branch_exists("feat/mv"))
+        self.assertEqual(self.queue(), [])
+
+    def test_origin_tip_moved_contained_trims_at_live_sha(self):
+        # (b) the branch advanced — to the base's own tip,
+        # still contained. (At census the sweep spares it
+        # as tip-equal; the standing queue charge still
+        # governs the drain.) The drain re-verifies the
+        # live tip, deletes, and records the LIVE sha.
+        self.add_origin()
+        evaluated = self.add_contained("feat/mv2", "mv2.txt")
+        self.seed_queue(f"feat/mv2\t{evaluated}\tsweep")
+        live = _git(self.main, "rev-parse", "main",
+                    env=self.env).stdout.strip()
+        _git(self.main, "push", "origin",
+             "main:refs/heads/feat/mv2", env=self.env)
+        _git(self.main, "branch", "-D", "feat/mv2",
+             env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("BRANCH-CONTAINED-SKIP-EQUAL repo=repo-a "
+                      "branch=feat/mv2", out.stdout)
+        self.assertIn(
+            "BRANCH-TRIMMED repo=repo-a branch=feat/mv2 "
+            f"scope=origin sha={live}", out.stdout)
+        self.assertNotIn("feat/mv2", self.remote_branches())
+        self.assertEqual(self.queue(), [])
+
+    def test_origin_tip_unchanged_trims_at_evaluated_sha(self):
+        # (c) no movement: the drain deletes as before,
+        # and both the result line and the ledger carry
+        # the evaluated tip — the pass record now states
+        # what it evaluated.
+        self.add_origin()
+        evaluated = self.add_contained("feat/still", "still.txt")
+        self.seed_queue(f"feat/still\t{evaluated}\tsweep")
+        _git(self.main, "branch", "-D", "feat/still",
+             env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(
+            "BRANCH-TRIMMED repo=repo-a branch=feat/still "
+            f"scope=origin sha={evaluated}", out.stdout)
+        self.assertNotIn("feat/still", self.remote_branches())
+        self.assertEqual(self.queue(), [])
+        ledger = (self.ws / "state" / "ledger.jsonl").read_text()
+        self.assertIn(
+            "act=branch-trim repo=repo-a branch=feat/still "
+            f"scope=origin sha={evaluated}", ledger)
+
+    def test_local_seed_tip_moved_uncontained_survives(self):
+        # (d) the local path, reached through the seed: a
+        # dead archive's manifest charges the branch trim
+        # against its recorded head; the branch has since
+        # moved to unlanded work, so the local delete
+        # re-evaluates and keeps it.
+        path = self.add_landed_tree(
+            "repo-a-sd-wt", "feat/sd", [("sd.txt", "x\n")],
+            NOW - 4000)
+        evaluated = _git(self.main, "rev-parse", "feat/sd",
+                         env=self.env).stdout.strip()
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        live = self.grow_tip("feat/sd", "more.txt", push=False)
+        self.write_sibling_manifest("feat/sd", str(path),
+                                    evaluated)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(
+            "BRANCH-DRAIN-SKIP repo=repo-a branch=feat/sd "
+            "scope=local reason=tip-moved-not-contained "
+            f"evaluated={evaluated} live={live}", out.stdout)
+        self.assertTrue(self.branch_exists("feat/sd"))
+
+    def test_local_seed_tip_moved_contained_trims_at_live_sha(self):
+        # (d2) the seed charge, the branch moved within
+        # main (re-pointed at the base's advanced tip):
+        # re-evaluation finds the live tip contained, the
+        # delete proceeds, and the record carries the
+        # live sha — not the manifest's stale head.
+        path = self.add_landed_tree(
+            "repo-a-sc-wt", "feat/sc", [("sc.txt", "x\n")],
+            NOW - 4000)
+        evaluated = _git(self.main, "rev-parse", "feat/sc",
+                         env=self.env).stdout.strip()
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        _advance_main(self)
+        live = _git(self.main, "rev-parse", "main",
+                    env=self.env).stdout.strip()
+        _git(self.main, "branch", "-f", "feat/sc", "main",
+             env=self.env)
+        self.write_sibling_manifest("feat/sc", str(path),
+                                    evaluated)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(
+            "BRANCH-TRIMMED repo=repo-a branch=feat/sc "
+            f"scope=local sha={live}", out.stdout)
+        self.assertFalse(self.branch_exists("feat/sc"))
 
 
 if __name__ == "__main__":
