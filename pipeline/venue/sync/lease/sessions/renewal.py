@@ -43,7 +43,7 @@ def install_renewal_kit(colab, repo: Path, rec: dict, now_dt: datetime | None = 
     which builds the CLI venv in-VM and moves the token to its
     canonical path at mode 600. Token contents are never printed,
     logged, or written anywhere but the two canonical locations (the
-    exposure is the plan's stated design property, proven 2026-11-01).
+    exposure is the plan's stated design property).
 
     Bounded and non-raising like the keepalive launch it rides beside:
     a stalled or failed step returns {"kit": "install-failed", ...} —
@@ -157,7 +157,7 @@ def _adopt_handover(colab, repo: Path, cfg: dict, rec: dict, now_dt: datetime) -
     # read: the CLI writes this file non-atomically, so a read can
     # catch a partial write, and starting from {} would clobber
     # every other session's binding on write-back — blinding the
-    # machinery to live sessions (the 2026-11-05 orphan incident).
+    # machinery to live sessions (the orphan incident).
     # Absent file: start empty. Present but unparseable: abort.
     try:
         raw = sessions_file.read_text()
@@ -265,7 +265,7 @@ def _attempt_renewal(colab, repo: Path, cfg: dict, rec: dict, state: str, now_dt
 def _ensure_remote_dirs(colab, repo: Path, session: str, dirs: list[str], tag: str) -> bool:
     """Create remote directories before uploading into them: the
     file channel 500s on an upload whose parent directory does not
-    exist (bridge probe, 2026-11-01 — the same defect that failed
+    exist (bridge probe — the same defect that failed
     the renewal kit's first installs at the upload stage). One
     bounded exec running os.makedirs in the session; False on any
     failure, and the caller reports its own stage."""

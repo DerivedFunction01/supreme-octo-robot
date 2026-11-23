@@ -1,5 +1,5 @@
 """Session load and warmth: the acquire sort's
-spreading inputs (load-aware assignment, 2026-11-21).
+spreading inputs (load-aware assignment).
 
 Load is the count of a session's in-flight runs,
 read from the runner's own results store

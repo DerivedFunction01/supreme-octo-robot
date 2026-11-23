@@ -8,13 +8,13 @@ from ..core import foundation, records, callers
 # Local why: a runtime admits exactly one SSH connection, and a
 # synchronous colab-sh / colab-fs call holds it for the call's whole
 # duration — long enough, unrecorded, to starve every other rider
-# invisibly (the 2026-11-08 starvation incidents). Synchronous use
+# invisibly (the starvation incidents). Synchronous use
 # is therefore a claim: TTL'd, caller-attributed, granted only to a
 # session's sole active caller, and checked per attach. The claim
 # makes "one active caller" an explicit, journaled fact; detached
 # work (colab-run jobs, colab-sh --detach) never needs one and
 # stays open to every caller. Design of record:
-# the 2026-11-08 sync-channel design (option 3 composite).
+# the sync-channel design (option 3 composite).
 # Mechanics: docs/lease-workflow.md.
 
 CLAIM_KEY = "sync_claim"
@@ -39,8 +39,8 @@ JOURNAL_TAIL_BYTES = 256 * 1024
 # live run's record file is re-saved on every reconcile outcome
 # (checkpoint read, poll failure, state change), so a record
 # untouched for this long belongs to a launcher that died
-# without closing it — the dead-"running" family (2026-11-11:
-# the consol lane's dead feat records held their callers
+# without closing it — the dead-"running" family (the
+# consol lane's dead feat records held their callers
 # "active" for hours and refused other lanes' sync plants).
 # Its caller is not active on its say-so. Registered jobs need
 # no bound here: the pruned projection (records.job_entry)
@@ -431,8 +431,8 @@ def sync_rights(repo: Path, session: str, caller: str | None, now_dt: datetime |
 
     - A caller marked active in the registry is refused outright
       (blocked_by active-caller): active means a potential use for
-      Colab exists even when no session is up (owner ruling
-      2026-11-10), so its work is detached-only — no claim is
+      Colab exists even when no session is up (owner ruling),
+      so its work is detached-only — no claim is
       granted and no occupancy state changes that.
     - A live claim held by another caller refuses (blocked_by
       claim) — the holder is named, with the claim's expiry.

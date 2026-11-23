@@ -3,7 +3,7 @@
 the source repo's configured identity, never whatever the
 forming shell happens to hold.
 
-The defect this cures (commissioned 2026-11-12): session
+The defect this cures: session
 trees carried no configured git identity, so a session-side
 commit inherited a lane-local identity that reached GitHub
 and broke a downstream deploy gate. The identity is the

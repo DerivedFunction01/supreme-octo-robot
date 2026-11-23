@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Single-flight claims: one run id, one execution.
 
-The twin-execution root (diagnosed 2026-11-21 from the Steam
+The twin-execution root (diagnosed from the Steam
 battery record): a daemonized fire's claim landed AFTER the
 parent's bounded wait had already declared it dead, and a lane
 resuming the "dead" id relaunched it — two executions sharing
@@ -44,7 +44,7 @@ def option_like_refusal(job_name, resume) -> "str | None":
     beginning with "-" in a name position is a flag consumed
     as a value by a misparsed invocation — `--resume
     --detach` claimed a run record named --detach, and a
-    --session record stood beside it (2026-11-23, both
+    --session record stood beside it (both
     quarantined by hand after days in results/runs/) — so
     the refusal fires at parse, before any record is
     written: no launch may claim an id that parses as an

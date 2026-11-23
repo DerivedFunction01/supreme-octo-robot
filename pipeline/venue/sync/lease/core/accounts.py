@@ -1,4 +1,4 @@
-"""Accounts and per-account budgets (venue rework, 2026-11-14).
+"""Accounts and per-account budgets (venue rework).
 
 The venue's core historically knew exactly one account: the
 funnel's stored credential, with its caps in the flat lease.json
