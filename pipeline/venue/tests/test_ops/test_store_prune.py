@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import time
 from pathlib import Path
 
@@ -19,6 +20,14 @@ def _sandbox(tmp_path: Path) -> Path:
     (root / "var" / "chunks").mkdir(parents=True)
     (root / "results" / "runs").mkdir(parents=True)
     (root / "results" / "xfers").mkdir(parents=True)
+    # The script loads its foundation module (and the paths
+    # spine it binds) from the store root it is pointed at —
+    # a real store is a full venue tree, so the sandbox
+    # carries those two files or the module never loads.
+    core = root / "sync" / "lease" / "core"
+    core.mkdir(parents=True)
+    shutil.copy(REPO / "sync" / "lease" / "core" / "foundation.py", core / "foundation.py")
+    shutil.copy(REPO / "paths.py", root / "paths.py")
     return root
 
 
@@ -134,3 +143,30 @@ def test_job_payload_archives_and_staging_tarballs_past_48h(tmp_path):
     assert "adapters/colab/jobs/some-job/payload-fresh.tar.gz" not in chosen
     assert "var/steampower-gates/run2-tree.tar.gz" not in chosen
     assert "var/loose-tree.tar.gz" not in chosen
+
+
+def test_staging_subdir_bundles_and_suffixed_tree_tarballs_past_48h(tmp_path):
+    # The measured store gap: formations staging in a named
+    # var/ subdir drop snapshot bundles beside their tree
+    # tarballs, and the tarballs often carry a suffixed name
+    # (hc01-tree-<hash>.tar.gz). Neither matched a class:
+    # class 2 globs only the var/ top level, and class 7's
+    # glob reached only the plain *-tree.tar.gz form.
+    root = _sandbox(tmp_path)
+    staging = root / "var" / "steampower-gates"
+    _write(staging / "df-next-085.bundle", age_s=85 * 3600)         # staging bundle past the floor: prunable
+    _write(staging / "df-next-999.bundle", age_s=3600)              # inside the floor: kept
+    _write(staging / "hc01-tree-deadbeef.tar.gz", age_s=61 * 3600)  # suffixed tree tarball past the floor: prunable
+    _write(staging / "hc01-tree-fresh.tar.gz", age_s=3600)          # suffixed, inside the floor: kept
+    _write(staging / "lease-some-session.json", age_s=200 * 3600)   # records are never candidates, at any age
+    _write(staging / "run-record.json", age_s=200 * 3600)           # likewise
+    _record(root, "runs", "run-live.json", {"state": "running", "bundle_seed": {"bundle": "staging-seed.bundle"}})
+    _write(staging / "staging-seed.bundle", age_s=85 * 3600)        # an in-flight run's seed: protected, kept
+    chosen = _plan_paths(root)
+    assert "var/steampower-gates/df-next-085.bundle" in chosen
+    assert "var/steampower-gates/hc01-tree-deadbeef.tar.gz" in chosen
+    assert "var/steampower-gates/df-next-999.bundle" not in chosen
+    assert "var/steampower-gates/hc01-tree-fresh.tar.gz" not in chosen
+    assert "var/steampower-gates/lease-some-session.json" not in chosen
+    assert "var/steampower-gates/run-record.json" not in chosen
+    assert "var/steampower-gates/staging-seed.bundle" not in chosen

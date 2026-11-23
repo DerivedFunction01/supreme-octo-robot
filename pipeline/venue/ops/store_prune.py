@@ -26,9 +26,17 @@ in order:
      is never a candidate, only the staged payload
      archives beside it (2026-11-18 precedent);
   7. launch-staging tree tarballs in named var/ subdirs
-     (var/*/*-tree.tar.gz) past the same 48 h floor —
-     formation staging a lane dropped in the store's own
-     namespace (the steampower-gates pattern).
+     (var/*/*-tree*.tar.gz — the plain and suffixed forms,
+     e.g. hc01-tree-<hash>.tar.gz) past the same 48 h
+     floor — formation staging a lane dropped in the
+     store's own namespace (the steampower-gates pattern);
+  8. snapshot bundles in the same staging subdirs
+     (var/*/*.bundle) past the same 48 h floor — class
+     2's rationale (every launch rebuilds its own from
+     the source repo, which holds the truth) applied to
+     the staging namespace; the top-level class's shorter
+     floor does not apply here, where formations stage
+     beside their tarballs.
 
 Never touched: run and transfer RECORDS (results/runs,
 results/xfers — metadata and verdicts are the evidence the
@@ -220,11 +228,16 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
             if now - archive.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(6, archive, "job payload archives past the 48h floor")
     if VAR.exists():
-        for staging in VAR.glob("*/*-tree.tar.gz"):
+        for staging in VAR.glob("*/*-tree*.tar.gz"):
             if staging.name in protected:
                 continue
             if now - staging.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(7, staging, "launch-staging tree tarballs past the 48h floor")
+        for staging_bundle in VAR.glob("*/*.bundle"):
+            if staging_bundle.name in protected:
+                continue
+            if now - staging_bundle.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
+                add(7, staging_bundle, "staging-subdir snapshot bundles past the 48h floor")
 
     candidates.sort(key=lambda c: (c[0], -c[2]))
     free_now = shutil.disk_usage(REPO).free
