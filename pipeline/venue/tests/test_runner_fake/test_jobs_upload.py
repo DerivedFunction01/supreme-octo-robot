@@ -123,8 +123,11 @@ def test_oversize_manifest_upload_moves_chunked_and_verified(tmp_path):
     out = json.loads(r.stdout)
     assert out["state"] == "complete"
     rec = json.loads((runs_dir(env) / f"{out['run_id']}.json").read_text())
-    landed = Path(env["FAKE_COLAB_STATE"]) / "sessions" / rec["session"] / "big.bin"
+    # Step 5: the upload lands in the run's own remote
+    # directory, not the shared session-root slot.
+    landed = Path(env["FAKE_COLAB_STATE"]) / "sessions" / rec["session"] / "runs" / out["run_id"] / "big.bin"
     assert landed.stat().st_size == 51 * 1024 * 1024
+    assert not (Path(env["FAKE_COLAB_STATE"]) / "sessions" / rec["session"] / "big.bin").exists()
 
 
 def test_job_scripts_upload_to_run_scoped_remote_names(tmp_path):

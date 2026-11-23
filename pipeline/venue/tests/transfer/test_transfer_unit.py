@@ -130,6 +130,17 @@ def test_upload_clean_multipart(tmp_path, monkeypatch):
     assert fake.remote["big.bin"] == CONTENT
 
 
+def test_upload_into_a_run_directory_lands_whole(tmp_path, monkeypatch):
+    # The runner's per-run form (Step 5): the remote name
+    # carries a directory — parts stage nested under the
+    # staging dir, the reassembled target lands inside the
+    # run directory, and no part residue remains anywhere.
+    fake, local = harness(tmp_path, monkeypatch)
+    r = xfer.chunked_upload("s", local, "runs/run-9/big.bin")
+    assert r["ok"] and r["parts"] == 4
+    assert fake.remote == {"runs/run-9/big.bin": CONTENT}
+
+
 def test_upload_retries_a_dropped_part(tmp_path, monkeypatch):
     fake, local = harness(tmp_path, monkeypatch)
     fake.fail_uploads["big.bin.part-001"] = 2  # attempts 1-2 drop, 3rd lands

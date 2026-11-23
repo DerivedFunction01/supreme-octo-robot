@@ -85,3 +85,31 @@ def test_per_run_env_from_out_name(tmp_path):
     assert mod.port_base_for(run_id) == base
     assert mod.run_id_for(out) == run_id
     assert mod.run_id_for(tmp_path / "job") is None
+
+
+def test_script_resolves_to_the_runs_own_upload_dir(tmp_path):
+    # Runner Step 5: uploads land in runs/<run_id>/ on the
+    # session. A --script addressed by its bare contract name
+    # (/content/gate.sh) must run the RUN's copy, never the
+    # shared root slot's — the root file here is a decoy with
+    # different bytes, the pre-Step-5 mislanding shape. The
+    # payload also receives the directory as $SHELL_JOB_UPLOADS
+    # so it can read its sibling uploads from it. The process
+    # runs with cwd = the session root (tmp_path), the fake
+    # CLI's dual-world seam.
+    run_id = "gate-20261123T120000Z"
+    run_dir = tmp_path / "runs" / run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "gate.sh").write_text('echo "marker=run-copy"\necho "uploads=$SHELL_JOB_UPLOADS"\n')
+    (tmp_path / "gate.sh").write_text('echo "marker=root-decoy"\n')
+    out = tmp_path / f"gate-out-{run_id}"
+    r = subprocess.run(
+        [sys.executable, str(SNIPPET), "--out", str(out), "--cwd", str(tmp_path),
+         "--script", "/content/gate.sh"],
+        capture_output=True, text=True, timeout=60, cwd=tmp_path,
+    )
+    assert r.returncode == 0, r.stderr
+    log = (out / "heartbeat.log").read_text()
+    assert "marker=run-copy" in log
+    assert "root-decoy" not in log
+    assert f"uploads={run_dir}" in log
