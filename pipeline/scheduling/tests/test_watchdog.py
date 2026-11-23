@@ -8,7 +8,7 @@ render-when-invalid in the healthy branch (rung 4), the load-state
 repair verb — start when not loaded, restart when loaded (rung 6),
 the fresh-restore path for a missing unit (rung 7), and the
 one-attempt episode cap (rung 8 / EC-13). The flap regression
-(2026-11-08) is covered too: a failed/denied render classifies the
+is covered too: a failed/denied render classifies the
 unit unknown — never stale — so no reinstall is attempted against
 a healthy unit and the watchdog exits 0 while the server is up.
 """
