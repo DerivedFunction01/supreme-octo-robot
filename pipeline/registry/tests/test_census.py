@@ -31,7 +31,7 @@ from registry.store import Registry
 REPO_ROOT = Path(__file__).resolve().parents[3]
 FIXTURES = REPO_ROOT / "contracts" / "fixtures"
 
-# The captured thread callers (S1 capture, 2026-11-13),
+# The captured thread callers (S1 capture),
 # renamed to invented stand-ins — the held capture
 # carries the original names as written: the review
 # counted 14; the live registry had gained one from

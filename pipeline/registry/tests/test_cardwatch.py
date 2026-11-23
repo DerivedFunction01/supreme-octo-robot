@@ -1,5 +1,5 @@
-"""The permission-card watcher (card-owner plan,
-2026-11-14): Step 6 — surfacing and hard-stop
+"""The permission-card watcher (card-owner plan):
+Step 6 — surfacing and hard-stop
 verification.
 
 This file is the watcher's shared test home: the spine

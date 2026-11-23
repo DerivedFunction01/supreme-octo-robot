@@ -1,5 +1,5 @@
 """The watchdog ladder's actuation proof (the
-actuation-gap cure, 2026-11-15): the ladder is driven
+actuation-gap cure): the ladder is driven
 end-to-end against a simulated systemd — a stub
 systemctl on PATH whose state machine (active / failed
 / start-limit-spent flag files) models the one property
@@ -11,8 +11,8 @@ WORKHORSE_PYTHON seam. The proof never touches a live
 unit, a live port, or live state: every write lands in
 the test's temp dirs.
 
-The incident these scenarios pin (2026-11-16,
-workhorse.service in start-limit exhaustion): the old
+The incident these scenarios pin (workhorse.service
+in start-limit exhaustion): the old
 ladder had no failed-state classification and no
 reset-failed act, so even a live driver could not have
 recovered the unit — and its driver, a scheduler job
@@ -36,8 +36,8 @@ half is pinned here:
     inside the episode escalates without re-acting —
     but only once the down-streak rung is satisfied.
 
-The second incident these scenarios pin (2026-11-16,
-the false fire): the ladder's probe budget was 5s and
+The second incident these scenarios pin (the
+false fire): the ladder's probe budget was 5s and
 a single failed probe was a restart. A serve
 mid-assembly on a contended box can take longer than
 that to answer a health route that itself never
@@ -60,8 +60,8 @@ crash). The cure pinned here:
     own 5s default stands for hand runs), recorded by
     the fake probe below from its environment.
 
-The third incident these scenarios pin (2026-11-18,
-boot ab0acf72): the host was replaced, the survival
+The third incident these scenarios pin (boot
+ab0acf72): the host was replaced, the survival
 rungs reinstalled the unit set and enabled every
 unit — and the ladder then counted its own freshly
 installed, never-started service as a down serve:
@@ -379,7 +379,7 @@ class WatchdogLadderTests(unittest.TestCase):
         self.assertNotIn("reset-failed workbench", calls)
 
     def test_slow_but_alive_is_never_restarted(self):
-        # The 2026-11-16 false fire in verdict space: the
+        # The false fire in verdict space: the
         # probe fails while the serve is saturated, then
         # the serve answers again before the streak
         # completes. No mutating call is ever issued and
@@ -421,7 +421,7 @@ class WatchdogLadderTests(unittest.TestCase):
             self.calls())
 
     def test_never_started_unit_is_started_on_first_pass(self):
-        # The 2026-11-18 incident (boot ab0acf72): the
+        # The host-replacement incident (boot ab0acf72): the
         # survival rungs reinstalled the unit set after
         # the host replacement and enabled every unit,
         # but install is presence — the service stood

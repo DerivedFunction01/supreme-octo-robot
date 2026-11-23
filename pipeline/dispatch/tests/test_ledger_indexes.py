@@ -1,4 +1,4 @@
-"""Pins for the ledger's covering indexes (L-C2, 2026-11-16):
+"""Pins for the ledger's covering indexes (L-C2):
 idx_events_kind_ts_status_job serves counts_since_grouped
 index-only, and idx_events_ts_text serves stats()'s
 MIN/MAX(ts) as endpoint reads. Indexes change speed, never

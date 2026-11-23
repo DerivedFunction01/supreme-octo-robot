@@ -1,7 +1,7 @@
 """The migrated attention state store (contract 01's
 annex; plan §4.15's S7 re-point) — re-homed from the
-registry package into this package (commission 12,
-2026-11-15): a package owns its store. The store's API,
+registry package into this package (commission 12):
+a package owns its store. The store's API,
 behaviour, and writer seam are unchanged by the move.
 
 ATT1's discipline, carried whole from the pinned store

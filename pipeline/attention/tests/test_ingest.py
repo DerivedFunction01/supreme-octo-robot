@@ -1,6 +1,6 @@
 """Ingest pins for the tail stack (S-5 and the
 routing-422 cure), which landed proven only live
-(re-gate finding 2, 2026-11-16): report pings upsert
+(re-gate finding 2): report pings upsert
 agent-clearable items on @workhorse keyed ping:<id>,
 clear when the ping leaves the pending set, and never
 resurrect a closed item; the scheduler client raises
