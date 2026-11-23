@@ -1,6 +1,6 @@
 """Provisioning unit tests with a stub colab callable.
 
-Pins the session-provisioning contract (2026-11-11): the
+Pins the session-provisioning contract: the
 Chromium ensure launches once per session lifetime, a landed
 verdict is folded into the session's stamp by the read path,
 a stamped-ok session is never re-provisioned, and a failed

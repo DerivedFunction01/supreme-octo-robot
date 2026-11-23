@@ -155,7 +155,7 @@ def install_bare_job(env, name, exit_code, uploads=None):
     holding one checkpoint-less job: its payload writes its
     declared output and exits with the given code, speaking
     none of the runner's completion protocol (no checkpoint,
-    no 'complete' line) — the shape the 2026-11-08 remainder
+    no 'complete' line) — the shape the remainder
     gate jobs had when green runs recorded failed."""
     root = Path(env["TEST_REPO_ROOT"])
     jobs_dir = root / "adapters" / "colab" / "jobs"
@@ -204,13 +204,13 @@ def upload_sleep_wrapper(tmp_path):
     return wrapper
 
 
-# --- The in-process fake venue (determinism cure, 2026-11-14) -----------------
+# --- The in-process fake venue (the determinism cure) -----------------
 # Two leaves' end-to-end fires were live-process/timing-shaped:
 # the payload ran as a detached host process while a poller
 # raced it on a wall clock, and the reader payload's pgrep read
 # the HOST process table (box-global under xdist), so under
 # full-suite contention the verdicts moved. The owner's
-# determinism ruling (2026-11-14) prohibits that shape: no
+# determinism ruling prohibits that shape: no
 # live-server or timing tests — a test pins against fakes.
 # FakeVenue is the funnel seam faked: the same verbs and output
 # shapes as tests/fixtures/fake_colab.py, answered in-process.

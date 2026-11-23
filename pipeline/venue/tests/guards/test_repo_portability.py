@@ -1,5 +1,5 @@
 """Repo portability guard (the operator's standing rule, applied to
-this repo 2026-11-01): no tracked file carries the owner's name,
+this repo): no tracked file carries the owner's name,
 absolute home paths, or home-relative workspace paths — files must
 read correctly cloned anywhere. Paths resolve repo-relative or via
 documented env vars (LEASE_UI_RUNTIME_DIR for the UI deploy, the
@@ -101,7 +101,7 @@ def test_personal_leg_matches_case_insensitively(tmp_path):
 
 
 def test_profiles_config_is_retired():
-    """Profiles were retired (2026-11-05): no tracked example seeds
+    """Profiles are retired: no tracked example seeds
     them any more. A leftover local config/profiles.json may exist
     as the legacy rate source for pre-retirement records, but it
     stays gitignored and untracked like every local config."""
@@ -121,7 +121,7 @@ def test_profiles_config_is_retired():
 
 def test_no_workload_literal_in_executable_code():
     """The retired default workload's profile id must not appear
-    as a literal in executable code (2026-11-03 hardcode strip):
+    as a literal in executable code (the hardcode strip):
     code resolves the default shape only from config/lease.json's
     `default_shape` key, and session names are generated, never
     derived from a workload.
@@ -171,7 +171,7 @@ WORKLOAD_SCAN_EXEMPT = set()
 
 def test_no_workload_literal_in_tracked_files():
     """The workload literal appears nowhere in tracked files
-    (2026-11-06 purge, no exemptions): the token scan above
+    (the purge, no exemptions): the token scan above
     governs executable code, and this scan closes the gap it
     left — docs, tests, and prose drifted because nothing
     scanned them. Case-insensitive substring: the repo is

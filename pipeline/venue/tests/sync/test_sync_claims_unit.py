@@ -1,5 +1,5 @@
 """Synchronous channel claim unit tests (design of record:
-the 2026-11-08 sync-channel design, option 3 composite).
+the sync-channel design, option 3 composite).
 
 The claim core against a scratch fixture repo: grants at sole
 occupancy, refusals naming the holder (a live foreign claim, or
@@ -566,7 +566,7 @@ def test_stale_run_record_is_not_activity(tmp_path, monkeypatch):
     """Run-record evidence carries a freshness bound: a
     non-terminal record nothing has re-saved inside the bound
     is a dead launcher's residue and does not hold its caller
-    active (2026-11-11: the consol lane's dead feat records
+    active (the consol lane's dead feat records
     refused other lanes' sync plants for hours). A freshly
     tended record of the same shape is activity (control)."""
     root = repo(tmp_path, monkeypatch)

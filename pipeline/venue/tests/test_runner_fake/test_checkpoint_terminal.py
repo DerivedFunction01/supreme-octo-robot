@@ -1,5 +1,5 @@
 """The checkpoint exit_code as a terminal leg in both poll
-paths (specimens commissioned 2026-11-12): gate payloads that
+paths (the commissioned specimens): gate payloads that
 write their checkpoint as their last act while their process
 lingers — a booted server holding the process open, so the
 wrapper's exit stamp never lands and no 'complete' line is

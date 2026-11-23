@@ -1,4 +1,4 @@
-"""Record truth (2026-11-11) against the fake colab CLI: a
+"""Record truth against the fake colab CLI: a
 confirmed launch clears the prior attempt's launch_lost /
 error in the same save, and the confirmation stamps the
 session's measured shape (the reader probe's machine block)
@@ -94,7 +94,7 @@ def test_resume_after_launch_lost_clears_the_stale_verdict(tmp_path):
 
 
 def test_detached_record_carries_collector_and_evidence_from_launch(tmp_path):
-    """Collector self-description (2026-11-12): from its
+    """Collector self-description: from its
     first saves, a record names who is collecting it
     (collector = the launching caller), when they last
     touched it (collector_at), and carries last_evidence_at

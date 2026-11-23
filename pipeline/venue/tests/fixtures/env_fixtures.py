@@ -41,8 +41,8 @@ def _disable_provisioning(root):
     # suite would run the payload against the host image's
     # real dpkg — mutating the machine the suite runs on and,
     # once the payload learned to wait out the dpkg lock,
-    # starving wall-clock cadence tests (2026-11-11 gate
-    # specimen: a dozen parked payloads, checkpoint-pull test
+    # starving wall-clock cadence tests (the gate specimen:
+    # a dozen parked payloads, checkpoint-pull test
     # starved). The subprocess suites therefore disable
     # provisioning in their authored fixture config; the
     # ensure's own logic stays pinned by the in-process unit
@@ -124,7 +124,7 @@ FAKE_ENV_GATE = dict(COLAB_LEASE_ACTOR="test")
 def runner_env(tmp_path, **extra):
     # A scratch HOME, exactly as lease_env builds: without it the
     # fake CLI writes its session bindings into the real
-    # ~/.config/colab-cli/sessions.json (the 2026-11-05 pollution
+    # ~/.config/colab-cli/sessions.json (the pollution
     # that blinded the lease machinery to live sessions).
     # portability-exception: ~/.config/colab-cli/sessions.json — the colab CLI's own per-user session file, named in the pollution note above
     home = _scratch_home(tmp_path)

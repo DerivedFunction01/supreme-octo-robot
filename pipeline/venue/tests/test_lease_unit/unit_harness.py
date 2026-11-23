@@ -25,7 +25,7 @@ lease = load_lease("lease", register=True)
 
 NOW = datetime(2026, 10, 29, 18, 0, tzinfo=timezone.utc)
 
-# --- The dynamic spec catalog (2026-11-01) ------------------------------------
+# --- The dynamic spec catalog ------------------------------------
 # The picker options are parsed from `colab new --help`, never
 # hand-listed; measured rates live in var/shape-rates.json.
 

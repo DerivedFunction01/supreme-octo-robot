@@ -1,6 +1,6 @@
 """Same-second parallel launches of one job must not collide.
 
-2026-11-14 specimen: two detached launches
+The specimen: two detached launches
 of the same job inside one second minted the
 identical run_id — the second run's record saves silently
 absorbed the first's, and one shard's results were lost with
