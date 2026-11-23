@@ -69,10 +69,9 @@ WALK_SKIP_DIRS = {".git", "state", ".plans", "__pycache__", "node_modules"}
 # Add a path here only together with the directive it relies
 # on, in that file. Paths are scan-root relative: each package
 # gate scans with its own root, so an entry names the file
-# within the package that carries it (enrolled 2026-11-14,
-# gate-hygiene pass: the venue package's tool-layout and
-# specimen strings, and two workrecord test files' synthetic
-# plan-file fixture names).
+# within the package that carries it (the venue package's
+# tool-layout and specimen strings, and two workrecord test
+# files' synthetic plan-file fixture names).
 EXCEPTION_FILES = (
     # venue
     "AGENTS.md",

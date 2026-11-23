@@ -1,8 +1,8 @@
 """Paths-discipline component: one paths spine owns path
-derivation (owner direction 2026-11-13, on the one-spine
-form: a foundation resolver plus per-area resolvers, every
-consumer importing from them — which is why a packaging
-change touches only the resolvers).
+derivation (the one-spine form: a foundation resolver
+plus per-area resolvers, every consumer importing from
+them — which is why a packaging change touches only the
+resolvers).
 
 This leg guards the discipline mechanically. In a scanned
 package's tracked Python sources it fails on:
