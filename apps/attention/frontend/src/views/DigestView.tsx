@@ -80,8 +80,8 @@ export function DigestView() {
       {content.sections.map((section) => (
         // Fragment, not a div: a wrapper div makes the label
         // a :first-child, and .glabel's first-child rule
-        // zeroes the 20px section margin (spacing audit,
-        // 2026-11-15 — the owner's Digest instances).
+        // zeroes the 20px section margin (spacing audit
+        // — the owner's Digest instances).
         <Fragment key={section.kind}>
           <GroupLabel>{`${section.kind_label} — ${section.owner_label}`}</GroupLabel>
           <Group>

@@ -103,7 +103,7 @@ export function EventsView({
           // Fragment, not a div: a wrapper div makes the
           // day label a :first-child and .rn-glabel's
           // first-child rule zeroes its 20px section
-          // margin (spacing audit, 2026-11-15).
+          // margin (spacing audit).
           <Fragment key={g.key}>
             <GroupLabel>
               {g.label} · {g.events.length} event{g.events.length === 1 ? "" : "s"}

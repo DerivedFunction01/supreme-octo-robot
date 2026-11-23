@@ -205,7 +205,7 @@ export interface WorkbenchAdapter {
    *  with parent_id — replies carry no selection; the
    *  root holds the anchor). */
   replyAnnotation(id: string, body: string): Promise<AnnotationThread>;
-  /** W-C5 disposition (ruled 2026-11-15): DERIVED-ONLY
+  /** W-C5 disposition (ruled): DERIVED-ONLY
    *  in live mode — a thread's resolved-ness is derived
    *  from its messages' lifecycle states (done is the
    *  agent's post-back, §7) and no server verb sets it,
@@ -284,7 +284,7 @@ export interface WorkbenchAdapter {
    *  (POST /api/goals/{slug}/status — contract 03
    *  status-post form, writer rules at the store). */
   postGoalStatus(slug: string, post: Omit<StatusPost, "postedAt">): Promise<GoalRecord>;
-  /** W-C5 disposition (ruled 2026-11-15): LOCAL-ONLY —
+  /** W-C5 disposition (ruled): LOCAL-ONLY —
    *  no server home exists and none is commissioned:
    *  the writable fields are client preferences (lane
    *  width) and a local override of a config-served

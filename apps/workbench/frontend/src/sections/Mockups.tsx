@@ -251,7 +251,7 @@ export function Mockups() {
       {/* Phone goes single-column: at two columns each card
           is ~163px — titles ellipsize, the Frame footer badge
           spills past the card edge, and the specimen header
-          wraps over the skeleton (mobile critic, 2026-11-15). */}
+          wraps over the skeleton (mobile critic). */}
       <div className={isPhone ? "grid grid-cols-1 gap-4" : "grid grid-cols-2 gap-4"}>
         {shown.map((e) => (
           <button
@@ -343,12 +343,12 @@ export function MockupDetail({ entryId }: { entryId: string }) {
           rail: the fixed 300px rail beside a flex-1 main left
           the main ~20px wide at 390px — the stage crushed and
           the Disposition label wrapped letter-by-letter
-          (mobile critic, 2026-11-15). */}
+          (mobile critic). */}
       {/* Phone stack gap is 20px, the section-header
           standard: the rail's first label (State) is a
           first-child whose own margin is zeroed, so the
-          stack gap IS its separation (spacing audit,
-          2026-11-15). Desktop keeps the 18px gutter. */}
+          stack gap IS its separation (spacing audit).
+          Desktop keeps the 18px gutter. */}
       <div className={isPhone ? "flex flex-col gap-[20px]" : "flex gap-[18px]"}>
         <div className="min-w-0 flex-1">
           <div className="h-[380px]">

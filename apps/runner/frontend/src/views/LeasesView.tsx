@@ -92,7 +92,7 @@ export function LeasesView({
   );
 }
 
-/** Lease row — the owner's form (ruled 2026-11-13 from his phone
+/** Lease row — the owner's form (ruled from his phone
  *  screenshot, where the old row's "Renewal due" chip clipped to
  *  "Renewal du" against the wrapped details block): line 1 is the
  *  lease name + status badge + chevron, line 2 the details at

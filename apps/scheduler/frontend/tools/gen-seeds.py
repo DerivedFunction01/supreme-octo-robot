@@ -10,7 +10,7 @@ Sources (read-only):
 
 Target form: contract 14's frozen field table. The migration field
 family (migrated, migrated_at, migration_note, proof_pending) is
-dropped per amendment 3 (2026-11-13): presence in the store is
+dropped per amendment 3: presence in the store is
 admission; the fields do not exist in the target format.
 
 The registry's YAML is a strict subset (nested maps by two-space

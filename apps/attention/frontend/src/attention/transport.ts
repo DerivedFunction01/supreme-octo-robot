@@ -51,7 +51,7 @@ export interface AttentionTransport {
 }
 
 /** The live base's one rule (the ?api= HIGH finding's
- * cure, 2026-11-16 — the runner cure b54ebb2 is the
+ * cure — the runner cure b54ebb2 is the
  * class standard): the live base is the serving origin,
  * so the only bases honoured are "" (the origin root)
  * and a same-origin relative path ("/...", never

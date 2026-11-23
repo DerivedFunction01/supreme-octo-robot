@@ -10,9 +10,9 @@ supervision rules are stated in the shared spec
 (spec-driven-starter, `docs/supervision-rules.md`). This
 file carries the product-specific substance: the row
 families the evaluator serves, what a decision means, and
-the Digest's ruled form. Recorded 2026-11-18 from the
+the Digest's ruled form. Drawn from the
 original owner-attention spec (§1.11 (a)–(l) and §1.13)
-and the owner's flow rulings of 2026-11-12.
+and the owner's flow rulings.
 
 ## 1. Staffing supervision — the row families
 
@@ -128,7 +128,7 @@ copied — there is no main triage step.
 
 ## 3. Queue semantics — decision is not fulfillment
 
-(Owner rulings, 2026-11-12.)
+(Owner rulings.)
 
 - A decision and its fulfillment are separate events.
   The tap records the verdict at once; the card then
@@ -148,7 +148,7 @@ copied — there is no main triage step.
 
 ## 4. Digest form
 
-(Owner rulings, 2026-11-12.)
+(Owner rulings.)
 
 - The Digest is **live cards, generated and stamped on
   open**: each card carries its `generated_at` stamp,
