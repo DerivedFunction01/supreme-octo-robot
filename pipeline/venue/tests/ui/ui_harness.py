@@ -2,8 +2,8 @@
 of ui/server.py against a stub lease CLI (no login, no
 network, no real lease state), plus the free-port pick.
 
-Split from test_ui_server.py at the file-size cap
-(2026-11-14): the harness is one seam, the tests that
+Split from test_ui_server.py at the file-size cap:
+the harness is one seam, the tests that
 drive it are the other. The boot copies the server into
 a fixture repo rooted like the consolidated tree (the
 platform serving core linked as a pipeline sibling) so

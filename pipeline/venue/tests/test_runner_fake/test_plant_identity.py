@@ -1,5 +1,5 @@
-"""The plant-git-identity verb against the fake CLI
-(2026-11-12): a session tree formed outside the seed path (a
+"""The plant-git-identity verb against the fake CLI:
+a session tree formed outside the seed path (a
 key clone, a branch transport) gets the source repo's
 configured identity planted repo-locally, read back, and
 recorded on its own run record — beside the key plant."""

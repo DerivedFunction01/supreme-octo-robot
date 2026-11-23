@@ -17,7 +17,7 @@ from fake_harness import PNOW, FakeColab, lease_mod, scratch_repo  # noqa: F401
 
 
 def test_second_caller_rides_the_existing_lease(tmp_path, monkeypatch):
-    """A session is shared capacity (operator ruling, 2026-11-05):
+    """A session is shared capacity (operator ruling):
     a second caller at the same shape uses the first caller's live
     lease — no new session is created, the record keeps its
     creator's stamp, and the ride is journaled as the rider's
@@ -38,8 +38,8 @@ def test_second_caller_rides_the_existing_lease(tmp_path, monkeypatch):
 
 
 def test_create_mints_a_parallel_lease_instead_of_riding(tmp_path, monkeypatch):
-    """An explicit create (the panel's Start, operator ruling
-    2026-11-05) never adopts: with a live lease at the shape it
+    """An explicit create (the panel's Start, operator ruling)
+    never adopts: with a live lease at the shape it
     mints a second, parallel session. Plain acquire keeps riding
     — creating is what --create is for; using the current lease
     is extend's job."""
@@ -157,7 +157,7 @@ def test_budget_guard_prices_concurrent_windows(tmp_path, monkeypatch):
 
 
 def test_budget_daily_check_clips_other_windows_to_today(tmp_path, monkeypatch):
-    """The 2026-11-07 refusal, as a fixture: a multi-day keeper
+    """The budget refusal, as a fixture: a multi-day keeper
     window (56 h at 0.08) and a same-shape window (9 h at 0.26)
     commit 6.82 unclipped, which with an 8 h window priced at
     2.08 busts a daily cap of 8. Clipped to today (18:00Z ->
@@ -184,7 +184,7 @@ def test_reap_passes_never_overlap(tmp_path, monkeypatch):
     """One reap pass at a time: while the pass lock is held, a
     second reap returns already-running and touches nothing —
     overlapping passes renewing the same lease in parallel
-    minted duplicate successor leases (2026-11-08). The lock is
+    minted duplicate successor leases. The lock is
     an flock, so a dead holder releases it: once the fd closes,
     reap proceeds normally."""
     import fcntl

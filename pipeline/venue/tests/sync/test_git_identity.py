@@ -1,4 +1,4 @@
-"""The git identity plant (2026-11-12): a tree the machinery
+"""The git identity plant: a tree the machinery
 forms carries the source repo's configured identity — its
 repo-local user.name/user.email — never the forming shell's
 inheritance. Unit pins for the reader, the payload (including

@@ -1,4 +1,4 @@
-"""The store prune's protections (owner ruling 2026-11-12):
+"""The store prune's protections (owner ruling):
 records are never candidates, work in flight keeps its
 staging, a complete transfer's parts and an old snapshot
 bundle are the first reclaim classes."""
@@ -90,7 +90,7 @@ def test_records_and_in_flight_work_are_never_candidates(tmp_path):
 
 
 def test_terminal_payload_inside_a_day_is_kept_and_removed_dirs_are_named(tmp_path):
-    # The 2026-11-21/22 specimen: a whole evening's gate
+    # The specimen: a whole evening's gate
     # pulls swept at the two-hour grace during a low-free
     # window, invisibly. Inside a day a terminal payload
     # is evidence, not cold storage; past it, the pass
@@ -127,7 +127,7 @@ def test_job_payload_archives_and_staging_tarballs_past_48h(tmp_path):
     root = _sandbox(tmp_path)
     job = root / "adapters" / "colab" / "jobs" / "some-job"
     _write(job / "job.json")                                   # the job's definition: never a candidate
-    _write(job / "wrap.py")                                    # likewise retained (2026-11-18 precedent)
+    _write(job / "wrap.py")                                    # likewise retained (the precedent)
     _write(job / "payload-old.tar.gz", age_s=49 * 3600)        # past the 48h floor: prunable
     _write(job / "payload-fresh.tar.gz", age_s=3600)           # inside the floor: kept
     _write(job / "seed-old.bundle", age_s=49 * 3600)           # bundles ride the same class

@@ -15,7 +15,7 @@ from runner_harness import FAKE, cli_calls, install_bare_job, logging_wrapper, r
 
 
 def test_checkpoint_less_job_completes_on_its_exit_stamp(tmp_path):
-    """D2 (2026-11-08 remainder report): a job that writes its
+    """D2 (the remainder report): a job that writes its
     outputs and exits 0 without the checkpoint protocol records
     complete — the launch wrapper's exit stamp is the outcome
     truth the death branch used to override with 'failed'."""
@@ -46,7 +46,7 @@ def test_checkpoint_less_job_failure_records_its_exit_code(tmp_path):
 
 
 def test_manifest_upload_failure_fails_the_run_at_upload_time(tmp_path):
-    """D1 (2026-11-08 remainder report): a manifest upload whose
+    """D1 (the remainder report): a manifest upload whose
     transfer fails ends the run AT the upload — failed record,
     the upload named — instead of launching a job that discovers
     the missing file itself (or never does)."""
@@ -69,8 +69,8 @@ def test_manifest_upload_failure_fails_the_run_at_upload_time(tmp_path):
 
 
 def test_small_upload_dead_channel_confesses_on_the_scaled_budget(tmp_path):
-    """Size-scaled upload timeout (improvement commissioned
-    2026-11-12): the runner script is a small file, so a
+    """Size-scaled upload timeout (the commissioned
+    improvement): the runner script is a small file, so a
     channel that never answers must fail its launch on the
     small budget the size prices — not the flat 600 s the
     largest payloads carry. The wrapper sleeps the script
@@ -131,7 +131,7 @@ def test_oversize_manifest_upload_moves_chunked_and_verified(tmp_path):
 
 
 def test_job_scripts_upload_to_run_scoped_remote_names(tmp_path):
-    """Foreign-payload regression (2026-11-08 remainder lanes):
+    """Foreign-payload regression (the remainder lanes):
     every lane's gate script is named run.py, and the runner's
     /content/<basename> slot made runs on a shared session
     execute whichever payload landed last — one run carried a

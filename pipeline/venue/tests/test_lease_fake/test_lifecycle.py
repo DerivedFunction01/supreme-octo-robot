@@ -50,7 +50,7 @@ def test_reap_clears_dead_session(tmp_path):
     active = Path(env["FAKE_COLAB_STATE"]) / "sessions" / session / "ACTIVE"
     active.unlink()
     # Absence must sustain across passes before the record
-    # clears (2026-11-13): the first absent reap only stamps.
+    # clears: the first absent reap only stamps.
     assert run_lease(env, "reap")["action"] == "kept-absent-unconfirmed"
     stamp = Path(env["COLAB_RUNNER_VAR"]) / f"absent-{session}.json"
     data = json.loads(stamp.read_text())

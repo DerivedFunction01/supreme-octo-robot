@@ -74,7 +74,7 @@ def test_registry_round_trips(tmp_path):
     assert bridge.Registry(path).attempts == {"cmd-9": 2}
 
 
-# --- Session shape gate: bridge minting (plan: the 2026-11-04 agent-session-shape-gate plan) --
+# --- Session shape gate: bridge minting (plan: the agent-session-shape-gate plan) --
 
 SHAPES = {
     "cpu-highram": {"high_mem": True, "gpu": None, "tpu": None, "rate_cu_per_hour": 0.26},
