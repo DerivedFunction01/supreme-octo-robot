@@ -26,6 +26,7 @@ record per move.
 # Portability exceptions (gate component directives):
 # portability-exception: ~/.local/bin/colab — the removed per-user CLI shim location, named in the resolution note to forbid it
 # portability-exception: f:\ — scanner artifact in the embedded remote-program payload text below (an `as f:` binding colon followed by a string-escape backslash), not a path
+# portability-exception: d:\ — scanner artifact in the embedded remote-program payload text below (an `if d:` binding colon followed by a string-escape backslash), not a path
 
 import hashlib
 import importlib.util as _ilu
