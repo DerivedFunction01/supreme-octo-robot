@@ -54,7 +54,7 @@
  * change that seeds its spec; a leg the project has not
  * seeded is unexercised, never passed (docs/checks.md).
  * (jobs-overflow2 sat unassigned from the repo remake
- * until 2026-11-21 — the partition check refused every run
+ * until its seeding landed — the partition check refused every run
  * in that window, which is the check working as designed
  * against a seeding change that skipped its half.)
  *
