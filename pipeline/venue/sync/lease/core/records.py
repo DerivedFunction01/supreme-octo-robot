@@ -387,6 +387,49 @@ def save_record(repo: Path, rec: dict) -> None:
         pass
 
 
+def retire_superseded(repo: Path, old_session: str, new_session: str, now_dt: datetime | None = None) -> str | None:
+    """Retire a superseded generation's record at a renewal
+    swap (2026-11-23): the old session's record leaves the live
+    namespace in the swap's own act, preserved as a tombstone
+    beside it — <file>.superseded-<ts>, the quarantine_torn
+    rename-out form — carrying the record as it stood plus
+    retired / superseded_by / superseded_at stamps. The bare
+    delete this replaces left a reader of the old name nothing
+    to reason from, and the failure it answers is the standing
+    copy: a resume priced its run against a generation whose
+    record still read as the lease's current pin while the
+    server no longer held that session ("not found
+    server-side", sunny-ridge-19 r1795368082). Out of the
+    namespace, no pool, census, pin, or reap pass can mistake
+    the tombstone for a live lease; on disk, the pointer names
+    the generation that replaced it. The old session's
+    evidence projection and liveness entry die with the live
+    record, exactly as delete_record's. Returns the
+    tombstone's file name, or None when no live record stood
+    for the old session (the delete still runs)."""
+    now_dt = now_dt or datetime.now(timezone.utc)
+    stamp = now_dt.strftime("%Y%m%dT%H%M%SZ")
+    held_path: Path | None = None
+    held: dict | None = None
+    for path in _record_files(repo):
+        rec = _valid_record(foundation.load_json(path, None))
+        if rec is not None and rec.get("session") == old_session:
+            held_path, held = path, rec
+            if path.name == f"lease-{old_session}.json":
+                break
+    tomb_name = None
+    if held is not None and held_path is not None:
+        tomb = dict(held)
+        tomb.update(retired=True, superseded_by=new_session, superseded_at=now_dt.isoformat())
+        dst = held_path.with_name(f"{held_path.name}.superseded-{stamp}")
+        if dst.exists():
+            dst = held_path.with_name(f"{held_path.name}.superseded-{stamp}-{os.getpid()}")
+        foundation.staged_write(dst, json.dumps(tomb, indent=2).encode())
+        tomb_name = dst.name
+    delete_record(repo, old_session)
+    return tomb_name
+
+
 def delete_record(repo: Path, session: str) -> None:
     """Remove a lease's record, wherever it lives — for the same
     reason save cleans up: no stale copy may resurrect a released

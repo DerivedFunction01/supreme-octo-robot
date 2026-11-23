@@ -38,6 +38,24 @@ from .records import claim_first_save, load_run_record, save_record
 CLAIM_DEADLINE_S = 180
 
 
+def option_like_refusal(job_name, resume) -> "str | None":
+    """The refusal message for an option-like job name or
+    resume id, or None when both names are clean. A token
+    beginning with "-" in a name position is a flag consumed
+    as a value by a misparsed invocation — `--resume
+    --detach` claimed a run record named --detach, and a
+    --session record stood beside it (2026-11-23, both
+    quarantined by hand after days in results/runs/) — so
+    the refusal fires at parse, before any record is
+    written: no launch may claim an id that parses as an
+    option, at creation or at resume."""
+    if isinstance(job_name, str) and job_name.startswith("-"):
+        return f"refusing option-like job name {job_name!r}: a flag was consumed as the job name"
+    if isinstance(resume, str) and resume.startswith("-"):
+        return f"refusing option-like run id {resume!r} for --resume: a flag was consumed as the run id"
+    return None
+
+
 def pid_alive(pid) -> bool:
     """True when pid names a live process. A pid we cannot
     signal for permission still exists; a missing or malformed
@@ -146,5 +164,11 @@ def adopt(run_id: str, shape_id):
 
 def stamp_takeover(rec: dict) -> None:
     """Mark a resume's takeover of a decidable-lost claim, so
-    the record carries both claims' facts."""
+    the record carries both claims' facts. The driver stamp
+    moves to the taking-over process: daemon_child_pid names
+    the run's current driver wherever a reader (the sweep's
+    daemon-orphan test) asks whether that driver still lives,
+    and a dead predecessor's pid would read as a dead driver
+    for a run a live process is now driving."""
     rec.update(claim_takeover_at=now(), claim_takeover_from=rec.get("daemon_child_pid"))
+    rec["daemon_child_pid"] = os.getpid()

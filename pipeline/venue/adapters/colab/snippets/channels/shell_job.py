@@ -60,19 +60,33 @@ def main() -> int:
 
     if args.script:
         script_path = Path(args.script)
-        if not script_path.is_file() and script_path.is_absolute() and Path.cwd() != Path("/content"):
-            # The runner addresses session files as /content/<name>;
-            # under the fake CLI the session root is the working dir
-            # instead (the same dual-world seam as the runner's
-            # relative out dir), so fall back to the bare name there.
-            # The discriminator is where this process runs, not
-            # whether a /content happens to exist on the local
-            # filesystem: on a real VM the cwd is /content, the
-            # fallback never engages, and a genuinely missing file
-            # refuses exactly as before.
-            alt = Path(script_path.name)
-            if alt.is_file():
-                script_path = alt
+        if not script_path.is_file() and script_path.is_absolute():
+            # Session-root resolution. The runner addresses
+            # session files as /content/<name>; the session root
+            # is /content on a real VM and the working dir under
+            # the fake CLI (the same dual-world seam as the cwd
+            # below — the discriminator is where this process
+            # runs, not whether a /content happens to exist on
+            # the local filesystem). Uploads land in the run's
+            # own directory, runs/<run_id>/ (runner Step 5): the
+            # run's copy of a same-named file wins over the
+            # shared root slot, whose contents are another
+            # launch's history. The run id is recovered from
+            # --out, per-run by construction. A genuinely
+            # missing file still refuses exactly as before.
+            root = Path("/content") if Path.cwd() == Path("/content") else Path.cwd()
+            rid = run_id_for(Path(args.out))
+            alts = []
+            if rid:
+                alts.append(root / "runs" / rid / script_path.name)
+            if script_path.parts[:2] == ("/", "content"):
+                alts.append(root.joinpath(*script_path.parts[2:]))
+            if Path.cwd() != Path("/content"):
+                alts.append(Path(script_path.name))
+            for alt in alts:
+                if alt.is_file():
+                    script_path = alt
+                    break
         if not script_path.is_file():
             print(f"shell_job: --script file not found: {args.script} "
                   "(upload it to the VM first, e.g. /content/env_build.sh)", file=sys.stderr)
@@ -118,6 +132,16 @@ def main() -> int:
         if run_id:
             env["SHELL_JOB_RUN_ID"] = run_id
             env["SHELL_JOB_PORT_BASE"] = str(port_base_for(run_id))
+            # The run's upload directory (runner Step 5): a
+            # payload reads its sibling uploads from here
+            # instead of the shared /content/<name> slots,
+            # whose contents are another launch's history.
+            # Exported only when the directory exists — a job
+            # with no uploads has none.
+            root = Path("/content") if Path.cwd() == Path("/content") else Path.cwd()
+            uploads = root / "runs" / run_id
+            if uploads.is_dir():
+                env["SHELL_JOB_UPLOADS"] = str(uploads)
         r = subprocess.run(["bash", str(job), *payload_args], cwd=cwd, stdout=log, stderr=subprocess.STDOUT, env=env)
         log.write(f"complete exit_code={r.returncode} t={time.time():.1f}\n")
         log.flush()

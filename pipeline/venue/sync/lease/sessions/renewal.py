@@ -115,10 +115,14 @@ def _swap_session(colab, repo: Path, rec: dict, new_session: str, acquired_at: s
     rec["last_used_at"] = now_dt.isoformat()
     records.save_record(repo, rec)
     if old_session != new_session:
-        # The record's file is keyed by session: the old session's
-        # file still holds the pre-swap record under the old name
-        # and must not survive as a second, stale lease.
-        records.delete_record(repo, old_session)
+        # The record's file is keyed by session: the old
+        # generation's file still holds the pre-swap record
+        # under the old name. It leaves the live namespace in
+        # this same act, retired with its superseded-by
+        # pointer (records.retire_superseded) — never surviving
+        # as a second, stale lease a reader could mistake for
+        # the window's current pin.
+        records.retire_superseded(repo, old_session, new_session, now_dt)
     if keepalive._capture_session_host(repo, rec, "renewal", spool_on_first=True):
         records.save_record(repo, rec)
     keepalive.ensure_keepalive(colab, repo, new_session)

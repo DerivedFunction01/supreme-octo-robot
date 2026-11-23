@@ -12,8 +12,8 @@
 # the original apart from this header and the probe target), invoked
 # by adapters/colab/jobs/plant-github-key/job.json. The probe repo —
 # the private repo the ls-remote leg proves readable — is named by
-# the untracked kit (var/kit-github/probe_repo, uploaded as
-# /content/probe_repo), never by tracked code; with no probe named,
+# the untracked kit (var/kit-github/probe_repo, uploaded into the
+# run's directory as probe_repo), never by tracked code; with no probe named,
 # the ssh greeting alone verifies the plant.
 set -uo pipefail
 OUT="${SHELL_JOB_OUT:-/content/plant-github-key-out}"
@@ -23,17 +23,21 @@ LOG="$OUT/plant.log"
 : > "$LOG"
 fail() { echo "PLANT FAILED: $1" >> "$LOG"; cat "$LOG"; exit 1; }
 
-[ -f /content/id_ed25519 ] || fail "key upload missing at /content/id_ed25519"
-[ -f /content/known_hosts_github ] || fail "known-hosts upload missing"
+# Uploads land in the run's own directory (runner Step 5);
+# shell_job exports it as SHELL_JOB_UPLOADS. The /content
+# fallback is the pre-Step-5 slot, for a hand-driven run.
+UP="${SHELL_JOB_UPLOADS:-/content}"
+[ -f "$UP/id_ed25519" ] || fail "key upload missing at $UP/id_ed25519"
+[ -f "$UP/known_hosts_github" ] || fail "known-hosts upload missing"
 
 mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
-cp /content/id_ed25519 "$HOME/.ssh/id_github" && chmod 600 "$HOME/.ssh/id_github"
-cp /content/known_hosts_github "$HOME/.ssh/known_hosts_github" && chmod 644 "$HOME/.ssh/known_hosts_github"
+cp "$UP/id_ed25519" "$HOME/.ssh/id_github" && chmod 600 "$HOME/.ssh/id_github"
+cp "$UP/known_hosts_github" "$HOME/.ssh/known_hosts_github" && chmod 644 "$HOME/.ssh/known_hosts_github"
 PROBE_REPO=""
-if [ -f /content/probe_repo ]; then
-  PROBE_REPO="$(head -n 1 /content/probe_repo | tr -d '[:space:]')"
+if [ -f "$UP/probe_repo" ]; then
+  PROBE_REPO="$(head -n 1 "$UP/probe_repo" | tr -d '[:space:]')"
 fi
-rm -f /content/id_ed25519 /content/known_hosts_github /content/probe_repo
+rm -f "$UP/id_ed25519" "$UP/known_hosts_github" "$UP/probe_repo"
 
 git config --global url."git@github.com:".insteadOf "https://github.com/"
 git config --global core.sshCommand "ssh -i $HOME/.ssh/id_github -o UserKnownHostsFile=$HOME/.ssh/known_hosts_github -o StrictHostKeyChecking=yes"

@@ -13,6 +13,7 @@ import time
 from datetime import datetime, timezone
 
 from .foundation import REPO, RUNS, colab, lease, now
+from .claims import claim_lost, pid_alive
 from .records import TERMINAL_STATES, collector_stale, emit_terminal_event, mark_terminal, save_record
 
 # A record still in "running" (the pre-confirmation state) this
@@ -26,6 +27,31 @@ STALE_RUNNING_S = 1200
 # it, so the bound sits at twice that call. Past it, with no
 # fresher stamp or save, the launcher died before the launch.
 STALE_STARTING_S = 7200
+
+
+def _daemon_orphan(rec: dict) -> bool:
+    """A daemonized launch whose driver is decidable as dead
+    before its launch began (2026-11-23): the record carries
+    its daemon child's pid as the driver stamp, the launch
+    never began (no launch_at — the stamp the launch exec's
+    own save writes), and the pid is provably dead. A claiming
+    record keys on the claim's own lost test (deadline passed
+    AND pid dead — claims.claim_lost); a starting record on
+    the dead pid alone, because the daemon child IS the
+    launcher: dead, it launches nothing, at any record age.
+    A live pid is never an orphan — a daemon queued behind
+    the session launch lock sits in "starting" with its pid
+    alive, healthy at any age — and the stamp follows the
+    driver (a resume re-stamps it, by takeover or in place),
+    so the test always names the process currently driving
+    the run."""
+    if rec.get("launch_at") or rec.get("launch_confirmed_at"):
+        return False
+    if rec.get("daemon_child_pid") is None:
+        return False
+    if rec.get("state") == "claiming":
+        return claim_lost(rec)
+    return not pid_alive(rec.get("daemon_child_pid"))
 
 
 def orphan_sweep() -> tuple[list[dict], bool]:
@@ -108,6 +134,19 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             if started_age > STALE_RUNNING_S and (evidence_age is None or evidence_age > STALE_RUNNING_S):
                 mark_terminal(rec, "failed", launch_lost=True, error=f"record still 'running' {int(started_age // 60)} min after start with no launch confirmation and no fresher evidence: the launcher died mid-launch; relaunch with --resume {rec['run_id']} to continue from its remote run-id")
                 findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "marked failed (launch-lost): stale 'running' record whose launcher died mid-launch; relaunch with --resume RUN_ID"})
+        elif rec.get("state") in ("claiming", "starting") and (rec.get("session") in live_names or not rec.get("session")) and _daemon_orphan(rec):
+            # Daemon-orphaned: decidable NOW, by the driver
+            # stamp, without the stale-starting branch's
+            # two-hour wait — a dead daemon launches nothing,
+            # and every hour the record reads as pre-launch it
+            # holds its caller's claim evidence as in-flight
+            # work (2026-11-23: six daemonized fires whose
+            # daemons died silently sat in "starting" until
+            # their callers gave up on them). The resume is
+            # the re-drive: it attaches or takes over under
+            # the claims discipline and relaunches the id.
+            mark_terminal(rec, "failed", launch_lost=True, error=f"record still '{rec['state']}' with its daemon driver (pid {rec.get('daemon_child_pid')}) dead and no launch begun: the daemonized launch died before the launch landed; relaunch with --resume {rec['run_id']} to retry")
+            findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": f"marked failed (launch-lost): daemon-orphaned '{rec['state']}' record whose daemon driver died pre-launch; relaunch with --resume RUN_ID"})
         elif rec.get("state") == "starting" and (rec.get("session") in live_names or not rec.get("session")):
             # Stale-"starting": the launcher died before its
             # launch landed (the upload-phase deaths on a wedged
@@ -132,7 +171,14 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             except OSError:
                 pass
             age = datetime.now(timezone.utc).timestamp() - max(stamps) if stamps else 0
-            if age > STALE_STARTING_S:
+            # A live daemon driver defeats the time proxy: the
+            # bound prices a wedged upload, but a daemon queued
+            # behind the session launch lock is alive in this
+            # state with no fresher stamp, healthy at any age
+            # (pid_alive(None) is False, so an unstamped
+            # foreground record is governed by time exactly as
+            # before).
+            if age > STALE_STARTING_S and not pid_alive(rec.get("daemon_child_pid")):
                 mark_terminal(rec, "failed", launch_lost=True, error=f"record still 'starting' {int(age // 60)} min after its freshest stamp: the launcher died before the launch landed; relaunch with --resume {rec['run_id']} to retry")
                 findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "marked failed (launch-lost): stale 'starting' record whose launcher died pre-launch; relaunch with --resume RUN_ID"})
     return findings, True

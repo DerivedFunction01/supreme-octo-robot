@@ -26,6 +26,7 @@ record per move.
 # Portability exceptions (gate component directives):
 # portability-exception: ~/.local/bin/colab — the removed per-user CLI shim location, named in the resolution note to forbid it
 # portability-exception: f:\ — scanner artifact in the embedded remote-program payload text below (an `as f:` binding colon followed by a string-escape backslash), not a path
+# portability-exception: d:\ — scanner artifact in the embedded remote-program payload text below (an `if d:` binding colon followed by a string-escape backslash), not a path
 
 import hashlib
 import importlib.util as _ilu
@@ -228,6 +229,16 @@ def _remote_part_hashes(session: str, names: list, mkdir_dir: str = "") -> dict:
             "if MKDIR:\n"
             "    os.makedirs(os.path.join(BASE, MKDIR), exist_ok=True)\n"
             f"NAMES = {names_json}\n"
+            # A part name can carry a directory (a target
+            # inside a per-run directory — the runner's
+            # Step 5 form): its staging parent must exist
+            # before the part uploads, or they fail on the
+            # far side exactly as a top-level upload into a
+            # missing directory does.
+            "for name in NAMES:\n"
+            "    d = os.path.dirname(name)\n"
+            "    if d:\n"
+            "        os.makedirs(os.path.join(BASE, d), exist_ok=True)\n"
             "out = {}\n"
             "for name in NAMES:\n"
             "    p = os.path.join(BASE, name)\n"
@@ -331,6 +342,11 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
         "import hashlib, json, os\n"
         "BASE = '/content' if os.getcwd() == '/content' else os.getcwd()\n"
         f"parts = {names}\n"
+        # A target inside a directory (the per-run form)
+        # needs its parent created before the write, like
+        # the part staging above; a bare name's dirname is
+        # empty and the makedirs is a no-op.
+        f"os.makedirs(os.path.join(BASE, {json.dumps(os.path.dirname(remote_name))}), exist_ok=True)\n"
         f"out = open(os.path.join(BASE, '{remote_name}'), 'wb')\n"
         "h = hashlib.sha256()\n"
         "for name in parts:\n"
