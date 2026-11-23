@@ -236,7 +236,7 @@ const disarmed = await adapter.setGoalPing("document-parsing-successor", false);
 check("goal ping disarms through the record", disarmed.ping.armed === false);
 
 // 6. The Goals section's records (storyboard
-//    2026-11-13-storyboard-goals.html + contract 11
+//    storyboard-goals.html + contract 11
 //    amendment). Run against a fresh adapter: §5e mutated
 //    the first one's posts.
 const a2 = new MockWorkbenchAdapter(() => NOW);

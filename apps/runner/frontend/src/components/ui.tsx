@@ -6,7 +6,7 @@
 // are built here from kit tokens only — no local palette, type,
 // or radius values. Recorded as a kit gap in the lane report.
 // The kit sheet's LogRow is NOT built here: since the
-// timeline-component study (2026-11-13) it ships in the kit
+// timeline-component study it ships in the kit
 // itself (@workhorse/kit/components/display/LogRow) and Events consumes
 // that one shared component.
 
@@ -43,7 +43,7 @@ export function Row({
 }
 
 /** RowText — the two-line stack form (the lease-row form,
- *  owner's row ruling 2026-11-13, matching the kit Row): the
+ *  owner's row ruling, matching the kit Row): the
  *  label gets line 1 and truncates; the sub gets line 2,
  *  truncating, with the trailing content (`end` — a status
  *  chip, an action cluster) riding that line flex-none at its

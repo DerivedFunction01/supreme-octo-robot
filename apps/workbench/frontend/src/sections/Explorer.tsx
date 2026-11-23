@@ -269,7 +269,7 @@ export function PeekPane({
         {/* The segmented control must not be squeezed by the
             pill beside it: flex-squeezed below two-pill width
             it wraps its pills into a tall stacked track
-            (mobile critic, 2026-11-15). flex-none keeps the
+            (mobile critic). flex-none keeps the
             control whole; the pill wraps instead. */}
         <span className="ml-auto flex flex-wrap items-center gap-2.5 [&_fieldset]:flex-none">
           <SegmentedControl

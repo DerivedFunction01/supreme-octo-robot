@@ -1,6 +1,6 @@
 // Served shapes for the workbench app, as pinned by the S0
 // contracts and the pinned workbench review
-// (docs/review/2026-11-12-review-workbench.md §2–§3).
+// (the pinned workbench review in docs/review/, §2–§3).
 //
 // The app renders served shapes only; every derivation below is
 // a shape the backend serves ready (progress derivation,
@@ -31,7 +31,7 @@ export type TodoStatus = "todo" | "doing" | "blocked" | "done";
 export interface FileTodo {
   id: string; // the todo's name: ^[a-z0-9]+(-[a-z0-9]+)*$
   project: string;
-  bundle: string; // bundle dir name, e.g. "2026-11-12-superapp-storyboards"
+  bundle: string; // bundle dir name, e.g. "<date>-superapp-storyboards"
   title: string;
   status: TodoStatus;
   created: string; // ISO date
@@ -264,7 +264,7 @@ export interface StatusPost {
   done?: string[];
   ongoing?: string[];
   owner_waiting?: { label: string; commissioned_at: string } | null;
-  /** Blocked-state pair (contract 11 amendment, 2026-11-13):
+  /** Blocked-state pair (contract 11 amendment):
    *  a post asserting BLOCKED-OWNER / BLOCKED-HARD carries
    *  the cited basis — the owner's message reference, thread
    *  + time — and the verification stamp, applied by the

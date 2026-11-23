@@ -56,7 +56,7 @@ export function RulesView() {
           // Fragment, not a div: a wrapper div makes the
           // scope label a :first-child and .glabel's
           // first-child rule zeroes its 20px section
-          // margin (spacing audit, 2026-11-15).
+          // margin (spacing audit).
           <Fragment key={scope}>
             <GroupLabel>{label}</GroupLabel>
             <Group>

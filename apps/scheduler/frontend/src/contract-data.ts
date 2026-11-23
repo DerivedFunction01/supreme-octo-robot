@@ -11,7 +11,7 @@
 //
 // What remains here is the mock's seed form of the two
 // knob-bearing entries' config blocks (contract 09,
-// amendment 2026-11-13). They stay adapter-carried — by the
+// amendment). They stay adapter-carried — by the
 // MOCK adapter only — for one named reason: the demo
 // persona's fake server must seed its store from something,
 // and the values must mirror the pipeline's backfilled
@@ -37,7 +37,7 @@ export type EntryConfigSeed = {
 export const ENTRY_CONFIG: Record<string, EntryConfigSeed> = {
   // The home free-space tiers: ops/storage_watch.py's
   // HOME_LOW = 50 GB / HOME_CRIT = 45 GB constants — the
-  // owner's 2026-11-11 retune figures. (The script's /tmp
+  // owner's retune figures. (The script's /tmp
   // tiers, 128/32 MB, are not seeded: the ruling named the
   // GB tiers.)
   "storage-watch": {
