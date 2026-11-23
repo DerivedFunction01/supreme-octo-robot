@@ -15,9 +15,13 @@ is the only criterion — no provenance, no held set, no
 name carve-outs. Within the containment half alone, the
 default branch itself and, locally, a branch checked out
 in a worktree stand mechanically (git refuses those);
-the cap phase in TestBranchCap knows no exempt set at
-all — an attached excess branch is freed by detaching
-its worktree's HEAD at the same tip, then deleted.
+the cap phase in TestBranchCap ranks the whole
+population by tip activity, but its candidates are the
+selectable rows alone: the 2026-11-23 cure structurally
+excludes principal branches (the base; the remote's
+default) and worktree-checked-out branches from
+candidacy — derived from the repo at census, never a
+name list (TestPrincipalBranches).
 """
 
 import unittest
@@ -149,9 +153,12 @@ class TestBranchCap(Fixture):
     """The cap phase (the owner's correction: containment
     is not the end state — the configured max, default 10
     per repo per side, binds the branch population, with
-    no exemptions). Excess branches are archive-before-
-    delete: their tips land in one verified bundle with a
-    manifest before any ref moves."""
+    no exemptions by name). Excess branches are archive-
+    before-delete: their tips land in one verified bundle
+    with a manifest before any ref moves. The 2026-11-23
+    structural exclusions (principal branches, checked-
+    out branches) bind candidacy, not by name — see
+    TestPrincipalBranches."""
 
     def add_orphan(self, branch, epoch):
         """An unlanded branch with no standing worktree:
@@ -257,15 +264,25 @@ class TestBranchCap(Fixture):
             self.assertIn(name, remote)
         self.assertEqual(self.queue(), [])
 
-    def test_attached_excess_branch_detaches_and_trims(self):
-        # (h') per-slug cap 3; the population per side is
-        # main plus a worktree-attached branch (the oldest
-        # tip of all) plus four orphans. There is no exempt
-        # set: the attached branch is excess like any other
-        # — its tip is archived into the verified bundle,
-        # its worktree's HEAD detaches at the same tip, and
-        # its ref deletes. The live count lands exactly on
-        # the cap, on both sides.
+    def test_attached_excess_branch_stands_cap_takes_selectable(self):
+        # (h'') RE-PINNED 2026-11-23 — only the attached
+        # branch's disposition changes; every other (h')
+        # assertion (the ranking, the bundle, the cap
+        # lines, the queue) stands as it was. (h') pinned
+        # the pre-cure rule: a worktree-attached excess
+        # branch is freed by detaching its worktree's HEAD
+        # at the same tip and deleted like any other. The
+        # 2026-11-23 hourly pass attempted exactly that
+        # against steampowernj's form/df-next-121 — a tree
+        # the same pass held as unlanded — and failed
+        # (BRANCH-LOCAL-FAIL reason=detach-failed), ending
+        # over cap on both sides. The cure: a checked-out
+        # branch is not cap-selectable on either side and
+        # is not archived by the cap phase; the excess is
+        # taken from the selectable population instead.
+        # Same fixture as (h'): per-slug cap 3; the
+        # population per side is main plus the attached
+        # branch (the oldest tip of all) plus four orphans.
         self.add_origin()
         tree = self.add_tree("repo-a-held-wt", "feat/held",
                              [("held.txt", "h\n")], NOW - 130000)
@@ -281,17 +298,19 @@ class TestBranchCap(Fixture):
             extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "3"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         # ranked by tip activity: held (NOW-130000), o0..o3
-        # (NOW-120000..NOW-117000), main (NOW-100000);
-        # excess = held, o0, o1; keep = o2, o3, main
+        # (NOW-120000..NOW-117000), main (NOW-100000).
+        # Blocked: main (principal), feat/held (checked
+        # out). The excess of 3 comes from the selectable
+        # orphans alone: o0, o1, o2; keep = o3, held, main.
         self.assertEqual(self.local_branches(),
-                         {"main", orphans[2], orphans[3]})
+                         {"main", "feat/held", orphans[3]})
         self.assertEqual(len(self.local_branches()), 3)
-        self.assertFalse(self.branch_exists("feat/held"))
+        self.assertTrue(self.branch_exists("feat/held"))
         remote = self.remote_branches()
-        self.assertNotIn("feat/held", remote)
+        self.assertIn("feat/held", remote)
         self.assertNotIn(orphans[0], remote)
         self.assertNotIn(orphans[1], remote)
-        self.assertIn(orphans[2], remote)
+        self.assertNotIn(orphans[2], remote)
         self.assertIn(orphans[3], remote)
         self.assertIn("main", remote)
         self.assertIn("BRANCH-CAP repo=repo-a side=local live=6 "
@@ -299,27 +318,30 @@ class TestBranchCap(Fixture):
         self.assertIn("BRANCH-CAP repo=repo-a side=origin live=6 "
                       "cap=3 archived=3", out.stdout)
         self.assertNotIn("BRANCH-CAP-OVER", out.stdout)
-        # the attached branch's tip is in the verified
-        # bundle, recorded in the manifest for both sides
+        # the bundle holds the selectable excess only —
+        # the attached branch is NOT archived by the cap
+        # phase, on either side
+        self.assertNotIn("BRANCH-ARCHIVED repo=repo-a "
+                         "branch=feat/held", out.stdout)
         rows = self.manifest_rows()
         self.assertEqual(len(rows), 3)
-        held_rows = [r for r in rows if r[0] == "feat/held"]
-        self.assertEqual(len(held_rows), 1)
-        self.assertEqual(held_rows[0][1], held_tip)
-        self.assertEqual(held_rows[0][3], "local,origin")
+        self.assertEqual([r[0] for r in rows], orphans[:3])
+        self.assertTrue(all(r[3] == "local,origin" for r in rows))
         bundle = self.cap_dir() / "branches.bundle"
         verify = _git(self.main, "bundle", "verify", str(bundle),
                       env=self.env, check=False)
         self.assertEqual(verify.returncode, 0, verify.stderr)
-        # the worktree still stands, its HEAD detached at
-        # the same tip sha, its files untouched
+        # the worktree still stands, still ON its branch
+        # at the same tip, its files untouched — the cap
+        # never detaches a tree to take its branch
         self.assertTrue(tree.is_dir())
         head = _git(tree, "rev-parse", "HEAD",
                     env=self.env).stdout.strip()
         self.assertEqual(head, held_tip)
         sym = _git(tree, "symbolic-ref", "-q", "HEAD",
-                   env=self.env, check=False)
-        self.assertNotEqual(sym.returncode, 0)
+                   env=self.env)
+        self.assertEqual(sym.stdout.strip(),
+                         "refs/heads/feat/held")
         self.assertEqual((tree / "held.txt").read_text(), "h\n")
         self.assertEqual(self.queue(), [])
 
@@ -646,6 +668,169 @@ class TestDrainReverify(Fixture):
             "BRANCH-TRIMMED repo=repo-a branch=feat/sc "
             f"scope=local sha={live}", out.stdout)
         self.assertFalse(self.branch_exists("feat/sc"))
+
+
+class TestPrincipalBranches(Fixture):
+    """Principal-branch and checkout exclusions
+    (2026-11-23 cure). The 2026-11-23 hourly pass — the
+    first under the drain-reverify cure — cap-archived
+    steampowernj's main, attempted its origin deletion
+    twice, and left a standing cap charge for it: in that
+    repo the base (containment's reference, the main
+    worktree's checkout) is dev and the remote default is
+    main, strictly contained in dev, so the sweep and the
+    cap both treated main as ordinary landed material;
+    only the remote's own default-branch refusal stood
+    in the way. The same pass failed to detach the
+    checked-out branch of a tree it held as unlanded
+    (form/df-next-121, BRANCH-LOCAL-FAIL
+    reason=detach-failed). The cure is structural,
+    derived from the repo at census — the principal set
+    (the base branch; the origin/HEAD target) and the
+    worktree checkout set — with no name literals and no
+    exemption registry."""
+
+    def add_dev_flow(self):
+        """steampowernj's shape: the base is dev (the
+        main worktree checks it out), the remote default
+        is main, and main is strictly contained in dev."""
+        origin = self.add_origin()
+        _git(origin, "symbolic-ref", "HEAD",
+             "refs/heads/main", env=self.env)
+        path = self.add_tree("repo-a-dev-wt", "dev",
+                             [("dev.txt", "d\n")], NOW - 90000)
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        _git(self.main, "checkout", "dev", env=self.env)
+        _git(self.main, "push", "origin", "main", "dev",
+             env=self.env)
+        return origin
+
+    def add_orphan(self, branch, epoch):
+        """An unlanded branch with no standing worktree:
+        survives the sweep against dev (its commit is in
+        neither main nor dev), so the cap phase alone
+        decides its fate."""
+        path = self.add_tree(
+            f"repo-a-{branch.replace('/', '-')}-wt", branch,
+            [(f"{branch.replace('/', '-')}.txt", "x\n")], epoch)
+        _git(self.main, "worktree", "remove", str(path),
+             env=self.env)
+        return path
+
+    def seed_queue(self, *lines):
+        state = self.ws / "state"
+        state.mkdir(parents=True, exist_ok=True)
+        (state / f"remote-pending-{self.slug}.txt").write_text(
+            "\n".join(lines) + "\n")
+
+    def cap_manifest_rows(self):
+        cap_dirs = sorted((self.ws / "worktree-archive").glob(
+            "*/repo-a-branch-cap"))
+        self.assertEqual(len(cap_dirs), 1)
+        return [ln.split("\t") for ln in
+                (cap_dirs[0] / "manifest.tsv")
+                .read_text().splitlines()
+                if ln and not ln.startswith("#")
+                and not ln.startswith("branch\t")]
+
+    def test_sweep_and_cap_never_take_principal_branches(self):
+        # base=dev, default=main, main strictly contained
+        # in dev: the sweep enqueues neither principal,
+        # and the cap phase — population 5 per side, cap
+        # 3 — takes its excess from the selectable
+        # branches alone. Both principals stand in both
+        # scopes by derivation, not by ranking: their
+        # tips are the two OLDEST in the population, so
+        # the pre-cure ranking would have taken main
+        # first.
+        self.add_dev_flow()
+        names = [f"feat/p{i}" for i in range(3)]
+        for i, name in enumerate(names):
+            self.add_orphan(name, NOW - 80000 + i * 10000)
+        _git(self.main, "push", "origin", *names,
+             env=self.env)
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "3"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertNotIn("branch=main", out.stdout)
+        self.assertNotIn("branch=dev", out.stdout)
+        self.assertTrue(self.branch_exists("main"))
+        self.assertTrue(self.branch_exists("dev"))
+        remote = self.remote_branches()
+        self.assertIn("main", remote)
+        self.assertIn("dev", remote)
+        self.assertIn("BRANCH-CAP repo=repo-a side=local live=5 "
+                      "cap=3 archived=2", out.stdout)
+        self.assertIn("BRANCH-CAP repo=repo-a side=origin live=5 "
+                      "cap=3 archived=2", out.stdout)
+        self.assertFalse(self.branch_exists(names[0]))
+        self.assertFalse(self.branch_exists(names[1]))
+        self.assertTrue(self.branch_exists(names[2]))
+        self.assertNotIn(names[0], remote)
+        self.assertNotIn(names[1], remote)
+        self.assertIn(names[2], remote)
+        self.assertEqual(self.queue(), [])
+        rows = self.cap_manifest_rows()
+        self.assertEqual([r[0] for r in rows], names[:2])
+
+    def test_drain_refuses_and_drops_principal_charges(self):
+        # a standing cap charge naming main (the
+        # incident's exact residue) and a legacy bare
+        # charge naming dev: the drain refuses both with
+        # reason=principal and drops them — no delete is
+        # attempted against the fixture remote, whatever
+        # code wrote the charges.
+        self.add_dev_flow()
+        main_tip = _git(self.main, "rev-parse", "main",
+                        env=self.env).stdout.strip()
+        self.seed_queue(f"main\t{main_tip}\tcap", "dev")
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("BRANCH-DRAIN-SKIP repo=repo-a branch=main "
+                      "scope=origin reason=principal", out.stdout)
+        self.assertIn("BRANCH-DRAIN-SKIP repo=repo-a branch=dev "
+                      "scope=origin reason=principal", out.stdout)
+        self.assertNotIn("BRANCH-TRIMMED repo=repo-a "
+                         "branch=main", out.stdout)
+        self.assertNotIn("BRANCH-TRIMMED repo=repo-a "
+                         "branch=dev", out.stdout)
+        remote = self.remote_branches()
+        self.assertIn("main", remote)
+        self.assertIn("dev", remote)
+        self.assertEqual(self.queue(), [])
+
+    def test_cap_over_reports_blocked_survivors(self):
+        # the selectable population cannot cover the
+        # excess: population 4 (main + two checked-out
+        # branches + one orphan), branch cap 2. The one
+        # selectable orphan is archived and trimmed; the
+        # side ends over the bound, reported as
+        # BRANCH-CAP-OVER with the blocked survivors'
+        # reasons, and the pass ends partial. The
+        # checked-out branches are neither selected nor
+        # archived.
+        self.add_tree("repo-a-a-wt", "feat/a",
+                      [("a.txt", "a\n")], NOW - 5000)
+        self.add_tree("repo-a-b-wt", "feat/b",
+                      [("b.txt", "b\n")], NOW - 4000)
+        self.add_orphan("feat/c", NOW - 6000)
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "2"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn("BRANCH-CAP repo=repo-a side=local live=4 "
+                      "cap=2 archived=1", out.stdout)
+        self.assertIn("BRANCH-CAP-OVER repo=repo-a side=local "
+                      "live=4 cap=2 over=1 "
+                      "survivors=checked-out,principal", out.stdout)
+        self.assertFalse(self.branch_exists("feat/c"))
+        self.assertTrue(self.branch_exists("feat/a"))
+        self.assertTrue(self.branch_exists("feat/b"))
+        self.assertTrue(self.branch_exists("main"))
+        rows = self.cap_manifest_rows()
+        self.assertEqual([r[0] for r in rows], ["feat/c"])
 
 
 if __name__ == "__main__":

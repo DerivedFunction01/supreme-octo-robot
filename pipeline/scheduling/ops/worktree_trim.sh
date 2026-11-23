@@ -165,7 +165,11 @@
 #      enqueue and the standing drain discharges them. No
 #      provenance, no held set, no name carve-outs: an
 #      uncontained branch is not trim material, a contained
-#      one trims.
+#      one trims. The principal branches (point 7) stand
+#      outside the candidate set entirely, in both scopes:
+#      the base branch is the criterion's own reference,
+#      and the remote's default branch — in a dev-base
+#      repo, contained by construction — is never enqueued.
 #      Two refinements bind the sweep's verdict to the
 #      moment of the act (2026-11-23):
 #      - tip-equal exclusion: a branch whose tip EQUALS
@@ -218,25 +222,56 @@
 #      on either side, the failure is recorded, and the
 #      pass is partial. Only then do the excess refs go:
 #      local through trim_local_branch, origin through the
-#      queue and its drain. The disposition is uniform:
-#      every branch on a side — the default branch and
-#      worktree-attached branches included — is a candidate
-#      ranked by tip activity alone, and the newest `cap`
-#      stand; there is no exempt set, in any form (owner,
-#      2026-11-22: no exceptions as a hard requirement —
-#      a live pass once printed live=12 cap=10 never=12,
-#      the whole population exempt and the cap binding
-#      nothing). A checked-out excess branch is freed
-#      mechanically before its ref deletes: its worktree's
-#      HEAD detaches at the same tip (the tree's files and
-#      position do not change), then the ref deletes like
-#      any other. A detach or delete failure records the
-#      failure line, marks the pass partial, and the pass
-#      continues with the remaining excess — a failure
-#      line is an outcome, not an exemption. The default
-#      branch stands or falls by the same ranking; in
-#      practice its tip is the freshest, as the landing
-#      target.
+#      queue and its drain. The disposition is uniform
+#      over the SELECTABLE population: candidates rank by
+#      tip activity alone and the newest `cap` stand.
+#      (Owner, 2026-11-22: no exceptions as a hard
+#      requirement — a live pass once printed live=12
+#      cap=10 never=12, the whole population exempt and
+#      the cap binding nothing. That ruling bans exempt
+#      SETS — name lists and state carve-outs; the two
+#      structural exclusions below are not a set: each is
+#      a property of the census itself, derived from the
+#      repo at census time, with no name literals and no
+#      registry.)
+#      - principal branches (2026-11-23 cure): the base
+#        branch — the ref containment is measured
+#        against, the main worktree's own checkout — and
+#        the remote's default branch (the origin/HEAD
+#        symref target). A principal is never a sweep
+#        candidate, never cap-selectable, never seeded,
+#        and the drain refuses and drops any charge
+#        naming one (BRANCH-DRAIN-SKIP reason=principal).
+#        The 2026-11-23 hourly pass cap-archived
+#        steampowernj's main — strictly contained in its
+#        base, dev — attempted its origin deletion
+#        twice, and left a standing cap charge for it;
+#        only the remote's own default-branch refusal
+#        stood in the way (attempts on main reach back
+#        to 2026-11-17), and a cap charge carries no
+#        containment verdict the drain could re-verify.
+#        A census cannot take its own reference points
+#        as material.
+#      - checked-out branches (2026-11-23 cure): a branch
+#        with a live worktree checkout is not
+#        cap-selectable on either side and is not
+#        archived by the cap phase. The pre-cure phase
+#        freed an attached excess branch by detaching its
+#        worktree's HEAD at the same tip; the 2026-11-23
+#        pass attempted exactly that against a tree the
+#        same pass held as unlanded and failed
+#        (BRANCH-LOCAL-FAIL reason=detach-failed). The
+#        cap never detaches a tree to take its branch.
+#      Blocked branches still count in their side's live
+#      population. When the selectable population cannot
+#      cover the excess, the pass reports the remainder
+#      as BRANCH-CAP-OVER with the blocked survivors'
+#      reasons and ends partial — the bound is stated
+#      honestly rather than met by taking a protected
+#      ref. A delete failure records the failure line,
+#      marks the pass partial, and the pass continues
+#      with the remaining excess — a failure line is an
+#      outcome, not an exemption.
 #
 # Silent when nothing happens. Exit codes: 0 = every repo
 # complete; 3 = at least one repo partial (archive failure,
@@ -407,6 +442,26 @@ run_worker() {
     export GIT_SSH_COMMAND="ssh -i $home_dir/.ssh/id_ed25519 -o IdentitiesOnly=yes -o UserKnownHostsFile=$home_dir/.ssh/known_hosts"
   fi
 
+  # Principal branches (2026-11-23 cure): the refs the
+  # branch leg must never charge, derived from the repo
+  # itself at pass start — never a name list. The set is
+  # the base branch (the main worktree's own checkout,
+  # the ref containment is measured against) plus the
+  # remote's default branch (the origin/HEAD symref
+  # target, read locally where the clone recorded it,
+  # else from the remote itself). In a main-base repo the
+  # two coincide; in a dev-base repo they are the two
+  # standing refs — main is contained in dev by
+  # construction, so without this derivation the sweep
+  # and the cap treat the remote's default as ordinary
+  # landed material.
+  local origin_default=""
+  origin_default="$($GIT -C "$main_dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"
+  origin_default="${origin_default#origin/}"
+  if [ -z "$origin_default" ] && $GIT -C "$main_dir" remote get-url origin >/dev/null 2>&1; then
+    origin_default="$(timeout 60 $GIT -C "$main_dir" ls-remote --symref origin HEAD 2>/dev/null | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2; exit }')"
+  fi
+
   # --- branch-trim queue helpers -------------------------------
   queue_file() { echo "$STATE_DIR/remote-pending-$slug.txt"; }
 
@@ -447,6 +502,19 @@ run_worker() {
         echo "git@github.com:${p}.git" ;;
       *) echo "$u" ;;
     esac
+  }
+
+  # Principal membership (see the derivation at worker
+  # start): the base branch or the remote's default
+  # branch, in either scope — a local branch carrying the
+  # default's name is the same standing ref the remote
+  # protects, and the local census has no separate
+  # derivation for it. Derived membership only: no name
+  # literals, no registry.
+  is_principal() {
+    [ "$1" = "$base_branch" ] && return 0
+    [ -n "$origin_default" ] && [ "$1" = "$origin_default" ] && return 0
+    return 1
   }
 
   # Set by trim_local_branch when it keeps a moved branch:
@@ -519,6 +587,19 @@ run_worker() {
         sha="${rest%%$'\t'*}"; class="${rest#*$'\t'}"
         [ "$class" = "$rest" ] && class=""
       fi
+      if is_principal "$b"; then
+        # A principal branch is never charged (2026-11-23
+        # cure): a standing charge naming one — of any
+        # class, a legacy bare charge included, written
+        # by any older code — is refused and dropped,
+        # never discharged. Before this, the remote's
+        # own default-branch refusal was the only thing
+        # standing between a queued cap charge and the
+        # delete, and cap charges carry no containment
+        # verdict the drain could re-verify.
+        echo "BRANCH-DRAIN-SKIP repo=$slug branch=$b scope=origin reason=principal" >>"$RESULT_FILE"
+        continue
+      fi
       out="$(timeout 60 $GIT -C "$main_dir" ls-remote --heads "$url" "refs/heads/$b" 2>/dev/null)"; rc=$?
       if [ "$rc" -ne 0 ]; then
         echo "$line" >>"$keep"
@@ -588,18 +669,46 @@ run_worker() {
     local swept_local=0 swept_origin=0 kept=0
     local -a checked_out=()
     local -a l_surv=() o_surv=()
+    local -A l_blocked=() o_blocked=()
     local origin_ok=0 have_base=0
     local wl lb ob oname url lsha lepoch osha oepoch
-    local base_lsha base_osha trc lep2
+    local base_lsha base_osha trc lep2 cb
     while IFS= read -r wl; do
       case "$wl" in
         "branch refs/heads/"*) checked_out+=("${wl#branch refs/heads/}") ;;
       esac
     done < <($GIT -C "$main_dir" worktree list --porcelain 2>/dev/null)
+    # Cap-phase blocks (2026-11-23 cure), derived here at
+    # census and read by branch_cap_phase through dynamic
+    # scoping: a principal branch is not cap-selectable in
+    # either scope, and a branch checked out in a worktree
+    # is not cap-selectable on either side — its tree
+    # stands, and the cap never detaches a tree to take
+    # its branch. Blocked branches still count in their
+    # side's live population. Principal membership
+    # overlays the checkout mark (the base branch is
+    # always checked out — in the main worktree — and its
+    # governing reason is principal).
+    for cb in "${checked_out[@]:-}"; do
+      [ -n "$cb" ] || continue
+      l_blocked["$cb"]="checked-out"; o_blocked["$cb"]="checked-out"
+    done
+    l_blocked["$base_branch"]="principal"; o_blocked["$base_branch"]="principal"
+    if [ -n "$origin_default" ]; then
+      l_blocked["$origin_default"]="principal"; o_blocked["$origin_default"]="principal"
+    fi
     base_lsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$base_branch" 2>/dev/null)"
     while IFS=$'\t' read -r lb lsha lepoch; do
       [ -z "$lb" ] && continue
-      [ "$lb" = "$base_branch" ] && continue
+      if is_principal "$lb"; then
+        # never a sweep candidate (2026-11-23 cure): the
+        # base branch's own cap row is the cap phase's to
+        # add, as before; any other principal (the remote
+        # default's local namesake) stands as a survivor
+        # in the cap census, blocked there as principal
+        [ "$lb" = "$base_branch" ] && continue
+        kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
+      fi
       if [ -n "$base_lsha" ] && [ "$lsha" = "$base_lsha" ]; then
         echo "BRANCH-CONTAINED-SKIP-EQUAL repo=$slug branch=$lb sha=$lsha" >>"$RESULT_FILE"
         kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
@@ -639,7 +748,19 @@ run_worker() {
         fi
         while IFS=$'\t' read -r ob osha oepoch; do
           oname="${ob#origin/}"
-          case "$oname" in ""|HEAD|"$base_branch") continue ;; esac
+          case "$oname" in ""|HEAD) continue ;; esac
+          if is_principal "$oname"; then
+            # never a sweep candidate (2026-11-23 cure):
+            # the base branch's own cap row is the cap
+            # phase's to add, as before; the remote
+            # default stands as a survivor in the cap
+            # census, blocked there as principal. (Main
+            # in a dev-base repo is contained by
+            # construction — this skip is the only thing
+            # between it and the queue.)
+            [ "$oname" = "$base_branch" ] && continue
+            kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha"); continue
+          fi
           if [ "$have_base" -eq 1 ] && [ -n "$base_osha" ] && [ "$osha" = "$base_osha" ]; then
             echo "BRANCH-CONTAINED-SKIP-EQUAL repo=$slug branch=$oname sha=$osha" >>"$RESULT_FILE"
             kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha"); continue
@@ -661,21 +782,28 @@ run_worker() {
 
   # Branch cap phase (header point 7): bind each side's
   # surviving population to branch_cap_for(). Reads the
-  # sweep's locals (l_surv, o_surv, origin_ok, have_base)
-  # through dynamic scoping. Excess tips are archived
-  # into one verified bundle BEFORE any deletion; a
-  # verification failure deletes nothing and marks the
-  # pass partial.
+  # sweep's locals (l_surv, o_surv, l_blocked, o_blocked,
+  # origin_ok, have_base) through dynamic scoping. Excess
+  # tips are archived into one verified bundle BEFORE any
+  # deletion; a verification failure deletes nothing and
+  # marks the pass partial.
   branch_cap_phase() {
     local bcap; bcap="$(branch_cap_for "$slug")"
     case "$bcap" in ""|*[!0-9]*) bcap=10 ;; esac
     local e rest nm
-    # --- per-side populations: every surviving branch is
-    # a candidate — the default branch and worktree-
-    # attached branches included; there is no exempt set.
-    # Ranked by tip activity (epoch asc, name asc — the
-    # standing ranking); the excess is the oldest beyond
-    # the cap on each side.
+    # --- per-side populations: every surviving branch
+    # counts in its side's population, ranked by tip
+    # activity (epoch asc, name asc — the standing
+    # ranking). The excess is drawn from the SELECTABLE
+    # rows only: a row blocked at census (a principal
+    # branch, or a branch checked out in a worktree —
+    # l_blocked/o_blocked, derived in branch_sweep) is
+    # never selected and never archived. When the
+    # selectable rows cannot cover the excess, the
+    # remainder is reported as BRANCH-CAP-OVER with the
+    # blocked survivors' reasons and the pass ends
+    # partial — the bound is stated honestly rather than
+    # met by taking a protected ref.
     local -a l_pop=() o_pop=()
     local bsha bepoch
     bsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$base_branch" 2>/dev/null)"
@@ -706,17 +834,69 @@ run_worker() {
       fi
     fi
     local live_origin=${#o_pop[@]}
+    # --- selection: the oldest selectable rows, up to
+    # the excess; blocked rows are walked past, never
+    # taken. over = the excess the selectable population
+    # could not cover.
     local -a cap_l_excess=() cap_o_excess=()
-    local nx
+    local nx sel_nm l_over=0 o_over=0
+    local l_surv_reasons="" o_surv_reasons=""
     if [ "$live_local" -gt "$bcap" ]; then
       nx=$((live_local - bcap))
-      cap_l_excess=("${l_pop[@]:0:$nx}")
+      for e in "${l_pop[@]:-}"; do
+        [ -z "$e" ] && continue
+        [ "${#cap_l_excess[@]}" -ge "$nx" ] && break
+        rest="${e#*|}"; sel_nm="${rest%%|*}"
+        [ -n "${l_blocked[$sel_nm]:-}" ] && continue
+        cap_l_excess+=("$e")
+      done
+      l_over=$((live_local - bcap - ${#cap_l_excess[@]}))
+      if [ "$l_over" -gt 0 ]; then
+        local -a rs=()
+        for e in "${l_pop[@]:-}"; do
+          [ -z "$e" ] && continue
+          rest="${e#*|}"; sel_nm="${rest%%|*}"
+          [ -n "${l_blocked[$sel_nm]:-}" ] && rs+=("${l_blocked[$sel_nm]}")
+        done
+        l_surv_reasons="$(printf '%s\n' "${rs[@]:-}" | grep -v '^$' | sort -u | paste -sd, -)"
+      fi
     fi
     if [ "$origin_ok" -eq 1 ] && [ "$live_origin" -gt "$bcap" ]; then
       nx=$((live_origin - bcap))
-      cap_o_excess=("${o_pop[@]:0:$nx}")
+      for e in "${o_pop[@]:-}"; do
+        [ -z "$e" ] && continue
+        [ "${#cap_o_excess[@]}" -ge "$nx" ] && break
+        rest="${e#*|}"; sel_nm="${rest%%|*}"
+        [ -n "${o_blocked[$sel_nm]:-}" ] && continue
+        cap_o_excess+=("$e")
+      done
+      o_over=$((live_origin - bcap - ${#cap_o_excess[@]}))
+      if [ "$o_over" -gt 0 ]; then
+        local -a rs=()
+        for e in "${o_pop[@]:-}"; do
+          [ -z "$e" ] && continue
+          rest="${e#*|}"; sel_nm="${rest%%|*}"
+          [ -n "${o_blocked[$sel_nm]:-}" ] && rs+=("${o_blocked[$sel_nm]}")
+        done
+        o_surv_reasons="$(printf '%s\n' "${rs[@]:-}" | grep -v '^$' | sort -u | paste -sd, -)"
+      fi
     fi
-    [ "${#cap_l_excess[@]}" -eq 0 ] && [ "${#cap_o_excess[@]}" -eq 0 ] && return 0
+    emit_cap_over() {
+      # $1 = side, $2 = live, $3 = over, $4 = survivors
+      echo "BRANCH-CAP-OVER repo=$slug side=$1 live=$2 cap=$bcap over=$3 survivors=$4" >>"$RESULT_FILE"
+      echo "act=branch-cap-over repo=$slug side=$1 live=$2 cap=$bcap over=$3 survivors=$4 epoch=$NOW" >>"$LEDGER_FILE"
+    }
+    if [ "${#cap_l_excess[@]}" -eq 0 ] && [ "${#cap_o_excess[@]}" -eq 0 ]; then
+      # nothing selectable: no archive is staged for refs
+      # that will not move; a blocked overage is reported
+      # and ends the pass partial
+      if [ "$l_over" -gt 0 ] || [ "$o_over" -gt 0 ]; then
+        [ "$l_over" -gt 0 ] && emit_cap_over local "$live_local" "$l_over" "$l_surv_reasons"
+        [ "$o_over" -gt 0 ] && emit_cap_over origin "$live_origin" "$o_over" "$o_surv_reasons"
+        partial=3
+      fi
+      return 0
+    fi
 
     # --- archive-before-delete: one bundle per repo per pass
     local cap_dir="$ARCHIVE_ROOT/$TODAY/${slug}-branch-cap"
@@ -848,31 +1028,18 @@ run_worker() {
       $GIT -C "$main_dir" update-ref -d "$sref" 2>/dev/null
     done
     # --- deletions, only now that the archive verifies ---
-    # A checked-out excess branch is freed mechanically
-    # before its ref deletes: its worktree's HEAD detaches
-    # at the same tip (the tree's files and position do
-    # not change), then the ref deletes like any other.
-    # A detach failure records the failure line, marks
-    # the pass partial, and the pass continues with the
-    # remaining excess — an outcome, not an exemption.
-    declare -A wt_of=()
-    local wpath="" wl2
-    while IFS= read -r wl2; do
-      case "$wl2" in
-        "worktree "*) wpath="${wl2#worktree }" ;;
-        "branch refs/heads/"*) wt_of["${wl2#branch refs/heads/}"]="$wpath" ;;
-      esac
-    done < <($GIT -C "$main_dir" worktree list --porcelain 2>/dev/null)
+    # The selected excess is never a checked-out branch
+    # (blocked at census, above), so no worktree is ever
+    # detached to free a ref — the pre-cure phase did
+    # exactly that, and the 2026-11-23 hourly pass failed
+    # at it against a tree the same pass held as unlanded.
+    # A branch checked out mid-pass (after the census)
+    # fails its delete inside trim_local_branch and
+    # records BRANCH-LOCAL-FAIL, as any delete failure
+    # does — an outcome, not an exemption.
     for e in "${cap_l_excess[@]:-}"; do
       [ -z "$e" ] && continue
       rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
-      if [ -n "${wt_of[$nm]:-}" ]; then
-        if ! $GIT -C "${wt_of[$nm]}" checkout --detach "$sha" >/dev/null 2>&1; then
-          echo "BRANCH-LOCAL-FAIL repo=$slug branch=$nm reason=detach-failed" >>"$RESULT_FILE"
-          partial=3
-          continue
-        fi
-      fi
       trim_local_branch "$nm" || partial=3
     done
     for e in "${cap_o_excess[@]:-}"; do
@@ -887,6 +1054,14 @@ run_worker() {
     if [ "${#cap_o_excess[@]}" -gt 0 ]; then
       echo "BRANCH-CAP repo=$slug side=origin live=$live_origin cap=$bcap archived=${#cap_o_excess[@]}" >>"$RESULT_FILE"
       echo "act=branch-cap repo=$slug side=origin live=$live_origin cap=$bcap archived=${#cap_o_excess[@]} epoch=$NOW" >>"$LEDGER_FILE"
+    fi
+    if [ "$l_over" -gt 0 ] || [ "$o_over" -gt 0 ]; then
+      # the selectable population could not cover the
+      # excess: the side(s) end over the bound, held by
+      # the blocked survivors the OVER line names
+      [ "$l_over" -gt 0 ] && emit_cap_over local "$live_local" "$l_over" "$l_surv_reasons"
+      [ "$o_over" -gt 0 ] && emit_cap_over origin "$live_origin" "$o_over" "$o_surv_reasons"
+      partial=3
     fi
   }
 
@@ -916,7 +1091,13 @@ run_worker() {
       b="$(sed -n 's/^branch=//p' "$mf" | head -1)"
       mp="$(sed -n 's/^path=//p' "$mf" | head -1)"
       mh="$(sed -n 's/^head=//p' "$mf" | head -1)"
-      case "$b" in ""|DETACHED|"$base_branch"|main) continue ;; esac
+      case "$b" in ""|DETACHED) continue ;; esac
+      # a principal branch is never charged (2026-11-23
+      # cure) — derived membership, not a name: the base
+      # branch or the remote's default (the seed acts on
+      # both scopes, so it tests the same union set as
+      # the sweep, the cap, and the drain)
+      is_principal "$b" && continue
       if [ -n "$mp" ] && is_in "$mp" "${census_paths[@]:-}"; then continue; fi
       if [ -n "$mh" ]; then
         # the manifest's recorded head is the evaluation
