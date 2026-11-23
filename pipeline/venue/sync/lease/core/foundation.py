@@ -110,7 +110,7 @@ def adapter_jobs_dir(repo: Path) -> Path:
 # design (its header) is that mutations are performed by the
 # long-lived server class, never a deniable caller process:
 # the write-denial flap kills short-lived processes at their
-# first write (the 2026-11-22 reaper deaths at exit 120 died
+# first write (the reaper deaths at exit 120 died
 # inside an in-process staged_write). So where the platform
 # tree exists, this seam hands each write to the platform
 # /ops client (loaded by path from beside the writer), which
@@ -280,7 +280,7 @@ def append_reaper_event(repo: Path, event: dict) -> bool:
         return False
 
 
-# Absence confirmation (2026-11-13): a lease record is deleted
+# Absence confirmation: a lease record is deleted
 # only on a confirmed-absent session reading, and one reading
 # inside one flicker window is not a confirmation — the session
 # list renders live sessions unnamed for whole minutes under

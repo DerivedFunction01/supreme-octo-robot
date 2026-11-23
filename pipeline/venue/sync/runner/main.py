@@ -85,7 +85,7 @@ def main() -> int:
     # name — extract them first and take the first remaining token
     # as the job. (Job-first-only parsing read a leading --caller
     # as a job name; it bit a consumer following shorthand in a
-    # message, 2026-11-05.)
+    # message.)
     resume = caller_flag = session_flag = None
     seed_flag = detach_flag = daemonize_flag = False
     extra_args = []
@@ -124,7 +124,7 @@ def main() -> int:
         return 2
     job_name = positional[0]
     # Option-like names refuse at parse, before any record
-    # is written (claims.option_like_refusal, 2026-11-23).
+    # is written (claims.option_like_refusal).
     refusal = option_like_refusal(job_name, resume)
     if refusal is not None:
         print(f"colab-run: {refusal}", file=sys.stderr)
@@ -139,7 +139,7 @@ def main() -> int:
         # cleanup kills its whole process group (ops.py's
         # killpg on timeout), the merely-nohup'd runner
         # included — read in the ops code and proven by the
-        # daemon-proof run of 2026-11-21, which outlived its
+        # daemon-proof run, which outlived its
         # op's timeout kill and completed. The daemon form
         # separates both, and claims single-flight (claims.py):
         # the parent claims the record itself, in the claiming
@@ -171,7 +171,7 @@ def main() -> int:
     # not plain strings refuse the launch loudly, naming the
     # field and the entry — the shapes have no tolerance
     # semantics, and discovering that mid-launch cost a
-    # consumer a crashed run (2026-11-12).
+    # consumer a crashed run.
     # The transport declaration settles at the same load point
     # (branch transport plan, Step 1): a malformed branch form refuses here.
     shape_err = manifest_shape_error(job) or transport_error(job)
@@ -220,7 +220,7 @@ def main() -> int:
         # A resume continues the run on disk: its launch facts
         # (started_at above all) are the run's history and are
         # never re-stamped — the resume adds its own facts.
-        # (2026-11-06: a resumed hold came back stamped with the
+        # (a resumed hold came back stamped with the
         # resume moment, erasing its launch time.)
         prior = RUNS / f"{run_id}.json"
         if prior.exists():
@@ -252,7 +252,7 @@ def main() -> int:
                 # state across a resume: re-stamping "starting"
                 # leaves confirmed-launch facts under a
                 # pre-launch state when the resume dies before
-                # its own launch (2026-11-11: an admincap record
+                # its own launch (an admincap record
                 # froze at "starting" carrying launch_at and
                 # launch_confirmed_at). The resume's own launch
                 # re-stamps "running" when it lands; a record
@@ -309,7 +309,7 @@ def main() -> int:
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
         save_record(rec)
-    # Transport (branch transport plan, 2026-11-23): stamp the
+    # Transport (branch transport plan): stamp the
     # record's transport, resolve any branch declaration (launch.transport_setup).
     transport, branch_err, branch_ctx = transport_setup(rec, job, seed_ctx)
     if branch_err is not None:
@@ -405,7 +405,7 @@ def main() -> int:
         # whose scripts share a basename (every lane's run.py)
         # overwrote each other between upload and launch — a run
         # then executed a foreign payload with its own args
-        # (2026-11-08 remainder lanes: an eraattr payload ran
+        # (remainder lanes: an eraattr payload ran
         # under a rem20d launch; the run-id-prefixed name that
         # cured it is subsumed by the directory). The payload
         # never names its own slot (the runner invokes it), and
@@ -413,7 +413,7 @@ def main() -> int:
         # what resolves a job script's imports of uploaded
         # modules to its own run's copies.
         remote_script = f"{run_upload_dir(run_id)}/{script.name}"
-        # Launch-phase stamps (2026-11-12): the window from the
+        # Launch-phase stamps: the window from the
         # record's creation to the state=running save below is
         # minutes of CLI round trips on a loaded session
         # (usage, uploads with verify probes, the seed), and a
@@ -438,8 +438,8 @@ def main() -> int:
         # Uploads land in the run's own directory (Step 5),
         # so a concurrent launch's uploads cannot meet them.
         # Nothing in this launch window serializes against
-        # another launch on the session (owner ruling,
-        # 2026-11-23: no sync blocker on the venue job path):
+        # another launch on the session (owner ruling:
+        # no sync blocker on the venue job path):
         # every piece of state below is the run's own — its
         # upload directory, its clone, its seed dest, its out
         # dir — and its execs ride the funnel independently,
@@ -458,7 +458,7 @@ def main() -> int:
         # the registry it reads (/content/repos.json), and
         # neither is the runner script itself. Until this loop
         # existed nothing uploaded them, so env-build's shell_job
-        # refused in its first second (2026-11-05) — a declared
+        # refused in its first second — a declared
         # upload missing locally fails the run here, never
         # launches a job that cannot run.
         for extra in job.get("uploads", []):
@@ -561,7 +561,7 @@ def main() -> int:
         # The payload runs under a stamp wrapper (launch.build_launch_stamp):
         # its exit code lands at <remote_out>.exit-code, so a payload that
         # never writes a checkpoint still reports its outcome truthfully
-        # (2026-11-08: checkpoint-less gate jobs recorded failed on green
+        # (checkpoint-less gate jobs recorded failed on green
         # runs), and the wrapper reaps the run's leaked processes at job
         # end before the stamp lands. Manifest args naming an upload point
         # at the run's own copy (launch.rewrite_upload_args, Step 5); the
@@ -584,7 +584,7 @@ def main() -> int:
         # the launcher — so a launch that never landed (the
         # daemon's exec lost under kernel saturation) left a
         # record claiming a run that did not exist, forever
-        # (2026-11-11 consol records). The stamp wrapper opens
+        # (the consol records). The stamp wrapper opens
         # the job's log at spawn, so a landed launch has a
         # footprint (pids, log, checkpoint, or exit stamp) on
         # the first reader pass; total absence is a lost launch.
@@ -615,7 +615,7 @@ def main() -> int:
             # prior attempt's launch_lost / error (a resume
             # carries both on the record) die in this same
             # save — a record must never read confirmed and
-            # lost at once (2026-11-11 record-truth item).
+            # lost at once (the record-truth item).
             rec.pop("launch_lost", None)
             rec.pop("error", None)
             # The machine that actually runs the job, from
@@ -673,7 +673,7 @@ def main() -> int:
             rec["usage_before"] = usage_before
             save_record(rec)
             # The launch result prints BEFORE any advisory
-            # pass runs (commission supplement, 2026-11-12:
+            # pass runs (commission supplement:
             # the overlap crash's worst property was eating the
             # run_id — a lane that loses its launcher before the
             # print cannot even name the run it must adopt).
@@ -688,7 +688,7 @@ def main() -> int:
         deadline = time.time() + job.get("timeout", 18000)
         cadence = job.get("checkpoint_pull_seconds", 300)
         # A checkpoint poll that outlives its subprocess timeout
-        # is a failed poll, not a dead poller (2026-11-06: an
+        # is a failed poll, not a dead poller (an
         # uncaught TimeoutExpired killed the poller mid-run and
         # stranded the record at polling while the payload
         # completed). The timeout is env-tunable for the same
@@ -698,7 +698,7 @@ def main() -> int:
         while time.time() < deadline:
             time.sleep(cadence)
             # A failed poll — subprocess timeout or unreadable
-            # answer — is counted, not fatal (2026-11-06: an
+            # answer — is counted, not fatal (an
             # uncaught TimeoutExpired killed the poller and
             # stranded the record at polling while the payload
             # completed); E11 bounds the count and classifies it.
@@ -736,7 +736,7 @@ def main() -> int:
                 # The launched process is gone and its launcher log
                 # is all that exists: the job died before producing
                 # a checkpoint — shell_job refusing a never-uploaded
-                # --script file is the proven case (2026-11-05: its
+                # --script file is the proven case (its
                 # one-line refusal sat in this log while the poller
                 # polled an empty out dir through two timeouts,
                 # ~40 min of apparent progress). A completed job

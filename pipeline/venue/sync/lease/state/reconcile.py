@@ -7,7 +7,7 @@ record whose session the channel reads absent — the
 disagreement itself is the diagnostic. Before this module it
 surfaced only as a stderr note on whichever call happened to
 notice (colab-sh's orphan advisory, the panel's census), and
-the ember renewal swap (2026-11-11) was reconstructed after
+the ember renewal swap was reconstructed after
 the fact from exactly such fragments. A disagreement now
 lands as a journal line (var/reconcile-journal.jsonl) with
 the evidence: the session, both readings, the producing

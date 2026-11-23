@@ -196,7 +196,7 @@ def _token_valid(data: bytes | None) -> bool:
 def _atomic_write_token(data: bytes) -> None:
     """Write the token through the unified writer, so no reader ever
     sees a partial credential and an interrupted write cannot destroy
-    the live file (owner ruling, 2026-11-01: token writes are atomic
+    the live file (owner ruling: token writes are atomic
     at every seam)."""
     _staged_write(TOKEN, data, mode=0o600)
 
@@ -226,7 +226,7 @@ def _binding_snapshot(data: bytes | None) -> bytes | None:
 
 def _binding_clobbered(snapshot: bytes | None) -> bool:
     """A call clobbered the binding when a healthy snapshot existed
-    and the file is now missing or unparseable (2026-11-13: the
+    and the file is now missing or unparseable (the
     write-denial flap truncated sessions.json to 0 bytes under a
     CLI rewrite — every recorded session read absent and the
     fleet blinded while its lease records stayed correct). A
@@ -248,7 +248,7 @@ def _restore_binding(snapshot: bytes | None) -> bool:
     """Restore a clobbered binding atomically; never raise — a
     failed restore must not break the call it guards. Returns
     True when a restore landed, so the heal can journal the
-    outcome instead of swallowing it (2026-11-17)."""
+    outcome instead of swallowing it."""
     try:
         if _binding_clobbered(snapshot):
             _staged_write(SESSIONS, snapshot, mode=0o600)
@@ -274,7 +274,7 @@ def _lease_record_live(name: str) -> bool:
 
 def _restore_pruned_entries(snapshot: bytes | None) -> None:
     """Re-add binding entries a call pruned while their lease
-    records live (2026-11-13 evening: the CLI's rewrites kept
+    records live (the CLI's rewrites kept
     dropping individual entries under the recovery traffic — the
     file stayed parseable, the name vanished, and runs orphaned
     mid-flight while their assignments lived; the whole-file
@@ -418,7 +418,7 @@ def _restore_from_last_healthy() -> str:
 
 def _heal_binding(snapshot: bytes | None) -> None:
     """Heal the binding after a call — loudly and stickily
-    (2026-11-17: the silent single-shot restore disarmed
+    (the silent single-shot restore disarmed
     itself. A restore denied in the same wave that truncated
     the file left it at 0 bytes; every later call snapshotted
     the damage, computed "no snapshot, no restore", and
@@ -475,7 +475,7 @@ def _auth_blocked(cmd: list[str], reason: str) -> subprocess.CompletedProcess:
 
 def colab(*args: str, timeout: int = 18000) -> subprocess.CompletedProcess:
     """The one funnel for every automated Colab CLI call, guarded so a
-    dead credential can never again masquerade as data (2026-11-01: a
+    dead credential can never again masquerade as data (a
     failed token refresh dropped the CLI into its interactive login
     flow, which overwrote the stored token with a stub and printed the
     auth prompt where callers expected a session list / usage text —
@@ -492,14 +492,14 @@ def colab(*args: str, timeout: int = 18000) -> subprocess.CompletedProcess:
     - snapshots the session binding (sessions.json) the same way:
       the CLI rewrites it non-atomically on ordinary calls, so a
       write denied after the truncate leaves 0 bytes and every
-      recorded session reads absent (2026-11-13). A call that
+      recorded session reads absent. A call that
       leaves the binding missing or unparseable gets the snapshot
       restored. A call that prunes an individual entry from a
       still-parseable binding gets that entry restored when its
       lease record lives — the CLI's rewrites drop entries under
       load while their assignments live on; an entry with no
       live record stays pruned, as the CLI's own removal. The
-      heal is loud and sticky (2026-11-17): damage is journaled
+      heal is loud and sticky: damage is journaled
       (var/binding-journal.jsonl) and served
       (var/binding-state.json), a call that starts against a
       damaged binding heals from the persisted last-healthy
@@ -544,7 +544,7 @@ def json_object_from_output(stdout: str) -> dict:
     output — its update nag ("A new version of Colab CLI is
     available", three [colab] lines) intermittently TRAILS the
     probe's object, and parsing the whole remainder as JSON then
-    fails on a call whose payload landed fine (2026-11-14: launch
+    fails on a call whose payload landed fine (launch
     upload-verifies died "unreadable" on banner-polluted reads,
     intermittently, on both live sessions). Raises ValueError when
     no complete object is present — the failure family every call
