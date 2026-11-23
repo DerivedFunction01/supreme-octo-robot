@@ -104,8 +104,8 @@ export function expirySelectionFor(expiresAt: string | null, now: Date): ExpiryS
   return matched === "none" ? "current" : matched;
 }
 
-/** The custom expiry's field form (owner commission
- *  2026-11-15, restored): a wall date + time in the
+/** The custom expiry's field form (owner commission,
+ *  restored): a wall date + time in the
  *  owner's own zone — the browser's — composed into the
  *  instant the presence write posts. The backend's
  *  set_presence accepts any instant; the integrated

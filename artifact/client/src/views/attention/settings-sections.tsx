@@ -101,7 +101,7 @@ export function PresenceSection({
   const [postedExpiry, setPostedExpiry] = useState<string | null | undefined>(undefined);
   const [lastPostedIso, setLastPostedIso] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-  // The custom expiry editor (owner commission 2026-11-15,
+  // The custom expiry editor (owner commission,
   // restored): open state + the wall date/time fields. The
   // fields seed from the served expiry when one stands,
   // else from two hours out.

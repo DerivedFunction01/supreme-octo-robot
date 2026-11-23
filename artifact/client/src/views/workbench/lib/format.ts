@@ -17,7 +17,7 @@ const DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-/** ISO-8601 string or epoch seconds → `Oct 25, 2026`. */
+/** ISO-8601 string or epoch seconds → `Oct 25, YYYY`. */
 export function formatDate(value: string | number | null | undefined): string {
   if (value == null || value === "") return "—";
   const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);

@@ -1,6 +1,6 @@
 // Entries — the registry browser + review surface
 // (Subplan 06, founding Step 5; the one collection since
-// the 2026-11-10 unification retired the Mockups /
+// the unification retired the Mockups /
 // Artifacts split). Triage lane first (the section's
 // entry view), then the storyboard: frames at a
 // 300px tile minimum, or contact-sheet mode where an entry

@@ -165,7 +165,7 @@ export function LifecycleCard({
             {/* The control's own row: a block, not a
                 flex row, so the button always takes its
                 natural width — a button never truncates
-                (owner ruling 2026-11-17; the disabled
+                (owner ruling; the disabled
                 reason prose that used to share this row
                 and squeeze the label is dropped). */}
             <div style={{ marginTop: "var(--wb-space-8)" }}>

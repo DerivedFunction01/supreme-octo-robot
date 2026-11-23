@@ -1,5 +1,5 @@
 // Appearance — the one client's unified appearance state
-// (owner ruling 2026-11-13: the shared axes stated once, in
+// (owner ruling: the shared axes stated once, in
 // one Settings view; kit sheet: palettes olive/teal, modes
 // dark/light as peers with the Auto override, density sets).
 //

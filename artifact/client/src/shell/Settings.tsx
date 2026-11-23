@@ -1,5 +1,5 @@
 // Settings — the one client's unified Settings view
-// (owner ruling 2026-11-13: palette + mode + density
+// (owner ruling: palette + mode + density
 // stated once, here; superapp storyboard frames "Settings"
 // and "Settings — Appearance").
 //

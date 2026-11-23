@@ -142,7 +142,7 @@ function SourceView({ source }: { source: string }) {
   };
   // The source block is a scrollable region (overflow-x
   // in the style above): keyboard-focusable with the
-  // kit's focus ring (critic WB5-1, 2026-11-17).
+  // kit's focus ring (critic WB5-1).
   const focusClass =
     "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
   if (html == null)

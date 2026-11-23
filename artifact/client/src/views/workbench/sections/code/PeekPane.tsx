@@ -41,7 +41,7 @@ const codeStyle: React.CSSProperties = {
 /** Every scrollable mono region (the code style above)
  * is keyboard-focusable with the kit's focus ring —
  * the axe scrollable-region-focusable cure (critic
- * WB5-1, 2026-11-17). */
+ * WB5-1). */
 const scrollRegionFocusClass =
   "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
 

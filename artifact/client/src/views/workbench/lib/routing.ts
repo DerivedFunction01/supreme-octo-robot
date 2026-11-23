@@ -27,7 +27,7 @@
 //                               segments map here at parse time)
 //   #/p/<slug>/preview/<id>     one entry's page as a full
 //                               page of the client (FU-1,
-//                               owner ruling 2026-11-16) —
+//                               owner ruling) —
 //                               the drill-in's door navigates
 //                               here; the page's own top bar
 //                               backs out to the drill-in
@@ -54,7 +54,7 @@ export type SectionId = "overview" | "entries" | "plans" | "todos" | "board" | "
 
 export const SECTION_IDS: SectionId[] = ["overview", "entries", "plans", "todos", "board", "code"];
 
-// The retired collection segments (the 2026-11-10
+// The retired collection segments (the
 // unification): old hashes in messages and bookmarks
 // land on the unified section, item segment preserved.
 const RETIRED_SECTION_SEGMENTS: Record<string, SectionId> = {

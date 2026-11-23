@@ -1,5 +1,5 @@
-// App — the one client's shell composition (owner ruling
-// 2026-11-16, audit Addendum 3: ONE app — one client, one
+// App — the one client's shell composition (owner ruling,
+// audit Addendum 3: ONE app — one client, one
 // bundle, one router, the four apps as views on the
 // unified kit).
 //
@@ -21,7 +21,7 @@
 // replaced (the frame shell) is deleted, not extended.
 //
 // The one bundle carries every view (the per-view
-// split of perf lane L-D retired 2026-11-22 — the CVM
+// split of perf lane L-D retired — the CVM
 // publish stage accepts exactly one JS bundle): the
 // dynamic imports below are inlined into the single
 // entry chunk by the canonical build, so each app
