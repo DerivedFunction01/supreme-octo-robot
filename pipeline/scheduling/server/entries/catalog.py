@@ -1,4 +1,4 @@
-"""The classified schedule catalog (plan 2026-11-08).
+"""The classified schedule catalog.
 
 The tracked examples layer is a catalog: examples/registry/
 catalog.yaml indexes every file in the layer, and each entry

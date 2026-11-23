@@ -1,5 +1,5 @@
-"""Principal-branch specimens for the worktree trim (the
-2026-11-23 cure): the census's own reference points — the
+"""Principal-branch specimens for the worktree trim:
+the census's own reference points — the
 base branch and the remote's default branch, both derived
 from the repo at census time, never a name list — are not
 trim material in either scope, the drain refuses charges
@@ -14,20 +14,20 @@ from tests.test_worktree_trim import NOW, Fixture, _git
 
 
 class TestPrincipalBranches(Fixture):
-    """Principal-branch and checkout exclusions
-    (2026-11-23 cure). The 2026-11-23 hourly pass — the
-    first under the drain-reverify cure — cap-archived
-    steampowernj's main, attempted its origin deletion
-    twice, and left a standing cap charge for it: in that
-    repo the base (containment's reference, the main
-    worktree's checkout) is dev and the remote default is
-    main, strictly contained in dev, so the sweep and the
-    cap both treated main as ordinary landed material;
-    only the remote's own default-branch refusal stood
-    in the way. The same pass failed to detach the
-    checked-out branch of a tree it held as unlanded
+    """Principal-branch and checkout exclusions.
+    In the specimen failure, an hourly pass under drain
+    re-verification cap-archived steampowernj's main,
+    attempted its origin deletion twice, and left a
+    standing cap charge for it: in that repo the base
+    (containment's reference, the main worktree's
+    checkout) is dev and the remote default is main,
+    strictly contained in dev, so the sweep and the cap
+    both treated main as ordinary landed material; only
+    the remote's own default-branch refusal stood in the
+    way. The same pass failed to detach the checked-out
+    branch of a tree it held as unlanded
     (form/df-next-121, BRANCH-LOCAL-FAIL
-    reason=detach-failed). The cure is structural,
+    reason=detach-failed). The exclusion is structural,
     derived from the repo at census — the principal set
     (the base branch; the origin/HEAD target) and the
     worktree checkout set — with no name literals and no
