@@ -12,9 +12,12 @@ main. The owner's ruling: the hourly pass takes no
 exemptions when it comes to trimming. The sweep censuses
 ALL branches every pass; containment in the default branch
 is the only criterion — no provenance, no held set, no
-name carve-outs. The only mechanical exemptions are the
+name carve-outs. Within the containment half alone, the
 default branch itself and, locally, a branch checked out
-in a worktree (git refuses those).
+in a worktree stand mechanically (git refuses those);
+the cap phase in TestBranchCap knows no exempt set at
+all — an attached excess branch is freed by detaching
+its worktree's HEAD at the same tip, then deleted.
 """
 
 import unittest
@@ -171,10 +174,14 @@ class TestBranchCap(Fixture):
         # default cap 10: the oldest 4 excess are archived
         # (one bundle, verified, manifest on disk) and their
         # refs deleted on BOTH sides; the newest 10 remain.
+        # Orphan tips are dated older than main's tip, as in
+        # production, where the default branch's tip is the
+        # freshest (the landing target) and stands by the
+        # same activity ranking as every other branch.
         self.add_origin()
         names = [f"feat/b{i:02d}" for i in range(13)]
         for i, name in enumerate(names):
-            self.add_orphan(name, NOW - 20000 + i * 1000)
+            self.add_orphan(name, NOW - 120000 + i * 1000)
         _git(self.main, "push", "origin", "main", *names,
              env=self.env)
         out = self.run_trim("--tier", "soft")
@@ -215,7 +222,7 @@ class TestBranchCap(Fixture):
         self.add_origin()
         names = [f"feat/g{i:02d}" for i in range(12)]
         for i, name in enumerate(names):
-            self.add_orphan(name, NOW - 20000 + i * 1000)
+            self.add_orphan(name, NOW - 120000 + i * 1000)
         _git(self.main, "push", "origin", "main", *names,
              env=self.env)
         blocker = self.ws / "archive-blocker"
@@ -233,59 +240,71 @@ class TestBranchCap(Fixture):
             self.assertIn(name, remote)
         self.assertEqual(self.queue(), [])
 
-    def test_default_and_checked_out_never_archive_deleted(self):
-        # (h) per-slug cap 3. Locally the never-delete set is
-        # main + the checked-out branch (the oldest tip of
-        # all): both stand, and the cap takes the oldest
-        # orphan excess instead. On origin the checked-out
-        # branch has no such protection — it is a candidate
-        # like any other and its origin copy is archived.
+    def test_attached_excess_branch_detaches_and_trims(self):
+        # (h') per-slug cap 3; the population per side is
+        # main plus a worktree-attached branch (the oldest
+        # tip of all) plus four orphans. There is no exempt
+        # set: the attached branch is excess like any other
+        # — its tip is archived into the verified bundle,
+        # its worktree's HEAD detaches at the same tip, and
+        # its ref deletes. The live count lands exactly on
+        # the cap, on both sides.
         self.add_origin()
-        self.add_tree("repo-a-held-wt", "feat/held",
-                      [("held.txt", "h\n")], NOW - 30000)
+        tree = self.add_tree("repo-a-held-wt", "feat/held",
+                             [("held.txt", "h\n")], NOW - 130000)
+        held_tip = _git(self.main, "rev-parse", "feat/held",
+                        env=self.env).stdout.strip()
         orphans = [f"feat/o{i}" for i in range(4)]
         for i, name in enumerate(orphans):
-            self.add_orphan(name, NOW - 20000 + i * 1000)
+            self.add_orphan(name, NOW - 120000 + i * 1000)
         _git(self.main, "push", "origin", "main", "feat/held",
              *orphans, env=self.env)
         out = self.run_trim(
             "--tier", "soft",
             extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "3"})
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        # ranked by tip activity: held (NOW-130000), o0..o3
+        # (NOW-120000..NOW-117000), main (NOW-100000);
+        # excess = held, o0, o1; keep = o2, o3, main
         self.assertEqual(self.local_branches(),
-                         {"main", "feat/held", orphans[3]})
-        self.assertTrue(self.branch_exists("feat/held"))
-        self.assertNotIn("feat/held", self.remote_branches())
+                         {"main", orphans[2], orphans[3]})
+        self.assertEqual(len(self.local_branches()), 3)
+        self.assertFalse(self.branch_exists("feat/held"))
+        remote = self.remote_branches()
+        self.assertNotIn("feat/held", remote)
+        self.assertNotIn(orphans[0], remote)
+        self.assertNotIn(orphans[1], remote)
+        self.assertIn(orphans[2], remote)
+        self.assertIn(orphans[3], remote)
+        self.assertIn("main", remote)
         self.assertIn("BRANCH-CAP repo=repo-a side=local live=6 "
                       "cap=3 archived=3", out.stdout)
         self.assertIn("BRANCH-CAP repo=repo-a side=origin live=6 "
                       "cap=3 archived=3", out.stdout)
-        # origin keeps main + the newest two candidates;
-        # feat/o2 was excess locally only and stands here
-        self.assertIn("feat/o2", self.remote_branches())
-        self.assertIn("feat/o3", self.remote_branches())
+        self.assertNotIn("BRANCH-CAP-OVER", out.stdout)
+        # the attached branch's tip is in the verified
+        # bundle, recorded in the manifest for both sides
         rows = self.manifest_rows()
+        self.assertEqual(len(rows), 3)
         held_rows = [r for r in rows if r[0] == "feat/held"]
         self.assertEqual(len(held_rows), 1)
-        self.assertEqual(held_rows[0][3], "origin")
-
-    def test_never_delete_overage_reports_and_stops(self):
-        # (h, overage form) the never-delete set alone —
-        # main + a checked-out branch — exceeds the cap
-        # (global env seam, cap 1): the overage is reported
-        # and the local side stops there; nothing is taken.
-        self.add_tree("repo-a-held-wt", "feat/held",
-                      [("held.txt", "h\n")], NOW - 30000)
-        self.add_orphan("feat/orphan", NOW - 20000)
-        out = self.run_trim(
-            "--tier", "soft",
-            extra_env={"WT_TRIM_BRANCH_CAP": "1"})
-        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
-        self.assertIn("BRANCH-CAP-OVER repo=repo-a side=local "
-                      "live=3 cap=1 never=2", out.stdout)
-        self.assertNotIn("BRANCH-ARCHIVED", out.stdout)
-        self.assertEqual(self.local_branches(),
-                         {"main", "feat/held", "feat/orphan"})
+        self.assertEqual(held_rows[0][1], held_tip)
+        self.assertEqual(held_rows[0][3], "local,origin")
+        bundle = self.cap_dir() / "branches.bundle"
+        verify = _git(self.main, "bundle", "verify", str(bundle),
+                      env=self.env, check=False)
+        self.assertEqual(verify.returncode, 0, verify.stderr)
+        # the worktree still stands, its HEAD detached at
+        # the same tip sha, its files untouched
+        self.assertTrue(tree.is_dir())
+        head = _git(tree, "rev-parse", "HEAD",
+                    env=self.env).stdout.strip()
+        self.assertEqual(head, held_tip)
+        sym = _git(tree, "symbolic-ref", "-q", "HEAD",
+                   env=self.env, check=False)
+        self.assertNotEqual(sym.returncode, 0)
+        self.assertEqual((tree / "held.txt").read_text(), "h\n")
+        self.assertEqual(self.queue(), [])
 
     def test_restore_from_bundle_lands_on_recorded_tip(self):
         # (i) the manifest header's restore commands, run
@@ -293,7 +312,7 @@ class TestBranchCap(Fixture):
         # the tip sha the manifest recorded.
         names = [f"feat/r{i}" for i in range(3)]
         for i, name in enumerate(names):
-            self.add_orphan(name, NOW - 20000 + i * 1000)
+            self.add_orphan(name, NOW - 120000 + i * 1000)
         out = self.run_trim(
             "--tier", "soft",
             extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "3"})

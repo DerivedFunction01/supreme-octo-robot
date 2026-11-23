@@ -178,13 +178,25 @@
 #      on either side, the failure is recorded, and the
 #      pass is partial. Only then do the excess refs go:
 #      local through trim_local_branch, origin through the
-#      queue and its drain. Keep priority per side: the
-#      default branch first, then (local side) branches
-#      checked out in a worktree, then newest tip activity.
-#      No name exemptions — a long-lived branch survives on
-#      activity alone. If the never-delete set alone
-#      exceeds the cap, the overage is reported and that
-#      side stops there.
+#      queue and its drain. The disposition is uniform:
+#      every branch on a side — the default branch and
+#      worktree-attached branches included — is a candidate
+#      ranked by tip activity alone, and the newest `cap`
+#      stand; there is no exempt set, in any form (owner,
+#      2026-11-22: no exceptions as a hard requirement —
+#      a live pass once printed live=12 cap=10 never=12,
+#      the whole population exempt and the cap binding
+#      nothing). A checked-out excess branch is freed
+#      mechanically before its ref deletes: its worktree's
+#      HEAD detaches at the same tip (the tree's files and
+#      position do not change), then the ref deletes like
+#      any other. A detach or delete failure records the
+#      failure line, marks the pass partial, and the pass
+#      continues with the remaining excess — a failure
+#      line is an outcome, not an exemption. The default
+#      branch stands or falls by the same ranking; in
+#      practice its tip is the freshest, as the landing
+#      target.
 #
 # Silent when nothing happens. Exit codes: 0 = every repo
 # complete; 3 = at least one repo partial (archive failure,
@@ -484,66 +496,60 @@ run_worker() {
 
   # Branch cap phase (header point 7): bind each side's
   # surviving population to branch_cap_for(). Reads the
-  # sweep's locals (l_surv, o_surv, checked_out, origin_ok,
-  # have_base) through dynamic scoping. Excess tips are
-  # archived into one verified bundle BEFORE any deletion;
-  # a verification failure deletes nothing and marks the
+  # sweep's locals (l_surv, o_surv, origin_ok, have_base)
+  # through dynamic scoping. Excess tips are archived
+  # into one verified bundle BEFORE any deletion; a
+  # verification failure deletes nothing and marks the
   # pass partial.
   branch_cap_phase() {
     local bcap; bcap="$(branch_cap_for "$slug")"
     case "$bcap" in ""|*[!0-9]*) bcap=10 ;; esac
     local e rest nm
-    # --- per-side populations, never-delete sets, excess ---
-    local live_local=$((1 + ${#l_surv[@]}))
-    local never_local=1
-    local -a l_cand=()
+    # --- per-side populations: every surviving branch is
+    # a candidate — the default branch and worktree-
+    # attached branches included; there is no exempt set.
+    # Ranked by tip activity (epoch asc, name asc — the
+    # standing ranking); the excess is the oldest beyond
+    # the cap on each side.
+    local -a l_pop=() o_pop=()
+    local bsha bepoch
+    bsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$base_branch" 2>/dev/null)"
+    if [ -n "$bsha" ]; then
+      bepoch="$($GIT -C "$main_dir" for-each-ref --format='%(committerdate:unix)' "refs/heads/$base_branch" 2>/dev/null)"
+      l_pop+=("$bepoch|$base_branch|$bsha")
+    fi
     for e in "${l_surv[@]:-}"; do
-      [ -z "$e" ] && continue
-      rest="${e#*|}"; nm="${rest%%|*}"
-      if is_in "$nm" "${checked_out[@]:-}"; then
-        never_local=$((never_local+1))
-      else
-        l_cand+=("$e")
-      fi
+      [ -n "$e" ] && l_pop+=("$e")
     done
-    if [ "${#l_cand[@]}" -gt 0 ]; then
-      mapfile -t l_cand < <(printf '%s\n' "${l_cand[@]}" | sort -t'|' -k1,1n -k2,2)
+    if [ "${#l_pop[@]}" -gt 0 ]; then
+      mapfile -t l_pop < <(printf '%s\n' "${l_pop[@]}" | sort -t'|' -k1,1n -k2,2)
     fi
-    local live_origin=0 never_origin=0
-    local -a o_cand=()
+    local live_local=${#l_pop[@]}
     if [ "$origin_ok" -eq 1 ]; then
-      live_origin=$((${#o_surv[@]} + have_base))
-      never_origin="$have_base"
-      o_cand=("${o_surv[@]:-}")
-      # drop the empty element an empty o_surv expands to
-      [ "${#o_cand[@]}" -eq 1 ] && [ -z "${o_cand[0]:-}" ] && o_cand=()
-      if [ "${#o_cand[@]}" -gt 0 ]; then
-        mapfile -t o_cand < <(printf '%s\n' "${o_cand[@]}" | sort -t'|' -k1,1n -k2,2)
+      if [ "$have_base" -eq 1 ]; then
+        bsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/remotes/origin/$base_branch" 2>/dev/null)"
+        if [ -n "$bsha" ]; then
+          bepoch="$($GIT -C "$main_dir" for-each-ref --format='%(committerdate:unix)' "refs/remotes/origin/$base_branch" 2>/dev/null)"
+          o_pop+=("$bepoch|$base_branch|$bsha")
+        fi
+      fi
+      for e in "${o_surv[@]:-}"; do
+        [ -n "$e" ] && o_pop+=("$e")
+      done
+      if [ "${#o_pop[@]}" -gt 0 ]; then
+        mapfile -t o_pop < <(printf '%s\n' "${o_pop[@]}" | sort -t'|' -k1,1n -k2,2)
       fi
     fi
+    local live_origin=${#o_pop[@]}
     local -a cap_l_excess=() cap_o_excess=()
-    local over_local=0 over_origin=0 nx
-    if [ "$never_local" -gt "$bcap" ]; then
-      over_local=1
-    elif [ "${#l_cand[@]}" -gt $((bcap - never_local)) ]; then
-      nx=$((${#l_cand[@]} - (bcap - never_local)))
-      cap_l_excess=("${l_cand[@]:0:$nx}")
+    local nx
+    if [ "$live_local" -gt "$bcap" ]; then
+      nx=$((live_local - bcap))
+      cap_l_excess=("${l_pop[@]:0:$nx}")
     fi
-    if [ "$origin_ok" -eq 1 ]; then
-      if [ "$never_origin" -gt "$bcap" ]; then
-        over_origin=1
-      elif [ "${#o_cand[@]}" -gt $((bcap - never_origin)) ]; then
-        nx=$((${#o_cand[@]} - (bcap - never_origin)))
-        cap_o_excess=("${o_cand[@]:0:$nx}")
-      fi
-    fi
-    if [ "$over_local" -eq 1 ]; then
-      echo "BRANCH-CAP-OVER repo=$slug side=local live=$live_local cap=$bcap never=$never_local" >>"$RESULT_FILE"
-      echo "act=branch-cap-over repo=$slug side=local live=$live_local cap=$bcap never=$never_local epoch=$NOW" >>"$LEDGER_FILE"
-    fi
-    if [ "$over_origin" -eq 1 ]; then
-      echo "BRANCH-CAP-OVER repo=$slug side=origin live=$live_origin cap=$bcap never=$never_origin" >>"$RESULT_FILE"
-      echo "act=branch-cap-over repo=$slug side=origin live=$live_origin cap=$bcap never=$never_origin epoch=$NOW" >>"$LEDGER_FILE"
+    if [ "$origin_ok" -eq 1 ] && [ "$live_origin" -gt "$bcap" ]; then
+      nx=$((live_origin - bcap))
+      cap_o_excess=("${o_pop[@]:0:$nx}")
     fi
     [ "${#cap_l_excess[@]}" -eq 0 ] && [ "${#cap_o_excess[@]}" -eq 0 ] && return 0
 
@@ -677,9 +683,31 @@ run_worker() {
       $GIT -C "$main_dir" update-ref -d "$sref" 2>/dev/null
     done
     # --- deletions, only now that the archive verifies ---
+    # A checked-out excess branch is freed mechanically
+    # before its ref deletes: its worktree's HEAD detaches
+    # at the same tip (the tree's files and position do
+    # not change), then the ref deletes like any other.
+    # A detach failure records the failure line, marks
+    # the pass partial, and the pass continues with the
+    # remaining excess — an outcome, not an exemption.
+    declare -A wt_of=()
+    local wpath="" wl2
+    while IFS= read -r wl2; do
+      case "$wl2" in
+        "worktree "*) wpath="${wl2#worktree }" ;;
+        "branch refs/heads/"*) wt_of["${wl2#branch refs/heads/}"]="$wpath" ;;
+      esac
+    done < <($GIT -C "$main_dir" worktree list --porcelain 2>/dev/null)
     for e in "${cap_l_excess[@]:-}"; do
       [ -z "$e" ] && continue
-      rest="${e#*|}"; nm="${rest%%|*}"
+      rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
+      if [ -n "${wt_of[$nm]:-}" ]; then
+        if ! $GIT -C "${wt_of[$nm]}" checkout --detach "$sha" >/dev/null 2>&1; then
+          echo "BRANCH-LOCAL-FAIL repo=$slug branch=$nm reason=detach-failed" >>"$RESULT_FILE"
+          partial=3
+          continue
+        fi
+      fi
       trim_local_branch "$nm" || partial=3
     done
     for e in "${cap_o_excess[@]:-}"; do
