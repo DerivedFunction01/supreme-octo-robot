@@ -6,6 +6,7 @@ checked against a fake ledger that only records.
 """
 import hashlib
 import os
+import stat
 import sys
 import tempfile
 import unittest
@@ -77,6 +78,47 @@ class OpsTest(unittest.TestCase):
              "content": "abs"})
         self.assertEqual(code, 200)
         self.assertTrue(payload["ok"])
+
+    def test_write_mode_is_stamped(self):
+        # The write form's mode extension (contract 15's
+        # discipline through the endpoint): a credential-class
+        # target performed through the service is stamped
+        # server-side, never left at the umask default.
+        target = os.path.join(self.root, "secret.json")
+        code, payload = self.perform(
+            {"caller": "test", "op": "write", "path": target,
+             "content": "{}", "mode": 0o600})
+        self.assertEqual(code, 200)
+        self.assertTrue(payload["ok"])
+        self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
+
+    def test_write_mode_restamps_a_recreated_file(self):
+        target = self._seed("secret.json", "{}")
+        os.chmod(target, 0o644)
+        code, _payload = self.perform(
+            {"caller": "test", "op": "write", "path": target,
+             "content": "{}", "mode": 0o600})
+        self.assertEqual(code, 200)
+        self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
+
+    def test_write_without_mode_carries_the_existing_mode(self):
+        target = self._seed("carried.txt", "old")
+        os.chmod(target, 0o640)
+        code, _payload = self.perform(
+            {"caller": "test", "op": "write", "path": target,
+             "content": "new"})
+        self.assertEqual(code, 200)
+        self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o640)
+
+    def test_write_bad_mode_is_rejected_and_writes_nothing(self):
+        for bad in ("600", True, 0o10000, -1):
+            target = os.path.join(self.root, "bad.txt")
+            code, payload = self.perform(
+                {"caller": "test", "op": "write", "path": target,
+                 "content": "x", "mode": bad})
+            self.assertEqual(code, 400, bad)
+            self.assertEqual(payload["error"], "bad_request")
+            self.assertFalse(os.path.exists(target))
 
     # ---------------------------------------------------------- patch
 

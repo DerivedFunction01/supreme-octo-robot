@@ -22,7 +22,7 @@ the ledger, not an operation set.
 
 Operation set (request forms carry {caller, op, path, ...}):
 
-  write       {path, content}                       full replace
+  write       {path, content, mode?}                full replace
   patch       {path, old, new}                      single-match
   cas-update  {path, expected_stamp, content}  or
               {path, expected_stamp, old, new}      stamp-guarded
@@ -157,9 +157,15 @@ def op_write(root, req):
     content = req.get("content")
     if not isinstance(content, str):
         raise WriterError("bad_request", "content must be a string")
+    mode = req.get("mode")
+    if mode is not None and (isinstance(mode, bool)
+                             or not isinstance(mode, int)
+                             or not 0 <= mode <= 0o7777):
+        raise WriterError("bad_request",
+                          "mode must be an int in 0..0o7777")
     path = resolve(root, req.get("path"))
     data = content.encode("utf-8")
-    staged_write(path, data)
+    staged_write(path, data, mode=mode)
     return _result_for(path, root, data)
 
 

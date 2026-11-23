@@ -112,5 +112,49 @@ class TestStagedWrite(unittest.TestCase):
                          0o600)
 
 
+class TestOpWriteMode(unittest.TestCase):
+    """The write op's mode field (the protocol extension
+    that carries the mode discipline through the /ops
+    service): perform() stamps an explicit mode, carries
+    the existing mode without one, and rejects a malformed
+    mode without writing."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.values = {"workspace_root": self.tmp.name}
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def _write(self, name, content, **extra):
+        req = {"caller": "test", "op": "write", "path": name,
+               "content": content}
+        req.update(extra)
+        return writer.perform(None, self.values, req)
+
+    def test_mode_stamped_through_perform(self):
+        code, payload = self._write("s.txt", "x", mode=0o600)
+        self.assertEqual(code, 200)
+        self.assertTrue(payload["ok"])
+        target = os.path.join(self.tmp.name, "s.txt")
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o600)
+
+    def test_no_mode_carries_existing(self):
+        target = os.path.join(self.tmp.name, "c.txt")
+        with open(target, "w", encoding="utf-8") as fh:
+            fh.write("old")
+        os.chmod(target, 0o640)
+        code, _payload = self._write("c.txt", "new")
+        self.assertEqual(code, 200)
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o640)
+
+    def test_bad_mode_rejected(self):
+        code, payload = self._write("b.txt", "x", mode="600")
+        self.assertEqual(code, 400)
+        self.assertEqual(payload["error"], "bad_request")
+        self.assertFalse(os.path.exists(
+            os.path.join(self.tmp.name, "b.txt")))
+
+
 if __name__ == "__main__":
     unittest.main()

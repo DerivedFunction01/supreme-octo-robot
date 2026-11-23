@@ -38,3 +38,13 @@ DISPATCH_LEDGER = repo_module("pipeline", "dispatch", "ledger.py")
 SCHEDULING_REGISTRY = repo_module(
     "pipeline", "scheduling", "server", "registry.py")
 WORKRECORD_ROOT = repo_module("pipeline", "workrecord")
+
+# The scheduling package: the /ops service's home. The ops
+# client (ops_client.py, beside the writer) resolves the
+# service endpoint from its live config and the acting
+# caller's token from its token home (contract 04, §10.1:
+# raw tokens live client-side only, one <caller>.token
+# file; the SCHED_OPS_TOKEN_DIR env var re-points the home).
+SCHEDULING_ROOT = os.path.join(PIPELINE_ROOT, "scheduling")
+SCHEDULING_CONFIG = os.path.join(SCHEDULING_ROOT, "config.json")
+OPS_TOKEN_DIR = os.path.join(SCHEDULING_ROOT, "ops-tokens")

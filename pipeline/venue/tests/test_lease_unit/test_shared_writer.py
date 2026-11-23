@@ -12,10 +12,11 @@ and two writers interleaved at the rename seam can never
 leave a torn or empty target — a reader at any point sees
 one writer's complete payload or the other's.
 
-Determinism: the interleave is driven by threading events
-at the rename seam, never by clocks or sleeps; the event
-waits carry hang-guard timeouts only, and no assertion
-depends on elapsed time. All fixtures are generic.
+Determinism: the interleave is driven by a threading
+barrier at the service boundary, never by clocks or
+sleeps; the waits carry hang-guard timeouts only, and no
+assertion depends on elapsed time or on which writer
+lands last. All fixtures are generic.
 """
 
 import importlib
@@ -67,12 +68,19 @@ class _RecordingWriter:
 
 
 def test_seam_delegates_to_the_platform_writer():
-    """In this tree the venue seam's writer IS the platform
-    writer module — the delegation the consolidation rests
-    on, proven rather than assumed."""
+    """In this tree the venue seam's writes are performed
+    through the platform /ops client — the delegation the
+    consolidation rests on, proven rather than assumed.
+    The platform writer module itself still loads beside
+    it: it is the standalone-layout fallback's protocol
+    source and the seam's WriterError."""
     assert foundation.WRITER is not None
     assert Path(foundation.WRITER.__file__).resolve() == (
         PIPELINE_ROOT / "platform" / "writer.py").resolve()
+    assert foundation.OPS_CLIENT is not None
+    assert Path(foundation.OPS_CLIENT.__file__).resolve() == (
+        PIPELINE_ROOT / "platform" / "ops_client.py").resolve()
+    assert foundation.OPS_CALLER == "venue"
 
 
 def test_stamp_writers_ride_the_seam(repo, monkeypatch):
@@ -100,58 +108,45 @@ def test_stamp_writers_ride_the_seam(repo, monkeypatch):
     assert json.loads(calls[3][1]) == {"kind": "provision"}
 
 
-def test_interleaved_writers_never_tear(tmp_path, monkeypatch):
-    """Two writers, one target, interleaved deterministically
-    at the rename seam: writer A stages and is held just
-    before its rename while writer B writes whole. A reader
-    at every held point sees a complete payload — the
-    original, then B's, then A's — never torn, never empty,
-    and no staging litter survives."""
+def test_interleaved_writers_never_tear(tmp_path):
+    """Two writers, one target, racing through the seam:
+    the service performs each write whole (its staged
+    rename is atomic), so the standing content at every
+    moment is one writer's complete payload or the
+    other's — never torn, never empty — and no staging
+    litter survives. The interleave used to be driven at
+    the in-process rename seam; the seam's writes are
+    performed by the /ops service now, so the race runs
+    at the service boundary and the invariant is what is
+    pinned. The barrier makes the two writers concurrent;
+    no assertion depends on which one lands last."""
     target = tmp_path / "shared.json"
     original = b'{"seat": "original", "seq": 0}'
     payload_a = b'{"seat": "first", "seq": 1}'
     payload_b = b'{"seat": "second", "seq": 2}'
     target.write_bytes(original)
 
-    real_replace = os.replace
-    a_ident = []
-    a_holding = threading.Event()
-    release_a = threading.Event()
+    barrier = threading.Barrier(2)
+    errors = []
 
-    def gated_replace(src, dst):
-        if str(dst) == str(target) and a_ident and threading.get_ident() == a_ident[0]:
-            a_holding.set()
-            release_a.wait(60)  # hang guard only; no assertion reads a clock
-        return real_replace(src, dst)
+    def write(payload):
+        try:
+            barrier.wait(60)  # hang guard only
+            foundation.staged_write(target, payload)
+        except Exception as exc:  # noqa: BLE001 - collected, asserted below
+            errors.append(exc)
 
-    monkeypatch.setattr(os, "replace", gated_replace)
-
-    def write_a():
-        a_ident.append(threading.get_ident())
-        foundation.staged_write(target, payload_a)
-
-    thread_a = threading.Thread(target=write_a)
-    thread_a.start()
-    assert a_holding.wait(60)
-    # A has staged but not renamed: the complete original stands.
-    assert target.read_bytes() == original
-    assert json.loads(target.read_bytes())["seat"] == "original"
-
-    thread_b = threading.Thread(
-        target=lambda: foundation.staged_write(target, payload_b))
-    thread_b.start()
-    thread_b.join(60)
-    assert not thread_b.is_alive()
-    # B renamed whole: a reader sees B complete.
-    assert target.read_bytes() == payload_b
-    assert json.loads(target.read_bytes())["seat"] == "second"
-
-    release_a.set()
-    thread_a.join(60)
-    assert not thread_a.is_alive()
-    # A renamed last, whole: the final state is A's complete payload.
-    assert target.read_bytes() == payload_a
-    assert json.loads(target.read_bytes())["seat"] == "first"
+    threads = [threading.Thread(target=write, args=(payload,))
+               for payload in (payload_a, payload_b)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(60)
+    assert not any(thread.is_alive() for thread in threads)
+    assert errors == []
+    final = target.read_bytes()
+    assert final in (payload_a, payload_b)
+    assert json.loads(final)["seat"] in ("first", "second")
     assert [p.name for p in tmp_path.iterdir()] == ["shared.json"]
 
 

@@ -11,9 +11,14 @@ ledger with its caller. The HTTP layer (server/serving/http.py) only
 routes; bin/sched carries the client verbs.
 
 Contract (POST /ops, JSON body):
-  {"caller": str, "op": "write", "path": p, "content": text}
+  {"caller": str, "op": "write", "path": p, "content": text, "mode": int?}
   {"caller": str, "op": "patch", "path": p, "old": text, "new": text}
   {"caller": str, "op": "exec", "argv": [..], "cwd": p?, "timeout": secs?}
+The write form's optional `mode` (an int in 0..0o7777) carries
+contract 15's mode discipline through the endpoint: a
+credential-class target is stamped with it server-side, so a
+caller performing through the service never loses the stamp
+its in-process write would have applied.
 Paths are absolute or relative to the workspace root; the
 resolved real path must stay inside it. Responses are
 {"ok": true, ...result} or {"ok": false, "error": name,
@@ -119,13 +124,13 @@ def _load_platform_writer():
 _writer = _load_platform_writer()
 
 
-def _staged_write(path, data):
+def _staged_write(path, data, mode=None):
     """Write via a sibling temp file, read back, rename over.
     Even a crash mid-write cannot tear the target. The
     implementation is the platform writer's (contract 15);
     its WriterError names are this endpoint's error names."""
     try:
-        _writer.staged_write(path, data)
+        _writer.staged_write(path, data, mode=mode)
     except _writer.WriterError as exc:
         raise OpError(exc.name, exc.detail) from exc
 
@@ -142,9 +147,15 @@ def _op_write(root, req):
     content = req.get("content")
     if not isinstance(content, str):
         raise OpError("bad_request", "content must be a string")
+    mode = req.get("mode")
+    if mode is not None and (isinstance(mode, bool)
+                             or not isinstance(mode, int)
+                             or not 0 <= mode <= 0o7777):
+        raise OpError("bad_request",
+                      "mode must be an int in 0..0o7777")
     path = _resolve(root, req.get("path"))
     data = content.encode("utf-8")
-    _staged_write(path, data)
+    _staged_write(path, data, mode=mode)
     return _result_for(path, root, data)
 
 

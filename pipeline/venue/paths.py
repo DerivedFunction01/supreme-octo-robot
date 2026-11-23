@@ -49,10 +49,13 @@ LEASE_FOUNDATION = (
 
 # Cross-package values, through the resolved root: the
 # pipeline root, and the platform writer the record
-# writers delegate to (contract 15). (The liveness
-# entries' scheduling dir is deliberately not a spine
-# value: it is a function of the liveness module's own
-# root — a patchable seam — and is composed from that
+# writers delegate to (contract 15) with the platform
+# /ops client beside it — the seam's writes are performed
+# by the scheduler service through that client. (The
+# liveness entries' scheduling dir is deliberately not a
+# spine value: it is a function of the liveness module's
+# own root — a patchable seam — and is composed from that
 # root at the consumer.)
 PIPELINE_ROOT = REPO_RESOLVED.parent
 PLATFORM_WRITER = PIPELINE_ROOT / "platform" / "writer.py"
+PLATFORM_OPS_CLIENT = PIPELINE_ROOT / "platform" / "ops_client.py"

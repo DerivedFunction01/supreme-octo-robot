@@ -102,12 +102,25 @@ def adapter_jobs_dir(repo: Path) -> Path:
 
 
 # --- Unified writer seam (S5, plan §4.15 / contract 15) -----------------------
-# Record writes ride the pipeline platform's unified writer:
-# its staged_write is the stage → fsync → read-back → rename
-# protocol this module's writers used to hand-roll. Loaded by
-# path from the pipeline tree; where no platform tree exists
-# (the pinned source repo's own layout), the fallback below is
-# the same protocol inline, so behaviour never differs by home.
+# Record writes ride the pipeline platform's unified writer,
+# PERFORMED by the scheduler /ops service. The writer's own
+# design (its header) is that mutations are performed by the
+# long-lived server class, never a deniable caller process:
+# the write-denial flap kills short-lived processes at their
+# first write (the 2026-11-22 reaper deaths at exit 120 died
+# inside an in-process staged_write). So where the platform
+# tree exists, this seam hands each write to the platform
+# /ops client (loaded by path from beside the writer), which
+# POSTs it to the service under the venue machinery caller;
+# the service runs the stage → fsync → read-back → rename
+# protocol server-side. A service failure raises the
+# writer's WriterError with the target byte-identical —
+# there is NO local fallback on failure: a local write in a
+# denied process is the death being cured. Where no
+# platform tree exists (the pinned source repo's own
+# layout, where no /ops service exists either), the
+# fallback below is the same protocol inline, so behaviour
+# never differs by home.
 
 def _load_writer():
     cand = _paths.PLATFORM_WRITER
@@ -119,21 +132,49 @@ def _load_writer():
     return None
 
 
+def _load_ops_client():
+    cand = _paths.PLATFORM_OPS_CLIENT
+    if cand.exists():
+        spec = _ilu.spec_from_file_location(
+            "pipeline_platform_ops_client", cand)
+        mod = _ilu.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    return None
+
+
 WRITER = _load_writer()
+OPS_CLIENT = _load_ops_client()
+
+# The seam's /ops caller: a machinery caller (code
+# constant, the venue AGENTS.md rule), registered in the
+# scheduler's connector registry with the write-state
+# scope alone — the seam performs writes, never exec. Its
+# raw token lives in the ops token home like every
+# caller's (contract 04, §10.1).
+OPS_CALLER = "venue"
 
 
 def staged_write(path: Path, data: bytes, mode: int | None = None) -> None:
     """Write bytes to path through the unified writer's
-    protocol: stage to a fresh sibling, flush + fsync, read
-    back and compare, rename over, directory fsync. A denial
-    or failure at any stage leaves the target byte-identical.
-    This seam is the venue's ONE writer (register E5): every
-    session/lease state write in the tree rides it onto the
-    platform writer. An explicit `mode` (credential-class
+    protocol, performed by the /ops service: stage to a
+    fresh sibling, flush + fsync, read back and compare,
+    rename over, directory fsync — all server-side. A
+    denial or failure at any stage leaves the target
+    byte-identical. This seam is the venue's ONE writer
+    (register E5): every session/lease state write in the
+    tree rides it. An explicit `mode` (credential-class
     targets) is stamped by the writer; without one, the
     target's existing mode carries."""
-    if WRITER is not None:
-        WRITER.staged_write(str(path), data, mode=mode)
+    if OPS_CLIENT is not None:
+        try:
+            OPS_CLIENT.staged_write(OPS_CALLER, str(path), data, mode=mode)
+        except OPS_CLIENT.WriterError as exc:
+            # Normalize onto the writer module this seam
+            # loaded: a caller catching the seam's
+            # WriterError sees one class, whichever module
+            # instance raised it.
+            raise WRITER.WriterError(exc.name, exc.detail) from exc
         return
 
     path.parent.mkdir(parents=True, exist_ok=True)
