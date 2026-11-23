@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Release server-side Colab assignments that have no local session binding.
 
-Why this exists (observed 2026-10-29): `colab run -s <name>` creates its own
+Why this exists: `colab run -s <name>` creates its own
 VM, releases it, and removes the local binding for <name> — orphaning any
 still-live assignment that `colab new -s <name>` created. `colab stop` then
 reports the session "not found" while the assignment keeps billing. The
@@ -23,7 +23,7 @@ from pathlib import Path
 def unassign_with_body(client, endpoint: str) -> None:
     """The client's unassign flow with a body on the POST. The stock
     call sends the POST bodiless and the tunnel endpoint answers
-    411 Length Required (diagnosed 2026-11-04), so the client's own
+    411 Length Required, so the client's own
     two steps — GET the unassign URL for an XSRF token, then POST it
     with the token header — are replayed here with an explicit
     empty-JSON body attached (data=b"{}"), the form that succeeds."""

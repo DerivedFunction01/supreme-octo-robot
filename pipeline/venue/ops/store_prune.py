@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The runner store prune (owner ruling, 2026-11-12: "Auto
+"""The runner store prune (owner ruling: "Auto
 prune, don't wait for me to state it — else it becomes too
 late and I get locked out").
 
@@ -24,7 +24,7 @@ in order:
      (adapters/colab/jobs/*/*.tar.gz, *.bundle) past a
      48 h floor — the job's definition (job.json, wrap.py)
      is never a candidate, only the staged payload
-     archives beside it (2026-11-18 precedent);
+     archives beside it (by precedent);
   7. launch-staging tree tarballs in named var/ subdirs
      (var/*/*-tree*.tar.gz — the plain and suffixed forms,
      e.g. hc01-tree-<hash>.tar.gz) and snapshot bundles in
@@ -92,15 +92,15 @@ RESUME_WINDOW_S = 24 * 3600
 FRESH_XFER_S = 3600
 SCRATCH_AGE_FLOOR_S = 3600
 # A completed run's outputs are at their hottest while its
-# collector assembles the verdict from them (2026-11-12: a
+# collector assembles the verdict from them (a
 # prune pass swept an M1 gate's outputs mid-collection).
 # Terminal alone is not cold: a run's payload dir is a
 # candidate only once its last activity — collector
 # heartbeat first, the record's own stamps as fallback —
 # is older than this grace. The grace is a day, not two
 # hours: gate outputs are landing evidence, cited and
-# re-read across the working day that lands them — on
-# 2026-11-21/22 the two-hour grace swept a whole evening's
+# re-read across the working day that lands them —
+# the two-hour grace once swept a whole evening's
 # gate pulls (gates A–U, the wd-diag verdict log) during
 # the low-free window before their consumers re-read
 # them, invisibly, because the prune log named no paths.
@@ -330,7 +330,7 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         summary[cls]["bytes"] += size
     # The payload dirs a pass removes are named in the
     # report (bounded): an aggregate-only log made the
-    # 2026-11-21/22 sweeps invisible to their consumers.
+    # sweeps invisible to their consumers.
     payload_dirs = sorted(
         p.name
         for _o, p, _s, cls in chosen

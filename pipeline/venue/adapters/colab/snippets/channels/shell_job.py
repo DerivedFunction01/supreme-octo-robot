@@ -36,7 +36,7 @@ def port_base_for(run_id: str) -> int:
     hold disjoint port ranges with overwhelming probability
     and a payload can key its servers on $SHELL_JOB_PORT_BASE
     instead of a fixed per-mode port — the fixed-port half of
-    the 2026-11-21 twin-execution collision."""
+    the twin-execution collision."""
     digest = hashlib.sha256(run_id.encode()).hexdigest()
     return 20000 + (int(digest[:8], 16) % 2000) * 10
 
@@ -122,7 +122,7 @@ def main() -> int:
         log.flush()
         env = dict(os.environ)
         env["SHELL_JOB_OUT"] = str(out)
-        # Per-run session state (2026-11-21 twin-execution
+        # Per-run session state (the twin-execution
         # cure): the payload keys its work dir and ports on
         # these instead of fixed per-mode names, so two runs
         # sharing a session never share state. SHELL_JOB_WORK

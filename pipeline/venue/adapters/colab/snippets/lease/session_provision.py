@@ -6,9 +6,10 @@ every Playwright e2e leg on a new session fails at
 browserType.launch with a missing shared library
 (libatk-1.0.so.0 is the first) until someone provisions it by
 hand — and the provisioning dies with the session, so the
-failure returns at 100% on the next one (2026-11-11: 74/74
-legs dead at ~6 ms each, read first as contention, then as
-product; the cure was `playwright install-deps chromium`).
+failure returns at 100% on the next one (in the measured
+instance 74/74 legs died at ~6 ms each, read first as
+contention, then as product; the cure is
+`playwright install-deps chromium`).
 
 This payload is the runner-owned ensure: it checks the
 runtime library set with the distro's package state, installs
@@ -25,7 +26,7 @@ wait on the lock (DPkg::Lock::Timeout) and a lock failure
 retries a bounded number of times before the verdict may
 call itself failed; a verdict that still fails on the lock
 says so (lock_contended) instead of reading as a package
-failure (specimen: ember r1794417373, 2026-11-11 — install
+failure (specimen: ember r1794417373 — install
 rc 100, frontend lock held by a concurrent apt-get, missing
 set unchanged).
 
@@ -86,7 +87,7 @@ def _alternatives(pkg: str) -> list:
     libatk1.0-0t64, ...): the plain name has no installation
     candidate there at all, and an install that names it
     aborts atomically for the whole set (specimen: ember
-    r1794417373, 2026-11-11 — "Package 'libasound2' has no
+    r1794417373 — "Package 'libasound2' has no
     installation candidate", nothing installed). A logical
     package is satisfied by any alternative installed, and
     installs under the first alternative that has a
