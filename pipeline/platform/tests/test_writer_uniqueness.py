@@ -32,6 +32,23 @@ perform on the loaded module. The census:
   spine the table does not name fails the census by
   name; a seam that cannot be resolved fails loudly
   naming it. Nothing here skips.
+
+Since the writer-service route, a write reaches the
+one writer two ways: in-process through a seam above,
+or through the /ops service, whose endpoint performs
+it server-side with the same writer. The platform ops
+client is the second way's transport face: it loads
+the writer by path for its error contract (WriterError)
+only — it calls neither staged_write nor perform on
+the loaded module and stages nothing itself (the gate's
+writer-uniqueness leg is the static half that keeps
+exactly one staged-write implementation in the tree).
+The sweep's net catches the client by its load, so the
+census counts it in TRANSPORTS below, a category of
+one shape: a by-path loader that never calls the
+writer. A loader in neither table fails the census by
+name; a transport that starts calling the writer
+fails its own pin and must re-register as a seam.
 """
 
 import ast
@@ -115,6 +132,24 @@ SEAMS = (
     ("workrecord (S4)",
      "pipeline/workrecord/lib/util.py",
      "pipeline/workrecord/lib/paths.py", "PLATFORM_WRITER"),
+)
+
+# By-path loaders of the writer that are NOT seams:
+# (module, what it takes from the writer). A transport
+# loads the writer for its WriterError contract and
+# performs writes through the /ops service instead of
+# calling the loaded module — the writer-service
+# route's client face. It is not a store's seam (no
+# spine constant, no staged_write / perform call on
+# the loaded module) and not a second implementation
+# (it stages nothing; the server performs the one
+# writer's protocol). The census counts it here so
+# the sweep's partition stays exact: every by-path
+# loader in the tree is a seam or a named transport.
+TRANSPORTS = (
+    ("pipeline/platform/ops_client.py",
+     "the /ops client: WriterError only; writes are "
+     "performed by the server-side writer over HTTP"),
 )
 
 # Every spine whose writer constant the census resolves:
@@ -271,15 +306,45 @@ class WriterCensusTests(unittest.TestCase):
 
     def test_census_counts_every_seam_in_the_tree(self):
         counted = {seam for _s, seam, _p, _c in SEAMS}
+        transports = {module for module, _r in TRANSPORTS}
+        self.assertFalse(
+            counted & transports,
+            "writer census tables overlap: "
+            f"{sorted(counted & transports)} counted as "
+            "both a seam and a transport — a by-path "
+            "loader is exactly one of the two")
         found = _sweep_seams()
         self.assertEqual(
-            found, counted,
+            found, counted | transports,
             "writer seam census drift: uncounted seam(s) "
-            f"{sorted(found - counted)}, counted seam(s) "
-            f"no longer loading the writer by path "
-            f"{sorted(counted - found)} — a store's seam "
-            "must be added to SEAMS or removed from it, "
-            "never left uncounted")
+            f"{sorted(found - counted - transports)}, "
+            "counted seam(s) no longer loading the writer "
+            f"by path {sorted(counted - found)} — a "
+            "store's seam must be added to SEAMS or "
+            "removed from it, never left uncounted; a "
+            "by-path loader that never calls the writer "
+            "belongs in TRANSPORTS, with its reason")
+
+    def test_transports_never_call_the_writer(self):
+        for module, _role in TRANSPORTS:
+            with self.subTest(transport=module):
+                tree = _parse(module)
+                self.assertTrue(
+                    _loads_writer_by_path(tree),
+                    f"transport {module} no longer loads "
+                    f"{WRITER_NAME} by path; it does not "
+                    "belong in TRANSPORTS")
+                self.assertFalse(
+                    any(isinstance(call.func, ast.Attribute)
+                        and call.func.attr in ("staged_write",
+                                               "perform")
+                        for call in _calls(tree)),
+                    f"transport {module} calls staged_write "
+                    "or perform on a loaded module; a "
+                    "transport performs through the /ops "
+                    "service only — a module that calls "
+                    "the writer is a seam and must be "
+                    "counted in SEAMS, through its spine")
 
     def test_census_counts_every_spine_in_the_tree(self):
         counted = {spine for spine, constant in SPINES

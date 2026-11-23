@@ -56,8 +56,8 @@ class TestStagedWrite(unittest.TestCase):
         # can land, and the target is never touched.
         staging = os.path.join(
             self.dir,
-            ".%s.sched-tmp-%d-%d" % ("note.md", os.getpid(),
-                                     threading.get_ident()))
+            ".{}.sched-tmp-{}-{}".format("note.md", os.getpid(), threading.get_ident()),
+        )
         os.mkdir(staging)
         with self.assertRaises(writer.WriterError):
             writer.staged_write(target, b"replacement\n")
@@ -73,8 +73,7 @@ class TestStagedWrite(unittest.TestCase):
             fh.write(b"original\n")
         os.chmod(target, 0o640)
         writer.staged_write(target, b"replacement\n")
-        self.assertEqual(os.stat(target).st_mode & 0o777,
-                         0o640)
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o640)
         with open(target, "rb") as fh:
             self.assertEqual(fh.read(), b"replacement\n")
 
@@ -85,8 +84,7 @@ class TestStagedWrite(unittest.TestCase):
             fh.write(b"original\n")
         os.chmod(target, 0o600)
         writer.staged_write(target, b"replacement\n")
-        self.assertEqual(os.stat(target).st_mode & 0o777,
-                         0o600)
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o600)
         with open(target, "rb") as fh:
             self.assertEqual(fh.read(), b"replacement\n")
 
@@ -97,8 +95,7 @@ class TestStagedWrite(unittest.TestCase):
         # the umask default.
         target = self._target("fresh-secret.md")
         writer.staged_write(target, b"credential\n", mode=0o600)
-        self.assertEqual(os.stat(target).st_mode & 0o777,
-                         0o600)
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o600)
         with open(target, "rb") as fh:
             self.assertEqual(fh.read(), b"credential\n")
 
@@ -108,8 +105,7 @@ class TestStagedWrite(unittest.TestCase):
             fh.write(b"original\n")
         os.chmod(target, 0o644)
         writer.staged_write(target, b"replacement\n", mode=0o600)
-        self.assertEqual(os.stat(target).st_mode & 0o777,
-                         0o600)
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o600)
 
 
 class TestOpWriteMode(unittest.TestCase):
@@ -127,8 +123,7 @@ class TestOpWriteMode(unittest.TestCase):
         self.tmp.cleanup()
 
     def _write(self, name, content, **extra):
-        req = {"caller": "test", "op": "write", "path": name,
-               "content": content}
+        req = {"caller": "test", "op": "write", "path": name, "content": content}
         req.update(extra)
         return writer.perform(None, self.values, req)
 
@@ -152,8 +147,7 @@ class TestOpWriteMode(unittest.TestCase):
         code, payload = self._write("b.txt", "x", mode="600")
         self.assertEqual(code, 400)
         self.assertEqual(payload["error"], "bad_request")
-        self.assertFalse(os.path.exists(
-            os.path.join(self.tmp.name, "b.txt")))
+        self.assertFalse(os.path.exists(os.path.join(self.tmp.name, "b.txt")))
 
 
 if __name__ == "__main__":

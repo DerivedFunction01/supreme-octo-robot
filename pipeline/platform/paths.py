@@ -13,6 +13,7 @@ cross-package by-path loads the platform services perform
 (the dispatch ledger, the scheduling registry) resolve
 here too, so no consumer re-derives a sibling's location.
 """
+
 import os
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -35,8 +36,7 @@ def repo_module(*parts):
 
 # The by-path loads the platform services perform.
 DISPATCH_LEDGER = repo_module("pipeline", "dispatch", "ledger.py")
-SCHEDULING_REGISTRY = repo_module(
-    "pipeline", "scheduling", "server", "registry.py")
+SCHEDULING_REGISTRY = repo_module("pipeline", "scheduling", "server", "registry.py")
 WORKRECORD_ROOT = repo_module("pipeline", "workrecord")
 
 # The scheduling package: the /ops service's home. The ops

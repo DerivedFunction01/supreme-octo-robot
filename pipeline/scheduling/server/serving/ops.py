@@ -46,6 +46,7 @@ endpoint delegates to it; the writer's wider operation set
 endpoint's set stays contract 04's write/patch/exec, and the
 per-repo standalone form of the service does not survive.
 """
+
 import hashlib
 import os
 import shlex
@@ -80,7 +81,8 @@ _OP_SCOPES = {"write": "write-state", "patch": "write-state", "exec": "exec"}
 
 # Refusals ledger as refusals, not errors.
 _REFUSAL_NAMES = frozenset(
-    {"outside_scope", "unauthenticated", "scope_refused", "caller_mismatch"})
+    {"outside_scope", "unauthenticated", "scope_refused", "caller_mismatch"}
+)
 
 
 class OpError(Exception):
@@ -113,9 +115,9 @@ def _load_platform_writer():
     pattern — so the protocol has exactly one implementation
     and this endpoint is its first caller."""
     import importlib.util
+
     path = _paths.PLATFORM_WRITER
-    spec = importlib.util.spec_from_file_location(
-        "pipeline_platform_writer", path)
+    spec = importlib.util.spec_from_file_location("pipeline_platform_writer", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -148,11 +150,10 @@ def _op_write(root, req):
     if not isinstance(content, str):
         raise OpError("bad_request", "content must be a string")
     mode = req.get("mode")
-    if mode is not None and (isinstance(mode, bool)
-                             or not isinstance(mode, int)
-                             or not 0 <= mode <= 0o7777):
-        raise OpError("bad_request",
-                      "mode must be an int in 0..0o7777")
+    if mode is not None and (
+        isinstance(mode, bool) or not isinstance(mode, int) or not 0 <= mode <= 0o7777
+    ):
+        raise OpError("bad_request", "mode must be an int in 0..0o7777")
     path = _resolve(root, req.get("path"))
     data = content.encode("utf-8")
     _staged_write(path, data, mode=mode)
@@ -167,10 +168,10 @@ def _op_patch(root, req):
         raise OpError("bad_request", "new must be a string")
     path = _resolve(root, req.get("path"))
     try:
-        with open(path, "r", encoding="utf-8") as fh:
+        with open(path, encoding="utf-8") as fh:
             text = fh.read()
     except FileNotFoundError:
-        raise OpError("not_found", f"no such file: {req.get('path')}")
+        raise OpError("not_found", f"no such file: {req.get('path')}") from None
     except UnicodeDecodeError as exc:
         raise OpError("bad_request", f"not a text file: {exc}") from exc
     except OSError as exc:
@@ -199,16 +200,20 @@ def _exec_env(values):
     known_hosts = values.get("git_ssh_known_hosts_file")
     if identity and known_hosts:
         env["GIT_SSH_COMMAND"] = (
-            "ssh -i %s -o UserKnownHostsFile=%s"
-            " -o StrictHostKeyChecking=yes"
-            % (shlex.quote(identity), shlex.quote(known_hosts)))
+            f"ssh -i {shlex.quote(identity)} "
+            f"-o UserKnownHostsFile={shlex.quote(known_hosts)} "
+            "-o StrictHostKeyChecking=yes"
+        )
     return env
 
 
 def _op_exec(root, values, req):
     argv = req.get("argv")
-    if (not isinstance(argv, list) or not argv
-            or not all(isinstance(a, str) for a in argv)):
+    if (
+        not isinstance(argv, list)
+        or not argv
+        or not all(isinstance(a, str) for a in argv)
+    ):
         raise OpError("bad_request", "argv must be a non-empty list of strings")
     cwd_raw = req.get("cwd")
     cwd = _resolve(root, cwd_raw) if cwd_raw else root
@@ -216,14 +221,17 @@ def _op_exec(root, values, req):
         raise OpError("not_found", f"no such directory: {cwd_raw or '.'}")
     timeout = req.get("timeout", DEFAULT_TIMEOUT_SECS)
     if not isinstance(timeout, int) or not 1 <= timeout <= MAX_TIMEOUT_SECS:
-        raise OpError("bad_request",
-                      f"timeout must be an int in 1..{MAX_TIMEOUT_SECS}")
+        raise OpError("bad_request", f"timeout must be an int in 1..{MAX_TIMEOUT_SECS}")
     cap = values["capture_cap_bytes"]
     try:
         proc = subprocess.Popen(
-            argv, cwd=cwd, env=_exec_env(values),
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            start_new_session=True)
+            argv,
+            cwd=cwd,
+            env=_exec_env(values),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
     except (OSError, ValueError) as exc:
         raise OpError("io_error", f"spawn failed: {exc}") from exc
     out_tail, err_tail = TailBuffer(cap), TailBuffer(cap)
@@ -285,8 +293,11 @@ def perform(ledger, values, req, auth=None):
     not match the identity, or a missing scope is a ledgered
     refusal and nothing is performed."""
     if not isinstance(req, dict):
-        return 400, {"ok": False, "error": "bad_request",
-                     "detail": "request must be a JSON object"}
+        return 400, {
+            "ok": False,
+            "error": "bad_request",
+            "detail": "request must be a JSON object",
+        }
     caller = req.get("caller")
     op = req.get("op")
     root = _root(values)
@@ -295,18 +306,19 @@ def perform(ledger, values, req, auth=None):
         if not isinstance(caller, str) or not caller:
             raise OpError("bad_request", "caller must be a non-empty string")
         if auth is None:
-            raise OpError("unauthenticated",
-                          "a bearer token is required (contract 04, §10.1)")
+            raise OpError(
+                "unauthenticated", "a bearer token is required (contract 04, §10.1)"
+            )
         auth_caller, scopes = auth
         if caller != auth_caller:
             raise OpError(
                 "caller_mismatch",
                 f"caller label {caller!r} does not match the "
-                f"authenticated caller {auth_caller!r}")
+                f"authenticated caller {auth_caller!r}",
+            )
         required = _OP_SCOPES.get(op)
         if required is not None and required not in scopes:
-            raise OpError("scope_refused",
-                          f"{op} needs scope {required}")
+            raise OpError("scope_refused", f"{op} needs scope {required}")
         if op == "write":
             result = _op_write(root, req)
         elif op == "patch":
@@ -322,13 +334,11 @@ def perform(ledger, values, req, auth=None):
         # is unproven and never enters the record as a caller.
         audit_caller = "unknown" if exc.name == "unauthenticated" else caller
         _audit(ledger, audit_caller, op, target, status, error=exc.name)
-        return _STATUS[exc.name], {"ok": False, "error": exc.name,
-                                   "detail": exc.detail}
+        return _STATUS[exc.name], {"ok": False, "error": exc.name, "detail": exc.detail}
     except Exception as exc:  # noqa: BLE001 - the surface stays up
         _audit(ledger, caller, op, target, "error", error="io_error")
         return 500, {"ok": False, "error": "io_error", "detail": str(exc)}
-    _audit(ledger, caller, op, target, "ok",
-           exit_code=result.get("exit_code"))
+    _audit(ledger, caller, op, target, "ok", exit_code=result.get("exit_code"))
     payload = {"ok": True, "op": op}
     payload.update(result)
     return 200, payload
@@ -338,8 +348,14 @@ def _audit(ledger, caller, op, target, status, error=None, exit_code=None):
     if ledger is None:
         return
     try:
-        ledger.record("op", caller=caller if isinstance(caller, str) else None,
-                      op=op if isinstance(op, str) else None, target=target,
-                      status=status, error=error, exit_code=exit_code)
+        ledger.record(
+            "op",
+            caller=caller if isinstance(caller, str) else None,
+            op=op if isinstance(op, str) else None,
+            target=target,
+            status=status,
+            error=error,
+            exit_code=exit_code,
+        )
     except Exception:  # noqa: BLE001 - audit failure never fails the op
         pass

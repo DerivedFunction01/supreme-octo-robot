@@ -57,11 +57,13 @@ class _OpsHandler(BaseHTTPRequestHandler):
         presented = self.headers.get("Authorization") or ""
         if presented.startswith("Bearer "):
             digest = hashlib.sha256(
-                presented[len("Bearer "):].encode("utf-8")).hexdigest()
+                presented[len("Bearer ") :].encode("utf-8")
+            ).hexdigest()
             if digest == self.server.token_sha256:
                 auth = (CALLER, ["write-state"])
         code, payload = self.server.ops.perform(
-            None, self.server.values, req, auth=auth)
+            None, self.server.values, req, auth=auth
+        )
         data = json.dumps(payload).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -94,15 +96,15 @@ def ops_service_double(tmp_path_factory):
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), _OpsHandler)
     server.ops = ops
-    server.values = {"workspace_root": str(basetemp),
-                     "capture_cap_bytes": 65536}
+    server.values = {"workspace_root": str(basetemp), "capture_cap_bytes": 65536}
     server.token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
-    saved = {name: os.environ.get(name)
-             for name in ("SCHEDULER_HOST", "SCHEDULER_PORT",
-                          "SCHED_OPS_TOKEN_DIR")}
+    saved = {
+        name: os.environ.get(name)
+        for name in ("SCHEDULER_HOST", "SCHEDULER_PORT", "SCHED_OPS_TOKEN_DIR")
+    }
     os.environ["SCHEDULER_HOST"] = "127.0.0.1"
     os.environ["SCHEDULER_PORT"] = str(server.server_address[1])
     os.environ["SCHED_OPS_TOKEN_DIR"] = str(token_dir)

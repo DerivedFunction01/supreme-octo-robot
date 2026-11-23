@@ -18,10 +18,8 @@ explode, so any local write attempt fails the pin.
 
 import importlib
 import types
-from pathlib import Path
 
 import pytest
-
 from unit_harness import lease, repo  # noqa: F401
 
 foundation = importlib.import_module("lease.core.foundation")
@@ -45,8 +43,7 @@ def _fake_client(monkeypatch, behaviour):
         calls.append((caller, path, data, mode))
         behaviour(caller, path, data, mode)
 
-    fake = types.SimpleNamespace(
-        WriterError=_ClientError, staged_write=staged_write)
+    fake = types.SimpleNamespace(WriterError=_ClientError, staged_write=staged_write)
     monkeypatch.setattr(foundation, "OPS_CLIENT", fake)
     return calls
 

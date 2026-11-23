@@ -2,16 +2,17 @@ import importlib.util as _ilu
 import json
 import os
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # The paths spine (paths.py at the package root) owns the
 # root derivation; bound by path — the bootstrap form.
 _paths_spec = _ilu.spec_from_file_location(
-    "venue_paths",
-    Path(__file__).resolve().parent.parent.parent.parent / "paths.py")
+    "venue_paths", Path(__file__).resolve().parent.parent.parent.parent / "paths.py"
+)
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
+
 
 def var_dir(repo: Path) -> Path:
     return Path(os.environ.get("COLAB_RUNNER_VAR", repo / "var"))
@@ -50,7 +51,7 @@ def dial_cache_read(repo: Path, name: str, now_dt: datetime):
     except (TypeError, ValueError):
         return None
     if fetched.tzinfo is None:
-        fetched = fetched.replace(tzinfo=timezone.utc)
+        fetched = fetched.replace(tzinfo=UTC)
     age = (now_dt - fetched).total_seconds()
     if age < 0 or age > DIAL_CACHE_TTL_S:
         return None
@@ -64,7 +65,9 @@ def dial_cache_write(repo: Path, name: str, value, now_dt: datetime) -> None:
     read."""
     p = var_dir(repo) / name
     try:
-        staged_write(p, json.dumps({"fetched_at": now_dt.isoformat(), "value": value}).encode())
+        staged_write(
+            p, json.dumps({"fetched_at": now_dt.isoformat(), "value": value}).encode()
+        )
     except Exception:
         pass
 
@@ -122,6 +125,7 @@ def adapter_jobs_dir(repo: Path) -> Path:
 # fallback below is the same protocol inline, so behaviour
 # never differs by home.
 
+
 def _load_writer():
     cand = _paths.PLATFORM_WRITER
     if cand.exists():
@@ -135,8 +139,7 @@ def _load_writer():
 def _load_ops_client():
     cand = _paths.PLATFORM_OPS_CLIENT
     if cand.exists():
-        spec = _ilu.spec_from_file_location(
-            "pipeline_platform_ops_client", cand)
+        spec = _ilu.spec_from_file_location("pipeline_platform_ops_client", cand)
         mod = _ilu.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod
@@ -215,19 +218,19 @@ def parse_dt(text: str) -> datetime:
 
 def iso_utc(dt: datetime) -> str:
     """An instant → its UTC ISO-8601 string."""
-    return dt.astimezone(timezone.utc).isoformat()
+    return dt.astimezone(UTC).isoformat()
 
 
 def stamp(now_dt: datetime | None = None) -> str:
     """The given instant (or now) as an ISO-8601 string —
     the identity stamp's form."""
-    return (now_dt or datetime.now(timezone.utc)).isoformat()
+    return (now_dt or datetime.now(UTC)).isoformat()
 
 
 def now_or(now_dt: datetime | None) -> datetime:
     """The given instant, or now (UTC) when none is given —
     the claim clock's injection seam."""
-    return now_dt or datetime.now(timezone.utc)
+    return now_dt or datetime.now(UTC)
 
 
 def epoch(iso: str | None) -> float | None:
@@ -304,7 +307,15 @@ def absent_since(repo: Path, session: str) -> datetime | None:
 def stamp_absent(repo: Path, session: str, first: datetime, now_dt: datetime) -> None:
     path = absent_stamp_path(repo, session)
     try:
-        staged_write(path, json.dumps({"first_absent_at": first.isoformat(), "last_absent_at": now_dt.isoformat()}).encode())
+        staged_write(
+            path,
+            json.dumps(
+                {
+                    "first_absent_at": first.isoformat(),
+                    "last_absent_at": now_dt.isoformat(),
+                }
+            ).encode(),
+        )
     except Exception:  # noqa: BLE001 - best-effort stamp, as before
         pass
 

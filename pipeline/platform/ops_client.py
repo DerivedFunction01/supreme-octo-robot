@@ -36,6 +36,7 @@ A server refusal or error raises WriterError under the
 endpoint's own error name. This client never writes the
 target itself: no local fallback exists to fall back to.
 """
+
 import hashlib
 import importlib.util as _ilu
 import json
@@ -46,12 +47,14 @@ import urllib.request
 from pathlib import Path
 
 _paths_spec = _ilu.spec_from_file_location(
-    "pipeline_platform_paths", Path(__file__).resolve().parent / "paths.py")
+    "pipeline_platform_paths", Path(__file__).resolve().parent / "paths.py"
+)
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
 _writer_spec = _ilu.spec_from_file_location(
-    "pipeline_platform_writer", Path(__file__).resolve().parent / "writer.py")
+    "pipeline_platform_writer", Path(__file__).resolve().parent / "writer.py"
+)
 _writer = _ilu.module_from_spec(_writer_spec)
 _writer_spec.loader.exec_module(_writer)
 
@@ -74,8 +77,9 @@ def resolve_token(caller, env=None):
     newline tolerated); a missing, unreadable, or empty
     file resolves to None."""
     try:
-        with open(os.path.join(token_dir(env), f"{caller}.token"),
-                  encoding="utf-8") as fh:
+        with open(
+            os.path.join(token_dir(env), f"{caller}.token"), encoding="utf-8"
+        ) as fh:
             token = fh.read().strip()
     except OSError:
         return None
@@ -133,7 +137,8 @@ def post(req, http_timeout, env=None):
     if token:
         headers["Authorization"] = f"Bearer {token}"
     request = urllib.request.Request(
-        server_url(env), data=body, method="POST", headers=headers)
+        server_url(env), data=body, method="POST", headers=headers
+    )
     try:
         with urllib.request.urlopen(request, timeout=http_timeout) as resp:
             return json.loads(resp.read().decode("utf-8"))
@@ -141,8 +146,11 @@ def post(req, http_timeout, env=None):
         try:
             return json.loads(exc.read().decode("utf-8"))
         except Exception:  # noqa: BLE001 - shape below covers it
-            return {"ok": False, "error": "bad_response",
-                    "detail": f"HTTP {exc.code} with no JSON body"}
+            return {
+                "ok": False,
+                "error": "bad_response",
+                "detail": f"HTTP {exc.code} with no JSON body",
+            }
     except urllib.error.URLError as exc:
         return UNREACHABLE if _pre_send(exc.reason) else UNKNOWN
     except (OSError, ValueError):
@@ -159,18 +167,19 @@ def perform(caller, req, http_timeout=30, env=None):
     req["caller"] = caller
     payload = post(req, http_timeout, env)
     if payload == UNREACHABLE:
-        raise WriterError(
-            "io_error",
-            "ops server unreachable — nothing was performed")
+        raise WriterError("io_error", "ops server unreachable — nothing was performed")
     if payload == UNKNOWN or not isinstance(payload, dict):
         raise WriterError(
             "io_error",
             "ops request sent but its response was lost — the "
             "outcome is unknown and the op may have performed; "
-            "verify before repeating")
+            "verify before repeating",
+        )
     if not payload.get("ok"):
-        raise WriterError(payload.get("error") or "io_error",
-                          payload.get("detail") or "ops request failed")
+        raise WriterError(
+            payload.get("error") or "io_error",
+            payload.get("detail") or "ops request failed",
+        )
     return payload
 
 
@@ -195,15 +204,18 @@ def staged_write(caller, path, data, mode=None, http_timeout=30, env=None):
     except UnicodeDecodeError as exc:
         raise WriterError(
             "bad_request",
-            f"content is not UTF-8 text; the /ops write protocol "
-            f"carries text: {exc}") from exc
+            f"content is not UTF-8 text; the /ops write protocol carries text: {exc}",
+        ) from exc
     req = {"op": "write", "path": path, "content": content}
     if mode is not None:
         req["mode"] = mode
     payload = perform(caller, req, http_timeout=http_timeout, env=env)
-    if (payload.get("bytes") != len(data)
-            or payload.get("sha256") != hashlib.sha256(data).hexdigest()):
+    if (
+        payload.get("bytes") != len(data)
+        or payload.get("sha256") != hashlib.sha256(data).hexdigest()
+    ):
         raise WriterError(
             "verify_failed",
-            f"ops result does not match the bytes handed over for {path}")
+            f"ops result does not match the bytes handed over for {path}",
+        )
     return payload

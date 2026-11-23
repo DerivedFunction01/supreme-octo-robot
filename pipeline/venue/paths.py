@@ -20,6 +20,7 @@ divide by contract:
   always derived, and the safe form for code loads out of
   the symlinked trees and for cross-package values.
 """
+
 import os
 from pathlib import Path
 
@@ -44,8 +45,7 @@ TRANSIENT_REGISTRY = REPO_RESOLVED / "config" / "transient.json"
 NAMING = REPO_RESOLVED / "sync" / "naming.py"
 LIVENESS_ENTRY = REPO_RESOLVED / "sync" / "liveness_entry.py"
 EXTEND_GUARD = REPO_RESOLVED / "sync" / "extend_guard.py"
-LEASE_FOUNDATION = (
-    REPO_RESOLVED / "sync" / "lease" / "core" / "foundation.py")
+LEASE_FOUNDATION = REPO_RESOLVED / "sync" / "lease" / "core" / "foundation.py"
 
 # Cross-package values, through the resolved root: the
 # pipeline root, and the platform writer the record

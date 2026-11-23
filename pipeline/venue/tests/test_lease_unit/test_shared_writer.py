@@ -26,11 +26,9 @@ import os
 import stat
 import threading
 import types
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
-
-import pytest
 
 from unit_harness import lease, repo  # noqa: F401
 
@@ -42,7 +40,7 @@ provisioning = importlib.import_module("lease.sessions.provisioning")
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 PIPELINE_ROOT = REPO_ROOT.parent
 
-STAMP_AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
+STAMP_AT = datetime(2026, 1, 1, tzinfo=UTC)
 
 
 def _load(name, path):
@@ -75,22 +73,30 @@ def test_seam_delegates_to_the_platform_writer():
     it: it is the standalone-layout fallback's protocol
     source and the seam's WriterError."""
     assert foundation.WRITER is not None
-    assert Path(foundation.WRITER.__file__).resolve() == (
-        PIPELINE_ROOT / "platform" / "writer.py").resolve()
+    assert (
+        Path(foundation.WRITER.__file__).resolve()
+        == (PIPELINE_ROOT / "platform" / "writer.py").resolve()
+    )
     assert foundation.OPS_CLIENT is not None
-    assert Path(foundation.OPS_CLIENT.__file__).resolve() == (
-        PIPELINE_ROOT / "platform" / "ops_client.py").resolve()
+    assert (
+        Path(foundation.OPS_CLIENT.__file__).resolve()
+        == (PIPELINE_ROOT / "platform" / "ops_client.py").resolve()
+    )
     assert foundation.OPS_CALLER == "venue"
 
 
-def test_stamp_writers_ride_the_seam(repo, monkeypatch):
+# F811: the parameter requests the unit_harness repo fixture
+# imported above for registration — the house fixture idiom.
+def test_stamp_writers_ride_the_seam(repo, monkeypatch):  # noqa: F811
     """The per-session stamp writers that used to hand-roll
     tmp+replace — absence stamps, listener census, identity,
     provisioning — all call the one seam."""
     calls = []
     monkeypatch.setattr(
-        foundation, "staged_write",
-        lambda path, data, mode=None: calls.append((Path(path), data)))
+        foundation,
+        "staged_write",
+        lambda path, data, mode=None: calls.append((Path(path), data)),
+    )
     foundation.stamp_absent(repo, "sess-a", STAMP_AT, STAMP_AT)
     listeners._save_stamp(repo, "sess-a", {"kind": "census"})
     identity._write_stamp(repo, "sess-a", {"kind": "identity"})
@@ -136,8 +142,10 @@ def test_interleaved_writers_never_tear(tmp_path):
         except Exception as exc:  # noqa: BLE001 - collected, asserted below
             errors.append(exc)
 
-    threads = [threading.Thread(target=write, args=(payload,))
-               for payload in (payload_a, payload_b)]
+    threads = [
+        threading.Thread(target=write, args=(payload,))
+        for payload in (payload_a, payload_b)
+    ]
     for thread in threads:
         thread.start()
     for thread in threads:
@@ -191,7 +199,8 @@ def test_funnel_heals_ride_the_writer(tmp_path, monkeypatch):
     fake.calls.clear()
     cli._atomic_write_token(b'{"refresh_token": "generic-fixture-token-value"}')
     assert fake.calls == [
-        (str(token), b'{"refresh_token": "generic-fixture-token-value"}', 0o600)]
+        (str(token), b'{"refresh_token": "generic-fixture-token-value"}', 0o600)
+    ]
 
     # The merge: a pruned entry whose lease record lives goes
     # back, merged into the current map, through the seam.
@@ -199,13 +208,18 @@ def test_funnel_heals_ride_the_writer(tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir()
     (var / "lease-sess-a.json").write_text(
-        json.dumps({"deadline": "2999-01-01T00:00:00+00:00"}))
+        json.dumps({"deadline": "2999-01-01T00:00:00+00:00"})
+    )
     monkeypatch.setattr(cli, "_var_dir", lambda: var)
-    sessions.write_text(json.dumps({"sess-b": {"endpoint": "https://example.invalid/b"}}))
-    before = json.dumps({
-        "sess-a": {"endpoint": "https://example.invalid/a"},
-        "sess-b": {"endpoint": "https://example.invalid/b"},
-    }).encode()
+    sessions.write_text(
+        json.dumps({"sess-b": {"endpoint": "https://example.invalid/b"}})
+    )
+    before = json.dumps(
+        {
+            "sess-a": {"endpoint": "https://example.invalid/a"},
+            "sess-b": {"endpoint": "https://example.invalid/b"},
+        }
+    ).encode()
     cli._restore_pruned_entries(before)
     assert len(fake.calls) == 1
     path, data, mode = fake.calls[0]
@@ -230,8 +244,10 @@ def test_sh_liveness_cache_rides_the_writer(tmp_path, monkeypatch):
 
     fake_foundation = types.SimpleNamespace(staged_write=record)
     monkeypatch.setattr(
-        sh_state, "_lease_module",
-        lambda: types.SimpleNamespace(foundation=fake_foundation))
+        sh_state,
+        "_lease_module",
+        lambda: types.SimpleNamespace(foundation=fake_foundation),
+    )
 
     liveness = tmp_path / "liveness-sess-a.json"
     liveness.write_text(json.dumps({"state": "unknown"}))
@@ -244,8 +260,8 @@ def test_sh_liveness_cache_rides_the_writer(tmp_path, monkeypatch):
     calls.clear()
     monkeypatch.setattr(sh_state, "_mirror_fresh", lambda: False)
     monkeypatch.setattr(
-        sh_state.subprocess, "run",
-        lambda *a, **k: types.SimpleNamespace(returncode=0))
+        sh_state.subprocess, "run", lambda *a, **k: types.SimpleNamespace(returncode=0)
+    )
     sh_state.restore_transient()
     assert [p.name for p, _ in calls] == ["mirror-restore.stamp"]
 

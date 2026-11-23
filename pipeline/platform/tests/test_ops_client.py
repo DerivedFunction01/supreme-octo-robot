@@ -23,7 +23,6 @@ import sys
 import tempfile
 import threading
 import unittest
-import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -50,8 +49,7 @@ class _Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)
         body = self.rfile.read(length)
-        self.server.requests.append(
-            {"headers": dict(self.headers), "body": body})
+        self.server.requests.append({"headers": dict(self.headers), "body": body})
         try:
             req = json.loads(body.decode("utf-8"))
         except ValueError:
@@ -60,11 +58,11 @@ class _Handler(BaseHTTPRequestHandler):
         presented = self.headers.get("Authorization") or ""
         if presented.startswith("Bearer "):
             digest = hashlib.sha256(
-                presented[len("Bearer "):].encode("utf-8")).hexdigest()
+                presented[len("Bearer ") :].encode("utf-8")
+            ).hexdigest()
             if digest == TOKEN_SHA256:
                 auth = (CALLER, ["write-state"])
-        code, payload = sched_ops.perform(
-            None, self.server.values, req, auth=auth)
+        code, payload = sched_ops.perform(None, self.server.values, req, auth=auth)
         data = json.dumps(payload).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -79,20 +77,21 @@ class OpsClientCase(unittest.TestCase):
         self.root = self._tmp.name
         self.token_dir = os.path.join(self.root, "ops-tokens")
         os.makedirs(self.token_dir)
-        with open(os.path.join(self.token_dir, f"{CALLER}.token"),
-                  "w", encoding="utf-8") as fh:
+        with open(
+            os.path.join(self.token_dir, f"{CALLER}.token"), "w", encoding="utf-8"
+        ) as fh:
             fh.write(TOKEN + "\n")
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), _Handler)
-        self.server.values = {"workspace_root": self.root,
-                              "capture_cap_bytes": 65536}
+        self.server.values = {"workspace_root": self.root, "capture_cap_bytes": 65536}
         self.server.requests = []
-        self.thread = threading.Thread(
-            target=self.server.serve_forever, daemon=True)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         port = self.server.server_address[1]
-        self.env = {"SCHEDULER_HOST": "127.0.0.1",
-                    "SCHEDULER_PORT": str(port),
-                    "SCHED_OPS_TOKEN_DIR": self.token_dir}
+        self.env = {
+            "SCHEDULER_HOST": "127.0.0.1",
+            "SCHEDULER_PORT": str(port),
+            "SCHED_OPS_TOKEN_DIR": self.token_dir,
+        }
 
     def tearDown(self):
         self.server.shutdown()
@@ -104,21 +103,20 @@ class OpsClientCase(unittest.TestCase):
 
     def test_write_lands_byte_identical_through_the_service(self):
         payload = ops_client.staged_write(
-            CALLER, self.target(), b'{"a": 1}\n', env=self.env)
+            CALLER, self.target(), b'{"a": 1}\n', env=self.env
+        )
         self.assertEqual(payload["bytes"], 9)
         with open(self.target(), "rb") as fh:
             self.assertEqual(fh.read(), b'{"a": 1}\n')
         # No staging litter: the server's staged sibling was
         # renamed over, nothing of the client's own exists.
-        self.assertEqual(sorted(os.listdir(self.root)),
-                         ["ops-tokens", "state.json"])
+        self.assertEqual(sorted(os.listdir(self.root)), ["ops-tokens", "state.json"])
 
     def test_token_and_caller_are_presented(self):
         ops_client.staged_write(CALLER, self.target(), b"{}", env=self.env)
         self.assertEqual(len(self.server.requests), 1)
         seen = self.server.requests[0]
-        self.assertEqual(seen["headers"].get("Authorization"),
-                         f"Bearer {TOKEN}")
+        self.assertEqual(seen["headers"].get("Authorization"), f"Bearer {TOKEN}")
         self.assertEqual(json.loads(seen["body"])["caller"], CALLER)
 
     def test_flap_local_writer_dead_but_the_route_lands(self):
@@ -135,8 +133,7 @@ class OpsClientCase(unittest.TestCase):
         ops_client._writer.staged_write = denied
         writer.staged_write = denied
         try:
-            ops_client.staged_write(
-                CALLER, self.target(), b"landed\n", env=self.env)
+            ops_client.staged_write(CALLER, self.target(), b"landed\n", env=self.env)
         finally:
             ops_client._writer.staged_write = orig_client_writer
             writer.staged_write = orig_local_writer
@@ -145,19 +142,18 @@ class OpsClientCase(unittest.TestCase):
 
     def test_mode_0600_survives_the_route(self):
         target = self.target("secret.json")
-        ops_client.staged_write(
-            CALLER, target, b"{}", mode=0o600, env=self.env)
+        ops_client.staged_write(CALLER, target, b"{}", mode=0o600, env=self.env)
         self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
         # And restamped on a recreate at the umask default.
         os.chmod(target, 0o644)
-        ops_client.staged_write(
-            CALLER, target, b'{"v": 2}', mode=0o600, env=self.env)
+        ops_client.staged_write(CALLER, target, b'{"v": 2}', mode=0o600, env=self.env)
         self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
 
     def test_unreachable_raises_io_error_and_target_untouched(self):
         # A port nothing listens on: bind, take the number,
         # close — the connect is refused, provably pre-send.
         import socket
+
         sock = socket.socket()
         sock.bind(("127.0.0.1", 0))
         dead_port = sock.getsockname()[1]
@@ -196,7 +192,8 @@ class OpsClientCase(unittest.TestCase):
     def test_non_utf8_is_refused_before_anything_is_sent(self):
         with self.assertRaises(ops_client.WriterError) as ctx:
             ops_client.staged_write(
-                CALLER, self.target(), b"\xff\xfe\x00", env=self.env)
+                CALLER, self.target(), b"\xff\xfe\x00", env=self.env
+            )
         self.assertEqual(ctx.exception.name, "bad_request")
         self.assertEqual(self.server.requests, [])
         self.assertFalse(os.path.exists(self.target()))
