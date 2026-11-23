@@ -11,7 +11,9 @@ Runs compute-bound work from this 2-vCPU machine on a Colab Pro high-RAM CPU run
 
 ## Job manifests: transport
 
-The manifest declares the tree's form; the runner holds the preference. Every run record stamps the transport used (`transport` on `results/runs/<run_id>.json`), the bytes the runner moved, and the claim→launch span, so adoption is measured from records.
+The manifest declares the tree's form; the runner holds the preference. Every run record stamps the transport used (`transport` on `results/runs/<run_id>.json`), the bytes the runner moved, and the claim→launch span, so adoption is measured from records — `ops/transport_report.py` reads the records back as per-programme branch / bundle / never-launched counts over a day or a rolling window.
+
+Branches are throwaway working surfaces. Disposable branches, detached-HEAD checkouts, and other ephemeral working states are all acceptable forms; nothing about a branch is precious or preserved for its own sake. The point of the discipline is that the main lineage carries finalized clean work only — work is finished, gated, and clean on the branch or detached surface, and only that finalized state lands on main.
 
 **Branch transport — the default for a committed, pushed tree.** The job names its tree's branch on origin; the runner skips the snapshot build and the code-payload upload, drives the session's base clone (`sync/base_clone.sh`) to fetch the branch, and launches only when the fetched tip equals the announced SHA:
 

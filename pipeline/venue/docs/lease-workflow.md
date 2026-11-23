@@ -20,10 +20,16 @@ is on any computer.
 1. **Preflight (local, every job)**: `bin/colab-lease status` must
    show the lease active with its deadline in the future. Read the
    local HEAD of the repo being shipped; if the job needs a tree
-   newer than the warmed snapshot, build a fresh snapshot bundle
+   newer than the warmed snapshot, ship it BEFORE queueing the
+   job — never mid-job. A committed, pushed tree travels by
+   branch transport: the job manifest declares
+   `transport: {kind: branch, repo, branch, sha}` and the runner
+   fetches the branch and asserts the SHA at launch (see
+   docs/README-runner.md). Only a genuinely uncommitted tree
+   takes the snapshot route: build a fresh snapshot bundle
    (sync/make_snapshot_bundle.sh) and apply it remotely
-   (sync/apply_bundle_remote.py) BEFORE queueing the job — never
-   mid-job. Record the shipped tree hash in the job's run record.
+   (sync/apply_bundle_remote.py). Record the shipped tree hash
+   in the job's run record.
 2. **Job zero — remote environment**: the first job on any fresh
    lease is an environment job, and no comparative result is
    trusted until it has passed on that lease. Job zero is
@@ -743,11 +749,15 @@ driver and regenerate, or regenerate from the network (8 rps,
 declared user agent passed via `--env`) — priced, with the route
 recorded.
 
-- **Snapshot bundles for code**: origin-lineage only (parent =
-  current origin tip, tree = the tree being shipped), byte size
-  and SHA-256 recorded before transfer and verified after,
-  applied by `git fetch` + `merge --ff-only`. Never a bundle on
-  the local lineage.
+- **Code sync**: a committed tree moves by branch transport —
+  the manifest declares the branch and its SHA, the session's
+  base clone fetches it from origin, and the checkout asserts
+  the SHA before launch. **Snapshot bundles for code** are the
+  fallback for a genuinely uncommitted tree: origin-lineage
+  only (parent = current origin tip, tree = the tree being
+  shipped), byte size and SHA-256 recorded before transfer and
+  verified after, applied by `git fetch` + `merge --ff-only`.
+  Never a bundle on the local lineage.
 - **Metadata snapshots**: always transfer, never refetch —
   refetch is not identity-preserving. Derived artifacts
   regenerate on the VM from the transferred snapshot and verify
