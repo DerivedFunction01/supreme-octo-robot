@@ -57,5 +57,5 @@ from .state.reconcile import reconcile_journal_path, journal_disagreement
 from .sync.bridge import BRIDGE_KIT_REMOTE, BRIDGE_REMOTE, BRIDGE_PROTOCOL, BRIDGE_READ_TIMEOUT_S, BRIDGE_INSTALL_COOLDOWN_S, BRIDGE_HEARTBEAT_STALE_S, bridge_limits, bridge_command, _bridge_arm_path, _bridge_arm, _bridge_arm_stamp, bridge_status_read, install_bridge_kit, _bridge_fold_stop, _bridge_ferry, bridge_duty
 from .state.state import _extend_guard_spec, extend_guard, status, specs, budget_snapshot, accounts_state, budgets_state, _UNSET, set_budget_caps, auth_required, _envelope_block, _bridge_block, state_records, state_specs, state_budget, state_grant, state_meta, state_extend_guard, state_listeners, state_orphans, state
 from .lifecycle.standing import standing_duty
-from .lifecycle.reap import _reap_record, _REAP_PRIORITY, _reap_lock, reap, _reap_pass
+from .lifecycle.reap import _reap_record, _REAP_PRIORITY, _reap_lock, reap, _reap_pass, GateScope, parse_gate_scope
 from .lifecycle.auto import request_path, write_request, load_request, clear_request, auto_enabled, auto_acquire

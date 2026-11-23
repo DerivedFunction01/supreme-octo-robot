@@ -1,6 +1,8 @@
 import contextlib
+import dataclasses
 import fcntl
 import os
+import re
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -40,6 +42,63 @@ def _budget_s() -> float:
         return _REAP_BUDGET_DEFAULT_S
 
 
+# --- Approval-gate scope -------------------------------------------------------
+# The reaper hook's approval gate (initiation-time approval plan,
+# Step 4) tracks tunnel hosts with no proven contact as pending:
+# dialing one mints a fresh approval card, so the gate's default
+# for a pending host is CLOSED — at most one probe dial per hour.
+# Before this scope existed, the hook expressed the gate by
+# skipping the whole reap whenever any host was pending, which
+# froze every proven host's pulse, keepalive, and deadline
+# enforcement between probes (2026-11-23: one renewed host's
+# unproven tunnel stalled three sessions' liveness for an hour
+# at a time and read as three session stalls). The scope moves
+# the boundary inside the pass: the hook now supplies the
+# pending/probe host sets on the reap command line, and the pass
+# scopes only the records on those hosts — a pending record gets
+# no network contact except, on a probe pass, its one kernel
+# pulse; every other record gets full duties. The gate supplies
+# hosts, never sessions: the pass resolves them against its own
+# records, so a named host with no record is inert. Validation
+# lives on the value itself — a malformed token or a probe host
+# that is not pending raises, and the CLI refuses before any
+# lease work runs; an absent scope is exactly the pre-gate
+# behaviour every other reap caller still gets.
+
+_HOST_TOKEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+@dataclasses.dataclass(frozen=True)
+class GateScope:
+    """One pass's approval-gate scope: the tunnel hosts with no
+    proven contact (pending) and the subset whose hourly probe
+    is due on this pass (probe)."""
+
+    pending_hosts: frozenset = frozenset()
+    probe_hosts: frozenset = frozenset()
+
+    def __post_init__(self):
+        for host in (*self.pending_hosts, *self.probe_hosts):
+            if not isinstance(host, str) or not _HOST_TOKEN.match(host):
+                raise ValueError(f"malformed gate host token: {host!r}")
+        extra = self.probe_hosts - self.pending_hosts
+        if extra:
+            raise ValueError(f"gate probe hosts not pending: {sorted(extra)}")
+
+
+def parse_gate_scope(pending_csv: str | None, probe_csv: str | None) -> GateScope:
+    """Parse the reap command line's comma-separated gate host
+    lists. None (flag absent) and an empty value both parse to
+    the empty set; a malformed token raises ValueError."""
+
+    def tokens(csv: str | None) -> frozenset:
+        if csv is None:
+            return frozenset()
+        return frozenset(tok.strip() for tok in csv.split(",") if tok.strip())
+
+    return GateScope(pending_hosts=tokens(pending_csv), probe_hosts=tokens(probe_csv))
+
+
 class _CycleBudget:
     """One pass's monotonic budget. `check` is the furniture
     gate: True while time remains; on exhaustion it records the
@@ -64,18 +123,26 @@ class _CycleBudget:
         return {"budget_s": self.budget_s, "spent_s": round(time.monotonic() - self._started, 1), "skipped": self.skipped}
 
 
-def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None, now_dt: datetime, state: str, diag: dict) -> tuple[dict, bool]:
+def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None, now_dt: datetime, state: str, diag: dict, scoped: bool = False) -> tuple[dict, bool]:
     """One record's lifecycle legs, given its state verdict:
     the pre-two-tier reap logic (hard deadline, idle shutdown,
     death-clearing, renewal) plus grant-expiry enforcement for
     standing leases — a standing lease whose grant has lapsed
     (or vanished) is released even before its own deadline.
     Returns (result, kept): kept is True when the lease survives
-    and its liveness furniture is still owed."""
+    and its liveness furniture is still owed.
+
+    A scoped record (its tunnel host is approval-pending) gets
+    no leg that dials the session: renewal and every release
+    wait for proven contact, and the record reports kept with
+    the gate marker naming why. The absent path still runs —
+    it is local bookkeeping over the pass's shared snapshot
+    (stamp, confirm, clear), not a dial — except its renewal
+    attempt, which creates a session and is therefore gated."""
     if state == "unknown":
         return {"action": "kept-unknown", "session": rec["session"], "read_error": diag.get("read_error"), "attempts": diag.get("attempts")}, False
     if state == "absent":
-        if rec.get("renew") and not rec.get("standing") and now_dt < foundation.parse_dt(rec["deadline"]):
+        if not scoped and rec.get("renew") and not rec.get("standing") and now_dt < foundation.parse_dt(rec["deadline"]):
             # Window lease whose session died mid-window: renew it
             # instead of clearing (lease-extension plan). A failed
             # renewal keeps the record — the next cycle retries, and
@@ -104,6 +171,9 @@ def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None,
         records.delete_record(repo, rec["session"])
         return {"action": "cleared-dead", "session": rec["session"]}, False
     foundation.clear_absent_stamp(repo, rec["session"])
+    if scoped:
+        live = records.live_jobs(repo, rec)
+        return {"action": "kept", "session": rec["session"], "deadline": rec["deadline"], "jobs": [entry["id"] for entry in live], "gate": "pending"}, True
     if rec.get("standing") and not grants.grant_active(grant, now_dt):
         rel = lifecycle.release(colab, repo, reason="grant-expired", session=rec["session"], now_dt=now_dt)
         return {"action": "released-standing-expired", "stop": rel.get("stop"), "was": rel.get("was")}, False
@@ -134,13 +204,22 @@ def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None,
     return out, True
 
 
-def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: datetime) -> bool:
+def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: datetime, scoped: bool = False, probe: bool = False) -> bool:
     """One kept record's liveness furniture: the kernel
     pulse, the keepalive freshness read, and the runtime
     identity check. Returns True when the keepalive read found
     the loop stale and a launch is owed — the launch itself is
     the caller's act (the pass defers it to its own phase; a
     stalled launch then starves nothing).
+
+    A scoped record (approval-pending host) gets none of it:
+    the freshness read, the keepalive launch, and the identity
+    probe are all tunnel contact the gate reserves. On a probe
+    pass the record gets exactly one dial — the kernel pulse,
+    the gate's own contact test — stamped on a fresh load
+    exactly as the cadenced pulse stamps it, because the stamp
+    is the contact evidence both gate latches read. A scoped
+    record never owes a keepalive launch.
 
     The pulse runs FIRST (2026-11-21 cure): it is the
     liveness heartbeat the whole layer reads, and under a
@@ -156,6 +235,21 @@ def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: 
     lost update waiting for the next concurrent writer —
     the 07:23Z pass reported a pulse ok for one record
     whose stamp never persisted."""
+    if scoped:
+        if probe:
+            result = keepalive.kernel_pulse(colab, repo, rec["session"])
+            fresh_rec = records.load_record(repo, rec["session"]) or rec
+            fresh_rec["last_pulse_at"] = now_dt.isoformat()
+            fresh_rec["last_pulse_result"] = result
+            records.save_record(repo, fresh_rec)
+            rec["last_pulse_at"] = fresh_rec["last_pulse_at"]
+            rec["last_pulse_result"] = result
+            out["pulse"] = result
+            out["gate"] = "probe"
+        else:
+            out["pulse"] = "gated"
+            out["gate"] = "pending"
+        return False
     launch_owed = False
     if cfg.get("keepalive", {}).get("enabled"):
         pulse_every = float(cfg["keepalive"].get("pulse_seconds", 600))
@@ -192,7 +286,7 @@ def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: 
     return launch_owed
 
 
-def _reap_record(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None, now_dt: datetime) -> dict:
+def _reap_record(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None, now_dt: datetime, gate: GateScope | None = None) -> dict:
     """One record's whole reap — lifecycle, furniture, and an
     inline keepalive launch — over its own state read. The
     pass composes the same legs in phases under the cycle
@@ -200,9 +294,11 @@ def _reap_record(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None, no
     single record directly."""
     diag: dict = {}
     state = sessions.session_state(colab, rec["session"], diag, attempts=sessions._REAP_READ_ATTEMPTS, timeout=sessions._REAP_READ_TIMEOUT_S)
-    out, kept = _reap_lifecycle(colab, repo, cfg, rec, grant, now_dt, state, diag)
+    scoped = gate is not None and rec.get("host") in gate.pending_hosts
+    out, kept = _reap_lifecycle(colab, repo, cfg, rec, grant, now_dt, state, diag, scoped=scoped)
     if kept:
-        if _reap_furniture(colab, repo, cfg, rec, out, now_dt):
+        probe = scoped and rec.get("host") in gate.probe_hosts
+        if _reap_furniture(colab, repo, cfg, rec, out, now_dt, scoped=scoped, probe=probe):
             out["keepalive"] = keepalive.ensure_keepalive(colab, repo, rec["session"]).get("keepalive")
     return out
 
@@ -234,14 +330,14 @@ def _reap_lock(repo: Path):
         os.close(fd)
 
 
-def reap(colab, repo: Path, now_dt: datetime | None = None) -> dict:
+def reap(colab, repo: Path, now_dt: datetime | None = None, gate: GateScope | None = None) -> dict:
     with _reap_lock(repo) as held:
         if not held:
             return {"action": "already-running", "records": []}
-        return _reap_pass(colab, repo, now_dt)
+        return _reap_pass(colab, repo, now_dt, gate=gate)
 
 
-def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
+def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScope | None = None) -> dict:
     """Hook duty: reap every lease record. The top-level
     action/fields are the most consequential per-record result —
     or the sole record's, in a one-lease world — so the hook's
@@ -258,7 +354,13 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
     (per-record identity/keepalive/pulse, the deferred
     keepalive launches, the listener census) run under the
     budget's remaining time, skipping-and-reporting what does
-    not fit."""
+    not fit.
+
+    A gate scope (the reaper hook's approval gate) narrows the
+    per-record legs for records on pending hosts only — see
+    GateScope; the shared listing and the global detections
+    are control-plane reads, not per-host tunnel contact, and
+    are never scoped."""
     now_dt = now_dt or datetime.now(timezone.utc)
     cfg = foundation.load_config(repo)
     recs = records.all_records(repo)
@@ -275,7 +377,10 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
     # moment the pass sees it (orphans.detect_nameless).
     nameless = orphans.detect_nameless(repo, live, now_dt)
     if not recs:
-        return {"action": "none", "records": [], "unattributed": unattributed, "nameless": nameless, "budget": budget.report()}
+        out = {"action": "none", "records": [], "unattributed": unattributed, "nameless": nameless, "budget": budget.report()}
+        if gate is not None:
+            out["gate"] = {"pending_sessions": [], "probe_sessions": []}
+        return out
     grant = grants.load_grant(repo)
     for rec in recs:
         # Host reconcile (initiation-time approval follow-up,
@@ -292,11 +397,24 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
         # change spools as origin "reconcile".
         if keepalive._capture_session_host(repo, rec, "reconcile", spool_on_first=False):
             records.save_record(repo, rec)
+    # Approval-gate scope, resolved after the host reconcile so
+    # it reads the freshest host per record: the sessions whose
+    # record sits on a pending host, and the subset whose host's
+    # probe is due on this pass.
+    pending_sessions: set[str] = set()
+    probe_sessions: set[str] = set()
+    if gate is not None:
+        for rec in recs:
+            host = rec.get("host")
+            if host in gate.pending_hosts:
+                pending_sessions.add(rec["session"])
+                if host in gate.probe_hosts:
+                    probe_sessions.add(rec["session"])
     results = []
     kept_pairs = []
     for rec in recs:
         state = sessions.state_in_snapshot(snapshot, rec["session"])
-        out, kept = _reap_lifecycle(colab, repo, cfg, rec, grant, now_dt, state, diag)
+        out, kept = _reap_lifecycle(colab, repo, cfg, rec, grant, now_dt, state, diag, scoped=rec["session"] in pending_sessions)
         entry = {"session": rec.get("session"), **out}
         results.append(entry)
         if kept:
@@ -306,7 +424,8 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
         if not budget.check(f"furniture:{rec['session']}"):
             entry["furniture"] = "skipped-budget"
             continue
-        if _reap_furniture(colab, repo, cfg, rec, entry, now_dt):
+        scoped = rec["session"] in pending_sessions
+        if _reap_furniture(colab, repo, cfg, rec, entry, now_dt, scoped=scoped, probe=rec["session"] in probe_sessions):
             launch_requests.append((rec, entry))
     for rec, entry in launch_requests:
         if not budget.check(f"keepalive-launch:{rec['session']}"):
@@ -321,6 +440,10 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
     # own failures and never raises, and this guard keeps even a
     # collector defect out of the reap's path.
     for rec in recs:
+        if rec["session"] in pending_sessions:
+            # The listener census reads through the session's
+            # tunnel — contact the gate reserves like any other.
+            continue
         if not budget.check(f"listeners:{rec['session']}"):
             continue
         try:
@@ -338,4 +461,6 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None) -> dict:
     out["unattributed"] = unattributed
     out["nameless"] = nameless
     out["budget"] = budget.report()
+    if gate is not None:
+        out["gate"] = {"pending_sessions": sorted(pending_sessions), "probe_sessions": sorted(probe_sessions)}
     return out

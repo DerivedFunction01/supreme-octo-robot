@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
 """Thin CLI over sync/lease/ — the shared-session lease.
 
-Usage: colab-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
+Usage: colab-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap [--gate-pending-hosts CSV] [--gate-probe-hosts CSV]|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
 Prints one JSON result. `reap` is the reaper-hook duty (deadline +
-orphan reconciliation across all lease records); `auto` is the
+orphan reconciliation across all lease records); its gate flags
+carry the hook's approval-gate scope — the tunnel hosts with no
+proven contact, and the subset whose hourly probe is due — and
+the pass scopes only the records on those hosts (a pending
+record's one probe pulse aside, it is not dialed; every other
+record gets full duties). A malformed host list refuses before
+any lease work runs; no flags is the unscoped pass every other
+caller gets. `auto` is the
 hook's auto-acquire duty (inert unless enabled in config/lease.json);
 `request` records a lease demand that `auto` consumes; `--at ISO-TIME`
 makes it a timed start the duty fires when due — data, not an agent
@@ -182,7 +189,7 @@ def _chain_log(event: dict) -> None:
         pass
 
 
-def _reap_with_collector() -> dict:
+def _reap_with_collector(gate=None) -> dict:
     """The reap duty: the lease pass, then the standing
     collector — stale detached run records get the poll their
     consumer never ran — inside the command budget. Guarded
@@ -193,7 +200,7 @@ def _reap_with_collector() -> dict:
 
     started = time.monotonic()
     _chain_log({"phase": "enter"})
-    result = lease.reap(cr.colab, REPO)
+    result = lease.reap(cr.colab, REPO, gate=gate)
     _chain_log({"phase": "pass-done", "elapsed_s": round(time.monotonic() - started, 1)})
     try:
         var = REPO / "var"
@@ -559,6 +566,23 @@ def main() -> int:
         had = lease.load_request(REPO) is not None
         lease.clear_request(REPO)
         result = {"action": "request-cleared" if had else "no-demand"}
+    elif cmd == "reap":
+        pending_csv, rest, err = parse_flag(args[1:], "--gate-pending-hosts")
+        probe_csv = None
+        if err is None:
+            probe_csv, rest, err = parse_flag(rest, "--gate-probe-hosts")
+        if err is None and rest:
+            err = f"reap takes no arguments besides --gate-pending-hosts/--gate-probe-hosts, got {rest[0]!r}"
+        gate = None
+        if err is None and (pending_csv is not None or probe_csv is not None):
+            try:
+                gate = lease.parse_gate_scope(pending_csv, probe_csv)
+            except ValueError as exc:
+                err = str(exc)
+        if err:
+            print(f"colab-lease: {err}", file=sys.stderr)
+            return 2
+        result = _reap_with_collector(gate)
     else:
         result = _reap_with_collector()
     print(json.dumps(result, indent=2))
