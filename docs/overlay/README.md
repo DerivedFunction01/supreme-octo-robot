@@ -1,6 +1,6 @@
 # S1 overlay capture — manifest
 
-Capture window: 2026-11-13 01:46–01:55 EST (America/New_York).
+Capture window: 01:46–01:55 EST (America/New_York).
 Sources read-only throughout; nothing in a source repo was
 edited. Execution pins: scheduler `cf910ce`, workbench-viewer
 `b0b9cc5`, colab-runner `636033b`, owner-attention `7f13ae7`.
@@ -15,7 +15,7 @@ in [workbench-manifest-census.json](workbench-manifest-census.json).
 
 ## Reconciliation against the reviews
 
-| Census | Review (2026-11-12) | Capture (2026-11-13) | Delta |
+| Census | Review | Capture | Delta |
 |---|---|---|---|
 | Scheduler live job entries beyond the 2 tracked | ~40 | 24 (19 operator + 5 machine-derived) | Explained: the review's ~40 was the fleet at its inspection peak. Per-lease `colab-liveness-*` entries (3 at capture) and `wb-progress-*` entries (2 at capture) are born and self-delete with leases/todos, so the count moves with live fleet size; the day's landings also retired entries. The operator set is stable and fully named in the scheduler inventory. |
 | Scheduler bodies | 12 files in `bodies/` | 14 files: 12 Markdown bodies + 2 routing-config YAML | Explained: +2 are the restart-reconcile pair (`restart-reconcile.md`, `restart-reconcile-owners.yaml`) landed with that job after the review. The 12-body core matches. |
@@ -71,7 +71,7 @@ in [workbench-manifest-census.json](workbench-manifest-census.json).
    (`SWEEPER_CONNECTOR_TOKEN`) — a live credential sitting in
    the scheduler working tree outside `config.json`'s
    hash-only registry. Not in §3's list; inventoried by
-   reference only. **Dispositioned 2026-11-13 by the
+   reference only. **Dispositioned by the
    scheduler thread: verified a redundant copy of the live
    sweeper-venue token (never committed, read by nothing)
    and removed; deletion verified. Detail in the scheduler
