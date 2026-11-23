@@ -1,5 +1,5 @@
 """Per-run remote upload directories (branch transport
-plan, Step 5).
+plan, Step 5; lock strip, 2026-11-23).
 
 The pins: an upload addressed with the run's directory
 lands at /content/runs/<run_id>/<name> — plain and chunked
@@ -9,11 +9,14 @@ the directory is created by one named exec before any
 upload; manifest args naming an upload are rewritten to
 the run's copy and nothing else is; the branch drive's
 substrate upload and driver both address the run's
-directory; and in main() the uploads stand OUTSIDE the
-launch lock while the branch drive stands inside it — the
-narrowed lock's scope, pinned on the source order because
-the lock itself is an flock whose coverage is the order
-of the calls around it.
+directory, and the drive's clone lands in the run's own
+dest under it; and no launch lock exists anywhere on the
+launch path — the per-session flock Step 5 narrowed was
+stripped outright under the owner's no-sync-blocker
+ruling, its three remaining legs (branch drive, seed
+apply, launch-confirm) cured by per-run isolation of the
+state they used to share. The no-lock pin is a source pin
+because an absence has no other observable.
 """
 
 import hashlib
@@ -169,17 +172,28 @@ def test_prepare_branch_addresses_the_run_dir(tmp_path):
     assert colab.uploads[0][-1] == "/content/runs/run-1/base_clone.sh"
     driver = (tmp_path / "var" / "branch-run-1.py").read_text()
     assert "runs/run-1/base_clone.sh" in driver
+    # The clone itself lands in the run's own dest under its
+    # directory — never the shared per-registry dest two
+    # drives would interleave on. The returned dest keeps
+    # naming the registry dest (the stamp's shape).
+    assert "'/content/runs/run-1/dest'" in driver
 
 
-def test_main_uploads_stand_outside_the_narrowed_lock():
-    # The lock's scope is the order of main()'s calls around
-    # it: the run-dir creation and every upload precede the
-    # lock's entry; the branch drive and the launch follow
-    # it. Pinned on the source because an flock's coverage
+def test_launch_path_takes_no_session_lock():
+    # The strip's pin (owner ruling, 2026-11-23: no sync
+    # blocker on the venue job path): neither the launch
+    # front end nor main() defines or takes a per-session
+    # launch lock, in any form — the flock Step 5 narrowed
+    # is gone, not renamed. A source pin because an absence
     # has no other observable.
-    text = (REPO / "sync" / "runner" / "main.py").read_text()
-    entered = text.index("launch_lock.__enter__()")
-    assert text.index("ensure_run_dir(session, run_id)") < entered
-    assert text.index("upload_one(session, script, remote_script, run_id)") < entered
-    assert text.index("remote_dir=run_upload_dir(run_id)") < entered
-    assert entered < text.index("drive_branch_window(session, rec, transport, branch_ctx, run_id)")
+    launch_text = (REPO / "sync" / "runner" / "launch.py").read_text()
+    main_text = (REPO / "sync" / "runner" / "main.py").read_text()
+    for text in (launch_text, main_text):
+        assert "session_launch_lock" not in text
+        assert "launch_lock" not in text
+        assert "flock" not in text
+
+
+def test_launch_module_exports_no_lock(tmp_path):
+    launch, _journal = load_launch(tmp_path, ScriptedColab([]))
+    assert not hasattr(launch, "session_launch_lock")

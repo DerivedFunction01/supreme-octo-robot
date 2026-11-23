@@ -4,8 +4,6 @@ and the orphan notes an acquire refusal prints (E1, runner
 half) so a refusal names the state that may have caused it.
 """
 
-import contextlib
-import fcntl
 import hashlib
 import json
 import os
@@ -300,7 +298,7 @@ def parse_transport(job) -> "dict | None":
 
 
 def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run_id: str) -> "tuple[str | None, dict]":
-    """Drive the session's base clone to the declared branch
+    """Drive the run's own base clone to the declared branch
     tip before launch (branch transport plan, Step 2): the
     snapshot build and the code-payload upload are skipped —
     the session fetches the branch from origin through the
@@ -314,7 +312,22 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
     before the fire. Returns (error, info): on success error
     is None and info carries the dest and the asserted head.
     The fetch moves on the session's own channel, which
-    reports no byte count, so no fetch size is claimed."""
+    reports no byte count, so no fetch size is claimed.
+
+    The clone lands in the run's own dest —
+    /content/runs/<run_id>/<dest> — never the shared
+    per-registry dest (owner ruling, 2026-11-23: no sync
+    blocker on the venue job path). The base clone used to
+    be one checkout per registry dest per session, and two
+    launches' fetch/reset of it could not interleave; that
+    shared checkout was the last state the launch lock
+    serialized. A clone per run removes the state instead:
+    each drive clones (or re-pins) its own copy, at the
+    price of a fresh clone per run. The returned dest keeps
+    naming the registry dest the clone serves — the record
+    stamp's shape is unchanged; the run's copy lives under
+    its upload directory, where the run's consumers resolve
+    it the same way they resolve its uploads."""
     err = upload_one(session, REPO / "sync" / "base_clone.sh", "base_clone.sh", run_id, remote_dir=run_upload_dir(run_id))
     if err is not None:
         return f"branch transport: base_clone.sh upload: {err}", {}
@@ -322,7 +335,7 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
     driver.parent.mkdir(parents=True, exist_ok=True)
     driver.write_text(
         "import subprocess\n"
-        f"r = subprocess.run(['bash',{run_upload_dir(run_id) + '/base_clone.sh'!r},{clone_url!r},{'/content/' + dest!r},{transport['branch']!r},{transport['sha']!r}], capture_output=True, text=True)\n"
+        f"r = subprocess.run(['bash',{run_upload_dir(run_id) + '/base_clone.sh'!r},{clone_url!r},{'/content/' + run_upload_dir(run_id) + '/' + dest!r},{transport['branch']!r},{transport['sha']!r}], capture_output=True, text=True)\n"
         "print(r.stdout); print(r.stderr[-500:])\n"
     )
     try:
@@ -416,13 +429,12 @@ def drive_branch_window(session, rec, transport, branch_ctx, run_id) -> "str | N
 
 
 def upload_seed_files(session, seed_ctx, run_id) -> "str | None":
-    """The seed's uploads, run before the launch lock
-    (Step 5): the bundle (chunked — it can exceed the
-    single-file ceiling), its manifest, and the apply
-    script land in the run's own directory. The apply
-    itself writes the seed's shared dest, so it runs
-    inside the lock in main(). Returns an error string,
-    or None."""
+    """The seed's uploads: the bundle (chunked — it can
+    exceed the single-file ceiling), its manifest, and the
+    apply script land in the run's own directory. The apply
+    (in main) writes the run's own seed dest under the same
+    directory, so no seed state is shared with another run.
+    Returns an error string, or None."""
     rd = run_upload_dir(run_id)
     up = transfer.chunked_upload(session, seed_ctx["bundle_path"], f"{rd}/{seed_ctx['bundle_path'].name}", staging_token=run_id)
     if not up["ok"]:
@@ -492,68 +504,6 @@ def stamp_transport_span(rec) -> None:
     launched = epoch(rec.get("launch_confirmed_at") or rec.get("launch_at"))
     if claimed is not None and launched is not None:
         rec["transport"]["claim_to_launch_s"] = round(launched - claimed, 1)
-
-
-@contextlib.contextmanager
-def session_launch_lock(session: str):
-    """Serialize what still shares session state in the
-    launch window, per session (branch transport plan,
-    Step 5).
-
-    This lock used to run from the first upload to the
-    launch confirmation: manifest uploads landed at
-    /content/<basename> — one shared slot per session — so
-    two launches uploading concurrently overwrote each
-    other's same-named uploads between upload and launch,
-    and a run executed a foreign payload (the class cured
-    for the runner-script slot alone in 2026-11-08; the
-    B3-S3b re-price run hit it three times through manifest
-    slots in 2026-11-21). The lock therefore serialized
-    minutes of upload and verify round trips per launch —
-    the Step 5 measurement priced the queue it made: ~25
-    min at a dozen-deep, past an hour in degraded weather.
-    Uploads now land in the run's own remote directory
-    (run_upload_dir), verified there, entirely outside this
-    lock; concurrent launches upload in parallel and cannot
-    meet. What remains inside is only the work that still
-    mutates state the session shares:
-
-    - the branch drive: the base clone is one checkout per
-      registry dest per session, and two launches' fetch /
-      reset of it must not interleave (prepare_branch's
-      substrate upload rides inside for the drive it
-      serves — one small file, priced in the measurement's
-      tail, not the upload class this step moved out);
-    - the seed apply: it writes the seed's shared dest;
-    - the launch exec and its confirmation read — the
-      launch-confirm window: the job's start and the
-      footprint verdict that decides whether it landed are
-      one atomic read of the session.
-
-    Running jobs are never locked. The lock is an flock on
-    var/launch-<session>.lock — a launcher that dies inside
-    the window releases it with its process, so a stranded
-    lock cannot outlive its holder. Residual, named: a
-    payload that addresses a sibling upload by a bare
-    /content/<name> path — the pre-Step-5 contract — reads
-    whatever the shared slot's history left there, not its
-    run's copy; consumers resolve the run's directory
-    instead (rewrite_upload_args for manifest args,
-    shell_job's --script resolution and $SHELL_JOB_UPLOADS
-    for payloads, the runner script's own directory for a
-    job script's imports).
-    """
-    path = REPO / "var" / f"launch-{session}.lock"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o644)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        yield
-    finally:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
 
 
 # --- The job-end process reap (2026-11-23) -----------------------------------

@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now
-from .launch import build_launch_stamp, build_seed_ctx, drive_branch_window, ensure_run_dir, orphan_notes, rewrite_upload_args, run_upload_dir, session_launch_lock, stamp_transport_span, transport_error, transport_setup, upload_one, upload_seed_files
+from .launch import build_launch_stamp, build_seed_ctx, drive_branch_window, ensure_run_dir, orphan_notes, rewrite_upload_args, run_upload_dir, stamp_transport_span, transport_error, transport_setup, upload_one, upload_seed_files
 from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, pull_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
@@ -435,12 +435,15 @@ def main() -> int:
             save_record(rec)
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
-        # Uploads run OUTSIDE the launch lock (Step 5): they
-        # land in the run's own directory, so a concurrent
-        # launch's uploads cannot meet them, and the minutes
-        # of upload + verify round trips no longer serialize
-        # the session. The lock (below) covers only what
-        # still shares session state.
+        # Uploads land in the run's own directory (Step 5),
+        # so a concurrent launch's uploads cannot meet them.
+        # Nothing in this launch window serializes against
+        # another launch on the session (owner ruling,
+        # 2026-11-23: no sync blocker on the venue job path):
+        # every piece of state below is the run's own — its
+        # upload directory, its clone, its seed dest, its out
+        # dir — and its execs ride the funnel independently,
+        # so concurrent launches proceed concurrently.
         err = upload_one(session, script, remote_script, run_id)
         if err is not None:
             rec.update(state="failed", error=f"runner script upload: {err}")
@@ -473,28 +476,18 @@ def main() -> int:
                 return 1
             rec["transport"]["bytes_moved"] = rec["transport"].get("bytes_moved", 0) + src.stat().st_size
         if seed_ctx is not None:
-            # The seed's uploads (still outside the lock):
-            # launch.upload_seed_files lands them in the run's
-            # directory; the apply writes the seed's shared
-            # dest and runs inside the lock below. A seed whose
-            # uploads did not land is a failed run, never a job
-            # launched against a missing tree.
+            # The seed's uploads: launch.upload_seed_files
+            # lands them in the run's directory, and the apply
+            # below writes the run's own seed dest under the
+            # same directory. A seed whose uploads did not
+            # land is a failed run, never a job launched
+            # against a missing tree.
             err = upload_seed_files(session, seed_ctx, run_id)
             if err is not None:
                 rec.update(state="failed", error=err)
                 save_record(rec)
                 print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
                 return 1
-        # The narrowed launch lock (launch.session_launch_lock,
-        # Step 5): uploads are per-run and done; what remains
-        # inside shares session state — the branch drive (one
-        # base clone per dest), the seed apply (the seed's
-        # shared dest), and the launch-confirm window below.
-        # Held until the confirmation chain concludes; every
-        # failure return inside the window exits this process,
-        # and process death releases the flock.
-        launch_lock = session_launch_lock(session)
-        launch_lock.__enter__()
         if branch_ctx is not None:
             # Branch transport: drive the base clone to the declared
             # tip before any launch (launch.drive_branch_window).
@@ -506,9 +499,16 @@ def main() -> int:
                 return 1
         seeded = False
         if seed_ctx is not None:
-            # Seed the dest on the VM from the run's own bundle
-            # copy and verify the manifest's tree in the seed's
-            # own output before any launch.
+            # Seed the run's own dest on the VM from the run's
+            # own bundle copy and verify the manifest's tree in
+            # the seed's own output before any launch. The dest
+            # stands under the run's upload directory
+            # (runs/<run_id>/<dest>), never the shared
+            # per-registry dest: two seeded launches used to
+            # write one dest, which is what held the seed apply
+            # inside the stripped launch lock. The record's
+            # bundle_seed stamp keeps naming the registry dest
+            # the run's copy serves.
             _ident = seed_ctx.get("git_identity")
             _ident_args = (
                 f",'--user-name',{_ident['name']!r},'--user-email',{_ident['email']!r}"
@@ -518,7 +518,7 @@ def main() -> int:
             seed_remote = REPO / "var" / f"seed-{run_id}.py"
             seed_remote.write_text(
                 "import subprocess\n"
-                f"r = subprocess.run(['python3','{run_upload_dir(run_id)}/apply_bundle_remote.py','{run_upload_dir(run_id)}/{seed_ctx['bundle_path'].name}','{seed_ctx['dest']}','--origin-url','{seed_ctx['clone_url']}'{_ident_args}], capture_output=True, text=True)\n"
+                f"r = subprocess.run(['python3','{run_upload_dir(run_id)}/apply_bundle_remote.py','{run_upload_dir(run_id)}/{seed_ctx['bundle_path'].name}','{run_upload_dir(run_id)}/{seed_ctx['dest']}','--origin-url','{seed_ctx['clone_url']}'{_ident_args}], capture_output=True, text=True)\n"
                 "print(r.stdout); print(r.stderr[-500:])\n"
             )
             try:
@@ -660,12 +660,6 @@ def main() -> int:
         # The claim→launch span (branch transport plan; launch.stamp_transport_span).
         stamp_transport_span(rec)
         save_record(rec)
-        # The launch attempt has concluded on every branch
-        # above (the one branch that returned already exited
-        # the process, releasing the flock with it): the
-        # upload→launch window closes and the next launcher on
-        # this session may enter it.
-        launch_lock.__exit__(None, None, None)
         if detach_flag:
             # E5: launch exactly as the foreground form, write
             # the record, return. usage_before is stamped now —

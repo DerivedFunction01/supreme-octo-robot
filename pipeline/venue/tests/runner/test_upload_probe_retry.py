@@ -15,8 +15,7 @@ keeps one entry per upload_one call — the final outcome.
 
 2026-11-21: the probe also verifies the landed SHA-256 — a
 same-size foreign file in the shared slot is a mismatch that
-returns at once with the foreign-bytes error — and the
-per-session launch lock's keying is pinned below.
+returns at once with the foreign-bytes error.
 """
 
 import hashlib
@@ -175,28 +174,3 @@ def test_same_size_foreign_bytes_fail_at_once_on_the_hash(tmp_path):
                    f"expected {expected} — the slot holds foreign bytes")
     assert colab.exec_calls == 1
     assert journal == [{"stage": "probe", "ok": False, "detail": DEST}]
-
-
-def test_launch_lock_is_keyed_per_session_and_excludes(tmp_path):
-    import fcntl
-    import os
-
-    colab = ScriptedColab([])
-    launch, _journal = load_launch(tmp_path, colab)
-
-    def try_grab(session):
-        path = tmp_path / "var" / f"launch-{session}.lock"
-        fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o644)
-        try:
-            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except BlockingIOError:
-            os.close(fd)
-            return False
-        fcntl.flock(fd, fcntl.LOCK_UN)
-        os.close(fd)
-        return True
-
-    with launch.session_launch_lock("sess-a"):
-        assert not try_grab("sess-a"), "a held session lock must exclude"
-        assert try_grab("sess-b"), "another session's lock stays free"
-    assert try_grab("sess-a"), "a released session lock must be grabbable"

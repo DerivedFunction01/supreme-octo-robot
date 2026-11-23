@@ -12,17 +12,22 @@ both fires: both runs' copies coexist under runs/<run_id>/
 with their own bytes, and the shared root slot holds
 nothing. The payloads also record the path they were
 handed, pinning that the runner's args rewrite delivered
-the per-run address. Deterministic by construction: no
-concurrency, no timing — the live two-fire concurrency
-proof is the parent's post-gate fire, and these pins are
-what make it meaningful.
+the per-run address. Those two leaves are deterministic
+by construction: no concurrency, no timing. The third
+leaf is the lock strip's (2026-11-23): two fires driven
+concurrently at one session, one launch window held open
+by a slowed upload, the other fire completing inside it —
+the overlap the stripped launch lock used to forbid, and
+the fake form of the parent's live multi-fire proof.
 """
 
 import hashlib
 import json
+import threading
+import time
 from pathlib import Path
 
-from runner_harness import install_bare_job, run_verb, runner_env, runs_dir  # noqa: F401
+from runner_harness import FAKE, install_bare_job, run_verb, runner_env, runs_dir, upload_sleep_wrapper  # noqa: F401
 
 
 def _install_data_job(env, name):
@@ -67,6 +72,39 @@ def _fire(env, name):
     out = json.loads(r.stdout)
     assert out["state"] == "complete", out
     return out
+
+
+def _install_named_data_job(env, name, basename):
+    """The data job of _install_data_job with its upload's
+    basename as a parameter, so two jobs on one session can
+    carry distinct upload names (the overlap leaf below
+    slows one job's upload by name)."""
+    root = Path(env["TEST_REPO_ROOT"])
+    jobs_dir = root / "adapters" / "colab" / "jobs"
+    if jobs_dir.is_symlink():
+        jobs_dir.unlink()
+    job_dir = jobs_dir / name
+    job_dir.mkdir(parents=True, exist_ok=True)
+    (job_dir / "payload.py").write_text(
+        "import argparse, hashlib\n"
+        "from pathlib import Path\n"
+        "ap = argparse.ArgumentParser()\n"
+        "ap.add_argument('--out', required=True)\n"
+        "ap.add_argument('--data', required=True)\n"
+        "a = ap.parse_args()\n"
+        "p = Path(a.data)\n"
+        "if not p.is_file():\n"
+        "    p = Path.cwd() / p.relative_to('/content')\n"
+        "out = Path(a.out)\n"
+        "out.mkdir(parents=True, exist_ok=True)\n"
+        "(out / 'result.txt').write_text(a.data + ' ' + hashlib.sha256(p.read_bytes()).hexdigest() + '\\n')\n"
+    )
+    manifest = {"name": name, "script": f"adapters/colab/jobs/{name}/payload.py",
+                "args": ["--data", f"/content/{basename}"], "uploads": [f"var/{basename}"],
+                "outputs": ["result.txt"], "shape": "cpu-highram",
+                "checkpoint_pull_seconds": 1, "timeout": 300}
+    (job_dir / "job.json").write_text(json.dumps(manifest))
+    return job_dir
 
 
 def _result(env, run_id):
@@ -148,3 +186,61 @@ def test_shell_job_pair_resolves_sibling_uploads_per_run(tmp_path):
     assert (sdir2 / "runs" / second["run_id"] / "key.bin").read_bytes() == b"key-two-longer" * 32
     assert not (sdir1 / "key.bin").exists()
     assert not (sdir1 / "gate.sh").exists()
+
+
+def test_two_fires_overlap_on_one_session(tmp_path):
+    """The lock strip's live-form pin (owner ruling,
+    2026-11-23: no sync blocker on the venue job path): two
+    fires at ONE session proceed concurrently — neither
+    launch waits for the other's launch window. The slow
+    fire's manifest upload is held 30 s by the channel
+    wrapper (a dead-slow channel's shape); the fast fire,
+    started while the slow one is inside that upload, must
+    run to completion before the slow fire's upload even
+    returns. Under any per-session launch lock covering the
+    upload→launch window the fast fire could not launch
+    until the slow fire's window closed, and this leaf
+    would watch it wait. Both fires then complete on the
+    same session, each reading its own run's bytes."""
+    env = runner_env(tmp_path)
+    root = Path(env["TEST_REPO_ROOT"])
+    (root / "var").mkdir(exist_ok=True)
+    _install_named_data_job(env, "perslow", "slow-a.bin")
+    _install_named_data_job(env, "perfast", "fast-b.bin")
+    (root / "var" / "slow-a.bin").write_bytes(b"slow-run-bytes" * 64)
+    (root / "var" / "fast-b.bin").write_bytes(b"fast-run-bytes" * 64)
+    state = Path(env["FAKE_COLAB_STATE"])
+    state.mkdir(parents=True, exist_ok=True)
+    (state / "uploadsleep.json").write_text(json.dumps({"sleep_upload_named": "slow-a.bin", "sleep_seconds": 30}))
+    env.update(COLAB_BIN=str(upload_sleep_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE))
+
+    slow_result = {}
+
+    def _slow():
+        slow_result["r"] = run_verb(env, "perslow")
+
+    slow_thread = threading.Thread(target=_slow, daemon=True)
+    slow_thread.start()
+    # Let the slow fire reach its held upload before the
+    # fast fire starts; the overlap claim does not rest on
+    # this head start — the fast fire must still finish
+    # inside the slow upload's 30 s hold.
+    time.sleep(3)
+    fast = _fire(env, "perfast")
+    assert slow_thread.is_alive(), "the fast fire finished only after the slow fire's launch window closed"
+    slow_thread.join(timeout=240)
+    assert not slow_thread.is_alive()
+    r = slow_result["r"]
+    assert r.returncode == 0, r.stdout + r.stderr
+    slow = json.loads(r.stdout)
+    assert slow["state"] == "complete", slow
+
+    sha_slow = hashlib.sha256(b"slow-run-bytes" * 64).hexdigest()
+    sha_fast = hashlib.sha256(b"fast-run-bytes" * 64).hexdigest()
+    assert _result(env, slow["run_id"]) == f"/content/runs/{slow['run_id']}/slow-a.bin {sha_slow}\n"
+    assert _result(env, fast["run_id"]) == f"/content/runs/{fast['run_id']}/fast-b.bin {sha_fast}\n"
+    sdir, rec_slow = _session_dir(env, slow["run_id"])
+    _sdir2, rec_fast = _session_dir(env, fast["run_id"])
+    assert rec_slow["session"] == rec_fast["session"]
+    assert (sdir / "runs" / slow["run_id"] / "slow-a.bin").read_bytes() == b"slow-run-bytes" * 64
+    assert (sdir / "runs" / fast["run_id"] / "fast-b.bin").read_bytes() == b"fast-run-bytes" * 64
