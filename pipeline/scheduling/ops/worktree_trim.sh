@@ -136,6 +136,55 @@
 #      the flip back; setting it to off re-imposes the
 #      stand-down (no purge-time branch acts, no queue
 #      seeding or draining; tree archiving is unaffected).
+#   6. branch sweep (2026-11-22, owner's ruling: the
+#      hourly pass takes no exemptions when it comes to
+#      trimming): every pass, per repo, the worker censuses
+#      ALL branches — not only the archives' own. Branches
+#      pushed by lanes whose trees never stood in the local
+#      census (venue/session clones) otherwise accumulate
+#      forever (steampowernj: 144 origin branches, 111 of
+#      them fully contained in main). One fetch --prune
+#      refreshes origin truth (an unreachable origin fails
+#      the origin half only; the local half still runs);
+#      the ONLY trim criterion is containment — the branch
+#      tip is an ancestor of the default branch (the local
+#      base branch locally, origin/<base> on origin).
+#      Contained local branches delete through
+#      trim_local_branch, except the default branch itself
+#      and any branch checked out in a worktree (mechanical:
+#      git refuses those). Contained origin branches
+#      enqueue and the standing drain discharges them. No
+#      provenance, no held set, no name carve-outs: an
+#      uncontained branch is not trim material, a contained
+#      one trims.
+#   7. branch cap (2026-11-22, owner's correction:
+#      containment is not the end state): the configured
+#      max binds the branch POPULATION — 10 branches per
+#      repo per side (local, origin) — and the hourly pass
+#      takes no exemptions. After the containment sweep,
+#      per repo per side, any population still over the cap
+#      sheds its excess by ARCHIVE-BEFORE-DELETE, oldest
+#      tip activity (tip committer epoch) first. Every
+#      excess tip is preserved in ONE bundle per repo per
+#      pass at $ARCHIVE_ROOT/<date>/<slug>-branch-cap/
+#      branches.bundle under refs/archive-cap/<branch>,
+#      with a manifest.tsv beside it (branch, tip sha, tip
+#      date, sides trimmed) whose header carries the exact
+#      restore commands; a same-day bundle from an earlier
+#      pass is unioned in, never clobbered. The bundle is
+#      verified (git bundle verify, and its head count
+#      equals the manifest row count) BEFORE any ref is
+#      deleted; on verification failure nothing is deleted
+#      on either side, the failure is recorded, and the
+#      pass is partial. Only then do the excess refs go:
+#      local through trim_local_branch, origin through the
+#      queue and its drain. Keep priority per side: the
+#      default branch first, then (local side) branches
+#      checked out in a worktree, then newest tip activity.
+#      No name exemptions — a long-lived branch survives on
+#      activity alone. If the never-delete set alone
+#      exceeds the cap, the overage is reported and that
+#      side stops there.
 #
 # Silent when nothing happens. Exit codes: 0 = every repo
 # complete; 3 = at least one repo partial (archive failure,
@@ -159,7 +208,9 @@
 # live-run hold; default: the venue package's results/runs
 # derived from this script's location in the mega repo),
 # WORKTREE_TRIM_DRAIN_ACT (the drain act's seam: the
-# unlanded hold reason does not stand for that pass).
+# unlanded hold reason does not stand for that pass),
+# WT_TRIM_BRANCH_CAP_<SLUG> / WT_TRIM_BRANCH_CAP (the
+# branch-population cap's env seams — see below).
 #
 # Configuration: the target set and its per-repo caps are
 # deployment data, not code — they live in the untracked
@@ -170,6 +221,14 @@
 # cap). With no config at all, only the repo hosting this
 # script is in scope, under the generic tier caps
 # (soft 10, deep 5).
+#
+# The branch-population cap (header point 7) resolves
+# through its own chain, in this order:
+# WT_TRIM_BRANCH_CAP_<SLUG> (per-repo env), then
+# WT_TRIM_BRANCH_CAP (global env), then the generic
+# configured soft cap, 10. repos.conf's per-repo rows are
+# worktree-tier caps only; they are NOT repurposed for the
+# branch cap.
 set -uo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 export GIT_TERMINAL_PROMPT=0
@@ -246,6 +305,20 @@ cap_for() {
     if [ -n "$cfg" ]; then echo "$cfg"; return; fi
   fi
   if [ "$TIER" = "deep" ]; then echo 5; else echo 10; fi
+}
+
+branch_cap_for() {
+  # Branch-population cap (header point 7): per-repo env
+  # WT_TRIM_BRANCH_CAP_<SLUG> wins; then the global env
+  # WT_TRIM_BRANCH_CAP; then the generic configured soft
+  # cap, 10. Deliberately NOT cap_for(): repos.conf's rows
+  # are worktree-tier caps and stay out of this chain.
+  local slug="$1" var def
+  var="WT_TRIM_BRANCH_CAP_$(echo "$slug" | tr 'a-z-' 'A-Z_')"
+  def="$(eval echo "\${$var:-}")"
+  if [ -n "$def" ]; then echo "$def"; return; fi
+  if [ -n "${WT_TRIM_BRANCH_CAP:-}" ]; then echo "$WT_TRIM_BRANCH_CAP"; return; fi
+  echo 10
 }
 
 iso_of() { date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ; }
@@ -348,6 +421,280 @@ run_worker() {
       fi
     done <"$qf"
     mv "$keep" "$qf"
+  }
+
+  # Branch sweep (header points 6 and 7): census every
+  # branch in both scopes against the containment criterion,
+  # then bind the surviving population to the branch cap.
+  # Runs after the manifest seeding, before the drain, so
+  # the origin branches it enqueues discharge in this same
+  # pass. Counts feed one BRANCH-SWEEP summary line, emitted
+  # only when the sweep acted (the pass stays silent when
+  # nothing happens). Survivors are recorded as
+  # epoch|name|sha rows (tip committer epoch, tip sha) —
+  # the cap phase's activity ranking and archive record.
+  branch_sweep() {
+    local swept_local=0 swept_origin=0 kept=0
+    local -a checked_out=()
+    local -a l_surv=() o_surv=()
+    local origin_ok=0 have_base=0
+    local wl lb ob oname url lsha lepoch osha oepoch
+    while IFS= read -r wl; do
+      case "$wl" in
+        "branch refs/heads/"*) checked_out+=("${wl#branch refs/heads/}") ;;
+      esac
+    done < <($GIT -C "$main_dir" worktree list --porcelain 2>/dev/null)
+    while IFS=$'\t' read -r lb lsha lepoch; do
+      [ -z "$lb" ] && continue
+      [ "$lb" = "$base_branch" ] && continue
+      if is_in "$lb" "${checked_out[@]:-}"; then
+        kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
+      fi
+      if $GIT -C "$main_dir" merge-base --is-ancestor "refs/heads/$lb" "refs/heads/$base_branch" 2>/dev/null; then
+        if trim_local_branch "$lb"; then swept_local=$((swept_local+1)); else partial=3; fi
+      else
+        kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha")
+      fi
+    done < <($GIT -C "$main_dir" for-each-ref --format='%(refname:short)%09%(objectname)%09%(committerdate:unix)' refs/heads 2>/dev/null)
+    url="$(push_url)"
+    if [ -n "$url" ]; then
+      if ! timeout 120 $GIT -C "$main_dir" fetch --prune origin >/dev/null 2>&1; then
+        echo "BRANCH-REMOTE-FAIL repo=$slug scope=origin reason=origin-unreachable" >>"$RESULT_FILE"
+        partial=3
+      else
+        origin_ok=1
+        $GIT -C "$main_dir" show-ref --verify --quiet "refs/remotes/origin/$base_branch" && have_base=1
+        while IFS=$'\t' read -r ob osha oepoch; do
+          oname="${ob#origin/}"
+          case "$oname" in ""|HEAD|"$base_branch") continue ;; esac
+          if [ "$have_base" -eq 1 ] && $GIT -C "$main_dir" merge-base --is-ancestor "refs/remotes/origin/$oname" "refs/remotes/origin/$base_branch" 2>/dev/null; then
+            enqueue_branch "$oname"; swept_origin=$((swept_origin+1))
+          else
+            kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha")
+          fi
+        done < <($GIT -C "$main_dir" for-each-ref --format='%(refname:short)%09%(objectname)%09%(committerdate:unix)' refs/remotes/origin 2>/dev/null)
+      fi
+    fi
+    if [ "$swept_local" -gt 0 ] || [ "$swept_origin" -gt 0 ]; then
+      echo "BRANCH-SWEEP repo=$slug local=$swept_local origin=$swept_origin kept=$kept" >>"$RESULT_FILE"
+      echo "act=branch-sweep repo=$slug local=$swept_local origin=$swept_origin kept=$kept epoch=$NOW" >>"$LEDGER_FILE"
+    fi
+    branch_cap_phase
+  }
+
+  # Branch cap phase (header point 7): bind each side's
+  # surviving population to branch_cap_for(). Reads the
+  # sweep's locals (l_surv, o_surv, checked_out, origin_ok,
+  # have_base) through dynamic scoping. Excess tips are
+  # archived into one verified bundle BEFORE any deletion;
+  # a verification failure deletes nothing and marks the
+  # pass partial.
+  branch_cap_phase() {
+    local bcap; bcap="$(branch_cap_for "$slug")"
+    case "$bcap" in ""|*[!0-9]*) bcap=10 ;; esac
+    local e rest nm
+    # --- per-side populations, never-delete sets, excess ---
+    local live_local=$((1 + ${#l_surv[@]}))
+    local never_local=1
+    local -a l_cand=()
+    for e in "${l_surv[@]:-}"; do
+      [ -z "$e" ] && continue
+      rest="${e#*|}"; nm="${rest%%|*}"
+      if is_in "$nm" "${checked_out[@]:-}"; then
+        never_local=$((never_local+1))
+      else
+        l_cand+=("$e")
+      fi
+    done
+    if [ "${#l_cand[@]}" -gt 0 ]; then
+      mapfile -t l_cand < <(printf '%s\n' "${l_cand[@]}" | sort -t'|' -k1,1n -k2,2)
+    fi
+    local live_origin=0 never_origin=0
+    local -a o_cand=()
+    if [ "$origin_ok" -eq 1 ]; then
+      live_origin=$((${#o_surv[@]} + have_base))
+      never_origin="$have_base"
+      o_cand=("${o_surv[@]:-}")
+      # drop the empty element an empty o_surv expands to
+      [ "${#o_cand[@]}" -eq 1 ] && [ -z "${o_cand[0]:-}" ] && o_cand=()
+      if [ "${#o_cand[@]}" -gt 0 ]; then
+        mapfile -t o_cand < <(printf '%s\n' "${o_cand[@]}" | sort -t'|' -k1,1n -k2,2)
+      fi
+    fi
+    local -a cap_l_excess=() cap_o_excess=()
+    local over_local=0 over_origin=0 nx
+    if [ "$never_local" -gt "$bcap" ]; then
+      over_local=1
+    elif [ "${#l_cand[@]}" -gt $((bcap - never_local)) ]; then
+      nx=$((${#l_cand[@]} - (bcap - never_local)))
+      cap_l_excess=("${l_cand[@]:0:$nx}")
+    fi
+    if [ "$origin_ok" -eq 1 ]; then
+      if [ "$never_origin" -gt "$bcap" ]; then
+        over_origin=1
+      elif [ "${#o_cand[@]}" -gt $((bcap - never_origin)) ]; then
+        nx=$((${#o_cand[@]} - (bcap - never_origin)))
+        cap_o_excess=("${o_cand[@]:0:$nx}")
+      fi
+    fi
+    if [ "$over_local" -eq 1 ]; then
+      echo "BRANCH-CAP-OVER repo=$slug side=local live=$live_local cap=$bcap never=$never_local" >>"$RESULT_FILE"
+      echo "act=branch-cap-over repo=$slug side=local live=$live_local cap=$bcap never=$never_local epoch=$NOW" >>"$LEDGER_FILE"
+    fi
+    if [ "$over_origin" -eq 1 ]; then
+      echo "BRANCH-CAP-OVER repo=$slug side=origin live=$live_origin cap=$bcap never=$never_origin" >>"$RESULT_FILE"
+      echo "act=branch-cap-over repo=$slug side=origin live=$live_origin cap=$bcap never=$never_origin epoch=$NOW" >>"$LEDGER_FILE"
+    fi
+    [ "${#cap_l_excess[@]}" -eq 0 ] && [ "${#cap_o_excess[@]}" -eq 0 ] && return 0
+
+    # --- archive-before-delete: one bundle per repo per pass
+    local cap_dir="$ARCHIVE_ROOT/$TODAY/${slug}-branch-cap"
+    local bundle="$cap_dir/branches.bundle"
+    local manifest="$cap_dir/manifest.tsv"
+    local cap_fail=""
+    # ref -> this pass's sides ("local", "origin", or
+    # "local,origin"); a branch whose local and origin tips
+    # differ stages its origin tip under <branch>@origin so
+    # both tips survive.
+    declare -A new_side=()
+    local sha ep ref cur
+    mkdir -p "$cap_dir" 2>/dev/null || cap_fail="archive-unwritable"
+    if [ -z "$cap_fail" ] && [ -f "$bundle" ]; then
+      # union an earlier same-day pass's bundle in: its refs
+      # restage alongside this pass's, and the rewritten
+      # bundle below carries the union — never a clobber.
+      timeout 60 $GIT -C "$main_dir" fetch --quiet "$bundle" \
+        'refs/archive-cap/*:refs/archive-cap/*' >/dev/null 2>&1 \
+        || cap_fail="prior-bundle-unreadable"
+    fi
+    if [ -z "$cap_fail" ]; then
+      for e in "${cap_l_excess[@]:-}"; do
+        [ -z "$e" ] && continue
+        ep="${e%%|*}"; rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
+        ref="refs/archive-cap/$nm"
+        $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+        new_side["$ref"]="local"
+      done
+    fi
+    if [ -z "$cap_fail" ]; then
+      for e in "${cap_o_excess[@]:-}"; do
+        [ -z "$e" ] && continue
+        ep="${e%%|*}"; rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
+        ref="refs/archive-cap/$nm"
+        cur="$($GIT -C "$main_dir" rev-parse --verify --quiet "$ref" 2>/dev/null)"
+        if [ -n "$cur" ] && [ "$cur" != "$sha" ] && [ "${new_side[$ref]:-}" = "local" ]; then
+          ref="refs/archive-cap/$nm@origin"
+          $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          new_side["$ref"]="origin"
+        else
+          $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          if [ "${new_side[$ref]:-}" = "local" ]; then
+            new_side["$ref"]="local,origin"
+          else
+            new_side["$ref"]="origin"
+          fi
+        fi
+      done
+    fi
+    # The bundle's rows: every staged archive ref (this
+    # pass's excess unioned with any earlier same-day rows).
+    # Sides for rows this pass did not touch are recovered
+    # from the standing manifest, keyed by branch+sha.
+    local -a staged=()
+    local sref ssha sep mb ms msha mside
+    declare -A old_side=()
+    if [ -z "$cap_fail" ]; then
+      if [ -f "$manifest" ]; then
+        while IFS=$'\t' read -r mb msha _ mside; do
+          case "$mb" in ""|\#*|branch) continue ;; esac
+          old_side["$mb|$msha"]="$mside"
+        done <"$manifest"
+      fi
+      while IFS=$'\t' read -r sref ssha sep; do
+        [ -z "$sref" ] && continue
+        staged+=("$sref|$ssha|$sep")
+      done < <($GIT -C "$main_dir" for-each-ref --format='%(refname)%09%(objectname)%09%(committerdate:unix)' refs/archive-cap 2>/dev/null)
+      [ "${#staged[@]}" -eq 0 ] && cap_fail="archive-stage-failed"
+    fi
+    local tmp_bundle="$cap_dir/.branches.bundle.tmp"
+    if [ -z "$cap_fail" ]; then
+      local -a ref_args=()
+      for e in "${staged[@]:-}"; do
+        [ -n "$e" ] && ref_args+=("${e%%|*}")
+      done
+      rm -f "$tmp_bundle"
+      if ! $GIT -C "$main_dir" bundle create "$tmp_bundle" "${ref_args[@]}" >/dev/null 2>&1; then
+        cap_fail="bundle-create-failed"
+      elif ! $GIT -C "$main_dir" bundle verify "$tmp_bundle" >/dev/null 2>&1; then
+        cap_fail="bundle-verify-failed"
+      else
+        local heads_n
+        heads_n="$($GIT -C "$main_dir" bundle list-heads "$tmp_bundle" 2>/dev/null | wc -l)"
+        [ "$heads_n" -ne "${#staged[@]}" ] && cap_fail="bundle-verify-failed"
+      fi
+    fi
+    if [ -n "$cap_fail" ]; then
+      rm -f "$tmp_bundle"
+      echo "BRANCH-CAP-FAIL repo=$slug reason=$cap_fail bundle=$bundle" >>"$RESULT_FILE"
+      echo "act=branch-cap-fail repo=$slug reason=$cap_fail epoch=$NOW" >>"$LEDGER_FILE"
+      partial=3
+      return 0
+    fi
+    mv "$tmp_bundle" "$bundle"
+    # Manifest: header carries the exact restore commands;
+    # one row per bundle head (branch, tip sha, tip date
+    # ISO, sides trimmed).
+    {
+      echo "# branch-cap archive repo=$slug epoch=$NOW"
+      echo "# bundle=$bundle"
+      echo "# restore_1=git -C $main_dir fetch $bundle refs/archive-cap/<branch>"
+      echo "# restore_2=git -C $main_dir branch <branch> FETCH_HEAD"
+      printf 'branch\ttip_sha\ttip_date\tsides\n'
+      local bname sside
+      for e in "${staged[@]:-}"; do
+        [ -z "$e" ] && continue
+        sref="${e%%|*}"; rest="${e#*|}"; ssha="${rest%%|*}"; sep="${rest##*|}"
+        bname="${sref#refs/archive-cap/}"
+        sside="${new_side[$sref]:-${old_side[$bname|$ssha]:-prior}}"
+        case "$bname" in
+          *@origin)
+            bname="${bname%@origin}"
+            [ "$sside" = "prior" ] && sside="origin"
+            ;;
+        esac
+        printf '%s\t%s\t%s\t%s\n' "$bname" "$ssha" "$(iso_of "$sep")" "$sside"
+      done
+    } >"$manifest"
+    for e in "${staged[@]:-}"; do
+      [ -z "$e" ] && continue
+      sref="${e%%|*}"
+      if [ -n "${new_side[$sref]:-}" ]; then
+        rest="${e#*|}"; ssha="${rest%%|*}"
+        bname="${sref#refs/archive-cap/}"; bname="${bname%@origin}"
+        echo "BRANCH-ARCHIVED repo=$slug branch=$bname sides=${new_side[$sref]} sha=$ssha bundle=$bundle" >>"$RESULT_FILE"
+        echo "act=branch-archived repo=$slug branch=$bname sides=${new_side[$sref]} sha=$ssha epoch=$NOW" >>"$LEDGER_FILE"
+      fi
+      $GIT -C "$main_dir" update-ref -d "$sref" 2>/dev/null
+    done
+    # --- deletions, only now that the archive verifies ---
+    for e in "${cap_l_excess[@]:-}"; do
+      [ -z "$e" ] && continue
+      rest="${e#*|}"; nm="${rest%%|*}"
+      trim_local_branch "$nm" || partial=3
+    done
+    for e in "${cap_o_excess[@]:-}"; do
+      [ -z "$e" ] && continue
+      rest="${e#*|}"; nm="${rest%%|*}"
+      enqueue_branch "$nm"
+    done
+    if [ "${#cap_l_excess[@]}" -gt 0 ]; then
+      echo "BRANCH-CAP repo=$slug side=local live=$live_local cap=$bcap archived=${#cap_l_excess[@]}" >>"$RESULT_FILE"
+      echo "act=branch-cap repo=$slug side=local live=$live_local cap=$bcap archived=${#cap_l_excess[@]} epoch=$NOW" >>"$LEDGER_FILE"
+    fi
+    if [ "${#cap_o_excess[@]}" -gt 0 ]; then
+      echo "BRANCH-CAP repo=$slug side=origin live=$live_origin cap=$bcap archived=${#cap_o_excess[@]}" >>"$RESULT_FILE"
+      echo "act=branch-cap repo=$slug side=origin live=$live_origin cap=$bcap archived=${#cap_o_excess[@]} epoch=$NOW" >>"$LEDGER_FILE"
+    fi
   }
 
   # Seed the queue from archive manifests whose archive no
@@ -511,6 +858,7 @@ EOF
   # --- branch trims owed from earlier archives ------------------
   if [ "$BRANCH_TRIM" = "on" ]; then
     seed_branch_queue
+    branch_sweep
     drain_queue
   else
     echo "act=branch-standdown repo=$slug epoch=$NOW" >>"$LEDGER_FILE"

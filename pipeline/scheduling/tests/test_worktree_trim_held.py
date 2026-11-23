@@ -184,8 +184,19 @@ class TestPurgeBranch(Fixture):
         self._hand_archive("feat/m", head, NOW - 1)
         out = self.run_trim("--tier", "soft")
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        # the purge's own disposition is unchanged: it does
+        # not charge a branch that no longer points at the
+        # recorded head
         self.assertIn("branch_local=kept-moved", out.stdout)
-        self.assertTrue(self.branch_exists("feat/m"))
+        # but the seat moved the branch onto main itself, so
+        # its tip is contained in main — and under the
+        # owner's containment-only ruling the branch sweep
+        # (test_worktree_trim_sweep.py) trims it in the same
+        # pass. The purge keeps its provenance rule; the
+        # sweep has none.
+        self.assertIn("BRANCH-TRIMMED repo=repo-a branch=feat/m "
+                      "scope=local", out.stdout)
+        self.assertFalse(self.branch_exists("feat/m"))
         self.assertEqual(self.queue(), [])
 
 
