@@ -14,12 +14,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now
-from .launch import build_seed_ctx, drive_branch_window, ensure_run_dir, orphan_notes, rewrite_upload_args, run_upload_dir, session_launch_lock, stamp_transport_span, transport_error, transport_setup, upload_one, upload_seed_files
+from .launch import build_launch_stamp, build_seed_ctx, drive_branch_window, ensure_run_dir, orphan_notes, rewrite_upload_args, run_upload_dir, session_launch_lock, stamp_transport_span, transport_error, transport_setup, upload_one, upload_seed_files
 from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, pull_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
-from .claims import adopt, attach_verdict, spawn_daemon, stamp_takeover
+from .claims import adopt, attach_verdict, option_like_refusal, spawn_daemon, stamp_takeover
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
@@ -123,6 +123,12 @@ def main() -> int:
         print("usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]", file=sys.stderr)
         return 2
     job_name = positional[0]
+    # Option-like names refuse at parse, before any record
+    # is written (claims.option_like_refusal, 2026-11-23).
+    refusal = option_like_refusal(job_name, resume)
+    if refusal is not None:
+        print(f"colab-run: {refusal}", file=sys.stderr)
+        return 2
     if daemonize_flag and not os.environ.get("COLAB_RUN_DAEMON_CHILD"):
         # --daemonize: the fire must survive its firing context.
         # A fire ridden through a bounded context — the
@@ -256,6 +262,16 @@ def main() -> int:
                     rec.update(resumed=True, resumed_at=now())
                 else:
                     rec.update(state="starting", resumed=True, resumed_at=now())
+                # The driver stamp follows the execution: a
+                # daemonized run's record names its daemon
+                # child as driver, and this resume is the driver
+                # now — the sweep's daemon-orphan test reads the
+                # stamp as the driver's identity, and the dead
+                # daemon's pid must not condemn a run a live
+                # resume is driving (claims.stamp_takeover does
+                # the same for the claim path).
+                if rec.get("daemon_child_pid") is not None:
+                    rec["daemon_child_pid"] = os.getpid()
     preclaimed = False
     if rec is None and daemon_id:
         # A daemonized child adopts its parent's pre-claim
@@ -542,20 +558,16 @@ def main() -> int:
         save_record(rec)
         # Detached launch (default pending the kill-matrix verdict): a short
         # exec starts the job under nohup; the CLI is never the job's lifeline.
-        # The payload runs under a stamp wrapper: its exit code lands at
-        # <remote_out>.exit-code, so a payload that never writes a
-        # checkpoint still reports its outcome truthfully (2026-11-08:
-        # checkpoint-less gate jobs recorded failed on green runs).
-        # Manifest args naming an upload point at the run's own
-        # copy (launch.rewrite_upload_args, Step 5); the extra
-        # args after -- are the operator's own argv and pass
-        # verbatim.
+        # The payload runs under a stamp wrapper (launch.build_launch_stamp):
+        # its exit code lands at <remote_out>.exit-code, so a payload that
+        # never writes a checkpoint still reports its outcome truthfully
+        # (2026-11-08: checkpoint-less gate jobs recorded failed on green
+        # runs), and the wrapper reaps the run's leaked processes at job
+        # end before the stamp lands. Manifest args naming an upload point
+        # at the run's own copy (launch.rewrite_upload_args, Step 5); the
+        # extra args after -- are the operator's own argv and pass verbatim.
         job_args = "".join(f",'{a}'" for a in rewrite_upload_args(job.get("args", []), {Path(u).name for u in job.get("uploads", [])}, run_id) + (["--skip-clone"] if seeded else []) + extra_args)
-        stamp = (
-            "import subprocess, sys\n"
-            f"rc = subprocess.run([sys.executable, '{remote_script}', '--out', '{remote_out}'{job_args}]).returncode\n"
-            f"open('{remote_out}.exit-code', 'w').write(str(rc))\n"
-        )
+        stamp = build_launch_stamp(remote_script, remote_out, job_args, run_id)
         launch = (
             f"import subprocess; subprocess.Popen(['nohup','python3','-c',{stamp!r}],"
             f" stdout=open('{remote_out}.log','w'), stderr=subprocess.STDOUT, start_new_session=True)"

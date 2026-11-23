@@ -556,6 +556,145 @@ def session_launch_lock(session: str):
             os.close(fd)
 
 
+# --- The job-end process reap (2026-11-23) -----------------------------------
+# A job's payload can leave processes behind on the session:
+# a server an early leg starts for the job's own later legs
+# is still holding its port after the payload exits, and the
+# next run on the session inherits the collision (specimen:
+# steampower-criticjv-scenes-20261123T071153Z — the scenes
+# server survived its job's cleanup and the port-after leg
+# failed on the held port; a predecessor lane hit the same
+# zombie-port class). The launch stamp wrapper
+# (build_launch_stamp, below) therefore reaps at job end,
+# scoped to the run: a process is the run's when its working
+# directory or one of its open files sits under one of the
+# run's own directories — the Step 5 upload dir
+# (runs/<run_id>/) or the run's out dir — and nothing else
+# is ever signalled. Conservative by construction: an
+# inspection gap (cwd or fd table unreadable) is no
+# evidence, and the payload's own group members the dir
+# test cannot scope are left alive and named in the reap
+# stamp the wrapper writes into the job's output. The
+# selection is a pure function over a process-table
+# snapshot, kept as source (REAP_SELECT_SOURCE) because the
+# wrapper carries it verbatim onto the session; the unit
+# tests exec the same source, so the tested selection is
+# the shipped one.
+
+REAP_GRACE_S = 3
+
+REAP_SELECT_SOURCE = '''def _reap_select(procs, scope_dirs, own_pid, group_pid):
+    """Choose the job-end reap's victims from a process-table
+    snapshot: a process is the run's when its working
+    directory or one of its open files sits under a scope
+    dir (the run's own directories); the payload's other
+    group members — the job's own processes the dir test
+    cannot scope — are reported as unscoped, to be left
+    alive and stamped by the caller. A process is signalled
+    only on a positive scope match, never on a guess."""
+    def _under(path):
+        if not path:
+            return False
+        if path.endswith(" (deleted)"):
+            path = path[: -len(" (deleted)")]
+        return any(path == d or path.startswith(d + "/") for d in scope_dirs)
+    reaped, left = [], []
+    for proc in procs:
+        pid = proc.get("pid")
+        if pid is None or pid == own_pid:
+            continue
+        scoped = _under(proc.get("cwd")) or any(_under(t) for t in (proc.get("fds") or []))
+        if scoped:
+            reaped.append(pid)
+        elif group_pid is not None and proc.get("pgid") == group_pid:
+            left.append(pid)
+    return sorted(reaped), sorted(left)
+'''
+
+
+def build_launch_stamp(remote_script: str, remote_out: str, job_args: str, run_id: str) -> str:
+    """The launch stamp wrapper's source: run the payload,
+    reap the run's leaked processes (above), then write the
+    exit-code stamp — in that order, so a terminal read of
+    the stamp implies the reap already ran. The wrapper is
+    the one code present at job end for every job form (the
+    payload script itself is the job, shell_job included),
+    which is why the reap lives here and not in a payload
+    harness. The reap is best-effort around the job's own
+    verdict: its failure never changes the exit code, and
+    its outcome is stamped in the job's output (reap.json in
+    the out dir, or the wrapper's sibling <remote_out>.reap.json
+    when the payload never made the dir)."""
+    return (
+        "import json, os, signal, subprocess, sys, time\n"
+        + REAP_SELECT_SOURCE
+        + "def _reap_driver():\n"
+        + f"    scope = [os.path.join(os.getcwd(), 'runs', {run_id!r}), os.path.join(os.getcwd(), {remote_out!r})]\n"
+        + "    procs = []\n"
+        + "    for name in os.listdir('/proc'):\n"
+        + "        if not name.isdigit():\n"
+        + "            continue\n"
+        + "        pid = int(name)\n"
+        + "        cwd = None\n"
+        + "        fds = None\n"
+        + "        pgid = None\n"
+        + "        try:\n"
+        + "            cwd = os.readlink('/proc/%d/cwd' % pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        try:\n"
+        + "            fds = []\n"
+        + "            for fd in os.listdir('/proc/%d/fd' % pid):\n"
+        + "                try:\n"
+        + "                    fds.append(os.readlink('/proc/%d/fd/%s' % (pid, fd)))\n"
+        + "                except OSError:\n"
+        + "                    pass\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        try:\n"
+        + "            pgid = os.getpgid(pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        procs.append({'pid': pid, 'cwd': cwd, 'fds': fds, 'pgid': pgid})\n"
+        + "    try:\n"
+        + "        group = os.getpgrp()\n"
+        + "    except OSError:\n"
+        + "        group = None\n"
+        + "    reaped, left = _reap_select(procs, scope, os.getpid(), group)\n"
+        + "    for pid in reaped:\n"
+        + "        try:\n"
+        + "            os.kill(pid, signal.SIGTERM)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + f"    deadline = time.time() + {REAP_GRACE_S}\n"
+        + "    survivors = [p for p in reaped if os.path.exists('/proc/%d' % p)]\n"
+        + "    while survivors and time.time() < deadline:\n"
+        + "        time.sleep(0.2)\n"
+        + "        survivors = [p for p in reaped if os.path.exists('/proc/%d' % p)]\n"
+        + "    killed = []\n"
+        + "    for pid in survivors:\n"
+        + "        try:\n"
+        + "            os.kill(pid, signal.SIGKILL)\n"
+        + "            killed.append(pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "    stamp = {'reaped': reaped, 'killed': killed, 'unscoped_left': left, 'at': time.time()}\n"
+        + "    try:\n"
+        + f"        out_dir = {remote_out!r}\n"
+        + "        target = os.path.join(out_dir, 'reap.json') if os.path.isdir(out_dir) else out_dir + '.reap.json'\n"
+        + "        with open(target, 'w') as fh:\n"
+        + "            json.dump(stamp, fh)\n"
+        + "    except OSError:\n"
+        + "        pass\n"
+        + f"rc = subprocess.run([sys.executable, {remote_script!r}, '--out', {remote_out!r}{job_args}]).returncode\n"
+        + "try:\n"
+        + "    _reap_driver()\n"
+        + "except Exception:\n"
+        + "    pass\n"
+        + f"open({remote_out + '.exit-code'!r}, 'w').write(str(rc))\n"
+    )
+
+
 def orphan_notes(shape_id: str, shape: dict) -> list[str]:
     """E1, runner half — failure path only: after an acquire
     refusal, name any live-but-unrecorded sessions at the
