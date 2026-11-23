@@ -287,7 +287,7 @@ class TestSweepWorktreeDedupe(unittest.TestCase):
 
 
 class TestSweepHygiene(unittest.TestCase):
-    """Registration hygiene (2026-11-09): scratch trees
+    """Registration hygiene: scratch trees
     inside a swept root never register, and standalone
     clones declaring one slug fold into one project."""
 
@@ -332,7 +332,7 @@ class TestSweepHygiene(unittest.TestCase):
             self.assertIs(by, project)
 
     def test_registry_carrying_clone_wins_the_fold(self):
-        # The 2026-11-12 live shape: a fresh working
+        # The live shape this pins: a fresh working
         # clone (the tracked manifest, no registry —
         # registry state is never tracked) is MORE
         # recently active than the checkout carrying
@@ -390,7 +390,7 @@ class TestSweepHygiene(unittest.TestCase):
 
 
 class TestSweepExportExclusion(unittest.TestCase):
-    """Export exclusion (2026-11-11): a directory-identity
+    """Export exclusion: a directory-identity
     copy of a project (an export tree carries the tracked
     manifest but is not a git checkout) never registers
     when a git checkout claims the same slug in the same
@@ -464,8 +464,8 @@ class TestSweepExportExclusion(unittest.TestCase):
 
 
 class TestSweepGitBudget(unittest.TestCase):
-    """The sweep's aggregate git budget (wedge fix,
-    2026-11-10): under a storage stall every git child
+    """The sweep's aggregate git budget (wedge fix):
+    under a storage stall every git child
     burns its per-call timeout in sequence, so the bound
     that matters is the sweep's total. A parked git must
     degrade identity resolution (directory identity), not

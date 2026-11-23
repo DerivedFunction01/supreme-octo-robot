@@ -15,13 +15,18 @@ from pathlib import Path
 from lib import registry as reg
 from lib.registry import store as store_mod
 
-# Portability exceptions (gate component directives; the strings are
-# synthetic plan-file fixture names — invented dates and subjects —
-# fed to the plan-link resolver as reference data):
-# portability-exception: .plans/2026-01-03-flat-study.md — synthetic plan-file fixture name in resolver test data
-# portability-exception: .plans/2026-01-02-widget-study/ — synthetic plan-bundle fixture name in resolver test data
-# portability-exception: .plans/2026-01-01-old-study.md — synthetic plan-file fixture name in resolver test data
-# portability-exception: .plans/2026-01-09-nope.md — synthetic plan-file fixture name in resolver test data
+# Portability exceptions: the gate component's directives for this
+# file's synthetic plan-file fixture names — invented dates and
+# subjects, fed to the plan-link resolver as reference data — are
+# the directive lines in _PORTABILITY_DIRECTIVES (data: the gate
+# reads directive lines from the file's raw lines and matches them
+# exactly).
+_PORTABILITY_DIRECTIVES = """
+portability-exception: .plans/2026-01-03-flat-study.md — synthetic plan-file fixture name in resolver test data
+portability-exception: .plans/2026-01-02-widget-study/ — synthetic plan-bundle fixture name in resolver test data
+portability-exception: .plans/2026-01-01-old-study.md — synthetic plan-file fixture name in resolver test data
+portability-exception: .plans/2026-01-09-nope.md — synthetic plan-file fixture name in resolver test data
+"""
 
 
 class Fixture(unittest.TestCase):

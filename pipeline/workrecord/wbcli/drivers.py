@@ -194,8 +194,8 @@ def cmd_progress_check(args):
 
 def cmd_commission_check(args):
     """One claimed commission's verdict against the
-    record (channel-indistinguishability cure,
-    2026-11-16): exit 0 with a COMMISSION line when the
+    record (channel-indistinguishability cure):
+    exit 0 with a COMMISSION line when the
     cited todo is a commission of record (provenance
     planted through the writers' plant_commission),
     exit 3 with a NOT A COMMISSION line when the record

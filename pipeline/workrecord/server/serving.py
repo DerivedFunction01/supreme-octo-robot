@@ -1,7 +1,7 @@
 """The workbench viewer's serving shell, on the platform
 serving core (pipeline/platform/serving.py) — the one
 serving implementation for the whole mega app (owner
-ruling, 2026-11-14).
+ruling).
 
 This module is the shell the OI-3 unit template's run.py
 shape always pointed at: the single-instance lock, the
@@ -11,8 +11,8 @@ logic lives in the sibling modules (feeds, repos_feed,
 messages_api, actions); the wire, the reply framing, and
 the containment are the core's.
 
-Startup order is the pinned server's (wedge fix,
-2026-11-10): lock, watchdog, maintenance, bind — and only
+Startup order is the pinned server's (wedge fix):
+lock, watchdog, maintenance, bind — and only
 then the warm-up, on its own thread, so a storage stall
 during warm-up can never park the process before it
 answers. In the one-process form (the repo-root run.py),
@@ -272,7 +272,7 @@ def build_mount():
         # thread), so it reports the cache's warmth as
         # data — sweep_warm, with zero counts while
         # cold — and never queues behind the fill
-        # (2026-11-15: the coupling ruling's health
+        # (the coupling ruling's health
         # discipline, carried inside this process).
         result = peek_sweep()
         projects = len(result.projects) \
@@ -489,8 +489,8 @@ def build_mount():
         return reply(200, fn(message_id))
 
     def refresh(request):
-        # The manual escape hatch (cache-refresh plan,
-        # 2026-11-05): force the sweep and bust every feed
+        # The manual escape hatch (cache-refresh plan):
+        # force the sweep and bust every feed
         # cache, so the next read re-derives from disk.
         result = get_sweep(force=True)
         _repos_invalidate_cache()
@@ -705,7 +705,7 @@ def build_mount():
 
     # Bind BEFORE any warm-up: the cached derivations fill
     # on this thread, off the request path. No freshness
-    # keeper starts here (the lazy restore, 2026-11-16):
+    # keeper starts here (the lazy restore):
     # the document and census refresh on reads past
     # their TTLs, kicked from the read paths themselves,
     # so an unread serve does no discovery or assembly

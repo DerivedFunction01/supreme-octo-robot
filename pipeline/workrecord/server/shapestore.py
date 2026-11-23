@@ -1,5 +1,5 @@
 """The assembled shapes' database store (the owner's
-persistence ruling, 2026-11-17: the assembled read
+persistence ruling: the assembled read
 shapes belong in a database, so they persist).
 
 Two shapes persist here: the assembled feeds document

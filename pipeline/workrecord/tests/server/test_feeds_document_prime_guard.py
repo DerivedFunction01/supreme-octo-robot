@@ -4,7 +4,7 @@ document above the configured bound (config
 feeds_document_prime_max_bytes) is not primed —
 the prime's parse transient runs ~6x the payload's
 size, so an oversized persist (a 752 MB document
-persisted by a scope-uncured assembly, 2026-11-16)
+persisted by a scope-uncured assembly)
 killed every restart before the service could
 assemble the document's successor. The refusal is
 read off the persisted payload's length (the shapes

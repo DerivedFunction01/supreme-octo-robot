@@ -10,7 +10,7 @@ still returns its whole text (the viewer renders it as
 formatted markdown); nothing is silently structured away.
 
 House format (from the real corpus — the founding plan, v2's
-subplans, the 2026-10-23 PowerBI plans, the 2026-10-22
+subplans, the PowerBI plans, the
 bootstrap plan):
   - `# Title`, then header fields `Key: value` (values wrap),
     notably Status / Created / Parent.

@@ -1,5 +1,5 @@
 """Commissions of record (channel-indistinguishability
-cure, 2026-11-16): a claimed commission resolves
+cure): a claimed commission resolves
 against the wb record or it is not a commission.
 
 The incident's shape: the Edgar Step 6 lane was

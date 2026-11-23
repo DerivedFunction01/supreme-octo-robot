@@ -107,7 +107,7 @@ def list_entry_files(entry: dict) -> list:
 def entry_bytes(entry: dict, rel_raw: str):
     """The raw byte-route read of an entry's own file: the
     file's bytes verbatim, for serving as a real document
-    (byte-route plan, 2026-11-10). The bridge carries JSON
+    (byte-route plan). The bridge carries JSON
     only, so a rendered artifact page cannot ride it — the
     companion server serves the bytes directly and the
     viewer's frame loads them as a document, scripts and

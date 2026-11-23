@@ -5,7 +5,7 @@ The backend serves a markdown document as structured
 segments — blocks of text runs plus math nodes — so the
 frontend renders display-ready content and never parses
 (document segments contract: the math-component study,
-approved 2026-11-13, form (b)). A math node carries
+approved, form (b)). A math node carries
 {source, display, valid}: the TeX source as written, the
 display flag, and the served validity state. Validity is
 decided HERE, at serve time, by tex_valid below — the

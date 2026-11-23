@@ -1,5 +1,4 @@
-"""Per-project content fingerprint (cache-refresh plan,
-2026-11-05): a sha256 over the stat shape of the file
+"""Per-project content fingerprint (cache-refresh plan): a sha256 over the stat shape of the file
 corpus a project's file-derived feeds are built from —
 every file under the project's `.plans/` tree plus its
 `workbench.yaml` manifest.

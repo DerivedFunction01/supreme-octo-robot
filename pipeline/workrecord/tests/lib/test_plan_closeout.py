@@ -10,7 +10,7 @@ directories are not plan files and never flag.
 
 The fixture matrix runs on a scratch .plans tree; the
 real-corpus pass runs the same feed over this repo's own
-.plans/ (post-2026-10-25 closeout sweep) and requires
+.plans/ (after the closeout sweep) and requires
 zero flags. The real-corpus pass is a live-corpus test,
 gated on WB_LIVE_CORPUS like the plan-parser corpus
 tests: a fresh clone with no corpus present skips it.
