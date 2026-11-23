@@ -1,6 +1,6 @@
-# Colab authentication — credential record, the 2026-11-01 incident, and the guards
+# Colab authentication — credential record, the incident, and the guards
 
-Findings first: the stored credential was destroyed on 2026-11-01 by an
+Findings first: the stored credential was destroyed by an
 automated CLI call, not by expiry. The defenses below now make that
 class of loss structurally impossible, and any future auth death
 surfaces as an explicit `auth_required` state instead of junk data.
@@ -25,13 +25,13 @@ surfaces as an explicit `auth_required` state instead of junk data.
 
 | Grant (consent) | Strategy | Client | Outcome |
 | --- | --- | --- | --- |
-| 2026-10-29 ~15:23Z | oauth2 InstalledAppFlow | public Cloud SDK client | Worked 3 days; destroyed 2026-11-01 (incident below), not expired |
-| 2026-11-01 13:17:54Z | oauth2 InstalledAppFlow | public Cloud SDK client | Current credential; recovered by direct code exchange (below) |
+| `2026-10-29 ~15:23Z` | oauth2 InstalledAppFlow | public Cloud SDK client | Worked 3 days; destroyed `2026-11-01` (incident below), not expired |
+| `2026-11-01 13:17:54Z` | oauth2 InstalledAppFlow | public Cloud SDK client | Current credential; recovered by direct code exchange (below) |
 
 Update this table at every re-authorization: grant time, strategy,
 client type. The panel's re-auth cadence is read from it.
 
-## The 2026-11-01 incident
+## The incident
 
 - ~12:59Z the credential was verified live. By 13:04:06Z the CLI log
   shows it unloadable; at 13:05:58Z an automated call whose token
@@ -58,7 +58,7 @@ client type. The panel's re-auth cadence is read from it.
   code against the message record before submitting it, or move it
   as a file.
 
-## The guards (all landed 2026-11-01)
+## The guards
 
 - `bin/colab-run`'s `colab()` — the single funnel for automated CLI
   calls: refuses to invoke the CLI when the stored token is
@@ -68,15 +68,15 @@ client type. The panel's re-auth cadence is read from it.
   auth-required result (rc 3, empty stdout) and drops a marker at
   `var/auth-required.json`, cleared by the next healthy call. Inert
   under `COLAB_BIN` (test fakes are not credential flows).
-- The same funnel snapshots the session binding (`sessions.json`,
-  landed 2026-11-13): the CLI rewrites it non-atomically on
+- The same funnel snapshots the session binding (`sessions.json`):
+  the CLI rewrites it non-atomically on
   ordinary calls, and a write denied after the truncate left it at
   0 bytes — every recorded session read absent and the fleet
   blinded while its lease records stayed correct. A call that
   leaves the binding missing or unparseable gets the snapshot
   restored atomically; a binding that still parses (even `{}`) is
   the CLI's own view and is never overridden wholesale. Entry
-  level (same landing): a call that prunes an individual entry
+  level: a call that prunes an individual entry
   from a parseable binding gets it restored verbatim from the
   snapshot — merged into the CLI's current map — when the
   session's lease record names a deadline in the future; the

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Lease keepalive: a detached loop that keeps a leased Colab runtime
 visibly busy so the idle timeout does not reap the session mid-lease
-(the operator's ruling, 2026-10-30 — the first away lease died at ~3h, idle).
+(the operator's ruling: an idle away lease dies at ~3h).
 
 Each cycle does a short CPU touch and appends a heartbeat JSON line to
 keepalive.log in the working directory; the lease reaper reads that file

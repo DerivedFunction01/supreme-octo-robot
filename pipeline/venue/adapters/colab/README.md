@@ -13,7 +13,7 @@ extracted as adapter material — never core.
   (hash-signed command queue at `/content/bridge`),
   endpoint host-grammar shape reading, `snippets/` and
   `probes/` classes, and the repo's own `jobs/` manifests.
-- **Landed (S5, 2026-11-13):** `snippets/`, `probes/`, and
+- **Physical home (S5):** `snippets/`, `probes/`, and
   `jobs/` physically live in this directory; the core
   reaches them only through `foundation.snippet_path` /
   `foundation.adapter_jobs_dir` (lease core) and the runner

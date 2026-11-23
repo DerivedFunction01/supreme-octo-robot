@@ -15,13 +15,13 @@ the main chat; GET /api/outbox reads never acknowledge anything.
 
 The HTTP plumbing rides the platform serving core
 (pipeline/platform/serving.py) — the one serving
-implementation for the whole mega app (owner ruling,
-2026-11-14). This module owns the panel's routes and
+implementation for the whole mega app (owner ruling).
+This module owns the panel's routes and
 their core-shelling behavior; the wire, the reply
 framing, and the containment are the core's.
 
 This surface serves in its OWN process (owner ruling,
-2026-11-15, extending the workbench split: process
+extending the workbench split: process
 boundaries follow coupling) — run.py serve-venue, under
 its own unit — because its state reads shell out
 synchronously to the lease core and the panel faces the
@@ -92,7 +92,7 @@ writer = _load_by_location(
 
 CORE_TIMEOUT_S = 1800
 # The state-read bounds live with the state-read wiring
-# in state_surface.py (extracted 2026-11-16); these
+# in state_surface.py; these
 # aliases keep the names this module's own readers use.
 # They are import-time snapshots, NOT live knobs:
 # state_surface.build_state_reads reads its own module
@@ -196,7 +196,7 @@ class Outbox:
     than the file state its signature check saw.
 
     The shape also persists across this process's
-    restarts (shape_store, 2026-11-17): at every point
+    restarts (shape_store): at every point
     the shape is (re)built — construction, a signature
     rebuild, an append — it is stored under the
     signature it was built from, and construction primes
@@ -504,8 +504,8 @@ def build_mount():
         not_found=lambda request: serving.Reply.json(
             404, {"error": "not found"}, mount.dumps))
 
-    # The route surface lives in route_surface.py
-    # (extracted 2026-11-16); its dependencies resolve
+    # The route surface lives in route_surface.py;
+    # its dependencies resolve
     # at call time through this env, so the suites'
     # monkeypatched run_core — and a reset OUTBOX /
     # STATE_READS global — is what a request calls.
