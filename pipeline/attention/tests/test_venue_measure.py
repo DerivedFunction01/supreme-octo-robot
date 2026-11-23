@@ -4,7 +4,7 @@ measure and the plan-frontier comparison, proven on
 recorded specimens.
 
 The specimen records are the venue runs store's own
-records for the edgar fleet on 2026-11-19, copied
+records for the edgar fleet, copied
 verbatim into fixtures/venue-results/runs (historical
 and immutable — read, never written). The windows
 are the plan's, as measured: 10:00–12:25Z reads
@@ -467,9 +467,9 @@ def _record(run_id, state, started, finished, caller="steampower-cust"):
 
 
 class TerminalUnconsumed(unittest.TestCase):
-    """The terminal-unconsumed class (commissioned
-    2026-11-20): a terminal failed run the owning
-    programme's own records never cite in that state.
+    """The terminal-unconsumed class: a terminal failed
+    run the owning programme's own records never cite
+    in that state.
     The specimen shape is steampower-reformed-gate-
     20261121T005537Z — terminal FAILED, recorded by
     the collector within seconds, unconsumed for

@@ -1,8 +1,7 @@
 """Shadow parity (supervision plan Step 6): the app
 measures in shadow beside the live cron fleet, over
-the recorded specimen window 2026-11-19 10:00Z –
-2026-11-20 00:30Z. Every defect either side raises is
-compared; a miss by the app side blocks cutover for
+the recorded specimen window. Every defect either
+side raises is compared; a miss by the app side blocks cutover for
 that surface. The bar (the plan's verify line): zero
 app-side misses against cron-side defects on the
 staffing and drain surfaces.

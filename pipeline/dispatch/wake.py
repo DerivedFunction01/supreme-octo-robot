@@ -42,7 +42,7 @@ from a caller with no owner mapping — is left queued
 and named on an UNRESOLVED line: a finding, never a
 guessed target.
 
-Episode escalation (F5 home, 2026-11-11): the per-item
+Episode escalation (F5 home): the per-item
 pings address the item's own thread, but the executor is
 one job — bridge-drain, an agent entry whose body is the
 drain executor. A pass that finds at least one resolvable
@@ -116,7 +116,7 @@ def target_for(record, owners, drain_chat=None):
     payload in front of a working lane whose job is not
     relaying — executor cycles there read the record, hit
     the prompt-injection screen on its content, and stalled
-    the whole dispatch class (2026-11-12). Unconfigured,
+    the whole dispatch class. Unconfigured,
     the pre-drain fallback holds: the chat it will post
     into. A read tool's result belongs to the requesting
     caller's owning thread."""

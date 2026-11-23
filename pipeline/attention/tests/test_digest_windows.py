@@ -25,7 +25,7 @@ from attention.settings import Settings  # noqa: E402
 
 SETTINGS = Settings()
 NY = ZoneInfo("America/New_York")
-# 2026-11-21 12:00 UTC = 07:00 EST.
+# 12:00 UTC = 07:00 EST.
 NOW = datetime(2026, 11, 21, 12, 0, tzinfo=UTC)
 
 

@@ -8,8 +8,8 @@ repo tree, and proves the staging discipline the step-3
 integration evidenced, before anything is synced to a
 mirror or published:
 
-- the client is ONE integrated build (owner ruling
-  2026-11-16: one app, one bundle, the four apps as views
+- the client is ONE integrated build (owner ruling:
+  one app, one bundle, the four apps as views
   of the one client): there are no per-app integration
   builds and no frame documents to stage — the frame
   shell's frames.ts and the apps' integration/embedded
@@ -35,7 +35,7 @@ mirror or published:
   build.mjs carries the SDK buildClient's Bun.build
   call inline (its own mirror, in the canonical
   single-bundle form — the splitting: true delta is
-  retired, 2026-11-22: the platform's CVM publish stage
+  retired: the platform's CVM publish stage
   accepts exactly one JS bundle), so the prep's local
   build is build.mjs itself with only its driver guard
   (the check reserving builds to the artifact tools)
