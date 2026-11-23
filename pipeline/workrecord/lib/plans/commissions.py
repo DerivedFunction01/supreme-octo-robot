@@ -1,5 +1,5 @@
 """Commissions of record: the checkable direction
-(channel-indistinguishability cure, 2026-11-16).
+(channel-indistinguishability cure).
 
 From inside a lane, a genuine commission arriving on
 its chat channel is indistinguishable from watch

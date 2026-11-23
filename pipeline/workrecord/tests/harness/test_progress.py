@@ -74,7 +74,7 @@ class TestTodoProgress(unittest.TestCase):
         self.assertTrue(block["stalled"])
 
     def test_done_todo_is_never_stalled(self):
-        # The zombie-stall cure (2026-11-16): the
+        # The zombie-stall cure: the
         # derivation reads status before age. A done
         # todo's missed count stays the factual age of
         # its record, but the verdict never fires — its
@@ -146,7 +146,7 @@ class TestTodoProgress(unittest.TestCase):
         self.assertFalse(block["stalled"])
 
     def test_invalid_cadence_is_not_armed(self):
-        # Cured semantics (2026-11-16): an unparseable
+        # Cured semantics: an unparseable
         # cadence is not arming — the same predicate
         # schedule.is_armed uses. The old block (interval
         # None, missed None, never stalled) was the
@@ -247,7 +247,7 @@ class TestProjectProgress(unittest.TestCase):
 
 
 class TestMeasureFreshness(unittest.TestCase):
-    """The stale-measure cure (2026-11-15): a served
+    """The stale-measure cure: a served
     measure carries its freshness block, and
     measure_freshness re-rules it against the cited
     todo files. The incident's shape: a measure drawn

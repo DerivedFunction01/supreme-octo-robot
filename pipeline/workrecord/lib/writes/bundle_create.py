@@ -74,7 +74,7 @@ def create_bundle(plans_dir, slug, *, plan: bool = False,
 
 
 # ----------------------------------------------------------------
-# Goal contracts (goal-prompt contract plan, 2026-11-12)
+# Goal contracts (goal-prompt contract plan)
 # ----------------------------------------------------------------
 
 def _check_contract_gate(plans_dir, bundle_dir) -> None:

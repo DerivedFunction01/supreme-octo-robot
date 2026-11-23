@@ -45,7 +45,7 @@ def _check_slug(slug: str, what: str = "slug"):
 
 # ----------------------------------------------------------------
 # Todo names: a todo's id IS its name — a GitHub-like
-# slug (the owner's 2026-11-14 naming ruling), validated
+# slug (the owner's naming ruling), validated
 # by the one rule in the parser family
 # (lib/plans/bundles.py: check_todo_name). A name is
 # unique across the whole project (every bundle, active
