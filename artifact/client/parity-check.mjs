@@ -1,6 +1,6 @@
 // Parity check — the durable spec-parity assertions for
-// the workhorse superapp's ONE client (owner ruling
-// 2026-11-16: one app, one bundle, the four apps as
+// the workhorse superapp's ONE client (owner ruling:
+// one app, one bundle, the four apps as
 // views on the unified kit; INTEGRATION.md is the
 // contract this guards). Plain node, no dependencies:
 //
@@ -9,7 +9,7 @@
 // Asserts, over client/src and the built client/dist:
 //   (a) dist holds exactly one HTML document and
 //       exactly one JS bundle (the canonical single
-//       bundle — the per-view split retired 2026-11-22;
+//       bundle — the per-view split retired;
 //       the CVM publish stage accepts no split): the
 //       document loads exactly one script (the bundle)
 //       and exactly one stylesheet, and no other JS

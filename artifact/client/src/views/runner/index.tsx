@@ -15,7 +15,7 @@
 //                    LogRow's first consumer)
 //   /orphans         Orphans
 //
-// Mutations stay (owner ruling 2026-11-15 20:11): the
+// Mutations stay (owner ruling): the
 // views call the merged registry's runner actions through
 // the one client's action layer (src/lib/actions.ts) —
 // the restoration lane's mapping is complete, zero open

@@ -1,5 +1,5 @@
 // Part 6 census — spends scanned from the tree at gate
-// time. Split from verify-contrast.mjs (the 2026-11-22
+// time. Split from verify-contrast.mjs (the
 // decomposition); the block runs verbatim as the
 // single file ran it, inside runCensus6().
 

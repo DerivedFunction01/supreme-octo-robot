@@ -1,7 +1,7 @@
 // Shared core for the verify-contrast parts: the token
 // table, the colour math, and the resolvers every part
 // prices against. Split from verify-contrast.mjs (the
-// 2026-11-22 decomposition — the file had crossed the
+// decomposition — the file had crossed the
 // repo line cap); behaviour is unchanged, and the
 // parts consume these helpers exactly as the single
 // file defined them.

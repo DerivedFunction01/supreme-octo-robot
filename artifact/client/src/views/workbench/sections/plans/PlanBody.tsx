@@ -43,7 +43,7 @@ const codeStyle: React.CSSProperties = {
 /** Every scrollable mono region (the code style above,
  * the diagram figure) is keyboard-focusable with the
  * kit's focus ring — the axe scrollable-region-focusable
- * cure (critic WB5-1, 2026-11-17). The spliced
+ * cure (critic WB5-1). The spliced
  * `.wb-codeblock` form carries the same treatment from
  * the kit's highlight.css. */
 const scrollRegionFocusClass =
@@ -56,7 +56,7 @@ const scrollRegionFocusClass =
  * each task item's own inline text (a nested list names
  * itself; its text is excluded) and the renderer stamps
  * it as the input's aria-label, the axe `label` cure
- * (critic F14, 2026-11-17). The emission is otherwise
+ * (critic F14). The emission is otherwise
  * marked's default byte-for-byte (same attributes, same
  * trailing space) — the label is an added attribute
  * only, no visual change. An item with no text of its
