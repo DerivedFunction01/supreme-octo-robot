@@ -65,6 +65,41 @@ def test_dict_args_entry_refuses_the_launch_loudly(tmp_path):
     assert list(runs_dir(env).glob("*.json")) == []
 
 
+def test_branch_transport_missing_sha_refuses_the_launch_loudly(tmp_path):
+    """Branch transport (plan 2026-11-22, Step 1): a branch
+    declaration missing its sha refuses at load with exit 2,
+    naming the field, and no run record is created — the
+    refusal lands before any session work, like the other
+    shape refusals in this module."""
+    env = runner_env(tmp_path)
+    install_shaped_job(env, "branchbad", {"transport": {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/x-20261123"}})
+    r = run_verb(env, "branchbad")
+    assert r.returncode == 2, r.stdout + r.stderr
+    assert "transport" in r.stderr and "sha" in r.stderr and "missing" in r.stderr, r.stderr
+    assert list(runs_dir(env).glob("*.json")) == []
+
+
+def test_no_transport_regression_stamps_the_bundle_path(tmp_path):
+    """The no-transport regression case (Step 1): a manifest
+    naming no transport launches exactly as before the
+    declaration existed, and its record stamps the bundle
+    path it took — kind, the bytes the runner moved, and
+    the claim→launch span — so the adoption census (Step 4)
+    reads every record, not just branch-form ones."""
+    env = runner_env(tmp_path)
+    install_shaped_job(env, "plainjob", {})
+    r = run_verb(env, "plainjob")
+    assert r.returncode == 0, r.stdout + r.stderr
+    out = json.loads(r.stdout)
+    assert out["state"] == "complete"
+    rec = json.loads((runs_dir(env) / f"{out['run_id']}.json").read_text())
+    assert rec["state"] == "complete"
+    transport = rec["transport"]
+    assert transport["kind"] == "bundle"
+    assert transport["bytes_moved"] > 0
+    assert transport["claim_to_launch_s"] >= 0
+
+
 def test_mapped_outputs_run_and_pull_by_local_name(tmp_path):
     """Own-manifest mapped outputs (the mapped-output gate shape:
     local / remote / archive keys) launch, complete, and pull

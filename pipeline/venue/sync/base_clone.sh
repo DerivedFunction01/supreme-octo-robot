@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Run ON the Colab VM: base HTTPS clone of the origin tip, the substrate the
 # snapshot bundle fast-forwards. Usage: base_clone.sh [repo_url] [dest]
+# Optional branch form (branch transport): base_clone.sh [repo_url] [dest]
+# [branch] [sha] — fetch the named branch and pin the clone to its tip; a
+# named sha is the announced tip, and a fetched tip that differs refuses.
 set -euo pipefail
 URL="${1:-${COLAB_REPO_URL:-}}"
 DEST="${2:-}"
+BRANCH="${3:-}"
+SHA="${4:-}"
 if [ -z "$URL" ]; then
   echo "base_clone: no repo URL given (arg 1 or COLAB_REPO_URL)" >&2; exit 2
 fi
@@ -12,6 +17,21 @@ if [ -z "$DEST" ]; then
 fi
 if [ ! -d "$DEST/.git" ]; then
   git clone "$URL" "$DEST"
+fi
+if [ -n "$BRANCH" ]; then
+  # Branch transport: the fetched branch tip IS the tree under test — the
+  # branch is transport only, never a landing, so the clone detaches at
+  # the tip and any local state from a previous pin is discarded by the
+  # reset, exactly as the main pin below discards a diverged snapshot.
+  git -C "$DEST" fetch origin "$BRANCH"
+  TIP="$(git -C "$DEST" rev-parse FETCH_HEAD)"
+  if [ -n "$SHA" ] && [ "$TIP" != "$SHA" ]; then
+    echo "base_clone: branch $BRANCH tip $TIP != announced sha $SHA; refusing" >&2; exit 3
+  fi
+  git -C "$DEST" checkout -q --detach "$TIP"
+  git -C "$DEST" reset --hard "$TIP"
+  echo "base clone at $(git -C "$DEST" rev-parse HEAD) tree $(git -C "$DEST" rev-parse 'HEAD^{tree}')"
+  exit 0
 fi
 git -C "$DEST" fetch origin main
 git -C "$DEST" checkout main
