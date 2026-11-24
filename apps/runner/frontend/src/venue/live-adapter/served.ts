@@ -8,6 +8,10 @@ import type { BudgetAccountView, BudgetView, ShapeSpec } from "../types";
 
 export interface ServedSpec {
   id: string;
+  /** The venue this shape belongs to, as the specs portion
+   *  serves it; absent on a portion served before per-venue
+   *  specs, where every shape is the home venue's. */
+  venue?: string;
   label: string;
   gpu: string | null;
   tpu: string | null;
@@ -18,6 +22,9 @@ export interface ServedSpec {
 
 export interface ServedLeaseRecord {
   session: string;
+  /** The venue the record was written under, as served;
+   *  absent on a legacy record, which is the home venue's. */
+  venue?: string;
   shape: string;
   shape_spec: ShapeSpec;
   rate_cu_per_hour: number | null;
@@ -104,6 +111,9 @@ export interface ServedEnvelope {
 }
 
 export interface ServedOrphan {
+  /** The venue the census row belongs to, when the census
+   *  serves it; the census is the home venue's today. */
+  venue?: string;
   /** Null on a nameless census row (the backend keys
    *  such a row by endpoint: session None, nameless
    *  True, prior_session the recovered name or None —
@@ -147,10 +157,28 @@ export interface OutboxEvent {
   detail: Record<string, unknown>;
 }
 
+/** One entry of the budget portion's per-venue set: a budgeted
+ *  venue's account (budget figures + caps), or a budget-less
+ *  venue kind's single entry, {venue, budget: null} — no account,
+ *  no figures. */
+export interface ServedBudgetEntry {
+  venue: string;
+  account?: string;
+  label?: string;
+  credential?: string | null;
+  budget: {
+    balance: number | null;
+    day_spent: number | null;
+    month_spent: number | null;
+    standing_day_spent: number | null;
+    caps: { daily: number | null; monthly: number | null; standing_daily: number | null };
+  } | null;
+}
+
 export interface Parts {
   records: { records: ServedRecordEntry[]; access: ServedAccessEntry[] } | null;
   specs: { specs: ServedSpec[] } | null;
-  budget: { budget: ServedBudget } | null;
+  budget: { budget: ServedBudget; budgets?: ServedBudgetEntry[] } | null;
   grant: { grant: ServedGrant | null; envelope: ServedEnvelope | null } | null;
   orphans: { orphans: ServedOrphan[] } | null;
   listeners: { listeners: Record<string, ServedListenerEntry> } | null;
@@ -176,4 +204,5 @@ export const EMPTY_BUDGET: BudgetView = {
   byCaller: [],
   caps: { daily: null, monthly: null, standingDaily: null },
   accounts: [],
+  budgetlessVenues: [],
 };

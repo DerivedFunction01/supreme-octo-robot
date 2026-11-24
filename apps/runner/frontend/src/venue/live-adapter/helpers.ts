@@ -5,7 +5,15 @@
 
 import type { ShapeSpec } from "../types";
 
-export const VENUE_LABEL = "Colab";
+/** Display labels for the venue kinds the core serves. A
+ *  venue with no label here renders as its own id — the id is
+ *  served data, the label is presentation, and an unlabelled
+ *  venue is never silently dressed as another venue. */
+export const VENUE_LABELS: Record<string, string> = { colab: "Colab", local: "Local" };
+
+export function venueLabel(venue: string): string {
+  return VENUE_LABELS[venue] ?? venue;
+}
 export const TZ = "America/New_York";
 
 export const CLASS_LABEL: Record<string, string> = {

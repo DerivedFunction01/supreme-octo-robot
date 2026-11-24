@@ -24,12 +24,12 @@ import type {
 import { fmtTime } from "../adapter/format";
 import {
   CLASS_LABEL,
-  VENUE_LABEL,
   baseName,
   fmtRemaining,
   liveSessionName,
   shapeClass,
   str,
+  venueLabel,
 } from "./helpers";
 import { EMPTY_BUDGET } from "./served";
 import type {
@@ -49,15 +49,25 @@ export interface LiveContext {
 /* ----- served catalog (from the specs portion) ----- */
 
 export function specMap(ctx: LiveContext): Map<string, ServedSpec> {
-  return new Map((ctx.parts.specs?.specs ?? []).map((s) => [s.id, s]));
+  // Keyed by id, and by venue:id when the portion serves the
+  // shape's venue: two venues may serve the same shape id, and
+  // a venue-scoped lookup must not read another venue's entry.
+  const map = new Map<string, ServedSpec>();
+  for (const s of ctx.parts.specs?.specs ?? []) {
+    if (!map.has(s.id)) map.set(s.id, s);
+    if (s.venue) map.set(`${s.venue}:${s.id}`, s);
+  }
+  return map;
 }
 
-export function shapeLabel(ctx: LiveContext, shape: string): string {
-  return specMap(ctx).get(shape)?.label ?? shape;
+export function shapeLabel(ctx: LiveContext, shape: string, venue?: string): string {
+  const map = specMap(ctx);
+  return (venue ? map.get(`${venue}:${shape}`) : undefined)?.label ?? map.get(shape)?.label ?? shape;
 }
 
-export function shapeRateLabel(ctx: LiveContext, shape: string): string {
-  const rate = specMap(ctx).get(shape)?.rate_cu_per_hour;
+export function shapeRateLabel(ctx: LiveContext, shape: string, venue?: string): string {
+  const map = specMap(ctx);
+  const rate = (venue ? map.get(`${venue}:${shape}`) : undefined)?.rate_cu_per_hour ?? map.get(shape)?.rate_cu_per_hour;
   return rate != null ? `${rate} CU/h` : "Cost unconfirmed";
 }
 
@@ -69,6 +79,8 @@ export function specViews(ctx: LiveContext): SpecView[] {
       !rec.gpu && !rec.tpu && shape === rec.label ? kind : `${kind} · ${shape}`;
     return {
       id: rec.id,
+      venue: rec.venue ?? "colab",
+      venueLabel: venueLabel(rec.venue ?? "colab"),
       label: rec.label,
       descriptor,
       spec: { gpu: rec.gpu, tpu: rec.tpu, high_mem: rec.high_mem },
@@ -102,10 +114,10 @@ export function leaseView(ctx: LiveContext, entry: ServedRecordEntry & { record:
   return {
     session: lease.session,
     displayName: liveSessionName(lease.session),
-    venue: "colab",
-    venueLabel: VENUE_LABEL,
+    venue: lease.venue ?? "colab",
+    venueLabel: venueLabel(lease.venue ?? "colab"),
     shape: lease.shape,
-    shapeLabel: shapeLabel(ctx, lease.shape),
+    shapeLabel: shapeLabel(ctx, lease.shape, lease.venue),
     caller: lease.caller ?? entry.caller ?? null,
     state: expired ? "renewal-due" : "running",
     stateLabel: expired ? "Renewal due" : "Running",
@@ -206,7 +218,7 @@ export function runViews(ctx: LiveContext): RunView[] {
       stateTone: l.tone,
       startedAt: ev.ts,
       durationLabel: "—",
-      venue: "colab",
+      venue: str(d.venue) ?? "colab",
     });
   }
   return out.sort((a, b) => Date.parse(b.startedAt) - Date.parse(a.startedAt));
@@ -229,6 +241,7 @@ export function budgetView(ctx: LiveContext): BudgetView {
       : Infinity;
   const accounts: BudgetAccountView[] = served.accounts.map((a) => ({
     venue: a.venue,
+    venueLabel: venueLabel(a.venue),
     account: a.account,
     label: a.label,
     balanceCu: a.balance,
@@ -242,6 +255,34 @@ export function budgetView(ctx: LiveContext): BudgetView {
     },
     credential: a.credential,
   }));
+  // Budgeted accounts of other venues ride the served budgets
+  // set, not the home snapshot: merge any (venue, account) the
+  // snapshot does not already carry, with its served caps and
+  // its figures as served — null where the core holds no dial
+  // or journal for that venue (honest absence, never zeros).
+  for (const e of ctx.parts.budget?.budgets ?? []) {
+    if (!e.budget || !e.account) continue;
+    if (accounts.some((a) => a.venue === e.venue && a.account === e.account)) continue;
+    accounts.push({
+      venue: e.venue,
+      venueLabel: venueLabel(e.venue),
+      account: e.account,
+      label: e.label ?? e.account,
+      balanceCu: e.budget.balance,
+      usedTodayCu: e.budget.day_spent,
+      usedMonthCu: e.budget.month_spent,
+      standingUsedTodayCu: e.budget.standing_day_spent,
+      caps: {
+        daily: e.budget.caps.daily,
+        monthly: e.budget.caps.monthly,
+        standingDaily: e.budget.caps.standing_daily,
+      },
+      credential:
+        e.credential === "live" || e.credential === "credential-present" || e.credential === "not-brought-in"
+          ? e.credential
+          : "not-brought-in",
+    });
+  }
   return {
     balanceCu,
     usedTodayCu,
@@ -258,6 +299,12 @@ export function budgetView(ctx: LiveContext): BudgetView {
       standingDaily: served.caps.standing_daily,
     },
     accounts,
+    // The per-venue set the same portion serves: a budget-less
+    // venue kind (local) arrives as {venue, budget: null} and
+    // renders as its own row — never as an account.
+    budgetlessVenues: (ctx.parts.budget?.budgets ?? [])
+      .filter((e) => e.budget === null)
+      .map((e) => ({ venue: e.venue, venueLabel: venueLabel(e.venue) })),
   };
 }
 
@@ -394,8 +441,11 @@ export function orphanViews(ctx: LiveContext): OrphanView[] {
       endpoint: o.endpoint ?? null,
       priorSession: o.prior_session ?? null,
       displayName: liveSessionName(o.session ?? "?"),
-      venue: "colab" as const,
-      venueLabel: VENUE_LABEL,
+      // The orphan census is the home venue's: its rows are
+      // home-venue sessions by construction, and a row that
+      // ever carries its own venue stamp wins over that.
+      venue: o.venue ?? "colab",
+      venueLabel: venueLabel(o.venue ?? "colab"),
       shapeLabel: shapeDescriptor,
       sub: `${shapeDescriptor} · seen ${seenMin} min ago · ${o.jobs_in_flight === 0 ? "no jobs in flight" : `${o.jobs_in_flight} job${o.jobs_in_flight > 1 ? "s" : ""} in flight`}`,
       firstSeenLabel: fmtTime(o.first_seen),

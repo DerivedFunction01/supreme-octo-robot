@@ -212,7 +212,7 @@ function renderBudget() {
   $("budget-card").innerHTML = `<div class="card">
     <div class="row"><span class="lab">Balance</span><b class="num">${b.balance == null ? "—" : `${fmtNum(b.balance)} CU`}</b></div>
     <div class="row"><span class="lab">Today</span><span class="num">${spent(b.day_spent, caps.daily)}</span></div>
-    <div class="row"><span class="lab">${esc(month)}</span><span class="num">${spent(b.month_spent, caps.monthly)}</span></div>
+    <div class="row"><span class="lab">${esc(month)}</span><span class="num">${spent(b.month_spent, caps.monthly)}</span></div>${otherVenueRows()}
     ${editor}
   </div>`;
   const chip = $("balance-chip");
@@ -540,7 +540,7 @@ function renderLeases() {
     return `<div class="card">
       <div class="row"><b>${esc(title)}</b>${leaseChip(entry)}</div>
       <p class="big num" data-countdown="${esc(rec.deadline || "")}">${esc(countdownText(rec.deadline))}</p>
-      <p class="kvline">Deadline <b>${esc(fmtTime(rec.deadline))}</b> · session <span class="mono">${esc(rec.session || "—")}</span>${rec.caller ? ` · Caller <b>${esc(rec.caller)}</b>` : ""}</p>
+      <p class="kvline">Deadline <b>${esc(fmtTime(rec.deadline))}</b> · session <span class="mono">${esc(rec.session || "—")}</span>${rec.caller ? ` · Caller <b>${esc(rec.caller)}</b>` : ""}${rec.venue && rec.venue !== "colab" ? ` · Venue <b>${esc(venueLabel(rec.venue))}</b>` : ""}</p>
       <p class="kvline">Heartbeat <b>${age == null ? "unknown" : `${Math.round(age)}s ago`}</b> · Pulse <b>${esc(pulse || "—")}</b> · Burn <b>${esc(burn)}</b></p>
       ${entry.sync_claim ? `<p class="kvline">Sync claim <b>${esc(entry.sync_claim.caller || "—")}</b> · until <b>${esc(fmtTime(entry.sync_claim.expires_at))}</b></p>` : ""}
       ${listenerLines(session)}
@@ -677,7 +677,7 @@ const LOG_KINDS = new Set(Object.keys(LOG_LEVEL_BY_KIND));
 const PARTS = {
   records: { url: "/api/state/records", cadence: 15000 },
   specs: { url: "/api/state/specs", cadence: 60000 },
-  budget: { url: "/api/state/budget", cadence: 30000 },
+  budget: { url: "/api/state/budget", cadence: 30000 }, budgets: { url: "/api/state/budgets", cadence: 30000 },
   grant: { url: "/api/state/grant", cadence: 60000 },
   orphans: { url: "/api/state/orphans", cadence: 15000 },
   listeners: { url: "/api/state/listeners", cadence: 60000 },

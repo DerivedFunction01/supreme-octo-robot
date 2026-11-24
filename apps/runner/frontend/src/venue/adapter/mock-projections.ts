@@ -188,14 +188,19 @@ export function budget(ctx: MockContext): BudgetView {
   const capHeadroom = primary.caps.daily != null ? Math.max(0, primary.caps.daily - usedTodayCu) : Infinity;
   const accounts: BudgetAccountView[] = ctx.store.budgetAccounts.map((a) => {
     const isPrimary = a === primary;
+    const isHome = a.venue === primary.venue;
+    // A foreign venue's account serves no figures through
+    // this snapshot (null, as the live adapter serves); a
+    // same-venue secondary is journal-backed at zero.
     return {
       venue: a.venue,
+      venueLabel: VENUE_LABEL[a.venue] ?? a.venue,
       account: a.account,
       label: a.label,
       balanceCu: isPrimary ? balanceCu : null,
-      usedTodayCu: isPrimary ? usedTodayCu : 0,
-      usedMonthCu: isPrimary ? Math.round(usedMonth) : 0,
-      standingUsedTodayCu: isPrimary ? Math.round(byCaller.get("standing") ?? 0) : null,
+      usedTodayCu: isPrimary ? usedTodayCu : isHome ? 0 : null,
+      usedMonthCu: isPrimary ? Math.round(usedMonth) : isHome ? 0 : null,
+      standingUsedTodayCu: isPrimary ? Math.round(byCaller.get("standing") ?? 0) : isHome ? 0 : null,
       caps: { ...a.caps },
       credential: a.credential,
     };
@@ -211,6 +216,10 @@ export function budget(ctx: MockContext): BudgetView {
       .sort((a, b) => b.cu - a.cu),
     caps: { ...primary.caps },
     accounts,
+    budgetlessVenues: ctx.store.budgetlessVenues.map((v) => ({
+      venue: v,
+      venueLabel: VENUE_LABEL[v] ?? v,
+    })),
   };
 }
 

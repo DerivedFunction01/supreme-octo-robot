@@ -11,7 +11,7 @@ import type {
   Tone,
 } from "../types";
 import { fmtDateToken, fmtTime, fmtTimeLong } from "../adapter/format";
-import { CLASS_LABEL, TZ, VENUE_LABEL, baseName, liveSessionName, str } from "./helpers";
+import { CLASS_LABEL, TZ, baseName, liveSessionName, str, venueLabel } from "./helpers";
 import { recordEntries, shapeLabel } from "./projections";
 import type { LiveContext } from "./projections";
 import type { OutboxEvent } from "./served";
@@ -199,6 +199,10 @@ export function eventViews(ctx: LiveContext): EventView[] {
       : undefined;
     const kindLabel =
       kind === "lease" ? "Lease" : kind === "run" ? "Run" : kind === "grant" ? "Grant" : kind === "budget" ? "Budget" : "Error";
+    // The event's venue: the linked lease record's own venue
+    // first, then a venue the event detail itself carries,
+    // else the home venue (every pre-venue event is its).
+    const evVenue = entry?.record.venue ?? str(d.venue) ?? "colab";
     return {
       id: `seq-${ev.seq}`,
       at: ev.ts,
@@ -206,8 +210,8 @@ export function eventViews(ctx: LiveContext): EventView[] {
       kindLabel,
       tone,
       message,
-      venue: "colab" as const,
-      venueLabel: VENUE_LABEL,
+      venue: evVenue,
+      venueLabel: venueLabel(evVenue),
       dateToken: fmtDateToken(ev.ts),
       time: fmtTime(ev.ts),
       headline,
@@ -221,7 +225,7 @@ export function eventViews(ctx: LiveContext): EventView[] {
         facts: [
           { label: "Time", value: fmtDayTime(ctx, ev.ts), mono: true },
           { label: "Kind", value: kindLabel },
-          { label: "Venue", value: VENUE_LABEL },
+          { label: "Venue", value: venueLabel(evVenue) },
         ],
         ...(entity ? { entity } : {}),
       },

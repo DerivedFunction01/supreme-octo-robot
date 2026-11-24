@@ -72,6 +72,9 @@ export interface BudgetAccountState {
 
 export interface Store {
   budgetAccounts: BudgetAccountState[];
+  /** Venues the core serves with no budget at all (the
+   *  local venue): named in the budget view, never accounts. */
+  budgetlessVenues: string[];
   leases: LeaseRecord[];
   runs: RunRecord[];
   evidence: Record<string, SessionEvidence>;
@@ -111,7 +114,15 @@ export function createSeedStore(): Store {
       credential: "not-brought-in",
       caps: { daily: null, monthly: null, standingDaily: null },
     },
+    {
+      venue: "ec2",
+      account: "primary",
+      label: "Primary",
+      credential: "not-brought-in",
+      caps: { daily: 20, monthly: 200, standingDaily: null },
+    },
   ],
+  budgetlessVenues: ["local"],
   leases: structuredClone(leasesSeed) as LeaseRecord[],
   runs: structuredClone(runsSeed) as RunRecord[],
   evidence: structuredClone(evidenceSeed) as Record<string, SessionEvidence>,

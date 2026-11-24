@@ -263,8 +263,9 @@ export class MockVenueAdapter implements VenueAdapter {
     const inScope = grant !== null && grant.scope.shapes.includes(input.shape);
     // Placement (contract 12): latest-deadline adoption first —
     // a live lease at the requested shape is adopted, not duplicated.
+    const venue = input.venue ?? "colab";
     const pool = this.store.leases
-      .filter((l) => l.shape === input.shape && Date.parse(l.deadline) > this.clockMs)
+      .filter((l) => l.shape === input.shape && l.venue === venue && Date.parse(l.deadline) > this.clockMs)
       .sort((a, b) => {
         const own = Number(b.caller === input.caller) - Number(a.caller === input.caller);
         if (own !== 0) return own;
@@ -281,12 +282,11 @@ export class MockVenueAdapter implements VenueAdapter {
       this.emit();
       return this.leaseView(adopted);
     }
-    const num = 40 + (this.seq % 55);
-    const session = `${NAME_A[this.seq % NAME_A.length].toLowerCase()}-${NAME_B[(this.seq >> 2) % NAME_B.length].toLowerCase()}-${num}`;
+    const session = venue === "local" ? "local-main" : `${NAME_A[this.seq % NAME_A.length].toLowerCase()}-${NAME_B[(this.seq >> 2) % NAME_B.length].toLowerCase()}-${40 + (this.seq % 55)}`;
     this.seq += 1;
     const lease: LeaseRecord = {
       session,
-      venue: "colab",
+      venue,
       shape: input.shape,
       shape_spec: { ...info.spec },
       rate_cu_per_hour: info.rateCuPerHour,

@@ -4,7 +4,10 @@
 // stand-in) and served display-ready — the frontend renders,
 // it does not re-derive.
 
-export type VenueId = "colab"; // the only implemented adapter (D1/D2)
+/** A venue id is served data, not a closed set: the core's
+ *  config names the venues (colab, local, …) and every view
+ *  renders the venue its record or portion carries. */
+export type VenueId = string;
 
 export interface ShapeSpec {
   gpu: string | null;
@@ -389,6 +392,10 @@ export interface CallerView {
  */
 export interface SpecView {
   id: string;
+  /** The venue serving this shape, and its label — a shape
+   *  belongs to exactly one venue's catalog. */
+  venue: VenueId;
+  venueLabel: string;
   label: string;
   descriptor: string;
   spec: ShapeSpec;
@@ -468,6 +475,7 @@ export interface BudgetCaps {
  *  never a fabricated figure. */
 export interface BudgetAccountView {
   venue: string;
+  venueLabel: string;
   account: string;
   label: string;
   balanceCu: number | null;
@@ -490,6 +498,13 @@ export interface BudgetView {
   caps: BudgetCaps;
   /** Every account of the venue, primary first. */
   accounts: BudgetAccountView[];
+  /** Venue kinds that carry no budget at all (a local machine
+   *  venue — unmetered, unlimited), as the budget portion serves
+   *  them: the venue name only, with a null budget. They are not
+   *  accounts and carry no figures — honest absence, rendered as
+   *  their own rows, never as zeroed accounts. The label rides
+   *  the projection like every other venue label. */
+  budgetlessVenues: { venue: string; venueLabel: string }[];
 }
 
 export interface Snapshot {
@@ -515,6 +530,9 @@ export interface AcquireInput {
   shape: string;
   caller: string;
   hours: number;
+  /** The venue the shape belongs to; absent means the home
+   *  venue, as every pre-venue acquire meant it. */
+  venue?: string;
 }
 
 export class AdapterError extends Error {

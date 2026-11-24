@@ -46,8 +46,19 @@ function credentialChip(a: Snapshot["budget"]["accounts"][number]) {
 
 export function BudgetView({ snap }: { snap: Snapshot }) {
   const b = snap.budget;
-  const [selected, setSelected] = useState<string>(b.accounts[0]?.account ?? "primary");
-  const account = b.accounts.find((a) => a.account === selected) ?? b.accounts[0];
+  // Selection is keyed venue:account — two venues can each
+  // hold a "primary" account, and the caps editor must never
+  // write one venue's caps onto another's.
+  const keyOf = (a: { venue: string; account: string }) => `${a.venue}:${a.account}`;
+  const [selected, setSelected] = useState<string>(b.accounts[0] ? keyOf(b.accounts[0]) : "colab:primary");
+  const account = b.accounts.find((a) => keyOf(a) === selected) ?? b.accounts[0];
+  const venueCount = new Set(b.accounts.map((a) => a.venue)).size;
+  const accountGroups: { venue: string; venueLabel: string; accounts: typeof b.accounts }[] = [];
+  for (const a of b.accounts) {
+    const group = accountGroups.find((g) => g.venue === a.venue);
+    if (group) group.accounts.push(a);
+    else accountGroups.push({ venue: a.venue, venueLabel: a.venueLabel, accounts: [a] });
+  }
   const [fields, setFields] = useState<Record<CapKey, string>>({ daily: "", monthly: "", standingDaily: "" });
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -126,37 +137,57 @@ export function BudgetView({ snap }: { snap: Snapshot }) {
           </Row>
         ))}
       </GroupedList>
-      <GroupLabel>Accounts · Colab</GroupLabel>
-      <GroupedList>
-        {b.accounts.map((a) => (
-          <Row key={`${a.venue}:${a.account}`}>
-            {/* Two-line stack form (the lease-row form): the
-                account name + credential chip ride line 1 and
-                the balance takes line 2 at full width. On one
-                line the three competed — the name wrapped
-                mid-word, the chip label ellipsized ("Not
-                brought…") and the balance ellipsized ("Not
-                dial…") at phone width. */}
-            <div className="rn-stack">
-              <div className="rn-stack-top">
-                <span className="rn-lab rn-name">
-                  {a.label} <span className="mono">({a.account})</span>
-                </span>
-                <span className="rn-stack-end">{credentialChip(a)}</span>
-              </div>
-              <div className="rn-sub">
-                {a.balanceCu == null ? "Not dialed" : `Balance ${a.balanceCu} CU`}
-              </div>
-            </div>
-          </Row>
-        ))}
-      </GroupedList>
+      {accountGroups.map((g) => (
+        <div key={g.venue}>
+          <GroupLabel>Accounts · {g.venueLabel}</GroupLabel>
+          <GroupedList>
+            {g.accounts.map((a) => (
+              <Row key={`${a.venue}:${a.account}`}>
+                {/* Two-line stack form (the lease-row form): the
+                    account name + credential chip ride line 1 and
+                    the balance takes line 2 at full width. On one
+                    line the three competed — the name wrapped
+                    mid-word, the chip label ellipsized ("Not
+                    brought…") and the balance ellipsized ("Not
+                    dial…") at phone width. */}
+                <div className="rn-stack">
+                  <div className="rn-stack-top">
+                    <span className="rn-lab rn-name">
+                      {a.label} <span className="mono">({a.account})</span>
+                    </span>
+                    <span className="rn-stack-end">{credentialChip(a)}</span>
+                  </div>
+                  <div className="rn-sub">
+                    {a.balanceCu == null ? "Not dialed" : `Balance ${a.balanceCu} CU`}
+                  </div>
+                </div>
+              </Row>
+            ))}
+          </GroupedList>
+        </div>
+      ))}
+      {b.budgetlessVenues.length > 0 ? (
+        <>
+          <GroupLabel>Other venues</GroupLabel>
+          <GroupedList>
+            {b.budgetlessVenues.map((v) => (
+              <Row key={v.venue}>
+                <span className="rn-lab">{v.venueLabel}</span>
+                <RowValue>No budget · unmetered</RowValue>
+              </Row>
+            ))}
+          </GroupedList>
+        </>
+      ) : null}
       <GroupLabel>Budget caps</GroupLabel>
       <div style={{ marginBottom: 10 }}>
         <PickerChips
           ariaLabel="Account to edit"
-          options={b.accounts.map((a) => ({ value: a.account, label: a.label }))}
-          value={account?.account ?? ""}
+          options={b.accounts.map((a) => ({
+            value: keyOf(a),
+            label: venueCount > 1 ? `${a.label} · ${a.venueLabel}` : a.label,
+          }))}
+          value={account ? keyOf(account) : ""}
           onChange={setSelected}
         />
       </div>

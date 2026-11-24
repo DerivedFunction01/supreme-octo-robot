@@ -7,12 +7,15 @@
 import type { ShapeSpec, SpecView, VenueId } from "../types";
 import specsSeed from "../seed/specs.json";
 
-export const VENUE_LABEL: Record<VenueId, string> = { colab: "Colab" };
+export const VENUE_LABEL: Record<VenueId, string> = { colab: "Colab", local: "Local" };
 
 /** One shape of the core's served specs portion, in the
  *  portion's own record shape (seed/specs.json). */
 export interface SpecRecord {
   id: string;
+  /** The venue serving this shape; the seed catalog is the
+   *  home venue's, so an absent venue is colab. */
+  venue?: string;
   label: string;
   gpu: string | null;
   tpu: string | null;
@@ -66,6 +69,8 @@ export function specDescriptor(rec: SpecRecord): string {
 export function specView(rec: SpecRecord): SpecView {
   return {
     id: rec.id,
+    venue: rec.venue ?? "colab",
+    venueLabel: VENUE_LABEL[rec.venue ?? "colab"] ?? (rec.venue ?? "colab"),
     label: rec.label,
     descriptor: specDescriptor(rec),
     spec: { gpu: rec.gpu, tpu: rec.tpu, high_mem: rec.high_mem },

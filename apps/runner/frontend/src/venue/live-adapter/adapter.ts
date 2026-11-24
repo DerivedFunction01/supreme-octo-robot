@@ -347,8 +347,7 @@ export class LiveVenueAdapter implements VenueAdapter {
   async acquire(input: AcquireInput): Promise<LeaseView> {
     this.assertReachable();
     const result = await this.post("/api/lease/start", {
-      shape: input.shape,
-      hours: input.hours,
+      shape: input.shape, hours: input.hours, venue: input.venue,
     });
     const action = str(result.action);
     const rec = (result.record ?? {}) as Record<string, unknown>;

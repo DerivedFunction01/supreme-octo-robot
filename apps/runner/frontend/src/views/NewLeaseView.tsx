@@ -8,6 +8,7 @@ import {
   ErrorNotice,
   GroupLabel,
   GroupedList,
+  PickerChips,
   Row,
   RowValue,
 } from "../components/ui";
@@ -62,8 +63,26 @@ export function NewLeaseView({
   onAcquired: (session: string) => void;
 }) {
   const [kind, setKind] = useState<GrantKind>("normal");
+  // Venue is a choice only when the specs portion serves more
+  // than one venue's catalog; each venue's shapes list apart,
+  // and switching venue re-points the shape at that venue's
+  // first shape. The two-tier grant is the home venue's
+  // envelope, so its burst list is the home venue's shapes.
+  const venues: { venue: string; venueLabel: string }[] = [];
+  for (const s of snap.specs) {
+    if (!venues.some((v) => v.venue === s.venue)) venues.push({ venue: s.venue, venueLabel: s.venueLabel });
+  }
+  const homeVenue = venues[0]?.venue ?? "colab";
+  const [venue, setVenue] = useState(() => homeVenue);
+  const visibleSpecs = snap.specs.filter((s) => s.venue === venue);
+  const homeSpecs = snap.specs.filter((s) => s.venue === homeVenue);
   const [shape, setShape] = useState(() => snap.specs[0]?.id ?? "");
-  const [burst, setBurst] = useState(() => snap.specs[0]?.id ?? "");
+  const [burst, setBurst] = useState(() => homeSpecs[0]?.id ?? "");
+  const pickVenue = (v: string) => {
+    setVenue(v);
+    const first = snap.specs.find((s) => s.venue === v);
+    if (first) setShape(first.id);
+  };
   const [callerSel, setCallerSel] = useState(adapter.registeredCallers()[0] ?? "");
   const [customCaller, setCustomCaller] = useState("");
   const [hours, setHours] = useState(2);
@@ -71,7 +90,7 @@ export function NewLeaseView({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const spec = snap.specs.find((s) => s.id === shape) ?? snap.specs[0];
+  const spec = visibleSpecs.find((s) => s.id === shape) ?? visibleSpecs[0];
   const cost = spec && spec.rateCuPerHour != null ? spec.rateCuPerHour * hours : null;
   const caller = callerSel === CUSTOM ? customCaller.trim() : callerSel;
   const inScope = snap.grant != null && spec != null && snap.grant.shapes.includes(spec.id);
@@ -88,7 +107,7 @@ export function NewLeaseView({
     }
     setBusy(true);
     try {
-      const lease = await adapter.acquire({ shape: spec.id, caller, hours });
+      const lease = await adapter.acquire({ shape: spec.id, caller, hours, venue: spec.venue });
       onAcquired(lease.session);
     } catch (e) {
       setError(e instanceof AdapterError ? e.message : String(e));
@@ -138,9 +157,9 @@ export function NewLeaseView({
           <>
             <GroupLabel>Burst spec</GroupLabel>
             <GroupedList>
-              {snap.specs.map((s) => (
+              {homeSpecs.map((s) => (
                 <SpecRow
-                  key={s.id}
+                  key={`${s.venue}:${s.id}`}
                   spec={s}
                   selected={s.id === burst}
                   onSelect={() => setBurst(s.id)}
@@ -177,11 +196,24 @@ export function NewLeaseView({
         )
       ) : (
         <>
+          {venues.length > 1 ? (
+            <>
+              <GroupLabel>Venue</GroupLabel>
+              <div style={{ marginBottom: 10 }}>
+                <PickerChips
+                  ariaLabel="Venue"
+                  options={venues.map((v) => ({ value: v.venue, label: v.venueLabel }))}
+                  value={venue}
+                  onChange={pickVenue}
+                />
+              </div>
+            </>
+          ) : null}
           <GroupLabel>Shape</GroupLabel>
           <GroupedList>
-            {snap.specs.map((s) => (
+            {visibleSpecs.map((s) => (
               <SpecRow
-                key={s.id}
+                key={`${s.venue}:${s.id}`}
                 spec={s}
                 selected={s.id === shape}
                 onSelect={() => setShape(s.id)}
@@ -250,8 +282,7 @@ export function NewLeaseView({
           ) : null}
           <p className="rn-sub" style={{ marginTop: 10 }}>
             Placement is the venue layer's: a live lease at this shape is adopted by
-            latest-deadline order before a new one is created (contract 12). Venue:{" "}
-            {snap.leases[0]?.venueLabel ?? "Colab"} — the only implemented adapter.
+            latest-deadline order before a new one is created (contract 12).
           </p>
         </>
       )}
