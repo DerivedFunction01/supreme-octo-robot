@@ -35,8 +35,9 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/b
 
 RUN useradd -m -s /bin/bash agent \
     && echo "agent ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers \
-    && mkdir -p /home/agent/.ssh && chmod 700 /home/agent/.ssh \
-    && chown -R agent:agent /home/agent/.ssh \
+    && AGENT_HOME="$(getent passwd agent | cut -d: -f6)" \
+    && mkdir -p "$AGENT_HOME/.ssh" && chmod 700 "$AGENT_HOME/.ssh" \
+    && chown -R agent:agent "$AGENT_HOME/.ssh" \
     && git config --system init.defaultBranch main \
     && git config --system --add safe.directory '*'
 
