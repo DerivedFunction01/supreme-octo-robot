@@ -144,6 +144,8 @@ class CapacityPassCase(unittest.TestCase):
     def _run_pass(self, store, settings, unlanded):
         from unittest import mock
 
+        from attention import capacity as capacity_mod
+
         def fake_capacity(state, _settings, now):
             state["capacity_snapshot"] = {"at": now, "sessions": []}
             state["capacity_error"] = None
@@ -151,21 +153,21 @@ class CapacityPassCase(unittest.TestCase):
 
         quiet = lambda *args: False  # noqa: E731
         with (
-            mock.patch.object(server_mod.staffing, "collect_capacity", fake_capacity),
-            mock.patch.object(server_mod.worktrees, "collect", quiet),
-            mock.patch.object(server_mod.records, "collect", quiet),
-            mock.patch.object(server_mod.lanes, "collect", quiet),
-            mock.patch.object(server_mod.records, "collect_consumption", quiet),
-            mock.patch.object(server_mod.records, "collect_unlanded", unlanded),
-            mock.patch.object(server_mod.records, "collect_goals", quiet),
-            mock.patch.object(server_mod.stamps, "collect", quiet),
-            mock.patch.object(server_mod.venue, "collect", quiet),
-            mock.patch.object(server_mod.venue, "collect_frontier", quiet),
-            mock.patch.object(server_mod.plans, "collect", quiet),
-            mock.patch.object(server_mod.contracts, "sync", quiet),
-            mock.patch.object(server_mod.digest, "collect_wb_facts", quiet),
+            mock.patch.object(capacity_mod.staffing, "collect_capacity", fake_capacity),
+            mock.patch.object(capacity_mod.worktrees, "collect", quiet),
+            mock.patch.object(capacity_mod.records, "collect", quiet),
+            mock.patch.object(capacity_mod.lanes, "collect", quiet),
+            mock.patch.object(capacity_mod.records, "collect_consumption", quiet),
+            mock.patch.object(capacity_mod.records, "collect_unlanded", unlanded),
+            mock.patch.object(capacity_mod.records, "collect_goals", quiet),
+            mock.patch.object(capacity_mod.stamps, "collect", quiet),
+            mock.patch.object(capacity_mod.venue, "collect", quiet),
+            mock.patch.object(capacity_mod.venue, "collect_frontier", quiet),
+            mock.patch.object(capacity_mod.plans, "collect", quiet),
+            mock.patch.object(capacity_mod.contracts, "sync", quiet),
+            mock.patch.object(capacity_mod.digest, "collect_wb_facts", quiet),
         ):
-            server_mod._capacity_pass(store, settings, threading.Lock())
+            capacity_mod._capacity_pass(store, settings, threading.Lock())
 
     def test_failure_is_recorded_and_success_clears_it(self):
         from datetime import UTC, datetime, timedelta

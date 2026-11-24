@@ -22,6 +22,11 @@ package root as settings.py and errors.py).
   refusal — there is no seeded-sample default anywhere in
   the serving path (the sample builder survives only as a
   fixture source for tests).
+- capacity: the slow capacity collector's pass and
+  loop, extracted from the serving shell along its
+  seam; the shell wires the loop as a supervised
+  worker, and the pass merges its snapshots into the
+  same store under the shared lock.
 - cli/client: the connector CLI (the `attn` verbs),
   riding ATTN_URL like the pinned connector did.
 """
