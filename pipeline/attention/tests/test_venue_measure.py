@@ -35,6 +35,7 @@ from attention.services.measure import (  # noqa: E402
     records,
     registry,
     staffing,
+    staffing_venue,
     venue,
 )
 from attention.services.measure import staffing_rows  # noqa: E402
@@ -118,12 +119,15 @@ def serial_rows(view):
 class SpecimenWindows(unittest.TestCase):
     def test_staffed_window_reads_staffed(self):
         # Inside 10:00–12:25Z the records show several
-        # families across both live sessions: no defect.
-        # The 13:30Z instant is not probed here — under
-        # the cured derivation it reads defect (the
-        # launch-lost records that made it read staffed
-        # are excluded), and it is probed as defect
-        # below.
+        # families across both live sessions: the count
+        # bands read staffed and no serial row stands.
+        # The queue stands nothing here either: its
+        # staffable-now work was staffed and pruned by
+        # amendment, and the one remaining work item
+        # (the Round 4 build) is gated on the unlanded
+        # packet marker, so nothing reads due at these
+        # instants. The 13:30Z instant is not probed
+        # here — it is probed as defect below.
         for now in (at(11), at(12), at(12, 15)):
             view = staffing.build_staffing(specimen_state(now), settings(), now)
             self.assertEqual(serial_rows(view), [], f"at {now}")
@@ -225,6 +229,157 @@ class FamilyDerivation(unittest.TestCase):
             "steampowernj",
         )
         self.assertIsNone(venue.attribute_slug("panel", declarations))
+
+
+def queue_state(families):
+    """A synthetic venue snapshot for the edgar
+    programme, in the served shape: the named
+    families in flight on the named sessions, the
+    programme's open work armed."""
+    now = at(15, 22)
+    state = {
+        "armed_rows": [
+            {
+                "project": "edgar-sec",
+                "todo": "ci-corefin-coci-build",
+                "row": {"project": "edgar-sec", "programme": "edgar-sec"},
+            }
+        ],
+        "venue_snapshot": {
+            "edgar-greenfield": {
+                "at": now,
+                "jobs": 4,
+                "families": {
+                    name: {"sessions": sessions, "runs": 1, "child_runs": 0}
+                    for name, sessions in families.items()
+                },
+                "workers": len(families),
+                "child_workers": 0,
+                "coordinator_caller": "edgar-specimen",
+            }
+        },
+    }
+    idle = {SCARLET: now - timedelta(minutes=52)}
+    return now, state, [CALM, SCARLET], idle
+
+
+_REAL_CONTRACT_FOR = registry.staffing_contract_for
+
+
+def packet_landed(slug):
+    """The registry contract with the segment
+    packet marker flipped landed, as the amendment
+    will record it when the packet landing lands:
+    the queue's one remaining work item (the Round
+    4 build) becomes due-eligible."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract:
+        for entry in contract["staffable_queue"]:
+            if entry["key"] == "segment-packet-landing":
+                entry["landed"] = True
+    return contract
+
+
+class QueueMeasure(unittest.TestCase):
+    """The queue condition (staffing-commission
+    amendment): due items named on the serial row,
+    gated items never due before their gate
+    resolves, an in-flight family never due."""
+
+    def test_due_item_named_gated_items_not_due(self):
+        from unittest import mock
+
+        now, state, live, idle = queue_state({"cocisep": [CALM]})
+        rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        # The queue's only work item (the Round 4
+        # build) is gated on the unlanded packet
+        # marker, so nothing reads due: the row
+        # stands on the count conditions alone.
+        self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
+        self.assertEqual(row["queue_unstaffed"], [])
+        # With the packet marker landed the gated
+        # item reads due, named on the row.
+        with mock.patch.object(registry, "staffing_contract_for", packet_landed):
+            rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertIn("prerequisite_due_family_unstaffed", row["conditions"])
+        self.assertEqual(
+            [e["key"] for e in row["queue_unstaffed"]],
+            ["round4-instrument-build"],
+        )
+        self.assertIn("Round 4 instrument build", row["detail"])
+
+    def test_bands_met_but_queue_due_still_raises(self):
+        from unittest import mock
+
+        now, state, live, idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        with mock.patch.object(registry, "staffing_contract_for", packet_landed):
+            rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["conditions"], ["prerequisite_due_family_unstaffed"])
+
+    def test_in_flight_family_is_never_due(self):
+        from unittest import mock
+
+        now, state, live, idle = queue_state(
+            {
+                "cocisep": [CALM],
+                "corefin-coci": [SCARLET],
+                "round4": [CALM],
+            }
+        )
+        # The packet marker landed makes the Round 4
+        # build due-eligible; its family in flight
+        # still keeps it from reading due.
+        with mock.patch.object(registry, "staffing_contract_for", packet_landed):
+            self.assertEqual(staffing_rows._family_rows(state, now, live, idle), [])
+
+    def test_marker_flip_makes_the_gated_item_due(self):
+        from unittest import mock
+
+        now, state, live, idle = queue_state(
+            {
+                "cocisep": [CALM],
+                "corefin-coci": [SCARLET],
+                "otherfam": [CALM],
+            }
+        )
+        with mock.patch.object(registry, "staffing_contract_for", packet_landed):
+            rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        # The Round 4 item reads due once its gate
+        # resolves; it is the queue's only remaining
+        # work item.
+        self.assertEqual(
+            [e["key"] for e in rows[0]["queue_unstaffed"]],
+            ["round4-instrument-build"],
+        )
+
+    def test_queue_due_gate_semantics(self):
+        queue = [
+            {"key": "a", "label": "A", "family": "fa", "staffable_when": None},
+            {"key": "gate", "label": "G", "marker": True, "landed": False},
+            {"key": "b", "label": "B", "family": "fb", "staffable_when": "gate"},
+            {"key": "c", "label": "C", "family": "fc", "staffable_when": "a"},
+        ]
+        due = staffing_venue._queue_due(queue, set())
+        self.assertEqual([e["key"] for e in due], ["a"])
+        # A landed marker resolves its gate; a work
+        # item still standing in the queue does not
+        # resolve its own.
+        queue[1]["landed"] = True
+        due = staffing_venue._queue_due(queue, set())
+        self.assertEqual([e["key"] for e in due], ["a", "b"])
+        # Landed work is pruned by amendment: with
+        # the gating item gone, its dependent is due.
+        pruned = [e for e in queue if e["key"] != "a"]
+        due = staffing_venue._queue_due(pruned, set())
+        self.assertEqual([e["key"] for e in due], ["b", "c"])
 
 
 PLAN_TEXT = """# Fixture plan
