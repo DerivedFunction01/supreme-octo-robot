@@ -342,6 +342,11 @@ def main() -> int:
         save_record(rec)
         print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
         return 2
+    if pin_session is None and use_lease and rec is not None:
+        # A resume keeps its recorded lineage: the record's pin
+        # (else its launch session) is this fire's pin when the
+        # caller names none; acquire resolves it through renewal.
+        pin_session = rec.get("session_pin") or rec.get("session")
     session = run_id  # the lease-disabled fallback's per-run session
     if use_lease:
         if pin_session:
@@ -353,6 +358,8 @@ def main() -> int:
         window_floor_s = min(int(job.get("timeout", 18000)), 3600)
         got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session, min_window_s=window_floor_s)
         if got["action"] in ("refused-budget", "create-failed", "shape-refused", "shape-mismatch", "caller-start-refused", "unknown-shape", "pin-unavailable"):
+            if got.get("probe"):
+                rec["bind_probe"] = got["probe"]
             rec.update(state="failed", error=json.dumps(got)[:300])
             save_record(rec)
             # E1: if live sessions sit unrecorded at this shape,
@@ -364,6 +371,9 @@ def main() -> int:
             print(json.dumps({"run_id": run_id, "state": "failed", "lease": got}, indent=2))
             return 1
         rec["lease_action"] = got["action"]
+        for key in ("bind_probe", "pin_resolved"):
+            if got.get(key):
+                rec[key] = got[key]
         if got.get("health_degraded"):
             # Adopted anyway (every candidate was degraded):
             # the record says the launch channel has been
