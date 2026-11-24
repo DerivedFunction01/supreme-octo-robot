@@ -20,7 +20,13 @@ moved verbatim, no behaviour change):
   orphan notes (upload_one, orphan_notes).
 - verbs: the non-launch verbs (poll_run, wait_run) and the
   poller's lease close-out.
-- main: argument parsing, dispatch, and the launch path itself.
+- dispatch: the launch front end — flag and claim
+  resolution, manifest and shape settlement, the run-record
+  claim, seed / transport setup, and lease acquire.
+- execute: the launch window — uploads, the seed and branch
+  windows, the confirmed detached launch, the foreground
+  poll loop, and finalize under the close-out finally.
+- main: argument parsing and verb routing.
 
 The package re-exports the former bin/colab-run module's whole
 surface under its existing names: consumers load bin/colab-run
@@ -30,7 +36,7 @@ names from here.
 """
 
 from . import foundation
-from . import launch, pull, reader, records, replace, sweep, verbs
+from . import dispatch, execute, launch, pull, reader, records, replace, sweep, verbs
 
 from .foundation import REPO, RUNS, cli, colab, colab_bin, colab_env, TOKEN, lease, mirror, now, repo_registry, transfer
 from .records import TERMINAL_STATES, claim_first_save, emit_terminal_event, load_run_record, mark_terminal, outbox_path, save_record

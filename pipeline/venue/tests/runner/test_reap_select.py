@@ -129,6 +129,6 @@ def test_stamp_runs_payload_then_reaps_then_stamps_the_exit_code():
     assert "reap.json" in stamp
 
 
-def test_main_builds_its_stamp_through_the_builder():
-    text = (REPO / "sync" / "runner" / "main.py").read_text()
+def test_execute_builds_its_stamp_through_the_builder():
+    text = (REPO / "sync" / "runner" / "execute.py").read_text()
     assert "build_launch_stamp(remote_script, remote_out, job_args, run_id)" in text

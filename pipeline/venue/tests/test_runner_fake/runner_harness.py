@@ -495,9 +495,13 @@ def runner_inprocess(tmp_path, monkeypatch):
     name = f"runner_inproc_{next(_INPROC_SEQ)}"
     pkg = module_loader.load_module(name, root / "sync" / "runner" / "__init__.py", register=True, search_locations=[str(root / "sync" / "runner")])
     main_mod = sys.modules[f"{name}.main"]
-    for leaf in (pkg.foundation, pkg.reader, pkg.sweep, pkg.launch, pkg.pull, main_mod):
+    dispatch_mod = sys.modules[f"{name}.dispatch"]
+    execute_mod = sys.modules[f"{name}.execute"]
+    for leaf in (pkg.foundation, pkg.reader, pkg.sweep, pkg.launch, pkg.pull, main_mod, dispatch_mod, execute_mod):
         leaf.colab = venue
     main_mod.mirror = lambda op: None
+    dispatch_mod.mirror = lambda op: None
+    execute_mod.mirror = lambda op: None
     pkg.verbs.mirror = lambda op: None
     return env, venue, pkg
 
