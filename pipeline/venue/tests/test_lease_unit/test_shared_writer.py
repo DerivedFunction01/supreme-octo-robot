@@ -51,14 +51,16 @@ def _load(name, path):
 
 
 class _RecordingWriter:
-    """A writer-module double: records every staged_write and
-    performs it plainly, so file assertions still hold."""
+    """A staged_write double: records every call and performs
+    it plainly, so file assertions still hold. Paths record
+    in the string form the writer surface itself receives —
+    the route hands the platform writer str(path)."""
 
     def __init__(self):
         self.calls = []
 
     def staged_write(self, path, data, mode=None):
-        self.calls.append((path, data, mode))
+        self.calls.append((str(path), data, mode))
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         Path(path).write_bytes(data)
         if mode is not None:
@@ -184,7 +186,7 @@ def test_funnel_heals_ride_the_writer(tmp_path, monkeypatch):
     staging (the concurrent-recovery-writer class)."""
     cli = _load("e5_cli", REPO_ROOT / "sync" / "cli.py")
     fake = _RecordingWriter()
-    monkeypatch.setattr(cli, "_WRITER", fake)
+    monkeypatch.setattr(cli, "_staged_write", fake.staged_write)
     sessions = tmp_path / "sessions.json"
     token = tmp_path / "token.json"
     monkeypatch.setattr(cli, "SESSIONS", sessions)
