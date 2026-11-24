@@ -1,4 +1,4 @@
-"""Panel shape persistence (2026-11-17): the assembled
+"""Panel shape persistence: the assembled
 shapes the panel serves — the state-read cache's builds
 and the outbox's stored shape — persist in the venue
 var dir's SQLite shape store, so a panel restart serves

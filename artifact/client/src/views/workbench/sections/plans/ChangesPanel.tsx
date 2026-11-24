@@ -112,7 +112,7 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
       // A scrollable region (overflow-x below) is
       // keyboard-focusable, with the kit's focus ring —
       // the axe scrollable-region-focusable cure
-      // (critic WB5-1, 2026-11-17), the same treatment
+      // (critic WB5-1), the same treatment
       // every scrollable mono region in the client
       // carries.
       tabIndex={0}

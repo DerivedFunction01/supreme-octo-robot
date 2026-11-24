@@ -55,7 +55,7 @@ def validate_caller(repo: Path, raw) -> str | None:
 def active_caller_registry(repo: Path) -> set:
     """The registered callers marked active in the local
     registry's "active" list. Active is the owner's standing
-    marking (2026-11-10): a caller with a potential use for
+    marking: a caller with a potential use for
     Colab even when no session is currently up — while marked
     active its work is detached-only, and the sync gate refuses
     its synchronous attaches outright (syncclaims.sync_rights).

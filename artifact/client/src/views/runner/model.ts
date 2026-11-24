@@ -376,7 +376,7 @@ export function adoptRefusalText(res: Record<string, unknown>): string {
 /* ---------------- logs form model (logs.js, pure) ---------------- */
 
 /** The logs vocabulary is closed: exactly the contract's
- *  eight kinds (owner's ruling, 2026-11-03). */
+ *  eight kinds (owner's ruling). */
 export const LOG_LEVEL_BY_KIND: Record<string, "ok" | "info" | "warn" | "error"> = {
   "lease-started": "ok",
   "lease-adopted": "ok",

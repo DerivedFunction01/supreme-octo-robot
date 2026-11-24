@@ -1,6 +1,6 @@
 """Funnel output-parse units: json_object_from_output reads one
 JSON object from CLI exec stdout and ignores whatever trails it
-(2026-11-14: the CLI's update nag trailing a probe's object made
+(the CLI's update nag trailing a probe's object made
 launch upload-verifies read as unreadable on landed uploads)."""
 
 import importlib.util

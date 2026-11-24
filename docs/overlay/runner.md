@@ -10,7 +10,7 @@ contract §4.4's family).
 
 | File | Bytes | SHA-256 | Notes |
 |---|---|---|---|
-| config/callers.json | 403 | aaefea86329c7bf201c7595a6a395364f6bfc68c564bb777dc1465edaf98b3df | the caller registry (contract 01's type specimen): **15 thread callers, 3 `active`** at capture — review said 14/3; +1 caller from live operator traffic since 2026-11-12, active set unchanged |
+| config/callers.json | 403 | aaefea86329c7bf201c7595a6a395364f6bfc68c564bb777dc1465edaf98b3df | the caller registry (contract 01's type specimen): **15 thread callers, 3 `active`** at capture — review said 14/3; +1 caller from live operator traffic since the review, active set unchanged |
 | config/lease.json | 979 | c3579c608eee50caa31e9e3964ef4421433e03c5c91d0037a9b1b572c43bc639 | caps + session-gate policy |
 | config/repos.json | 2077 | ec19f20da725c8e51c511718362083e05dd0d375a4f45fb3126a4a9b5bfd7db5 | pointer-only target-repo registry |
 | config/notify-routes.json | 324 | e230b4209b5d8e1d9e9cccced4aadd3def0fc729b8b664a3b2f2c7f25c596888 | caller→chat routing for liveness escalation |
@@ -77,7 +77,7 @@ runtime state of the same class: not itemized, not carried.
   server is the outbox's single writer apart from the
   core's `run-terminal` appends.
 - **Runtime registrations, recorded by the parent
-  (2026-11-13, from the hook system's own records — the
+  (from the hook system's own records — the
   lane's gap above is closed):** both hooks are registered
   and **enabled**, delivery to the main chat.
   `colab-lease-reaper`: poll 120 s, script

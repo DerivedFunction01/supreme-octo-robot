@@ -3,8 +3,8 @@
 **Canonical owner:** the pipeline platform — the config
 pattern (§4.4: each app keeps its own live config file; the
 pattern, precedence, and source-reporting are
-pipeline-owned), and, by the 2026-11-13 amendment, the
-platform's ops-service and watchdog/keeper clauses below.
+pipeline-owned), and, by amendment, the platform's
+ops-service and watchdog/keeper clauses below.
 (Plan §4.4, plus the file-registry home added by the S0
 amendment to §4.4.)
 
@@ -141,8 +141,8 @@ capped at 4 MiB.
   `/tools` token model; callers resolve through contract
   01's registry. Exec timeouts default to 120 s, capped at
   600 s.
-- **§10.1 disposition (S9/P4, 2026-11-13; inputs built
-  2026-11-14, cutover-prep lane OI-2):** the scope
+- **§10.1 disposition (S9/P4; inputs built by
+  cutover-prep lane OI-2):** the scope
   mapping is frozen: **`write` and `patch` require the
   `write-state` scope; `exec` requires the `exec` scope.**
   The two inputs the S9/P4 disposition named as missing

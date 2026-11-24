@@ -95,7 +95,7 @@ export function Entries() {
           return (
             <Row key={e.id} last={i === shown.length - 1} onClick={() => open(e.id)}>
               {/* Two-line discipline (the kit Row form, owner's
-                  row ruling 2026-11-13): line 1 is the kind pill +
+                  row ruling): line 1 is the kind pill +
                   the truncating title + chevron; the review badge
                   rides line 2 beside the truncating sub, flex-none
                   — neither text line competes with the badge for

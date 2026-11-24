@@ -115,7 +115,7 @@ def test_failed_renewal_retries_next_cycle_deadline_untouched(repo, tmp_path, mo
 
 def test_renewal_retires_the_superseded_generations_record(repo, tmp_path, monkeypatch):
     """The swap retires the old generation's record in its
-    own act (2026-11-23): out of the live namespace, so no
+    own act: out of the live namespace, so no
     reader can mistake it for the lease's current pin — the
     specimen failure was a resume priced against a
     superseded generation whose record still stood while

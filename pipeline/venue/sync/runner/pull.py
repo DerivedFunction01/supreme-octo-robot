@@ -35,7 +35,7 @@ def pull_outputs(rec: dict, job: dict, session: str, remote_out: str, reader_sta
 
     Runs at every checkpoint cadence while the job runs — the
     manifest's checkpoint_pull_seconds is a pull cadence, not
-    only a poll cadence (2026-11-07: the venue relay starved
+    only a poll cadence (the venue relay starved
     because outputs landed only at completion, so a 12 h job's
     log never reached the local reader waiting on it) — and once
     more after the loop as the authoritative final pull. A failed
@@ -63,7 +63,7 @@ def pull_outputs(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     a stamped sibling name before the staging file moves in,
     with the rotation noted on the pull entry and the record.
     A remote output that restarts smaller must not silently
-    erase the history already pulled (2026-11-08: after a
+    erase the history already pulled (after a
     wrapper resume, the venue keeper's pulled log shrank to its
     first line and the accumulated record was gone — the
     forensic read had to fall back to the venue-side lease
@@ -108,7 +108,7 @@ def pull_outputs(rec: dict, job: dict, session: str, remote_out: str, reader_sta
                     # disagrees with the reader's stat for the
                     # output is not a pull — a failed or partial
                     # download must not be certified as the
-                    # artifact (2026-11-11: a completed job's
+                    # artifact (a completed job's
                     # 1,762-byte heartbeat was pulled as a 0-byte
                     # entry and the run read complete on it). The
                     # stored stat stays unset, so the next cadence
@@ -158,7 +158,7 @@ def misplaced_outputs(session: str, missing: list, started_epoch: "float | None"
     they sit at the payload's cwd root: one bounded exec stats
     each missing name there and returns [{name, path, bytes,
     mtime, fresh}] for the ones present. The specimen class
-    (2026-11-11: gate scripts writing cwd-relative paths
+    (gate scripts writing cwd-relative paths
     landed their outputs at /content while their out dirs held
     only harness files, and the finalize record said only
     "missing") is usually a lane-script addressing slip, and
@@ -199,7 +199,7 @@ def misplaced_outputs(session: str, missing: list, started_epoch: "float | None"
     # update-check notice opens with "[colab]"), so the probe's
     # JSON is read as the last line that parses as a list —
     # slicing from the first "[" reads the preamble and the
-    # naming silently comes back empty (2026-11-11 live
+    # naming silently comes back empty (live
     # specimen: both outputs present at /content, probe JSON
     # in the output, record unnamed).
     found = None
@@ -226,8 +226,7 @@ def _output_names(entries) -> list:
     collide at a shared root. Any other shape is skipped: an
     advisory accounting must degrade, never crash (first
     version hashed the raw entries and a mapped neighbour
-    manifest crashed a consumer's launch client-side,
-    2026-11-12)."""
+    manifest crashed a consumer's launch client-side)."""
     names = []
     if isinstance(entries, list):
         for entry in entries:
@@ -266,7 +265,7 @@ def manifest_shape_error(job) -> "str | None":
     no tolerance semantics: uploads and args are consumed as
     plain strings (a path to upload, an argv entry to quote),
     and a mapped entry there crashed a launch mid-flight in
-    the wild (2026-11-12, dict-shaped uploads). Returns an
+    the wild (dict-shaped uploads). Returns an
     error naming the field and the offending entry, or None
     when the shapes are the contract's."""
     for field in ("uploads", "args"):
@@ -327,7 +326,7 @@ def output_name_overlaps(session: str, run_id: str, outputs: list) -> list:
 
 def flag_contended_misplaced(rec: dict, session: str, misplaced: list) -> None:
     """Attribution guard on the misplaced fallback (defect
-    routed 2026-11-12: two lanes' drives on one session both
+    routed: two lanes' drives on one session both
     wrote drive-result.json cwd-relative; the first finalize
     collected the OTHER lane's content — fresh, correctly
     sized, wrong run). A fresh root file is attributable to
@@ -360,7 +359,7 @@ def flag_contended_misplaced(rec: dict, session: str, misplaced: list) -> None:
                 # first attempt (failed, no finished_at stamped)
                 # refuse its re-run's fresh outputs as contended
                 # over an hour after the dead run's last evidence
-                # (2026-11-12, Lane 10A specimen).
+                # (Lane 10A specimen).
                 end = epoch(other.get("finished_at")) or epoch(other.get("last_evidence_at")) or epoch(other.get("collector_at")) or start
             else:
                 end = now_epoch
@@ -451,7 +450,7 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     record + its one outbox event. Returns (exit_code, result).
 
     The payload's checkpoint exit_code is the truth about the
-    outcome (2026-11-05: a job-zero build whose init_venv.py
+    outcome (a job-zero build whose init_venv.py
     failed recorded "complete" with a clean-looking pull; only a
     human reading the pulled report saw assertions_passed:
     false). Jobs whose checkpoints carry no exit_code fall back
@@ -467,7 +466,7 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     # declared artifacts unwritten (or written outside its out
     # dir), and until this was computed the run read "complete"
     # with a short pull and no signal anywhere — the absence
-    # was discovered by hand, downstream (2026-11-11: heartbeat
+    # was discovered by hand, downstream (heartbeat
     # and checkpoint arrive at cadence, gate artifacts never
     # do). The payload's exit code stays the outcome truth;
     # the shortfall is recorded and returned, not fatal.
@@ -478,7 +477,7 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     # a payload writing cwd-relative paths instead of its out
     # dir. A FRESH one (written during this run, judged
     # against the run's own started stamp) is also collected
-    # through the pull: five consumer runs on 2026-11-12 lost
+    # through the pull: five consumer runs lost
     # or hand-recovered verdicts to cwd-root writes, one
     # outright. A STALE one — an earlier run's leftover — is
     # named only, never delivered as this run's output.
@@ -502,7 +501,7 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     # still be wrong — 0 bytes where the reader sizes the remote
     # file above 0. With the pull-side size cross-check this is
     # belt-and-braces, but the terminal record names it rather
-    # than reading clean (2026-11-11: a completed job's heartbeat
+    # than reading clean (a completed job's heartbeat
     # and checkpoint pulled as 0-byte entries).
     final_stats = (reader_state or {}).get("outputs") or {}
     empty = [
@@ -518,7 +517,7 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     # non-zero remote — and whose collection failed on this
     # pass is not an absence: the payload wrote it and the
     # transfer failed, and a terminal close would freeze that
-    # failure as the verdict (2026-11-14 specimen: a run closed
+    # failure as the verdict (specimen: a run closed
     # complete 8 s after its misplaced pull landed 0 bytes, all
     # three outputs probed fresh at /content/ and uncollected,
     # and a later --poll echoed complete because a terminal

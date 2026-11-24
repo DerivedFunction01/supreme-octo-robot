@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Bridge agent: the in-VM half of the standing bridge
-(the 2026-11-01 lobby-bridge plan). Installed into the standing
+(the lobby-bridge plan). Installed into the standing
 lease by the lease core (sync/lease/sync/bridge.py's install_bridge_kit)
 alongside _remote_guard.py, the bridge config, and the account
 token. Two modes:
@@ -27,7 +27,7 @@ with a duplicate line, not a re-run. Children live in the bridge-
 prefix namespace, are registered at mint, pulsed on an interval,
 and reaped on idle or at a hard age cap. Stops use the measured
 form `colab stop -s <name>` (the --yes flag and the positional
-form both fail rc 2 — bridge probe, 2026-11-01).
+form both fail rc 2 — bridge probe).
 
 Standard library only. Refuses to run off a Colab VM via the
 _remote_guard pattern. The token and the sessions file are never

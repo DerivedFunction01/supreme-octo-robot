@@ -1,5 +1,5 @@
-// Boot for the space's ONE client bundle (owner ruling
-// 2026-11-16: one integrated frontend — one entry, one
+// Boot for the space's ONE client bundle (owner ruling:
+// one integrated frontend — one entry, one
 // bundle, one router). There is no runtime branch: the
 // entry document is the only document, and every surface
 // is a view of this client, mounted by its hash router.

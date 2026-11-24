@@ -1,6 +1,5 @@
-"""Branch-sweep specimens for the worktree trim (the
-2026-11-22 cure), sharing the fixture harness in
-test_worktree_trim.py.
+"""Branch-sweep specimens for the worktree trim,
+sharing the fixture harness in test_worktree_trim.py.
 
 The pre-cure trim charged a branch trim only at the purge
 of an archive the trim itself had made, plus a crash queue
@@ -17,11 +16,11 @@ default branch itself and, locally, a branch checked out
 in a worktree stand mechanically (git refuses those);
 the cap phase in TestBranchCap ranks the whole
 population by tip activity, but its candidates are the
-selectable rows alone: the 2026-11-23 cure structurally
-excludes principal branches (the base; the remote's
-default) and worktree-checked-out branches from
-candidacy — derived from the repo at census, never a
-name list (test_worktree_trim_principal).
+selectable rows alone: principal branches (the base;
+the remote's default) and worktree-checked-out branches
+are structurally excluded from candidacy — derived from
+the repo at census, never a name list
+(test_worktree_trim_principal).
 """
 
 import unittest
@@ -155,9 +154,9 @@ class TestBranchCap(Fixture):
     per repo per side, binds the branch population, with
     no exemptions by name). Excess branches are archive-
     before-delete: their tips land in one verified bundle
-    with a manifest before any ref moves. The 2026-11-23
-    structural exclusions (principal branches, checked-
-    out branches) bind candidacy, not by name — see
+    with a manifest before any ref moves. The structural
+    exclusions (principal branches, checked-out branches)
+    bind candidacy, not by name — see
     TestPrincipalBranches."""
 
     def add_orphan(self, branch, epoch):
@@ -265,22 +264,16 @@ class TestBranchCap(Fixture):
         self.assertEqual(self.queue(), [])
 
     def test_attached_excess_branch_stands_cap_takes_selectable(self):
-        # (h'') RE-PINNED 2026-11-23 — only the attached
-        # branch's disposition changes; every other (h')
-        # assertion (the ranking, the bundle, the cap
-        # lines, the queue) stands as it was. (h') pinned
-        # the pre-cure rule: a worktree-attached excess
-        # branch is freed by detaching its worktree's HEAD
-        # at the same tip and deleted like any other. The
-        # 2026-11-23 hourly pass attempted exactly that
-        # against steampowernj's form/df-next-121 — a tree
-        # the same pass held as unlanded — and failed
-        # (BRANCH-LOCAL-FAIL reason=detach-failed), ending
-        # over cap on both sides. The cure: a checked-out
-        # branch is not cap-selectable on either side and
-        # is not archived by the cap phase; the excess is
-        # taken from the selectable population instead.
-        # Same fixture as (h'): per-slug cap 3; the
+        # (h'') A checked-out branch is not cap-selectable
+        # on either side and is not archived by the cap
+        # phase; the excess is taken from the selectable
+        # population instead. Detaching a worktree's HEAD to
+        # free its branch can fail against a tree held as
+        # unlanded — the steampowernj form/df-next-121
+        # specimen (BRANCH-LOCAL-FAIL
+        # reason=detach-failed) — and leave the pass over
+        # cap on both sides. Same fixture as (h'): per-slug
+        # cap 3; the
         # population per side is main plus the attached
         # branch (the oldest tip of all) plus four orphans.
         self.add_origin()
@@ -377,7 +370,7 @@ class TestBranchCap(Fixture):
 
 
 class TestTipEqual(Fixture):
-    """The tip-equal exclusion (2026-11-23): a branch
+    """The tip-equal exclusion: a branch
     whose tip EQUALS the default branch's tip at census
     is not swept, on either side — the exclusion keys on
     the ref's position, not its name (a tip-equal ref is
@@ -491,7 +484,7 @@ class TestTipEqual(Fixture):
 
 
 class TestDrainReverify(Fixture):
-    """Drain re-verification (2026-11-23): a guarded queue
+    """Drain re-verification: a guarded queue
     charge carries the tip its containment verdict was
     computed against; at discharge the LIVE tip governs.
     A branch that advanced to unlanded work after its

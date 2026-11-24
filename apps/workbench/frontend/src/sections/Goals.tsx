@@ -35,8 +35,8 @@ import {
 import { StatusChip, StatusPostFormRows } from "../components/StatusPost";
 
 // Goals — the dedicated section for contract 11's records
-// (storyboard 2026-11-13-storyboard-goals.html, approved
-// 2026-11-13; mockup approval = exact reproduction). A goal
+// (the storyboard-goals storyboard, approved;
+// mockup approval = exact reproduction). A goal
 // is the top level of the work record — goal → bundle →
 // todos → arms — and its ping state rides the same views.
 // Every label, count, and derivation is served through the

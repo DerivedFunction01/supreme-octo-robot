@@ -14,7 +14,7 @@ def classify(argv, cwd=REPO):
 
 class MatcherCase(unittest.TestCase):
     def test_acceptance_specimen_unfiltered_vitest_flags(self):
-        # The 2026-11-09 live specimen: one file, NO name filter.
+        # The live specimen: one file, NO name filter.
         finding = classify(["node", "opt/bin/npx", "vitest", "run",
                             "packages/services/src/booking-e2.test.ts",
                             "--pool=threads"])
@@ -175,7 +175,7 @@ class StrictMatcherCase(unittest.TestCase):
         # The runner's seeding mechanic invoked relatively
         # from its own repo root: the raw argv carries no
         # repo segment, so the pattern can only match the
-        # resolved path (the 2026-11-10 14:45 EST refire).
+        # resolved path (the refire specimen).
         self.assertIsNone(self.strict(
             ["bash", "sync/make_snapshot_bundle.sh"],
             cwd="ws/colab-runner",
@@ -192,7 +192,7 @@ class StrictMatcherCase(unittest.TestCase):
         self.assertEqual(finding["kind"], "script")
 
     def test_attention_status_transport_never_flags(self):
-        # The 2026-11-15 false positives: a lane's
+        # The false positives: a lane's
         # prescribed status posts (00:12:39Z / 00:12:46Z)
         # flagged as local execution while the fleet was
         # up. The status transport is supervision
@@ -339,8 +339,8 @@ class StrictCycleCase(unittest.TestCase):
         # the repo's ops/ — infrastructure by job argv
         # (absolute) and by relative invocation from the
         # repo root alike (an agent running a leg by hand;
-        # the 2026-11-10 12:43 self-flag of this watcher was
-        # the false positive this pins). Seeded fake tree in
+        # the self-flag of this watcher was the false
+        # positive this pins). Seeded fake tree in
         # the mega shape — the scheduling package nested at
         # pipeline/scheduling inside its repo — because
         # resolution is by script identity on disk and the
@@ -378,8 +378,8 @@ class StrictCycleCase(unittest.TestCase):
         # repo's ops/ script by relative path from its own
         # repo root (mirror_transient.py), and a repo's
         # healthcheck surface outside ops/ (server/
-        # healthcheck.py) — the 2026-11-10 false-positive
-        # class. Seeded fake tree, resolved by identity.
+        # healthcheck.py) — the false-positive class.
+        # Seeded fake tree, resolved by identity.
         ws = self.fake_workspace()
         sched = os.path.join(ws, "scheduler")
         wbv = os.path.join(ws, "workbench-viewer")
@@ -395,18 +395,17 @@ class StrictCycleCase(unittest.TestCase):
                 # The viewer's watchdog execs its repair
                 # surface: the exec'd argv shows only
                 # server/autorepair.py from the scheduler
-                # cwd (2026-11-10 15:35 EST sighting).
+                # cwd.
                 ([wbv + "/.venv/bin/python",
                   wbv + "/server/autorepair.py"], sched),
                 # The healthcheck chain's link probe, same
-                # server/ machinery family (2026-11-11
-                # 02:57 EST sighting).
+                # server/ machinery family.
                 ([wbv + "/.venv/bin/python",
                   wbv + "/server/linkprobe.py"], sched),
                 # The panel's venue machinery: the systemd
                 # unit installer with the absolute script
-                # path from the ui cwd (2026-11-10 20:33Z
-                # sighting), the deploy script likewise,
+                # path from the ui cwd, the deploy script
+                # likewise,
                 # and the installer invoked relatively from
                 # the repo root.
                 (["bash", colab + "/ui/install-unit.sh"],

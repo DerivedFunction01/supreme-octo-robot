@@ -1,6 +1,6 @@
 """Owner-attention armed rows (staffing-absorption
-plan 2026-11-11, Arming; commission from main
-2026-11-11): the todo `doing` transition that arms a
+plan, Arming; commission from main): the todo
+`doing` transition that arms a
 progress schedule also writes the work item's row for
 the attention evaluator, a terminal move retires it,
 and the declared opt-out writes no row.

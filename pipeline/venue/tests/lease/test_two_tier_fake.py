@@ -64,11 +64,10 @@ def test_acquire_hours_deadline_and_projection(tmp_path):
 
 
 def test_acquire_hours_honored_over_max(tmp_path):
-    """An explicit --hours is the operator's instruction. Until
-    2026-11-01 this test pinned the opposite: acquire clamped every
-    explicit window to the config max_hours, so an ordered 24 h
-    endurance lease silently came up as 8 h. The window is now
-    honored as given and priced in full; past the 12 h session cap
+    """An explicit --hours is the operator's instruction. The
+    window is honored as given and priced in full — a clamp to
+    the config max_hours would silently bring an ordered 24 h
+    endurance lease up as 8 h. Past the 12 h session cap
     the lease is a window lease from birth (renew flagged)."""
     env = lease_env(tmp_path)
     out = run_lease(env, "acquire", "--shape", "cpu", "--hours", "100")

@@ -57,7 +57,7 @@ class RepoError(Exception):
 
 
 # Aggregate wall-clock budget for one census derivation
-# pass over the whole workspace (wedge fix, 2026-11-10):
+# pass over the whole workspace (wedge fix):
 # the per-call timeout bounds a single child, but the
 # census fan-out derives ~20 repos × a dozen calls each,
 # and under a storage stall every call burns its full
@@ -161,7 +161,7 @@ def discover_repos(root, max_depth=3, prune=DEFAULT_PRUNE,
     deadline when one is given.
 
     The walk is a scandir recursion, not os.walk (the
-    lazy restore's enumeration budget, 2026-11-16): the
+    lazy restore's enumeration budget): the
     census runs over hundreds of repos and thousands of
     directories, and the os.walk form paid two Path stats
     per directory — the `.git` probe — on top of the

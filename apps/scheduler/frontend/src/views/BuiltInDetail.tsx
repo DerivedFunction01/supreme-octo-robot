@@ -1,6 +1,6 @@
 // Built-in detail — the read-only form for a built-in job
 // (approved mockup frame 6 + the owner's taxonomy
-// refinement, 2026-11-13; contract 09 amendment).
+// refinement; contract 09 amendment).
 //
 // Status, last run, latest outcome, and the 24 h counts —
 // every figure served by the detail view. NO Enabled

@@ -109,7 +109,7 @@ class ServerFeedsTest(unittest.TestCase):
         self.assertEqual(block["id"],
                          self.info["doing_todo"])
         self.assertEqual(block["interval_seconds"], 1800)
-        # armed 2026-10-25, last checkpoint that day: by
+        # armed long ago, last checkpoint that day: by
         # any later run this is far past the stall line
         self.assertTrue(block["stalled"])
         self.assertGreaterEqual(block["missed_checks"], 2)

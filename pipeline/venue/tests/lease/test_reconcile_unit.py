@@ -1,6 +1,6 @@
 """Reconciliation-evidence and last-use unit tests.
 
-Pins the record-truth contracts (2026-11-11): a
+Pins the record-truth contracts: a
 records-vs-channel disagreement (live session, no lease
 record / live record, channel-absent session) lands as a
 journal line carrying both readings — throttled per

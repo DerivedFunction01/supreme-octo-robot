@@ -38,7 +38,7 @@ exercisable end-to-end before the pipeline exists.
   live workbench state stores were never read or copied.
 - `src/sections/` — the storyboard's 20 frames, in order.
 - `src/components/Shell.tsx` — **standalone-preview chrome
-  only.** Per the owner's one-shell ruling (2026-11-13) the
+  only.** Per the owner's one-shell ruling the
   kit's AppShell replaces it at integration; the sections do
   not depend on it beyond navigation context. It does engage
   the kit's `useIsPhone` seam for its phone presentation.

@@ -1,5 +1,5 @@
 """Option-like run ids refuse at parse, before any record
-is written (2026-11-23): a flag token consumed as a value —
+is written: a flag token consumed as a value —
 `--resume --detach`, `--resume --session` — otherwise
 reaches the claim with the flag as its run id and writes a
 record named for it; results/runs/ carried exactly those

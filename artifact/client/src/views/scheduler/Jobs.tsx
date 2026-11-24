@@ -19,7 +19,7 @@
 // gains its compact line — the table compacts instead
 // of scrolling, exactly the original's form.
 //
-// Overflow cure (2026-11-20): the table is auto
+// Overflow cure: the table is auto
 // layout, so columns size at their cells' min-content
 // floors. Unbreakable Job-cell text — long hyphenated
 // ids in the <strong>, single-token owners in Sub —

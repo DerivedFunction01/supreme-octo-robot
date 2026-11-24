@@ -1,6 +1,6 @@
 /* Lease UI components — built entirely on the workbench --wb-* tokens
  * in theme.css. Layout follows the approved mockup
- * (ui/mockups/2026-11-01-lease-lifecycle-mockup.html): one frontend at
+ * (the approved lease-lifecycle mockup): one frontend at
  * every width. Below 1024px the slots stack in phone order (budget,
  * control, leases, events); at 1024px and up the layout opens into a
  * main column (leases, then events) and a 330px right rail (budget,

@@ -4,7 +4,7 @@ A fresh Colab image carries no Chromium runtime libraries, so
 every Playwright e2e leg on a new session fails at launch with
 a missing shared library until someone provisions the session
 by hand — and the provisioning dies with the session
-(2026-11-11: 74/74 e2e legs dead at launch on a fresh image,
+(74/74 e2e legs dead at launch on a fresh image,
 cured by `playwright install-deps chromium`). The ensure is
 runner-owned and per-session-lifetime: at a session's first
 registration (creation or first adoption), the acquire path

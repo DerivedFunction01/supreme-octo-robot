@@ -1,5 +1,5 @@
 """The venue panel's route surface — the HTTP routes
-ui/server.py mounts, extracted 2026-11-16 ahead of
+ui/server.py mounts, extracted ahead of
 server.py's file-size cap on the state_surface
 precedent.
 
@@ -390,7 +390,7 @@ def register_routes(r, env) -> None:
     def api_ungrant(request):
         # Ungrant actuates on no target field, so an empty body
         # would end the standing grant on a bare POST (the R-2
-        # class, 2026-11-15): the call must carry an explicit
+        # class): the call must carry an explicit
         # confirmation, as the panel's confirm dialog sends.
         if body(request).get("confirm") is not True:
             return reply(400, {"error": "confirm is required"})

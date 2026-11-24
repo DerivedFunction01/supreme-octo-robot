@@ -4,7 +4,7 @@ route serves the serialized bytes the last assembly
 stored — the very serialization the persist writes —
 with no serialization and no recompute on the request
 path. Freshness is the lazy TTL contract (the
-restore, 2026-11-16): a primed payload is stale by
+restore): a primed payload is stale by
 construction, so the first read serves it and kicks
 the one reassembly behind it; a read past the TTL
 does the same for a computed payload; inside the TTL

@@ -140,7 +140,7 @@ class MintTests(BridgeWakeCase):
 
 
 class EscalationTests(BridgeWakeCase):
-    """The F5 episode escalation (2026-11-11): one
+    """The F5 episode escalation: one
     bridge-drain ping per non-empty queue episode."""
 
     def test_chat_send_wake_addresses_the_drain_home(self):
@@ -149,7 +149,7 @@ class EscalationTests(BridgeWakeCase):
         # destination chat: delivery is the drain's work,
         # and the destination lane never has to read an
         # instruction-shaped payload to relay it (the
-        # 2026-11-12 screen-stall defect). The record's
+        # screen-stall defect). The record's
         # own destination is untouched.
         with open(self.owners_path, "w", encoding="utf-8") as fh:
             fh.write("version: 1\ndrain:\n"

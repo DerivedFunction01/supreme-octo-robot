@@ -2,7 +2,7 @@
 plan, Step 1): every live programme's seeded row loads
 and validates, a missing or invalid field refuses
 loudly naming the field, the edgar row reproduces the
-2026-11-19 family-concurrency staffing contract
+family-concurrency staffing contract
 verbatim as data, the sweep's measure classes are
 seeded per programme, the coordinator routes are
 wb-sent, and the drain tail carries the standing
@@ -21,10 +21,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from attention.services.measure import registry  # noqa: E402
 
 # The edgar staffing contract as ruled (owner
-# enforcement ruling, 2026-11-19, in the
+# enforcement ruling, in the
 # edgar-parallel-staffing reminder's measure section;
 # carrying floor amended to 3 under the owner's
-# fleet ruling, 2026-11-21: 3 standing sessions, all
+# fleet ruling: 3 standing sessions, all
 # three actually used): written out here from the
 # ruling, so the seed is checked against the source,
 # not against itself.
@@ -263,7 +263,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
                 self.assertIn(core, classes, f"{slug} missing {core}")
 
     def test_terminal_class_is_enabled_for_every_active_programme(self):
-        # The terminal-unconsumed class (2026-11-20):
+        # The terminal-unconsumed class:
         # every active programme declares it; the
         # retired row does not gain it retroactively.
         for row in registry.active_declarations():
@@ -275,7 +275,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
         self.assertNotIn("terminal", registry.measure_classes_for("edgar-sec"))
 
     def test_unlanded_class_is_enabled_for_every_active_programme(self):
-        # The unlanded class (2026-11-22): seeded with
+        # The unlanded class: seeded with
         # the terminal declarers — every active
         # programme declares it; the retired row does
         # not gain it retroactively.

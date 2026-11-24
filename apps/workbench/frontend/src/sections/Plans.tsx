@@ -113,8 +113,8 @@ export function Plans({ initialBundle }: { initialBundle?: string }) {
     <div className={isPhone ? "px-[18px] py-4" : "px-[26px] py-[22px]"}>
       {/* Phone stacks the bundle list over the reading pane:
           the fixed 272px list column beside a flex-1 pane
-          left the pane ~48px wide at 390px (mobile critic,
-          2026-11-15). */}
+          left the pane ~48px wide at 390px
+          (mobile critic). */}
       <div className={isPhone ? "flex flex-col gap-[18px]" : "flex gap-[18px]"}>
         <div className={isPhone ? "w-full" : "w-[272px] flex-[0_0_272px]"}>
           <GroupLabel>In progress</GroupLabel>

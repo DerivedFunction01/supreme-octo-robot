@@ -77,9 +77,9 @@ the pin. G1 at this re-pin: the runner is clean and pushed
 (local == remote); workbench clean, 5 ahead; attention clean,
 4 ahead; scheduler 9 ahead — pushes remain the owner's word.
 
-Source reviews: `docs/review/2026-11-12-review-scheduler.md`,
-`docs/review/2026-11-12-review-workbench.md`,
-`docs/review/2026-11-12-review-runner.md`. Pack rulings: seed plan
+Source reviews: `docs/review/2026-11-12/review-scheduler.md`,
+`docs/review/2026-11-12/review-workbench.md`,
+`docs/review/2026-11-12/review-runner.md`. Pack rulings: seed plan
 D1–D6, §2b (kit + scope fence), §3, §4, §5.
 
 **Parallelization ruling (owner: backend vs frontend lanes split
@@ -1261,7 +1261,7 @@ Executed. Pin: owner-attention
 `24ae5bc245b1eeeef32284603bfe3d14931a9fa8` (tree clean at the
 pin; `var/` is gitignored wholesale, so the live state is
 overlay by construction). Review:
-`docs/review/2026-11-12-review-attention.md`, run under the
+`docs/review/2026-11-12/review-attention.md`, run under the
 same read-only protocol as the other three. No delta here
 reopens a pipeline contract; the one open question the review
 carried (the `/vocab` write surface, its §9.4c) is resolved

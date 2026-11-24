@@ -38,7 +38,7 @@ def test_budget_snapshot_serves_standing_day_spend(repo, tmp_path, monkeypatch):
     # read back from the scratch repo rather than pinned.
     assert out["caps"]["standing_daily"] == lease.load_config(repo)["standing"]["daily_cu_cap"]
 
-    # A balance collapse (the 2026-11-01 expiration step) moves
+    # A balance collapse (the expiration step) moves
     # nothing: spend is attributed, not balance-derived.
     out2 = lease.budget_snapshot(lambda *a, **k: cp("Current balance: 699.00 compute units"), repo, now_dt=now)
     assert out2["standing_day_spent"] == 2.42
@@ -175,7 +175,7 @@ def test_budget_check_maps_auth_required(repo, tmp_path, monkeypatch):
 
 def test_budget_check_usage_timeout_is_a_refusal_not_a_crash(repo, tmp_path, monkeypatch):
     """The usage read rides the stall-prone proxy (a 120 s timeout
-    fired live on 2026-11-01 and crashed acquire with a traceback):
+    firing live crashes acquire with a traceback):
     it must come back as a clean refused-budget — the guard cannot
     price without a balance — never as a raised exception."""
 

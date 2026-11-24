@@ -71,13 +71,13 @@ review's route inventory) is frozen as served:
   ok exit codes, run/body/escalate_body, state paths, the
   full report block, classification, lifetime, and the
   recent-runs (50), recent-dues (50), and ping-history
-  (20) windows. (Amendment 3, 2026-11-13: the pinned
+  (20) windows. (Amendment 3: the pinned
   views' `migrated` field and migrated count in the
   overview, and job detail's `migrated_at` and
   `proof_pending`, do not exist in the target — the
   migration field family is dropped from the format,
-  contract 14.) (Amendment 2026-11-13: the job view
-  also carries the served operator / built-in
+  contract 14.) (The job view also carries the served
+  operator / built-in
   classification, and detail adds the entry's config
   block on knob-bearing entries — see the amendment
   section at the end of this contract; schema:
@@ -132,7 +132,7 @@ and SCH6's `/api/v1` half (the view set above). The shell
 instances' remaining preserve items ride their app
 contracts (traced in `traceability.md`).
 
-## Findings from the frontend build (2026-11-13)
+## Findings from the frontend build
 
 Recorded by the scheduler frontend lane against the frozen
 view set; all dispositioned as S8 inputs (the live adapter's
@@ -160,11 +160,11 @@ reconciliation), none fabricated around in the mock:
   verbs, if any, graduate into the shell is decided at
   S8, not assumed by the mock.
 
-## Amendment — served job classification + entry config (2026-11-13)
+## Amendment — served job classification + entry config
 
-Owner rulings of 2026-11-13 (the grouped Jobs treatment
+Owner rulings (the grouped Jobs treatment
 approved from the jobs/built-ins mockup, then the taxonomy
-refinement the same hour). The classification is **served
+refinement). The classification is **served
 data** — the client renders it and never derives it
 (contract 06's rule applied to a new axis). Schema:
 `schemas/job-view.schema.json`.
@@ -233,8 +233,8 @@ Built-ins split in two:
   `stale-mockup-cleanup`, `storage-watch`,
   `vm-restart-detector`.
 
-`storage-watch` is a **reclassification** (owner,
-2026-11-13): it sat with the operator jobs in the
+`storage-watch` is a **reclassification** (owner
+ruling): it sat with the operator jobs in the
 mockup; it watches the machine, not client work, so it
 is a direct built-in. Counts in the served seed:
 6 operator (5 enabled — `paywatch-lane-watchdog` stands
@@ -275,7 +275,7 @@ Knob-bearing at this stage (values from the entries'
 own evidence, not invented): `storage-watch` — the
 home free-space tiers (low 50 GB, critical 45 GB; the
 live `ops/storage_watch.py` constants, the owner's
-2026-11-11 retune), with the declared constraint
+retune), with the declared constraint
 critical < low; `memory-index-watchdog` — the topic
 thresholds its held check script takes as parameters
 (per-file cap 40960 bytes, per-topic set register
@@ -288,7 +288,7 @@ no batch or window knobs — it works the whole queue;
 its only timing parameter is the entry's hourly
 backstop cadence, already served as the cadence).
 
-## S8 dispositions — the live adapter (2026-11-13)
+## S8 dispositions — the live adapter
 
 Recorded by the S8 backend lane (scheduler app). The
 adapter lives at `apps/scheduler/frontend/src/live/`
@@ -417,7 +417,7 @@ Named extras dispositioned at S8 (not G-numbered):
   code-diff-identical between the pinned and moved
   servers.
 
-## Pipeline serving — the S8 remainders land (2026-11-13)
+## Pipeline serving — the S8 remainders land
 
 The four items the dispositions above named as open with
 their remaining home in the pipeline now serve from the
@@ -542,7 +542,7 @@ additions, and catch contract 14's field table up with
 the `config` field (documented meanwhile in
 `pipeline/scheduling/jobs/README.md`).
 
-## Fire-time seam — landed (2026-11-13)
+## Fire-time seam — landed
 
 The pipeline-serving section above closed with the
 fire-time read "named, not wired"; this section lands

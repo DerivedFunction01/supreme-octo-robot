@@ -43,7 +43,7 @@ const validatePing = ajv.compile(readJson("schemas/outbox-ping.schema.json"));
 const validateLedger = ajv.compile(
   readJson("schemas/ledger-event.schema.json"),
 );
-// The job-view schema (contract 09, amendment 2026-11-13):
+// The job-view schema (contract 09, amendment):
 // the view object plus the config $defs the entry form and
 // the served detail validate against.
 ajv.addSchema(readJson("schemas/job-view.schema.json"));

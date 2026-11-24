@@ -1,6 +1,6 @@
 """Binding-damage read-side units.
 
-Pins the read half of the 2026-11-17 binding cure: a
+Pins the read half of the binding cure: a
 sessions listing dialed against a damaged binding store
 (missing, empty, or unparseable sessions.json) is not
 evidence. The CLI's empty-store view is indistinguishable

@@ -1,6 +1,6 @@
-"""Lease unit tests: the reap cycle budget (2026-11-14).
+"""Lease unit tests: the reap cycle budget.
 
-Pins the cure for the 2026-11-13 exit-124s: a pass classifies
+Pins the cure for the exit-124s: a pass classifies
 every record from ONE shared listing, lifecycle legs complete
 before any furniture starts, furniture runs under a monotonic
 budget that skips-and-reports instead of being killed

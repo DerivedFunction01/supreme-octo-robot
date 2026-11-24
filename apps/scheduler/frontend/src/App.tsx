@@ -47,7 +47,7 @@ export function App({
 
   const pendingCount = api.listPings().length;
   // The Jobs badge counts the operator's jobs only (contract
-  // 09, amendment 2026-11-13) — built-ins are not the
+  // 09, amendment) — built-ins are not the
   // operator's list.
   const operatorCount = api
     .listJobs()
@@ -80,7 +80,7 @@ export function App({
   // counts plumbing through the shell's props. There is no
   // Settings destination: the shared appearance axes live in
   // the superapp shell's unified Settings (consolidation
-  // ruling, 2026-11-13) and arrive as host-provided root
+  // ruling) and arrive as host-provided root
   // attributes; this app has no app-specific settings.
   const onShellNavigate = (key: string) => {
     navigate({ view: key as "overview" | "jobs" | "pings" | "ledger" });

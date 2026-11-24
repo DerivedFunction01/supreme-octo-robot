@@ -1,4 +1,4 @@
-"""Entry config blocks (contract 09, amendment 2026-11-13):
+"""Entry config blocks (contract 09, as amended):
 the serving projection and the guarded save behind them.
 
 The block rides the entry record (the registry entry form,

@@ -4,7 +4,7 @@ The defect class: several component processes hand-rolling
 their own staging onto shared state files — the lease core's
 stamps, the funnel's binding heals, the liveness writers —
 each a private tmp+replace away from tearing a file another
-process reads (the 2026-11-13 binding loss: a sessions file
+process reads (the binding loss: a sessions file
 recreated empty under concurrent recovery writers). The cure
 pinned here: every one of those writes rides the lease
 foundation's seam onto the platform writer (contract 15),

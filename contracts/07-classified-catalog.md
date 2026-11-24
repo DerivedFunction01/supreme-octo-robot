@@ -60,7 +60,7 @@ live overlay and:
   `state/adoptions/<live-id>/` and named, never performed;
 - runs the admission back half (validate → server-context
   proof → admitted by the writer-path write itself,
-  contract 02; amendment 3, 2026-11-13) and stamps the
+  contract 02; amendment 3) and stamps the
   adoption-form `source` (`{catalog, catalog_version,
   parameters}`).
 
@@ -69,7 +69,7 @@ live overlay and:
 Drift re-renders adopted entries from their stamps and
 diffs them against the live files. **Volatile fields** —
 named, and excluded from the diff's verdict: `source`.
-(Amendment 3, 2026-11-13: the pinned list's `migrated`
+(Amendment 3: the pinned list's `migrated`
 and `migrated_at` leave it — those fields do not exist
 in the target format.) Hand-written, machine-written
 (per writer family), and per-session entries are counted

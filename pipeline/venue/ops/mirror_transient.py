@@ -69,7 +69,7 @@ def resolve(item: dict) -> tuple[Path, Path]:
     canonical = Path(str(item["canonical"]).replace("~", str(home()), 1))
     # The mirror's root is the repo — except under the
     # COLAB_RUNNER_HOME override, where both sides resolve
-    # under the override root (2026-11-11: the suite's mirror
+    # under the override root (the suite's mirror
     # tests shared the one real mirror file through this seam
     # and raced under parallel workers).
     root = home() if os.environ.get("COLAB_RUNNER_HOME") else REPO
@@ -139,7 +139,7 @@ def capture(item: dict) -> str:
         return "no-canonical"
     if item.get("validate") == "colab-token":
         # A clobbered credential must never propagate into the mirror
-        # (2026-11-01: the flow's stub overwrote the canonical token
+        # (the flow's stub overwrote the canonical token
         # and a capture carried the stub into the mirror, destroying
         # the last good copy). An invalid canonical with a valid
         # mirror heals from the mirror instead of capturing.
@@ -150,10 +150,10 @@ def capture(item: dict) -> str:
             return "canonical-invalid-kept"
     if item.get("never_capture_empty") and mirror.exists():
         # A live binding clobbered to {} by a CLI side effect must not
-        # overwrite the last good mirror copy (observed 2026-10-29: a
+        # overwrite the last good mirror copy (a
         # `colab run` emptied sessions.json while its assignment lived on).
         # An unparseable file counts as empty on both sides: the
-        # 2026-11-13 loss was a 0-byte canonical, which raised in
+        # guarded failure was a 0-byte canonical, which raised in
         # json.loads, fell through the old guard's except, and was
         # captured over the last good mirror in the same minute.
 

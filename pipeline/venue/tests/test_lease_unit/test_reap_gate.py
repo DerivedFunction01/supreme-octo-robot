@@ -1,6 +1,6 @@
 """Lease unit tests: the reap's approval-gate scope.
 
-Pins the 2026-11-23 blast radius: one renewed session's
+Pins the blast radius: one renewed session's
 unproven tunnel host made the reaper hook skip the whole reap
 between hourly probes, so two proven hosts lost their kernel
 pulses, keepalive maintenance, and deadline enforcement for an
