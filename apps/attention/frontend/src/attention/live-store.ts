@@ -460,6 +460,13 @@ export class LiveAttentionStore extends LiveStoreWrites implements AttentionData
             escalation_label: r.escalation === "main" ? "Escalated to Main" : null,
           })),
         },
+        // The programme lane blocks, as served on the
+        // digest's programme entries: a programme whose
+        // entry carries no block (no staffable queue
+        // named) contributes no row at all.
+        programme_lanes: (digest?.programmes ?? [])
+          .map((p) => p.lane_block)
+          .filter((block) => block != null),
         topics: (digest?.topics ?? []).map((t) => ({
           topic: t.topic,
           worst_label: t.worst_label,

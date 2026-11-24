@@ -3,6 +3,7 @@
 // between the backend's vocabulary and the frontend's.
 
 import type {
+  DigestProgrammeLanes,
   HandlerStatusView,
   PresenceMode,
   RegistriesView,
@@ -140,6 +141,15 @@ export interface ServerDigest {
       escalation: string | null;
     }[];
   };
+  /** The digest's programme entries; `lane_block` is
+   * the programme's lane block, present only where the
+   * programme's registry contract names a staffable
+   * queue, absent entirely where none is named. */
+  programmes?: {
+    slug: string;
+    label: string;
+    lane_block?: DigestProgrammeLanes;
+  }[];
   topics: {
     topic: string;
     worst_label: string | null;

@@ -155,6 +155,70 @@ export function DigestView() {
         )}
       </Group>
 
+      {content.programme_lanes.length > 0 ? (
+        <>
+          <GroupLabel>Programme lanes</GroupLabel>
+          {content.programme_lanes.map((block) => (
+            <Fragment key={block.slug}>
+              <GroupLabel>{block.label}</GroupLabel>
+              <Group>
+                <Row>
+                  <RowText
+                    label={`${block.actual} of ${block.expected} lanes counted`}
+                    sub={
+                      block.declared != null
+                        ? `Declared ${block.declared}`
+                        : undefined
+                    }
+                  />
+                  <RowValue>
+                    {block.queue_unstaffed.length === 0 &&
+                    block.actual >= block.expected
+                      ? "Clear"
+                      : `${block.queue_unstaffed.length} unstaffed`}
+                  </RowValue>
+                </Row>
+                {block.lanes.map((lane) => {
+                  const parts: string[] = [];
+                  if (lane.queue_item ?? lane.family)
+                    parts.push(lane.queue_item ?? lane.family ?? "");
+                  parts.push(lane.venue === "none" ? "No venue" : (lane.venue ?? ""));
+                  parts.push(lane.state);
+                  if (lane.gap_waits_on) parts.push(`Waiting on ${lane.gap_waits_on}`);
+                  if (lane.stale && lane.ping_gap_minutes != null)
+                    parts.push(`Last ping ${lane.ping_gap_minutes} min ago`);
+                  return (
+                    <Row key={lane.key}>
+                      <RowText label={lane.label ?? lane.key} sub={parts.join(" · ")} />
+                      {lane.terminated ? (
+                        <RowValue>Terminated</RowValue>
+                      ) : lane.stale ? (
+                        <RowValue>Stale — not counted</RowValue>
+                      ) : lane.overrun ? (
+                        <RowValue>Over estimate</RowValue>
+                      ) : null}
+                    </Row>
+                  );
+                })}
+                {block.queue_unstaffed.map((item) => (
+                  <Row key={`unstaffed-${item.key}`}>
+                    <RowText
+                      label={item.label ?? item.key}
+                      sub={
+                        item.staffable_when
+                          ? `Staffable when ${item.staffable_when}`
+                          : "Staffable now"
+                      }
+                    />
+                    <RowValue>Unstaffed</RowValue>
+                  </Row>
+                ))}
+              </Group>
+            </Fragment>
+          ))}
+        </>
+      ) : null}
+
       <GroupLabel>Handlers by topic</GroupLabel>
       {content.topics.map((topic) => (
         <Fragment key={topic.topic}>
