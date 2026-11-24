@@ -1,6 +1,6 @@
 """The standing collector (--collect-stale): a detached run
 whose consumer never polls wedges at "polling" forever over a
-finished run (formation-laneb-scoped, 2026-11-13 — the gate
+finished run (formation-laneb-scoped — the gate
 completed session-side in a minute and the record sat
 uncollected for 36+ minutes). The pass drives stale detached
 records through the same poll the verb runs; fresh records

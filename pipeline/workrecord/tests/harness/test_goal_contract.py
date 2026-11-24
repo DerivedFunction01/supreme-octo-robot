@@ -1,5 +1,5 @@
 """Goal contracts on wb bundles (goal-prompt
-contract plan 2026-11-12, Step 4): a programme's
+contract plan, Step 4): a programme's
 standing bundle carries the six-field contract
 (contract.md — four fields filled per programme,
 three clauses verbatim from the template), and the

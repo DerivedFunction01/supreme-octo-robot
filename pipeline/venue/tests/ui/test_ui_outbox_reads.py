@@ -1,4 +1,4 @@
-"""The outbox's stored-shape read path (2026-11-16):
+"""The outbox's stored-shape read path:
 /api/outbox used to re-read and re-parse the whole
 ui-outbox.jsonl on every poll — the profiled payload
 (747,589 B) cost 200.5 ms per request at N=1 growing

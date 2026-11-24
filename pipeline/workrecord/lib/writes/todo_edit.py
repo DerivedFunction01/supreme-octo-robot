@@ -259,7 +259,7 @@ def set_todo_fields(plans_dir, todo_id, *, title=None,
 
 # ----------------------------------------------------------------
 # Commissions of record (channel-indistinguishability
-# cure, 2026-11-16)
+# cure)
 # ----------------------------------------------------------------
 
 # The front-matter keys that make a todo a commission

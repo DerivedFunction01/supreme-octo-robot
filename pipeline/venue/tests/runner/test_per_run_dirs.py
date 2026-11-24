@@ -1,5 +1,5 @@
 """Per-run remote upload directories (branch transport
-plan, Step 5; lock strip, 2026-11-23).
+plan, Step 5; the lock strip).
 
 The pins: an upload addressed with the run's directory
 lands at /content/runs/<run_id>/<name> — plain and chunked
@@ -180,7 +180,7 @@ def test_prepare_branch_addresses_the_run_dir(tmp_path):
 
 
 def test_launch_path_takes_no_session_lock():
-    # The strip's pin (owner ruling, 2026-11-23: no sync
+    # The strip's pin (owner ruling: no sync
     # blocker on the venue job path): neither the launch
     # front end nor main() defines or takes a per-session
     # launch lock, in any form — the flock Step 5 narrowed

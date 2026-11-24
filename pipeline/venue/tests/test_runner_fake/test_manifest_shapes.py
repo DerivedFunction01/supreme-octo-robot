@@ -1,4 +1,4 @@
-"""Manifest-shape totality at load (commissioned 2026-11-12):
+"""Manifest-shape totality at load (commissioned):
 outputs tolerate totally — plain names or mapped entries
 normalize once at load and every consumer works by local
 name — while uploads / args entries that are not plain
@@ -66,7 +66,7 @@ def test_dict_args_entry_refuses_the_launch_loudly(tmp_path):
 
 
 def test_branch_transport_missing_sha_refuses_the_launch_loudly(tmp_path):
-    """Branch transport (plan 2026-11-22, Step 1): a branch
+    """Branch transport (plan, Step 1): a branch
     declaration missing its sha refuses at load with exit 2,
     naming the field, and no run record is created — the
     refusal lands before any session work, like the other

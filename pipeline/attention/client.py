@@ -45,7 +45,7 @@ class ApiError(AttentionError):
 
 class EmptyAnswer(AttentionError):
     """The surface answered 2xx without a JSON body
-    (diagnosis of record, 2026-11-16: the serving
+    (diagnosis of record: the serving
     process dying mid-response leaves exactly this
     shape — a status line and no body). The call's
     landing is UNKNOWN: it may or may not have been

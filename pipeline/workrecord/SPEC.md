@@ -1,16 +1,16 @@
 # Workbench Viewer — SPEC
 
-Status: **APPROVED** (the owner, 2026-10-25 — the remaining
+Status: **APPROVED** (the owner — the remaining
 open questions resolved from the monitor repo's hard
 lessons; see §13). The fundamentals (§11) are APPROVED
-(2026-10-25, with the owner's multi-theme + themes-folder
+(with the owner's multi-theme + themes-folder
 amendments) and wired in.
 
-Provenance (2026-11-18): this file is the SPEC of record
+Provenance: this file is the SPEC of record
 for the workbench harness as consolidated in this repo at
 `pipeline/workrecord/`. It is ported from the standalone
 workbench-viewer repo's `SPEC.md` — the sole copy after
-that repo's retirement at the 2026-11-15 cutover —
+that repo's retirement at the cutover —
 recovered verbatim from its GitHub mirror
 (`redacted/workbench-viewer`, blob
 `4c6dd403db4a807d38c3517a5d93febfaf708c16`). The port
@@ -33,7 +33,7 @@ An adopting project's spec is that project's own durable
 record — a mockup that lands in a project amends THAT
 project's spec (see §9), never this one.
 
-Sources this draft is drawn from (all 2026-10-25, the owner's
+Sources this draft is drawn from (the owner's
 rulings): the founding plan
 (`2026-10-25-workbench-viewer-repo.md`),
 the workbench data model in example-project subplan 09
@@ -54,7 +54,7 @@ Workbench Viewer fixes that by structure: one always-on
 companion server reads every opt-in project's own data files
 and serves ONE artifact whose per-project sections are
 **Overview, Entries, Plans, Todos, Board**, and **Code**
-(the Code facet is the consolidation of §21, 2026-11-20:
+(the Code facet is the consolidation of §21:
 git state is a facet of the project, never a separate
 destination).
 
@@ -68,7 +68,7 @@ records an owner ruling. Deliverables, outputs, and pure
 reference documents are never registered — they are
 project data, not disposition material. The collection
 was two sibling sections (Mockups and Artifacts, split
-at the feed by kind) until the 2026-11-10 unification
+at the feed by kind) until the unification
 retired the boundary: the split's census was lopsided —
 every registered entry was kind `artifact` and the
 design-kind feeds served zero rows — and the two
@@ -98,14 +98,14 @@ Out of scope:
   viewer renders work and design state, never project data.
   Repo browsing is the exception, absorbed from the git
   repo viewer (absorption plan,
-  2026-10-28-git-viewer-absorption) and consolidated into
-  the project's Code facet (§21, 2026-11-20): census,
+  `2026-10-28-git-viewer-absorption`) and consolidated into
+  the project's Code facet (§21): census,
   status, tree, peek, and guarded edit for every repo
   under the workspace root, manifest or not, reached
   through its project. A repo anchor (repo + path)
   legitimizes a peek and a diff against HEAD; arbitrary
   revision browsing stays out of scope.
-- **another-project is registered (owner's ruling, 2026-10-26 —
+- **another-project is registered (owner's ruling —
   reverses the earlier exclusion)** — it keeps its own maintenance
   system; the harness reads its data files only, as for any
   project; its adoption footprint is entirely untracked local
@@ -165,7 +165,7 @@ choice.
     verbatim word.** Editing data in the viewer is the owner's
     direct action at his own keyboard and is recorded as
     such; it is not publishing.
-11. **One schema, every repo (the owner, 2026-10-25).** Every
+11. **One schema, every repo (the owner).** Every
     adopting repo's registry DB carries the SAME schema
     (§4, §14): one schema definition, one `user_version`
     lineage, owned by lib/. No per-project schema forks or
@@ -294,7 +294,7 @@ and the last sweep's project list, and `GET /api/config`
 the resolved config — "why doesn't it see my repo?" is
 answered from the server, not from guesswork.
 
-### 3.1 One identity — sweep + census (2026-11-20)
+### 3.1 One identity — sweep + census
 
 Discovery runs two enumerations over the same ground —
 the manifest sweep above and the git census (every `.git`
@@ -345,7 +345,7 @@ run on temp fixtures and no caller depends on ambient state.
   operates on any row regardless of kind, and no feed,
   route, or section discriminates by kind — the
   collection boundary that was drawn at the feed retired
-  in the 2026-11-10 unification, and it never lived in
+  in the unification, and it never lived in
   the schema.
 - `status` — the RULED status (§5); `gate` — for hard-gate
   entries, the named blocker.
@@ -393,7 +393,7 @@ Review dispositions are history rows (verb `review`,
 approval's state snapshot rides in that row, and approval
 coverage (§1.3) is derived from the latest approval row.
 Reviews already recorded stay readable in the log. The
-viewer takes no new reviews (retired 2026-11-10): an
+viewer takes no new reviews (retired): an
 artifact's answers travel as the kit page's Copy payload
 pasted back to the owning thread and transcribed from
 there (§5.1) — the paste-back is the transport, the
@@ -471,8 +471,8 @@ the kit page's Copy payload ({artifact, answers,
 unanswered, feedback}) is pasted back to the owning
 thread, which records the answers into the registry
 through lib/ — the viewer offers no answer or approval
-surface of its own (its review disposition retired
-2026-11-10; §1's approval-binds-to-state survives as the
+surface of its own (its review disposition retired;
+§1's approval-binds-to-state survives as the
 recorded-history semantics of reviews already taken):
 
 - `unexplored` — questions open; no answer recorded.
@@ -542,7 +542,7 @@ definition for a platform scheduler, IF one is later ruled;
 the harness builds the tool, not the schedule.
 
 Progress schedules for long work: arming is automatic
-(the owner's 2026-11-03 ruling) — a move to `doing`
+(the owner's ruling) — a move to `doing`
 arms the per-todo progress schedule at the default
 `15m` cadence in the same write whenever the todo
 declares neither a cadence nor the opt-out, so
@@ -558,14 +558,14 @@ fields; a move to done or blocked disarms in the same
 write. And `wb progress`
 serves every project's armed todos with their derived
 stall verdicts as JSON — the single read a driver
-consumes. Since the owner's 2026-10-31 auto-create
+consumes. Since the owner's auto-create
 commission the harness also created the schedule
 itself: arming wrote a scheduler-registry entry
 (`lib/progress/schedule.py`; the scheduler server's
 registry is files, rescanned every tick) whose command
 was `wb progress-check <id>` at the todo's cadence, and
 disarming deleted it. That rendering is retired
-(supervision plan Step 6, 2026-11-19): the scheduler
+(supervision plan Step 6): the scheduler
 no longer fires progress-check — the attention tick's
 armed rows are the check now — and the harness only
 deletes lingering entries (`wb progress --sync-entries`
@@ -656,7 +656,7 @@ API (the feeds the artifact consumes):
   `POST /api/projects/<slug>/todos` (`{verb, ...}`) —
   the cross-project todos view assembles the per-project
   feeds client-side; the `GET /api/todos` aggregate was
-  dropped with the board monolith's lineage (2026-11-03)
+  dropped with the board monolith's lineage
 - `GET /api/projects/<slug>/board` (one project's board
   portion; the board screen assembles portions
   client-side)
@@ -681,7 +681,7 @@ API (the feeds the artifact consumes):
   `/api/repos` family is removed, not aliased (§21).
 
 The whole HTTP surface lives under `/api`, with ONE
-exception (byte-route plan, 2026-11-10):
+exception (byte-route plan):
 
 - `GET /raw/<slug>/entries/<id>/<path...>` — an entry's file
   bytes served verbatim as a document, under the file's own
@@ -694,7 +694,7 @@ exception (byte-route plan, 2026-11-10):
 The route's consumer is the artifact server, never a
 client: the companion's loopback address resolves on the
 reader's own device, so no client surface may navigate to
-it (the loopback frame shipped 2026-11-10 read
+it (the shipped loopback frame read
 ERR_CONNECTION_REFUSED on the owner's phone — the route
 was healthy, the address was the device's own). The
 bridge carries a raw sibling contract (wbRaw) beside the
@@ -754,7 +754,7 @@ scan failure reports "unknown", never mass-flags.
 
 ## 8. The artifact — one viewer, the project sections + Code
 
-(Title amended 2026-11-20 per §21: the Repos destination
+(Title amended per §21: the Repos destination
 is retired; the per-project sections are Overview,
 Entries, Plans, Todos, Board, and Code.)
 

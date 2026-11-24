@@ -16,7 +16,7 @@ import { ChevronLeft, Play } from "lucide-react";
 
 // No Settings destination: the appearance axes (palette ×
 // mode × density) are shared and live in the superapp shell's
-// unified Settings (consolidation ruling, 2026-11-13). The app
+// unified Settings (consolidation ruling). The app
 // carries no app-specific settings, so there is no in-app
 // settings surface; appearance arrives as the shell-provided
 // root attributes the kit themes key off.

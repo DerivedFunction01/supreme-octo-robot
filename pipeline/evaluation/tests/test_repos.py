@@ -510,8 +510,8 @@ class TestRepoDir(unittest.TestCase):
 
 
 class TestCensusBudget(unittest.TestCase):
-    """The census aggregate deadline (wedge fix,
-    2026-11-10): under a storage stall every git call
+    """The census aggregate deadline (wedge fix):
+    under a storage stall every git call
     burns its per-call timeout, so the pass over the
     workspace must be bounded in aggregate. An exhausted
     budget degrades a repo to its error shape; a live

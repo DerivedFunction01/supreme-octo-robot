@@ -143,7 +143,7 @@ def record(probe: str, data: dict) -> Path:
 
 # The fallback's unassign replay, run under the CLI's own interpreter:
 # the client's stock unassign POST carries no body and the tunnel
-# endpoint answers 411 Length Required (diagnosed 2026-11-04), so the
+# endpoint answers 411 Length Required, so the
 # client's own two steps (GET for the XSRF token, then POST) are
 # replayed with an explicit empty-JSON body attached. Same form as
 # sync/lease/sessions/sessions.py's UNASSIGN_FALLBACK_SCRIPT.

@@ -1,6 +1,6 @@
 """The assembled feeds document's TTL cache behaviour
 (assemble.build_feeds over assemble._DocumentStore —
-the lazy restore, 2026-11-16): within the TTL a repeat
+the lazy restore): within the TTL a repeat
 build serves the stored document without reassembling,
 and a store write inside the TTL moves nothing (the
 named trade: freshness is the TTL bound, not the

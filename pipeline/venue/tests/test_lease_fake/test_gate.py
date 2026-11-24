@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fake_harness import PNOW, FakeColab, _seed_cli_catalog, gate_journal, gate_repo, lease_bin, lease_env, lease_mod, record_files, run_lease  # noqa: F401
 
-# --- Session shape gate (plan: the 2026-11-04 agent-session-shape-gate plan) --
+# --- Session shape gate (plan: the agent-session-shape-gate plan) --
 # The gate's own tests run in-process under an ENFORCING fixture
 # config (gate_repo), unlike the general suite's permissive doors.
 # One CLI test pins the refusal's exit code and the panel bypass

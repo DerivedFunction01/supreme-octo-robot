@@ -40,8 +40,8 @@ from .common import (CFG, ApiError,  # noqa: E402
                      get_fingerprints, get_sweep, layout_of)
 
 # ----------------------------------------------------------------
-# Fingerprint-keyed feed caches (cache-refresh plan,
-# 2026-11-05): the file-derived per-project feeds (todos,
+# Fingerprint-keyed feed caches (cache-refresh plan):
+# the file-derived per-project feeds (todos,
 # plans, board portions) serve from these keyed SWR
 # caches, fresh-tested against the project's sweep
 # fingerprint (common.get_fingerprints) instead of a
@@ -119,7 +119,7 @@ def entry_segments(db_path, entry_id) -> dict:
 
 def entries_feed(project, *, archived: bool) -> dict:
     """The one entries feed over the shared registry
-    (2026-11-10 unification): there is no collection
+    (the unification): there is no collection
     boundary — every kind serves in this one feed, kinds
     riding as row labels; the export and the reconcile
     block stay whole-store (entry dirs share one tree)."""
@@ -372,7 +372,7 @@ def _plans_feed_compute(project, bundles=None) -> dict:
 
 # ----------------------------------------------------------------
 # Plans feed bundle projection (heavy-feed batching
-# follow-up, 2026-11-03): the board-portion treatment
+# follow-up): the board-portion treatment
 # applied to the Plans section's own feed. A bundle's
 # todos ride the feed as CHECKLIST CARDS — the fields
 # the plan list and the reader's checklist strip render,
@@ -413,7 +413,7 @@ def _plans_bundle(bundle) -> dict:
 
 
 # ----------------------------------------------------------------
-# Board portions (heavy-feed batching, 2026-11-01): the board
+# Board portions (heavy-feed batching): the board
 # screen is assembled client-side from ONE PORTION PER
 # PROJECT — the large-scale pattern of one API call per
 # portion instead of one monolith that re-derives every
@@ -651,7 +651,7 @@ def home_feed() -> dict:
     cache note above); captured_at is when the payload
     was computed, not when it was served. Fresh means
     BOTH inside the TTL and computed under the current
-    combined fingerprint (cache-refresh plan, 2026-11-05):
+    combined fingerprint (cache-refresh plan):
     any project's corpus moving makes the payload stale
     on the next read, however much TTL remains — it still
     serves stale while the refresh runs behind it."""

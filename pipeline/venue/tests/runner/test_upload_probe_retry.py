@@ -1,7 +1,7 @@
 """upload_one's verify probe: bounded attempts against an
 episodic exec-channel stall.
 
-2026-11-17 specimen: the probe was one-shot, and the channel
+The specimen: the probe was one-shot, and the channel
 stalls in episodes of minutes — probe-fail rates of 9/60 and
 10/79 on two sessions in one evening, successes interleaved
 seconds apart — so one stall killed the launch, including a
@@ -13,7 +13,7 @@ a stall signature (timeout, unreadable output) retries, a size
 mismatch is information and returns at once, and the journal
 keeps one entry per upload_one call — the final outcome.
 
-2026-11-21: the probe also verifies the landed SHA-256 — a
+The probe also verifies the landed SHA-256 — a
 same-size foreign file in the shared slot is a mismatch that
 returns at once with the foreign-bytes error.
 """

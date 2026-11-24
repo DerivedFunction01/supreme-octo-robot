@@ -2,7 +2,7 @@
 """The §10.3 one-time migration: stamp the legacy record stock
 with its venue, and disposition the hygiene remainder.
 
-Ruled 2026-11-13 (plan §10.3): legacy lease/run records are
+Under plan §10.3: legacy lease/run records are
 STAMPED `venue: colab` in a one-time migration at S5 — records
 rewritten once, and no read-time default exists in any reader
 to outlive its truth. This module is that migration. It is
@@ -10,7 +10,7 @@ deliberately re-runnable: at S11's cutover it runs once more
 against the then-live store, and a record already stamped is
 counted, never rewritten.
 
-Hygiene (S1 finding 4, as updated by the 2026-11-13
+Hygiene (S1 finding 4, as updated by the
 reconciliation): run-record files that cannot be parsed, and
 the record whose state (`completed`) is outside the contract's
 three terminal states, are NOT repaired and NOT rewritten into

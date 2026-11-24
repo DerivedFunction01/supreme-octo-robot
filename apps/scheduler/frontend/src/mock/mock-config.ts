@@ -1,7 +1,7 @@
 // Entry config for the mock adapter (split from
 // mock-adapter.ts): the served CONFIG constants, the
 // config projection, and the one writer path (contract
-// 09, amendment 2026-11-13). The store is the source; the
+// 09, amendment). The store is the source; the
 // engine reads the same record at fire time, and a save
 // lands in the same record — the save validates
 // everything before applying anything, ledgers one op

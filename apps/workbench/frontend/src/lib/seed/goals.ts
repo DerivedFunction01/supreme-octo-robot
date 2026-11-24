@@ -45,7 +45,7 @@ export function buildGoals(t: SeedTime): GoalRecord[] {
         summary: "Genre defect cure is a ruling line; segment lanes wait on it",
         refs: { project: "aldercrest", plan: "2026-11-11-document-parsing-successor", todo_ids: ["genre-defect-ruling-line-cure"] },
         owner_waiting: { label: "Genre ruling-line cure", commissioned_at: hoursAgo(6) },
-        // Contract 11 amendment (2026-11-13): a blocked post
+        // Contract 11 amendment: a blocked post
         // carries its cited basis + verification stamp. The
         // citation is the owner's escalation the genre cure
         // rides on; main verified it against the owner's
@@ -70,7 +70,7 @@ export function buildGoals(t: SeedTime): GoalRecord[] {
     },
     {
       // The deployment's real closed goal, seeded at record
-      // level from its record (programme closed 2026-11-13,
+      // level from its record (programme closed,
       // 11 of 11 steps landed): the Completed group's specimen.
       slug: "aldercrest-greenfield-tagger",
       project: "aldercrest",

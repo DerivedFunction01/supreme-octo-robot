@@ -163,7 +163,7 @@ def test_resume_preserves_the_original_started_at(tmp_path):
     """--resume continues a run; it does not relaunch it. The
     record's launch facts (started_at above all — the field
     concurrency evidence reads) survive a resume byte-identical;
-    the resume adds its own facts. (Live defect 2026-11-06: a
+    the resume adds its own facts. (Live defect: a
     resumed hold came back stamped with the resume moment.)"""
     env = runner_env(tmp_path)
     runs = runs_dir(env)
@@ -188,7 +188,7 @@ def test_resume_over_a_torn_record_starts_fresh_instead_of_crashing(tmp_path):
     — a torn prior holds nothing to preserve, so the run starts
     fresh (its damaged file replaced by a valid record) rather
     than every later entry dying on JSONDecodeError (the
-    geodata lane's 2026-11-08 block)."""
+    geodata lane's block)."""
     env = runner_env(tmp_path)
     runs = runs_dir(env)
     runs.mkdir(parents=True, exist_ok=True)
@@ -210,7 +210,7 @@ def test_checkpoint_pull_lands_outputs_during_the_run(tmp_path):
     cadence: declared outputs download at every checkpoint while
     the job runs, so a long job's growing outputs (the venue
     keeper's log is the live case) reach local readers mid-run
-    instead of only at completion. (Live defect 2026-11-07: the
+    instead of only at completion. (Live defect: the
     relay waiting on the keeper's log starved for the job's whole
     12 h timeout because pulls happened only after the loop.)
 
@@ -220,8 +220,8 @@ def test_checkpoint_pull_lands_outputs_during_the_run(tmp_path):
     its unit and never touched again) is pulled exactly once —
     its reader stat never changes, so later cadences skip it.
 
-    The payload is gate-driven, not clock-driven (determinism
-    cure, 2026-11-14): the smoke payload's 1 s units raced the
+    The payload is gate-driven, not clock-driven (the determinism
+    cure): the smoke payload's 1 s units raced the
     poll loop's cadence — on a slow machine the payload finished
     before the first cadence pull fired, and heartbeat arrived
     only at the final pull. Here the payload changes state only
@@ -274,8 +274,8 @@ def test_checkpoint_pull_lands_outputs_during_the_run(tmp_path):
 def test_poll_timeout_degrades_instead_of_killing_the_poller(tmp_path):
     """A checkpoint poll whose CLI call exceeds its timeout is a
     failed poll, not a dead poller: the loop notes it on the
-    record and continues to the next cadence. (Live defect
-    2026-11-06: an uncaught TimeoutExpired killed the poller and
+    record and continues to the next cadence. (Live defect:
+    an uncaught TimeoutExpired killed the poller and
     stranded the run at polling while its payload completed.)"""
     wrapper = tmp_path / "wrapper_colab.py"
     wrapper.write_text(
@@ -307,12 +307,12 @@ def test_shrinking_repull_rotates_the_held_copy(tmp_path):
     history already pulled: the re-pull rotates the held copy
     aside under a stamped sibling name, the live file takes the
     new content, and the rotation is noted on the pull entry and
-    the run record. (Live defect 2026-11-08: after a wrapper
+    the run record. (Live defect: after a wrapper
     resume, the venue keeper's pulled log shrank to its first
     line and the accumulated record was gone.)
 
     The shrink is staged by the test, not by a download-counting
-    wrapper (determinism cure, 2026-11-14): the old shape shrank
+    wrapper (the determinism cure): the old shape shrank
     the remote on the first checkpoint.json download and needed
     a whole cadence ordering — unit-0 pulled before that
     download, then re-pulled after it — to occur inside one

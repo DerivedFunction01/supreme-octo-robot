@@ -607,7 +607,7 @@ await setSearch("");
 await sleep(150);
 
 // --- Appearance: owned by the unified shell Settings --------
-// Consolidation ruling (2026-11-13): the app carries no
+// Consolidation ruling: the app carries no
 // settings surface — no Settings destination, no in-app
 // appearance controls. Appearance arrives as root attributes
 // from the host; in this standalone render the preview

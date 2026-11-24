@@ -21,7 +21,7 @@
 // the recorded answers.
 //
 // Staging is purely local to this panel (the owner's
-// answering ruling, 2026-10-26): a tap changes only the
+// answering ruling): a tap changes only the
 // values state below — the plan document's rendering
 // never hears about it. Submit is ONE round-trip: the
 // answers post once, the file is edited server-side,

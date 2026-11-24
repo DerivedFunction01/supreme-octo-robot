@@ -202,7 +202,7 @@ export function DecisionSheet({
   };
 
   // A plain action row: the kit Sheet's footer wraps and
-  // shrink-protects its children (kit cure, 2026-11-15 —
+  // shrink-protects its children (kit cure —
   // before it, this sheet's four actions ellipsized to
   // stubs at phone width and the app wrapped its own).
   const footer = (
@@ -250,7 +250,7 @@ export function DecisionSheet({
     <>
     <Sheet open title={item.title} onClose={onClose} footer={footer}>
       {/* The kit Sheet's content region scrolls natively
-          (kit cure, 2026-11-15); the content rides it. */}
+          (kit cure); the content rides it. */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <HandlerChip label={item.handler_label} severity={item.severity} />

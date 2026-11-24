@@ -1,5 +1,5 @@
 // Part 6 pairs — non-text pairs and composite grounds.
-// Split from verify-contrast.mjs (the 2026-11-22
+// Split from verify-contrast.mjs (the
 // decomposition); the block runs verbatim as the
 // single file ran it, inside runPart6Pairs().
 

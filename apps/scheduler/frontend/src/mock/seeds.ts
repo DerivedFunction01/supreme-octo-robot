@@ -128,8 +128,8 @@ export function planFor(jobId: string): PlannedOutcome[] {
   return PLANS[jobId] ?? DEFAULT_PLAN;
 }
 
-// The mock's fleet classification (contract 09, amendment
-// 2026-11-13; owner rulings of 2026-11-13) — the fake
+// The mock's fleet classification (contract 09, amendment;
+// owner rulings) — the fake
 // server's copy, seeded here with the rest of the mock's
 // served data. The pipeline serves the same axis on every
 // job view and the live adapter reads the served fields;

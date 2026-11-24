@@ -242,7 +242,7 @@ class TestWriters(Fixture):
         self.assertTrue(todo["valid"], todo["errors"])
         self.assertEqual(todo["status"], "todo")
         self.assertEqual(todo["plan_step"], 5)
-        # The name derives from the title (the 2026-11-14
+        # The name derives from the title (the
         # naming ruling) and the file is the name itself.
         self.assertEqual(todo["id"], "ship-the-shell")
         todo_file = Path(todo["file"])
@@ -391,7 +391,7 @@ class TestWriters(Fixture):
                          Path(todo["file"]).read_text())
 
     def test_doing_move_auto_arms_at_default(self):
-        # The core auto-arm case (2026-11-03): a plain
+        # The core auto-arm case: a plain
         # move to doing, no progress argument anywhere,
         # arms the schedule at the default cadence.
         bundle_mod.create_bundle(self.plans, "b1",

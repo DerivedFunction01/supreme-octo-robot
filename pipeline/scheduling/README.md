@@ -4,13 +4,13 @@ The scheduling engine: registry parser/validator and entry
 schema, the classified catalog with adoption and drift,
 schedule math, the engine, and the scripted executor.
 
-- **Landed:** step S3 (2026-11-13) — the scheduler pin
-  `cf910ce` tree moved here whole (server package, `bin/sched`,
-  tests, `ops/`, `tools/`, examples, the registry) plus the
-  S1 overlay capture (24 entries, 14 bodies, 5 member
-  scripts, the file-registry manifest under `registry/`).
-  The moved registry censuses 26 entries, matching the live
-  census; the pinned suite passes against the moved tree.
+- **Contents:** the scheduler pin `cf910ce` tree stands
+  here whole (server package, `bin/sched`, tests, `ops/`,
+  `tools/`, examples, the registry) plus the S1 overlay
+  capture (24 entries, 14 bodies, 5 member scripts, the
+  file-registry manifest under `registry/`). The registry
+  censuses 26 entries, matching the live census; the pinned
+  suite passes against this tree.
 - **Target semantics, per the S0 contracts:** the registry
   entry format is contract 14's — the migration field family
   does not exist here (amendment 3), and presence through

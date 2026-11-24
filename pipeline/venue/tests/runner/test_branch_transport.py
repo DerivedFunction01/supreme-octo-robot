@@ -1,4 +1,4 @@
-"""Branch transport (plan 2026-11-22, Steps 1–2): the
+"""Branch transport (plan, Steps 1–2): the
 manifest declaration, the record stamp, and the base-clone
 drive.
 

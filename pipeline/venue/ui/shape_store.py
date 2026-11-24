@@ -3,7 +3,7 @@ the assembled shapes the panel serves — the state-read
 cache's last good builds and the outbox's stored shape —
 so a panel restart serves the current shape at once
 while the refresh disciplines recompute behind it
-(owner ruling, 2026-11-17: workbench and venue state
+(owner ruling: workbench and venue state
 persists in a database, or the surfaces load slowly /
 not at all across restarts).
 

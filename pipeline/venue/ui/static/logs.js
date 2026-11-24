@@ -127,7 +127,7 @@ function renderLogsLegend() {
     `<span class="legend-item">${levelDot(l)} ${l}</span>`).join("");
 }
 
-/* The shipped form (owner's pick from the mockup, 2026-11-03):
+/* The shipped form (owner's pick from the mockup):
  * timeline, grouped by day, relative time shown, compact density.
  * The pick is the form's constants, not a user-facing toggle. */
 const LOG_VIEW = { form: "timeline", group_by_day: true, relative_time: true, compact: true };

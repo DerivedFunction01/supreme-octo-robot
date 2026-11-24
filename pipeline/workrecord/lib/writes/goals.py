@@ -37,7 +37,7 @@ and its posts carry contract 03 refs (plan + todo_ids) —
 bundles and todos themselves stay in their own stores
 (WR4: two stores stay two).
 
-The writer rules (contract 11 + its 2026-11-13 amendment):
+The writer rules (contract 11 + its amendment):
 
 - A post asserting a blocked state (BLOCKED-OWNER /
   BLOCKED-HARD) must carry its basis_citation (the owner's

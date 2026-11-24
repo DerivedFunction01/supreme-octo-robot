@@ -115,8 +115,8 @@ export function DatasetView({
       // The kit table is w-full table-fixed with equal
       // columns: without a floor it compresses to the phone
       // viewport and every cell ellipsizes (accession IDs
-      // unreadable at 88px columns, mobile critic
-      // 2026-11-15). The per-column floor (220px — an
+      // unreadable at 88px columns, mobile critic).
+      // The per-column floor (220px — an
       // accession number plus cell padding) keeps values
       // whole; the box scrolls horizontally to reach them.
       className="overflow-x-auto"

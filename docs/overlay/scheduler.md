@@ -139,7 +139,7 @@ tables, held):
 - **`scheduler.env`** — credential, reference only: held a
   raw connector token (variable `SWEEPER_CONNECTOR_TOKEN`).
   Never copied, never hashed. Not in §3's list — finding 2
-  in the manifest. **Disposition (2026-11-13, scheduler
+  in the manifest. **Disposition (scheduler
   thread, owning): verified and removed.** The value
   hash-matched the registry's live sweeper-venue caller;
   the file was a redundant plaintext copy left from the
@@ -160,7 +160,7 @@ tables, held):
   live server's SQLite store and changes under the running
   server; a file copy would be a torn snapshot. The only
   existing export is `state/exports/logs-all-20261101-225620.jsonl`
-  (437,903 B, 2026-11-01) plus the retired
+  (437,903 B) plus the retired
   `state/ledger.jsonl.retired-2026-11-01`. History moves at
   the S3 cutover via `bin/sched logs export` against a
   quiesced store, with its printed SHA-256 as the proof.

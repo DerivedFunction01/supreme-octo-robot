@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Chunked file transfer over the colab CLI's file channel.
 
-Measured constraints (2026-10-29, live):
+Measured constraints (live):
 - `colab upload` lands files at the VM root unless the remote path is
   absolute — always use /content-absolute remote paths.
 - Single-file uploads succeed at 50 MB and fail immediately at 75 MB
@@ -10,7 +10,7 @@ Measured constraints (2026-10-29, live):
   and reassemble on the far side; integrity is by SHA-256 end to end.
 - Tunnel throughput is ~1.6 MB/s each way.
 
-Reliability (2026-10-31): the P2 1 GB upload died at part 12 of 32 on a
+Reliability: the P2 1 GB upload died at part 12 of 32 on a
 contents-API drop and the whole transfer was lost. Parts are now
 retried individually (PART_ATTEMPTS attempts, linear backoff) and both
 directions resume: before moving a part, the far side's copy is
@@ -134,7 +134,7 @@ def _exec_file(session: str, code: str, timeout: int = 600) -> subprocess.Comple
     # Unique staging name per call: a fixed name made concurrent
     # transfers clobber each other's scripts (and made the fake
     # CLI serve the first script staged under that name for every
-    # later call — the 2026-11-05 chunked-upload proof failure).
+    # later call — the chunked-upload proof failure).
     f = REPO / "var" / f"transfer-exec-{os.getpid()}-{time.time_ns()}.py"
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(code)
@@ -166,7 +166,7 @@ def _xfer_dir(digest: str, remote_name: str = "") -> str:
     derived from its whole-file SHA-256: .xfer-<digest[:12]>.
     Parts live under it, never flat beside the target — residue
     from a completed transfer must be unable to poison a
-    consumer globbing the target's directory (2026-11-11: xfer
+    consumer globbing the target's directory (xfer
     .part-000 chunks beside a bundle were swallowed by a job's
     part-* reassembly glob and doubled it). The derivation is
     content-keyed so both directions and any re-run agree on
@@ -233,8 +233,8 @@ def _remote_part_hashes(session: str, names: list, mkdir_dir: str = "") -> dict:
     # and its timeout is caught: it is a resume optimization,
     # and a stall here must read as "no resume information"
     # (upload everything), never as twelve silent minutes in
-    # front of a transfer that has not started (2026-11-11:
-    # xfer verify-phase stalls on a saturated kernel).
+    # front of a transfer that has not started (xfer
+    # verify-phase stalls on a saturated kernel).
     try:
         r = _exec_file(session, (
             "# transfer:part-hashes\n"
@@ -289,8 +289,8 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
     transfers of different files under one remote name
     overwrote each other's parts between split and upload —
     the bytes that landed were the other transfer's, caught
-    only by the end-to-end hash as a failed run (2026-11-21,
-    the B3-S3b tree-tar specimen). The token defaults to a
+    only by the end-to-end hash as a failed run
+    (the B3-S3b tree-tar specimen). The token defaults to a
     per-process unique value; a caller that knows its run
     passes it (the runner passes the run id). The remote
     staging dir is content-addressed by the file's hash
@@ -324,7 +324,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
     # optimization. On a session the launch journal already
     # reads degraded, the probe contends with the part uploads
     # for the same worst channel and its bounded stall is paid
-    # serially before any byte moves (the 2026-11-11 file-cap
+    # serially before any byte moves (the file-cap
     # specimen: the verify leg timed out twice against
     # byte-identical parts). Skip it there; every part uploads
     # and the end-to-end hash still verifies.
@@ -353,7 +353,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
     # and until it did, a stall here was one silent 720 s bound
     # ending in an uncaught timeout or a stage-less failure —
     # the caller could not tell a wedged verify from a slow
-    # transfer (2026-11-11).
+    # transfer.
     r, _used = _attempt(lambda: _exec_file(session, (
         "# transfer:reassemble\n"
         "import hashlib, json, os\n"

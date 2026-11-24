@@ -246,7 +246,7 @@ snippet jobs:
 A runtime admits one SSH connection at a time, so a synchronous
 `colab-sh` / `colab-fs` call holds the channel for its whole
 duration. Synchronous use is therefore a claim, not a default
-(design: the 2026-11-08 sync-channel design):
+(design: the sync-channel design):
 
 - A session has at most one sync claim: {caller, claimed_at,
   expires_at, last_attach_at}, TTL'd by `sync_claim.ttl_minutes`
@@ -276,7 +276,7 @@ duration. Synchronous use is therefore a claim, not a default
   (`config/callers.json`'s "active" list) is refused before
   any of that: active means a potential use for Colab exists
   for that caller even when no session is currently up
-  (owner ruling 2026-11-10), so while the marking stands its
+  (owner ruling), so while the marking stands its
   synchronous attaches refuse outright (`sync-refused-active-
   caller`, exit 2 with the detached form) — no claim is
   granted, and no occupancy state changes the verdict. A lane
@@ -673,10 +673,10 @@ The governing cap values of record (the deployment's
 `config/lease.json` carries them; the tracked example config
 ships placeholders, not these values):
 
-| Cap | Value | Set |
-| --- | ----- | --- |
-| `daily_cu_budget` | 40 CU | raised 2026-11-09 |
-| `monthly_cu_budget` | 300 CU | raised 2026-11-14 |
+| Cap | Value |
+| --- | ----- |
+| `daily_cu_budget` | 40 CU |
+| `monthly_cu_budget` | 300 CU |
 
 - **Projection**: a window projects rate × hours at its shape's
   `rate_cu_per_hour`. A shape whose rate is null has an
@@ -858,7 +858,7 @@ A live assignment can also lose its name: the server-side
 record drops it (the listing shows the endpoint wearing `?`,
 or omits the name while the assignment stands), and every
 lease channel being name-keyed, the named adoption cannot
-reach it — it bills on, unadoptable (2026-11-15: a rotated
+reach it — it bills on, unadoptable (a rotated
 pair, released unadopted after hours assigned). The endpoint
 form, `bin/colab-lease adopt --endpoint EP`, is the cure: the
 name is the machinery's own identifier, not evidence, so the
@@ -889,8 +889,8 @@ then a binding problem, not an adoption.
 
 An assigned-but-recordless runtime is an actionable census
 row the moment it is seen, never a standing idle-billing
-state only a human census read notices (owner addendum,
-2026-11-15). The reap pass reads the assignments each cycle
+state only a human census read notices (owner addendum).
+The reap pass reads the assignments each cycle
 (`orphans.detect_nameless`, beside unattributed detection),
 composes endpoint-keyed rows from the prior name's evidence
 (`orphans.nameless_census`), stores them at
@@ -928,7 +928,7 @@ on the reap cadence.
 
 ## Panel server supervision
 
-> **S11 consolidation (2026-11-14):** in the consolidated tree
+> **S11 consolidation:** in the consolidated tree
 > the per-surface arrangement below is retired — the panel is
 > served by the repo-root `run.py` under the one workhorse unit
 > (`pipeline/platform/ops/workhorse.service.tmpl`), and the
@@ -941,7 +941,7 @@ on the reap cadence.
 The lease panel's companion server (`ui/server.py` on
 127.0.0.1:8793) conforms to the **VM-restart survival pattern
 contract v1** (canonical text: the spec-driven-starter SPEC;
-conformance landed 2026-11-08 under the survival-pattern plan's
+conformance under the survival-pattern plan's
 Step 3). The unit's source is the tracked template
 `ui/colab-lease-ui.service.tmpl`, rendered by
 `ui/install-unit.sh` into the system instance and enabled;
@@ -955,9 +955,9 @@ answers — and when the page does not answer it runs the ladder:
 install, then the load-state verb (a loaded unit is restarted,
 anything else started), poll-verified, with the pre-systemd
 `ui.sh` start as the last rung. A failed ladder wakes; a
-successful restore is silent. Proof: the 2026-11-08 19:14 EST
+successful restore is silent. Proof: a
 VM replacement restored the panel unattended in ~2¾ minutes,
-and an adoption drill the same evening (unit removed, service
+and an adoption drill (unit removed, service
 stopped) is recorded in the repo's run logs.
 
 The server also conforms to the **stack-dump contract**

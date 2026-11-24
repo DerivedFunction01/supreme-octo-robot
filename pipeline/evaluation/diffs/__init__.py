@@ -5,7 +5,7 @@ target, paths), resolved here from an anchor — a worktree,
 a plan bundle, or a commit (§18.1). Diffs exist ONLY
 anchored (decision D10): a request that cannot name its
 anchor is refused. Absorption amendment (absorption plan,
-2026-10-28-git-viewer-absorption): a repo anchor (repo +
+git-viewer-absorption): a repo anchor (repo +
 path) is a first-class anchor for a single file's peek and
 diff against HEAD, served by lib/files; arbitrary revision
 browsing stays out of scope.

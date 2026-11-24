@@ -1,4 +1,4 @@
-"""Delivery-side provenance pins (2026-11-16): a send
+"""Delivery-side provenance pins: a send
 delivered into a chat carries only its text — the bridge
 record's meta never reaches the message and the channel
 stamps the executing chat's identity — so a

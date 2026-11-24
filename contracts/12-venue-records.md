@@ -3,7 +3,7 @@
 **Canonical owner:** the pipeline venue layer — it writes
 and reads the records; the panel and the evaluator consume
 its served projections, never the files directly. (Plan
-§4.12, added by the 2026-11-13 amendment; the S0 evidence
+§4.12, added by amendment; the S0 evidence
 schemas for these records are adopted here and stop being
 evidence owned by no clause.)
 
@@ -124,7 +124,7 @@ contract 01; lease and repos config ride contract 04.
 
 RUN1, RUN2, RUN4, RUN5 — whole.
 
-## Findings from the frontend build (2026-11-13)
+## Findings from the frontend build
 
 Two defects recorded by the runner frontend lane, both
 dispositioned as S5 inputs:
@@ -133,8 +133,8 @@ dispositioned as S5 inputs:
    field, while §7/D2 require every record venue-keyed. The
    frontend's seed evidence omits the key (schema-faithful)
    and its projection names the venue. S5 amends the schema
-   when it stamps the legacy records. **Disposition (S5,
-   2026-11-13): amended.** The schema gains a required
+   when it stamps the legacy records. **Disposition (S5):
+   amended.** The schema gains a required
    `venue` property; the fixture carries `venue: colab`;
    `write_session_evidence` projects the record's venue, and
    the §10.3 migration stamps the legacy evidence files with
@@ -146,8 +146,8 @@ dispositioned as S5 inputs:
    against its own payloads. S5 dispositions it in the
    same amendment pass — the schema corrected to the
    specimen, or the field's requirement scoped to records
-   written after the venue migration. **Disposition (S5,
-   2026-11-13): the requirement is scoped, as the second
+   written after the venue migration. **Disposition (S5):
+   the requirement is scoped, as the second
    option names.** The code stamps `budget_at_acquire` at
    every acquire and adoption (the acquire field shape), so
    the schema now requires it exactly on records carrying
@@ -157,7 +157,7 @@ dispositioned as S5 inputs:
    schema also gains the `venue` property itself, and the
    run-record schema gains `venue` as a required key (its
    fixture carries the stamp).
-3. Reconciliation addendum (2026-11-13): upstream commit
+3. Reconciliation addendum: upstream commit
    `8e9cb9b` ("Standing collector: stale detached runs
    collect on the reap cycle") now collects stale detached
    run records in the live runner — of 2,084 records at the
@@ -168,7 +168,7 @@ dispositioned as S5 inputs:
    S5's: 3 records that do not parse and 1 record in the
    `completed` state outside the three terminal states
    named above.
-4. Event entry-shape extension (2026-11-13, LogRow build):
+4. Event entry-shape extension (LogRow build):
    the venue event record serves one message string —
    `{at, kind, tone, message, venue}` — while the kit's
    shared timeline row (LogRow, timeline-component study
@@ -187,7 +187,7 @@ dispositioned as S5 inputs:
    served event shape should carry the split natively
    rather than each consumer re-deriving it — disposition:
    S5/S8 input, with this finding as the shape of record.
-   **S5 half dispositioned (2026-11-13):** the split is now
+   **S5 half dispositioned:** the split is now
    the venue layer's one derivation
    (`pipeline/venue/sync/venue_events.py` — date token and
    time from the record's own timestamp, headline the

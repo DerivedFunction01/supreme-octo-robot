@@ -155,7 +155,7 @@ def test_main_refuses_a_dead_session_without_connecting(tmp_path, monkeypatch):
     """The connect guard: a target that does not read alive server-side
     is refused before any ssh invocation — the CLI's ssh flow would
     otherwise assign a fresh default-shape runtime for the dead name
-    (the 2026-11-04 lane-probe mints)."""
+    (the lane-probe mints)."""
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
     fake = FakeRun()
     monkeypatch.setattr(sh.subprocess, "run", fake)

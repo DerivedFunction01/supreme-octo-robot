@@ -15,7 +15,7 @@ Every registry attention owns lives only in this file; it
 migrates as data (contract §4.1/§9 seed-and-export), never
 as code. Counts taken from the captured copy:
 
-| Registry | At review (2026-11-12) | At capture | Delta |
+| Registry | At review | At capture | Delta |
 |---|---|---|---|
 | handlers | 10 | 10 | — |
 | programmes | 3 | 3 | — |

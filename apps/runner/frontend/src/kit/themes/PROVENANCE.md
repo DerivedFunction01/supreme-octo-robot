@@ -7,7 +7,7 @@ bundled fonts from `../assets/fonts/` alongside, per plan
 §10.4: one generator in the kit's home; the generated CSS
 ships as the distribution and consumers take it checked-in.
 These copies are never edited by hand — a token change is
-made in the kit's home and re-vendored. Refreshed 2026-11-13
+made in the kit's home and re-vendored. Refreshed
 (shell unification): the copies were verified byte-identical
 to the kit home at the refresh.
 
@@ -19,7 +19,7 @@ checked-in. An earlier build carried copied components under
 `src/kit/components/` and `src/kit/lib/`; the copies were
 verified byte-identical to the kit originals and removed.
 
-Re-vendored 2026-11-13 (kit pass part 2): `index.css`,
+Re-vendored (kit pass part 2): `index.css`,
 `olive.css`, and `teal.css` regenerated in the kit's home
 and re-vendored byte-identical — `index.css` no longer
 imports a `katex.css` (gap K2, closed in the kit: the

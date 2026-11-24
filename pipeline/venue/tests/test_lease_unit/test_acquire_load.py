@@ -1,4 +1,4 @@
-"""Lease unit tests: load-aware acquire (2026-11-21) —
+"""Lease unit tests: load-aware acquire —
 the pool sort spreads unpinned fires across live
 sessions instead of concentrating them on the
 longest deadline: warm before cold, least in-flight

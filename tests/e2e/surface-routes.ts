@@ -44,7 +44,7 @@
  * main is the landmark the sweep works over.
  *
  * Breadcrumb record (measured against the client of
- * record, 2026-11-19): the breadcrumb renders its crumbs
+ * record): the breadcrumb renders its crumbs
  * as plain <span>s (App.tsx's Crumb component) — it
  * carries no a[href] and no button, so the sweep collects
  * ZERO candidates on every app route's Breadcrumb
@@ -98,7 +98,7 @@ export const SURFACE_ROUTES: SurfaceRoute[] = [
   // inbox_lands_on_home). Enrolled so the census prices the
   // landing, not a memory of the deleted view.
   { pattern: "/inbox", path: "/#/inbox", rendered: true, landmarks: ["main"] },
-  // Measured failure of record, CURED 2026-11-19: in gate
+  // Measured failure of record, since cured: in gate
   // run workhorse-s4-gate-20261119T091942Z the sweep priced
   // every control in this landmark except the two
   // unselected expiry presets ("At 5:00 PM", "Tomorrow,

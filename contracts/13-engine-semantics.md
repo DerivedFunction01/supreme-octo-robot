@@ -4,7 +4,7 @@
 engine is this contract's only implementer; every consumer
 of fired work reads its effects through the ledger
 (contract 05) and the entry format (contract 14). (Plan
-§4.13, added by the 2026-11-13 amendment.)
+§4.13, added by amendment.)
 
 **The contract in one line:** the engine fires each due
 point exactly once, in order, or fails safe and says so in
@@ -39,8 +39,8 @@ due under them:
 - **Fail-safe halt (EC-10):** corrupt durable state means
   **no firing at all**. Doubt stops the engine; it does
   not improvise a partial fleet.
-- **Firing is status + presence (amendment 3,
-  2026-11-13):** the engine fires an entry iff its status
+- **Firing is status + presence (amendment 3):** the
+  engine fires an entry iff its status
   is `active` and it stands in the pipeline registry
   store. The store has exactly one mutation path —
   contract 02's writer path (validate under contract
@@ -74,7 +74,7 @@ S3 moves the engine behind this contract into
 `pipeline/scheduling/`. A change to any clause above is a
 ruling, not a migration detail: the §2 preserve item
 permits deliberate, named replacements, and amendment 3
-(2026-11-13) is the firing clause's — recorded in the
+is the firing clause's — recorded in the
 bullet above and in `contracts/traceability.md`. The
 ordering clause's replacement allowance stands as
 written, and the rest carry as written.

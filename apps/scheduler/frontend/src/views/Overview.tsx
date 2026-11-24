@@ -26,7 +26,7 @@ export function Overview({
   const overview = api.getOverview();
   const jobs = api.listJobs();
 
-  // The counts split (contract 09, amendment 2026-11-13):
+  // The counts split (contract 09, amendment):
   // the Status group counts the OPERATOR's jobs from the
   // served classification; built-ins summarize on their own
   // row. Last outcome and Next wake stay fleet-wide — the

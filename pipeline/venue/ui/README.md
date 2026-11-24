@@ -67,7 +67,7 @@ In the consolidated tree the panel is served by the repo-root
 `run.py serve-venue` (this panel's own mount on the platform
 serving core at port 8793) under its OWN unit —
 `pipeline/platform/ops/venue.service.tmpl`, `Restart=always`
-(owner ruling, 2026-11-15: process boundaries follow coupling,
+(owner ruling: process boundaries follow coupling,
 extended to the venue — its state reads shell out synchronously
 to the lease core and it faces the heaviest polling of the
 surfaces, so it shares fate with neither the coupled
@@ -77,8 +77,8 @@ read-scoped timeout (`state_reads.py`) and the listener's
 handler threads are bounded (`bounded_server.py`), so a hung
 core call degrades the panel alone. The panel's earlier
 per-surface unit machinery (its own unit template, installer,
-and watchdog) retired with the one-process collapse (S11,
-2026-11-14); the venue unit above is the split's successor
+and watchdog) retired with the one-process collapse (S11);
+the venue unit above is the split's successor
 shape, rendered by the platform's render path like the other
 units.
 

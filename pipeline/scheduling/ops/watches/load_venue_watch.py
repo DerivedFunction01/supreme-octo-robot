@@ -7,7 +7,7 @@ The pieces existed separately: the local-test watch samples
 /proc/loadavg as context (never load-gated) and counts live
 fleet sessions from the registry's colab-liveness entries
 (count only, never names). This watch assembles them into
-the one finding the owner ordered (2026-11-15): a script
+the one finding the owner ordered: a script
 that fires on CPU load and NAMES the active sessions.
 
 Firing rule (mechanical, episode-based; state in

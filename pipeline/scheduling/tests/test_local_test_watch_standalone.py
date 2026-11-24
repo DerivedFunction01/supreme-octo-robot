@@ -5,7 +5,7 @@ class StandaloneLoadCase(unittest.TestCase):
     def test_ledger_loads_in_a_clean_interpreter(self):
         # The job runs the watch as a bare script; the
         # suite's own package context masked a loader
-        # failure there once (2026-11-22: the ledger's
+        # failure there once (the ledger's
         # util load died on util's relative import and
         # the watch job failed at startup while the
         # package gate stood green). This pin loads the

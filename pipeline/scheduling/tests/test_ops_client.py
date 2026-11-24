@@ -1,4 +1,4 @@
-"""The ops client's exit-4 contract (2026-11-22 cure): a
+"""The ops client's exit-4 contract: a
 transport failure is reported as non-performance ONLY
 when the request provably never left (connection refused,
 name unresolvable). A sent request whose response was

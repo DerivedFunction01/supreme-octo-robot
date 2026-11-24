@@ -150,7 +150,7 @@ export type RuledStatusName = (typeof RULED_STATUSES)[number];
 
 // The kind vocabulary (SPEC §4.1): kinds are labels in
 // the unified collection — `artifact` included, since the
-// 2026-11-10 unification retired the feed split that kept
+// unification retired the feed split that kept
 // it out of this list.
 export const ENTRY_KINDS = [
   "mockup",

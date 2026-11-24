@@ -1,7 +1,6 @@
 """Machine-written scheduler entries for live leases.
 
-Session liveness plan (.plans/2026-11-06-session-liveness-
-schedule.md): every live lease carries a derived schedule in
+Session liveness plan: every live lease carries a derived schedule in
 the scheduler server's registry — jobs/colab-liveness-
 <session>.yaml, a scripted entry running bin/colab-liveness
 every 15 minutes. The lease record is the record of truth and
@@ -30,7 +29,7 @@ longer a sibling repo under the process HOME). Test suites
 operate on scratch repos, so the installed-repo guard keeps
 a suite run from writing entries for fixture sessions into
 the live registry (the test-isolation rule, learned from
-the 2026-11-05 binding pollution). One more guard rides
+the binding pollution). One more guard rides
 here: under pytest (PYTEST_CURRENT_TEST set — in-process
 tests, and the subprocesses they spawn from os.environ) the
 default resolution always refuses, because in-process tests
