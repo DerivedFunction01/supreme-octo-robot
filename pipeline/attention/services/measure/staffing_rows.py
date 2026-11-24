@@ -49,6 +49,7 @@ from .staffing_venue import (  # noqa: F401
     _terminal_rows,
     _unlanded_rows,
 )
+from .staffing_plans import _overdue_rows  # noqa: F401
 from .staffing_waits import (  # noqa: F401
     _armed_rows,
     _latest_lane_stamp,

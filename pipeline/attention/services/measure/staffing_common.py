@@ -43,6 +43,7 @@ KIND_LABELS = {
     "unlanded_build": "Build claimed complete — unlanded",
     "serial_staffing": "Serial staffing",
     "frontier_shortfall": "Frontier shortfall",
+    "step_overdue": "Step overdue",
 }
 WORKHORSE_TERMS = {
     "scheduler": ("scheduler",),

@@ -72,6 +72,7 @@ SWEEP_CLASSES = {
     "owner_waiting_unanswered": ("unreported",),
     "unrouted_defect": ("unreported",),
     "steer_undeliverable": ("unreported",),
+    "step_overdue": ("stall",),
 }
 _SWEEP_NEXT_ACT = {
     "fleet_idle": (
@@ -458,6 +459,23 @@ def run_staffing_pass(
     )
 
 
+def _overdue_commission(row: dict) -> str:
+    """The commission form of an overdue step's next
+    act, in the staffing commission's form: the step
+    named as the act to staff, in its plan. An overdue
+    step is a commission, not a report."""
+    step_title = row.get("step_title") or ""
+    label = f"step {row.get('step')}"
+    if step_title:
+        label += f" ({step_title})"
+    label += f" of plan {row.get('plan_title') or row.get('plan')}"
+    return (
+        f"Staffing commission — staff: {label}. The step stands "
+        f"overdue against its own estimate; build it, or "
+        f"re-estimate it in the plan with its reason stated."
+    )
+
+
 def _sweep_steer(row: dict, slug: str | None, escalated: bool, bound) -> tuple:
     """The steer for a sweep-class row: the row's
     measured sentence plus its next act, sent by wb."""
@@ -468,6 +486,8 @@ def _sweep_steer(row: dict, slug: str | None, escalated: bool, bound) -> tuple:
     )
     parts = [row.get("detail") or ""]
     next_act = _SWEEP_NEXT_ACT.get(row["kind"])
+    if row["kind"] == "step_overdue":
+        next_act = _overdue_commission(row)
     if next_act:
         parts.append(next_act)
     if escalated:
@@ -502,6 +522,13 @@ def run_sweep_pass(
     for row in view.get("rows") or []:
         kind = row.get("kind")
         if dom.class_is_hard_stop(kind, state.get("wait_classes")):
+            continue
+        if row.get("owner_only"):
+            # An owner-only row routes to the digest:
+            # it stands in the served staffing view the
+            # digest embeds, escalates there on the
+            # standing bound, and never steers a
+            # coordinator for an act that is the owner's.
             continue
         classes = SWEEP_CLASSES.get(kind)
         if classes is None:

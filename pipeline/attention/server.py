@@ -82,6 +82,7 @@ from attention.services import contracts, programmes
 from attention.services.dispatch import dispatch, dispatch_consumer
 from attention.services.measure import (
     continuation,
+    plans,
     records,
     staffing,
     stamps,
@@ -639,6 +640,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
         stamps_changed = stamps.collect(fresh, settings, now)
         venue_changed = venue.collect(fresh, settings, now)
         frontier_changed = venue.collect_frontier(fresh, settings, now)
+        plans_changed = plans.collect(fresh, now)
         contracts_changed = contracts.sync(fresh)
         digest_changed = digest.collect_wb_facts(fresh, settings, now)
         after = (fresh.get("capacity_snapshot"), fresh.get("capacity_error"))
@@ -653,6 +655,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
             or stamps_changed
             or venue_changed
             or frontier_changed
+            or plans_changed
             or digest_changed
         ):
             with lock:
@@ -676,6 +679,8 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
                     state["venue_snapshot"] = fresh["venue_snapshot"]
                 if frontier_changed:
                     state["frontier_snapshot"] = fresh["frontier_snapshot"]
+                if plans_changed:
+                    state["plan_snapshot"] = fresh["plan_snapshot"]
                 if contracts_changed:
                     state["programmes"] = fresh["programmes"]
                 if digest_changed:
