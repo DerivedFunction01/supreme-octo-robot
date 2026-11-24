@@ -48,6 +48,7 @@ KIND_LABELS = {
     "lane_escalated": "Lane declaration escalated",
     "lane_unposted": "Unposted work",
     "lane_unwitnessed": "Lane claim unwitnessed",
+    "step_overdue": "Step overdue",
 }
 WORKHORSE_TERMS = {
     "scheduler": ("scheduler",),
