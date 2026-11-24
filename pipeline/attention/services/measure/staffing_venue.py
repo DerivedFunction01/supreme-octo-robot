@@ -256,6 +256,91 @@ def _queue_due(queue: list, in_flight: set) -> list:
     return due
 
 
+def _lane_payload(
+    state: dict, declaration: dict, contract: dict, families: dict
+) -> tuple:
+    """One programme's lane payload — the single
+    assembly the serial-staffing row's evidence and
+    the digest's per-programme lane block both serve
+    from. The lane records are the measure's primary
+    staffing source where the programme carries
+    them: a due item an open, non-stale lane record
+    covers — by queue item or by family — is
+    staffed, and the counted actual reads against
+    the queue-derived expected (the gate-resolved
+    work items, in flight or not). Returns (block,
+    lane_extra): lane_extra is the row's lane_records
+    evidence, present only where the programme
+    carries lane records; the block is served
+    wherever a queue is named, records or none —
+    declared reads None and lanes empty where no
+    lane snapshot stands."""
+    slug = declaration["slug"]
+    queue = contract.get("staffable_queue") or []
+    due = _queue_due(queue, set(families))
+    facts_lanes = lanes.record_facts(state, slug)
+    lane_extra = None
+    declared = None
+    actual = 0
+    lane_list: list = []
+    if facts_lanes is not None:
+        family_of = {
+            entry.get("key"): entry.get("family")
+            for entry in queue
+            if not entry.get("marker")
+        }
+        covered = set(facts_lanes["covered_queue_items"])
+        covered |= {
+            key
+            for key, family in family_of.items()
+            if family in facts_lanes["covered_families"]
+        }
+        due = [entry for entry in due if entry["key"] not in covered]
+        lane_extra = {
+            "declared": facts_lanes["declared"],
+            "expected": len(_queue_due(queue, set())),
+            "actual": facts_lanes["actual"],
+            "lanes": facts_lanes["lanes"],
+        }
+        declared = lane_extra["declared"]
+        actual = lane_extra["actual"]
+        lane_list = lane_extra["lanes"]
+    block = {
+        "slug": slug,
+        "label": declaration["label"],
+        "declared": declared,
+        "expected": len(_queue_due(queue, set())),
+        "actual": actual,
+        "lanes": lane_list,
+        "queue_unstaffed": due,
+    }
+    return block, lane_extra
+
+
+def lane_blocks(state: dict) -> dict:
+    """The per-programme lane blocks the digest
+    serves, keyed by slug: one block for each active
+    programme whose registry contract names a
+    staffable queue, absent entirely where no queue
+    is named — served unconditionally, at full
+    staffing as at a shortfall, so a standing
+    programme row renders from the block and honest
+    absence (no queue named) reads apart from every
+    other absence."""
+    snapshot = state.get("venue_snapshot") or {}
+    blocks = {}
+    for declaration in registry.active_declarations():
+        contract = registry.staffing_contract_for(declaration["slug"])
+        if contract is None or not contract.get("staffable_queue"):
+            continue
+        facts = snapshot.get(declaration["slug"]) or {}
+        block, _lane_extra = _lane_payload(
+            state, declaration, contract, facts.get("families") or {}
+        )
+        blocks[declaration["slug"]] = block
+    return blocks
+
+
 def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> list:
     """The family-concurrency measure (owner
     enforcement ruling, carried as the registry's
@@ -311,39 +396,14 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
             conditions.append(
                 "all_compute_on_one_session_while_another_live_session_carries_none"
             )
-        due = _queue_due(contract.get("staffable_queue") or [], set(families))
-        # The lane records are the measure's primary
-        # staffing source where the programme carries
-        # them: a due item an open, non-stale lane
-        # record covers — by queue item or by family —
-        # is staffed, and the counted actual reads
-        # against the queue-derived expected (the
-        # gate-resolved work items, in flight or not).
-        facts_lanes = lanes.record_facts(state, slug)
-        lane_extra = None
-        if facts_lanes is not None:
-            queue = contract.get("staffable_queue") or []
-            family_of = {
-                entry.get("key"): entry.get("family")
-                for entry in queue
-                if not entry.get("marker")
-            }
-            covered = set(facts_lanes["covered_queue_items"])
-            covered |= {
-                key
-                for key, family in family_of.items()
-                if family in facts_lanes["covered_families"]
-            }
-            due = [entry for entry in due if entry["key"] not in covered]
-            expected = len(_queue_due(queue, set()))
-            lane_extra = {
-                "declared": facts_lanes["declared"],
-                "expected": expected,
-                "actual": facts_lanes["actual"],
-                "lanes": facts_lanes["lanes"],
-            }
-            if facts_lanes["actual"] < expected:
-                conditions.append("lane_shortfall")
+        # The payload assembly is shared with the
+        # digest's lane block (_lane_payload): the
+        # row's queue_unstaffed and lane_records
+        # evidence are the block's own fields.
+        _block, lane_extra = _lane_payload(state, declaration, contract, families)
+        due = _block["queue_unstaffed"]
+        if lane_extra is not None and lane_extra["actual"] < lane_extra["expected"]:
+            conditions.append("lane_shortfall")
         if due:
             conditions.append("prerequisite_due_family_unstaffed")
         if not conditions:
