@@ -16,6 +16,7 @@ sync/lease/ assembles the taken set and owns the journals.
 """
 
 import random
+import re
 
 ADJECTIVES = (
     "amber", "azure", "brisk", "calm", "cedar", "coral", "cozy", "crisp",
@@ -41,6 +42,22 @@ NOUNS = (
 )
 
 MAX_ATTEMPTS = 200
+
+
+_RENEWAL_SUFFIX = re.compile(r"-r\d+$")
+
+
+def lineage(session: str) -> str:
+    """The lease family a session name belongs to: the generated
+    name with every renewal generation suffix (-r<epoch>)
+    stripped — the derivation renewal mints a window's children
+    by (sync/lease/sessions/renewal.py), so a name and all its
+    renewed successors share one lineage, and a pin written
+    against one generation names the family."""
+    base = session
+    while _RENEWAL_SUFFIX.search(base):
+        base = _RENEWAL_SUFFIX.sub("", base)
+    return base
 
 
 def generate_name(taken, rng: random.Random | None = None) -> str:
