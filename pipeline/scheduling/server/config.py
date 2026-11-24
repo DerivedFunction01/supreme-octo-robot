@@ -9,12 +9,36 @@ import os
 
 from . import paths as _paths
 
+
+def _root_list(value):
+    """Coerce an extra-write-roots value: a list of paths, or
+    one os.pathsep-joined string (the env layer's form). Each
+    entry is ~-expanded; the resolved roots themselves are
+    realpath'd by the writer at resolve time."""
+    if isinstance(value, str):
+        parts = [p for p in value.split(os.pathsep) if p]
+    elif isinstance(value, (list, tuple)):
+        parts = list(value)
+    else:
+        raise ValueError("expected a list of paths or a pathsep-joined string")
+    if not all(isinstance(p, str) and p for p in parts):
+        raise ValueError("extra write roots must be non-empty path strings")
+    return [os.path.expanduser(p) for p in parts]
+
+
 # key -> (default, env var, coercion)
 KEYS = {
     "host": ("127.0.0.1", "SCHEDULER_HOST", str),
     "port": (8796, "SCHEDULER_PORT", int),
     "home": (None, "SCHEDULER_HOME", str),
     "workspace_root": (None, "SCHEDULER_WORKSPACE_ROOT", str),
+    # Extra roots the /ops writer may write under, beside the
+    # workspace root (contract 15's server-configured
+    # allowance). The default — derived in resolve() when no
+    # layer sets the key — is exactly the venue funnel's
+    # credential directory under the server's home; a caller
+    # can never name a root in a request.
+    "ops_extra_write_roots": (None, "SCHEDULER_OPS_EXTRA_WRITE_ROOTS", _root_list),
     "tick_secs": (20, "SCHEDULER_TICK_SECS", int),
     "default_timezone": ("America/New_York", "SCHEDULER_DEFAULT_TIMEZONE", str),
     "outbox_ack_timeout_secs": (3600, "SCHEDULER_OUTBOX_ACK_TIMEOUT_SECS", int),
@@ -116,6 +140,14 @@ def resolve(path=None, env=None):
     if values["workspace_root"] is None:
         values["workspace_root"] = os.path.dirname(values["home"])
         sources["workspace_root"] = "default"
+    if values["ops_extra_write_roots"] is None:
+        # The one standing extra root: the venue funnel's
+        # credential directory, resolved from the server's
+        # home — never a tracked literal, never a glob.
+        values["ops_extra_write_roots"] = [
+            os.path.join(os.path.expanduser("~"), ".config", "colab-cli")
+        ]
+        sources["ops_extra_write_roots"] = "default"
     return values, sources
 
 

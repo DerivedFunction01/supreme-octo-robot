@@ -20,7 +20,13 @@ credential-class target is stamped with it server-side, so a
 caller performing through the service never loses the stamp
 its in-process write would have applied.
 Paths are absolute or relative to the workspace root; the
-resolved real path must stay inside it. Responses are
+resolved real path must stay inside it — or inside a
+server-configured extra write root (the config's
+`ops_extra_write_roots`, beside `workspace_root`; the venue
+funnel's credential directory by default). The allowance is
+the server's own configuration: a request can never name an
+extra root, and it widens write/patch targets only — exec
+cwd stays workspace-scoped. Responses are
 {"ok": true, ...result} or {"ok": false, "error": name,
 "detail": text} with enumerable error names: bad_request,
 outside_scope, not_found, no_match, multi_match, verify_failed,
@@ -96,16 +102,24 @@ def _root(values):
     return os.path.realpath(values["workspace_root"])
 
 
-def _resolve(root, raw):
+def _extra_roots(values):
+    """The server-configured extra write roots (config values,
+    beside workspace_root). A request carries no field for
+    them: the allowance is the server's, never the caller's."""
+    return tuple(values.get("ops_extra_write_roots") or ())
+
+
+def _resolve(root, raw, extra_roots=()):
     """Resolve a caller-supplied path against the workspace root
-    and refuse anything that lands outside it."""
-    if not isinstance(raw, str) or not raw:
-        raise OpError("bad_request", "path must be a non-empty string")
-    candidate = raw if os.path.isabs(raw) else os.path.join(root, raw)
-    resolved = os.path.realpath(candidate)
-    if resolved != root and not resolved.startswith(root + os.sep):
-        raise OpError("outside_scope", f"{raw} resolves outside the workspace")
-    return resolved
+    and refuse anything that lands outside it — or outside a
+    server-configured extra write root, for the write ops
+    that thread them. The discipline itself is the platform
+    writer's resolve (contract 15): one scope rule, homed
+    with the writer; its error names are this endpoint's."""
+    try:
+        return _writer.resolve(root, raw, extra_roots)
+    except _writer.WriterError as exc:
+        raise OpError(exc.name, exc.detail) from exc
 
 
 def _load_platform_writer():
@@ -145,7 +159,7 @@ def _result_for(path, root, data):
     }
 
 
-def _op_write(root, req):
+def _op_write(root, req, extra_roots=()):
     content = req.get("content")
     if not isinstance(content, str):
         raise OpError("bad_request", "content must be a string")
@@ -154,19 +168,19 @@ def _op_write(root, req):
         isinstance(mode, bool) or not isinstance(mode, int) or not 0 <= mode <= 0o7777
     ):
         raise OpError("bad_request", "mode must be an int in 0..0o7777")
-    path = _resolve(root, req.get("path"))
+    path = _resolve(root, req.get("path"), extra_roots)
     data = content.encode("utf-8")
     _staged_write(path, data, mode=mode)
     return _result_for(path, root, data)
 
 
-def _op_patch(root, req):
+def _op_patch(root, req, extra_roots=()):
     old, new = req.get("old"), req.get("new")
     if not isinstance(old, str) or not old:
         raise OpError("bad_request", "old must be a non-empty string")
     if not isinstance(new, str):
         raise OpError("bad_request", "new must be a string")
-    path = _resolve(root, req.get("path"))
+    path = _resolve(root, req.get("path"), extra_roots)
     try:
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
@@ -268,15 +282,20 @@ def _op_exec(root, values, req):
     }
 
 
-def _target_text(root, op, req):
+def _target_text(root, op, req, extra_roots=()):
     """The audit target: the path (workspace-relative when it
-    resolves) or the argv, truncated for the ledger record."""
+    resolves inside the workspace; the resolved absolute path
+    under an extra write root) or the argv, truncated for the
+    ledger record."""
     if op in ("write", "patch"):
         raw = req.get("path")
         try:
-            return os.path.relpath(_resolve(root, raw), root)
+            resolved = _resolve(root, raw, extra_roots)
         except OpError:
             return str(raw)
+        if resolved == root or resolved.startswith(root + os.sep):
+            return os.path.relpath(resolved, root)
+        return resolved
     if op == "exec":
         argv = req.get("argv")
         if isinstance(argv, list):
@@ -301,7 +320,10 @@ def perform(ledger, values, req, auth=None):
     caller = req.get("caller")
     op = req.get("op")
     root = _root(values)
-    target = _target_text(root, op, req) if isinstance(op, str) else ""
+    extra_roots = _extra_roots(values)
+    target = (
+        _target_text(root, op, req, extra_roots) if isinstance(op, str) else ""
+    )
     try:
         if not isinstance(caller, str) or not caller:
             raise OpError("bad_request", "caller must be a non-empty string")
@@ -320,9 +342,9 @@ def perform(ledger, values, req, auth=None):
         if required is not None and required not in scopes:
             raise OpError("scope_refused", f"{op} needs scope {required}")
         if op == "write":
-            result = _op_write(root, req)
+            result = _op_write(root, req, extra_roots)
         elif op == "patch":
-            result = _op_patch(root, req)
+            result = _op_patch(root, req, extra_roots)
         elif op == "exec":
             result = _op_exec(root, values, req)
         else:
