@@ -61,7 +61,11 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     shape, and every other outcome is a `pin-unavailable`
     refusal naming the reason — no silent substitution, and the
     named record is never cleared by a pin that cannot use it.
-    An unreadable session list still reads acquire-unknown.
+    The pin names the lease's lineage, not a frozen instance: a
+    renewal since the pin was written resolves to the lineage's
+    live generation (records.resolve_session_record), never to
+    another lineage. An unreadable session list still reads
+    acquire-unknown.
 
     Launch health (same plan): within each caller tier the pool
     prefers sessions the launch channel has not recently failed
@@ -69,7 +73,11 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     adopting the one session whose upload probes were timing
     out. Health demotes; it never reorders tiers and never
     blocks: an all-degraded pool still adopts, flagged
-    `health_degraded` on the result.
+    `health_degraded` on the result. Bind liveness
+    (adoption-liveness cure): adoption probes the chosen
+    session's kernel channel once (keepalive.bind_probe) — a
+    failed probe skips the candidate without clearing it, and
+    a pinned candidate refuses `pin-lineage-unhealthy`.
 
     Load-aware assignment (2026-11-21): inside a tier, a
     warm session (its provisioning verdict stands —
@@ -125,6 +133,8 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     health_map = health.launch_health(repo, now_dt)
     load_map = load.session_load(repo, now_dt) if pool else {}
     pool.sort(key=lambda r: (caller is not None and r.get("caller") == caller, r.get("caller") is None, load.is_warm(r), -load_map.get(r.get("session"), 0), not health_map.get(r.get("session"), {}).get("degraded", False), r.get("deadline") or ""), reverse=True)
+    pin_resolved = None
+    pin_target = None
     if prefer_session is not None:
         if create:
             return {"action": "pin-unavailable", "session": prefer_session, "reason": "a pin names a lease to adopt; it cannot combine with create"}
@@ -134,16 +144,26 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         # clearing branch can never destroy the named record
         # under a pin that asked for it by name; an unknown state
         # falls through to the loop, whose first check returns
-        # acquire-unknown untouched.
-        pinned = next((r for r in records.all_records(repo) if r.get("session") == prefer_session), None)
-        if pinned is None:
-            return {"action": "pin-unavailable", "session": prefer_session, "reason": "no lease record for the named session"}
+        # acquire-unknown untouched. The named record is the
+        # pin's lineage's live generation, resolved through
+        # renewal (records.resolve_session_record): a lease that
+        # renewed since the pin was written is the pin's lease
+        # still; another lineage never substitutes.
+        resolved = records.resolve_session_record(repo, prefer_session)
+        if resolved is None:
+            return {"action": "pin-unavailable", "session": prefer_session, "reason": "no lease record for the named session or its lineage"}
+        pinned = resolved["record"]
+        pin_target = resolved["session"]
+        if pin_target != prefer_session:
+            pin_resolved = {"from": prefer_session, "to": pin_target, "via": resolved["via"]}
         if pinned.get("shape") != shape_id:
-            return {"action": "pin-unavailable", "session": prefer_session, "reason": f"named session is shape {pinned.get('shape')}, not {shape_id}"}
-        pin_state = sessions.session_state(colab, prefer_session)
+            return {"action": "pin-unavailable", "session": prefer_session, "reason": f"named session is shape {pinned.get('shape')}, not {shape_id}", "record": pinned}
+        pin_state = sessions.session_state(colab, pin_target)
         if pin_state != "unknown" and not (pin_state == "alive" and now_dt < foundation.parse_dt(pinned["deadline"])):
             return {"action": "pin-unavailable", "session": prefer_session, "reason": f"named session is {pin_state} or past its deadline", "record": pinned}
         pool = [pinned]
+    probe_failures: list = []
+    bound_probe = None
     rec = None
     for cand in pool:
         session = cand["session"]
@@ -160,13 +180,28 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
             if min_window_s is not None:
                 remaining_s = (foundation.parse_dt(cand["deadline"]) - now_dt).total_seconds()
                 if remaining_s < min_window_s:
-                    if prefer_session is not None and session == prefer_session:
+                    if pin_target is not None and session == pin_target:
                         return {"action": "pin-unavailable", "session": prefer_session, "reason": f"named session's remaining window ({int(remaining_s)}s) cannot cover the required window ({int(min_window_s)}s)", "record": cand}
                     # Window-short for this fire only: skip the
                     # candidate WITHOUT clearing it — the lease
                     # stays usable for shorter work, and the
                     # fall-through creates when nothing covers.
                     continue
+            # Bind liveness (adoption-liveness cure): one
+            # bounded kernel probe gates the bind — the session
+            # list proves the assignment exists, not that its
+            # channel answers. A failed probe skips the
+            # candidate WITHOUT clearing it (the lease may
+            # recover; the probe journaled the failure as
+            # launch health); the pinned candidate refuses
+            # pin-lineage-unhealthy instead of wandering.
+            probe = keepalive.bind_probe(colab, repo, session)
+            if not probe["live"]:
+                if pin_target is not None and session == pin_target:
+                    return {"action": "pin-unavailable", "session": prefer_session, "reason": f"pin-lineage-unhealthy: {session} failed the bind probe ({probe['result']})", "probe": probe, "record": cand}
+                probe_failures.append({"session": session, "probe": probe})
+                continue
+            bound_probe = probe
             rec = cand
             break
         # Not usable. The caller's own (or an unstamped) record is
@@ -186,7 +221,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
                 since = foundation.absent_since(repo, session)
                 if since is None or (now_dt - since).total_seconds() < foundation.ABSENT_CONFIRM_S:
                     foundation.stamp_absent(repo, session, since or now_dt, now_dt)
-                    if prefer_session is not None and session == prefer_session:
+                    if pin_target is not None and session == pin_target:
                         # A pin asked for this record by name: the
                         # honest refusal is the pin's, not the
                         # creation gate the fall-through reaches.
@@ -216,6 +251,9 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         fresh, _age = keepalive.keepalive_fresh(colab, repo, session)
         ka = {"keepalive": "ok"} if fresh else keepalive.ensure_keepalive(colab, repo, session)
         out = {"action": "adopted", "record": rec, **ka}
+        for key, val in (("bind_probe", bound_probe), ("bind_probe_failures", probe_failures), ("pin_resolved", pin_resolved)):
+            if val:
+                out[key] = val
         # The provisioning ensure is per-session-lifetime and
         # reads the stamp itself: a verdict-ok stamp no-ops, an
         # attempt inside its retry window reads pending, and a
@@ -262,6 +300,8 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     # agent creation denial does not.
     refusal = gate.enforce_session_admission(repo, shape_id, via=via, shape=shape, seam="acquire", caller=caller, duty=duty, standing=standing)
     if refusal is not None:
+        if probe_failures:
+            refusal["bind_probe_failures"] = probe_failures
         return refusal
     session = sessions.generate_session_name(repo, colab)
     args = ["new", "-s", session] + catalog._session_shape_args(shape)
