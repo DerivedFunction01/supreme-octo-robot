@@ -3,9 +3,10 @@ set -e
 # Authorized keys are mounted read-only at /run/secrets/authorized_keys.
 # Copy (never symlink) so sshd StrictModes ownership checks pass.
 if [ -f /run/secrets/authorized_keys ]; then
-  cp /run/secrets/authorized_keys /home/agent/.ssh/authorized_keys
-  chmod 600 /home/agent/.ssh/authorized_keys
-  chown agent:agent /home/agent/.ssh/authorized_keys
+  AGENT_HOME="$(getent passwd agent | cut -d: -f6)"
+  cp /run/secrets/authorized_keys "$AGENT_HOME/.ssh/authorized_keys"
+  chmod 600 "$AGENT_HOME/.ssh/authorized_keys"
+  chown agent:agent "$AGENT_HOME/.ssh/authorized_keys"
 fi
 # Persist SSH host keys in the ssh-host-keys volume so a container
 # recreate does not change the host key and break known_hosts.

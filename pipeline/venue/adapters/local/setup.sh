@@ -13,7 +13,7 @@
 # never pastes a heredoc.
 #
 # Options:
-#   --target DIR          install dir (default: ~/muse-compute)
+#   --target DIR          install dir (default: $HOME/muse-compute)
 #   --authkey KEY         Tailscale auth key (or env TS_AUTHKEY)
 #   --cpus N              workspace CPU cap      (default 4)
 #   --mem SIZE            workspace memory cap   (default 8g)

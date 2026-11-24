@@ -6,7 +6,7 @@ disk, temp files, CPU and memory are capped there, and the host
 filesystem outside one mounted workspace folder is not visible.
 
 Template: `../adapters/local/template/` — copy the whole folder to the
-host (e.g. `~/muse-compute/` in WSL), fill it in, `docker compose up -d`.
+host (e.g. `$HOME/muse-compute/` in WSL), fill it in, `docker compose up -d`.
 
 ## Architecture
 
@@ -130,7 +130,7 @@ Plan of what the script does:
 1. Prompts (or takes flags / env) for the Tailscale auth key and
    the connecting agent's SSH public key; limits are flags with
    defaults: `--cpus`, `--mem`, `--workspace-gb`, `--total-gb`,
-   `--target` (default `~/muse-compute`). Fully non-interactive
+   `--target` (default `$HOME/muse-compute`). Fully non-interactive
    form, with example values: `setup.sh --authkey ... 
    --authorized-key '...' --cpus 4 --mem 8g --workspace-gb 96
    --total-gb 128 --yes`.
@@ -198,7 +198,7 @@ and the container overlay the host's.
 - **Docker storage: the remaining share, guarded — no hard cap
   exists on Windows.** Images, container writable layers, and
   named volumes live in Docker Desktop's WSL disk image
-  (`C:\Users\<user>\AppData\Local\Docker\wsl`). On the WSL 2 backend
+  (`%UserProfile%\AppData\Local\Docker\wsl`). On the WSL 2 backend
   there is no disk-image size setting (that slider is macOS-only);
   resource limits on Windows are managed by Windows itself, via
   `%UserProfile%\.wslconfig` (`[wsl2] memory= / processors= / swap=`),

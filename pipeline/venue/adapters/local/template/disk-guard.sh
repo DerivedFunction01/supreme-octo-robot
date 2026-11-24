@@ -4,7 +4,7 @@
 # hard cap on the Windows WSL 2 backend, so this guard is the primary
 # enforcement for its remaining share: at WARN it logs, at STOP it stops
 # the workspace container before the host disk is threatened.
-# Cron (WSL): */15 * * * *  ~/muse-compute/disk-guard.sh
+# Cron (WSL): */15 * * * *  $HOME/muse-compute/disk-guard.sh
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 # Thresholds come from the instance .env when present (cron does not
