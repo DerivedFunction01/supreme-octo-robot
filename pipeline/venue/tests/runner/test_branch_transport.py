@@ -12,6 +12,14 @@ mismatch or a fetch that never lands is a refusal here,
 never a silent bundle substitution. Driven against a stub
 foundation whose colab is scripted, in the upload-probe
 suite's idiom.
+
+The plant pins (plant cure, 2026-11-24): the drive verifies
+the session's git plant before the substrate upload — a
+plant that fails its checks is a refusal naming the plant,
+with no upload and no clone attempted; and the plant job's
+own upload set pairs the kit's key with the tracked pinned
+known-hosts artifact beside the plant script, whose lines
+are GitHub's published host keys.
 """
 
 import hashlib
@@ -29,6 +37,8 @@ from module_loader import load_module  # noqa: E402
 SHA = "0123456789abcdef0123456789abcdef01234567"
 OTHER = "fedcba9876543210fedcba9876543210fedcba98"
 BRANCH = {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/x-20261123", "sha": SHA}
+PLANT_OK = json.dumps({"failed": [], "greeting": "Hi redacted! You've successfully authenticated, but GitHub does not provide shell access."}) + "\n"
+PLANT_SPLIT = json.dumps({"failed": ["hosts", "greeting"], "greeting": "Host key verification failed."}) + "\n"
 
 
 def _json_object_from_output(text):
@@ -209,7 +219,7 @@ def test_resolve_branch_ctx(tmp_path):
 
 def test_prepare_branch_lands_at_the_announced_sha(tmp_path):
     src = make_base_clone(tmp_path)
-    colab = ScriptedColab([("probe",), ("stdout", f"base clone at {SHA} tree abc\n")], src)
+    colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", f"base clone at {SHA} tree abc\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
     err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-1")
     assert err is None, err
@@ -219,7 +229,7 @@ def test_prepare_branch_lands_at_the_announced_sha(tmp_path):
 
 def test_prepare_branch_refuses_a_mismatched_head(tmp_path):
     src = make_base_clone(tmp_path)
-    colab = ScriptedColab([("probe",), ("stdout", f"base clone at {OTHER} tree abc\n")], src)
+    colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", f"base clone at {OTHER} tree abc\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
     err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-2")
     assert err is not None and "!=" in err and OTHER in err and SHA in err
@@ -229,7 +239,7 @@ def test_prepare_branch_refuses_a_mismatched_head(tmp_path):
 
 def test_prepare_branch_refuses_a_fetch_that_never_lands(tmp_path):
     src = make_base_clone(tmp_path)
-    colab = ScriptedColab([("probe",), ("stdout", "fatal: could not read from remote repository\n")], src)
+    colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", "fatal: could not read from remote repository\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
     err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-3")
     assert err is not None and "did not land" in err
@@ -239,9 +249,98 @@ def test_prepare_branch_refuses_a_fetch_that_never_lands(tmp_path):
 
 def test_prepare_branch_refuses_when_the_substrate_upload_fails(tmp_path):
     src = make_base_clone(tmp_path)
-    colab = ScriptedColab([], src, upload_rc=1)
+    colab = ScriptedColab([("stdout", PLANT_OK)], src, upload_rc=1)
     launch, _foundation, _journal = load_launch(tmp_path, colab)
     err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-4")
     assert err is not None and "base_clone.sh upload" in err
     assert info == {}
-    assert colab.exec_calls == 0
+    assert colab.exec_calls == 1  # the plant probe only; the clone never runs
+
+
+# --- the plant verification (plant cure) ---
+
+
+def test_prepare_branch_refuses_at_an_unhealthy_plant_before_any_upload(tmp_path):
+    src = make_base_clone(tmp_path)
+    colab = ScriptedColab([("stdout", PLANT_SPLIT)], src)
+    launch, _foundation, journal = load_launch(tmp_path, colab)
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-5")
+    assert err is not None and err.startswith("branch transport: git plant on session sess")
+    assert "hosts" in err and "plant-github-key" in err
+    assert info == {}
+    assert colab.upload_calls == 0 and colab.exec_calls == 1
+    assert {"stage": "branch", "ok": False, "detail": "plant"} in journal
+
+
+def test_prepare_branch_refuses_when_the_plant_probe_never_answers(tmp_path):
+    src = make_base_clone(tmp_path)
+    colab = ScriptedColab([("timeout",)], src)
+    launch, _foundation, journal = load_launch(tmp_path, colab)
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-6")
+    assert err is not None and "plant probe" in err and "timed out" in err
+    assert info == {}
+    assert colab.upload_calls == 0 and colab.exec_calls == 1
+    assert {"stage": "branch", "ok": False, "detail": "plant"} in journal
+
+
+def test_prepare_branch_refuses_when_the_plant_probe_returns_no_verdict(tmp_path):
+    src = make_base_clone(tmp_path)
+    colab = ScriptedColab([("stdout", "some unstructured kernel noise\n")], src)
+    launch, _foundation, _journal = load_launch(tmp_path, colab)
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-7")
+    assert err is not None and "plant probe" in err and "no verdict" in err
+    assert info == {}
+    assert colab.upload_calls == 0
+
+
+# --- the plant's own upload set and pinned artifact ---
+
+PLANT_JOB = REPO / "adapters" / "colab" / "jobs" / "plant-github-key" / "job.json"
+PLANT_SCRIPT = REPO / "adapters" / "colab" / "snippets" / "jobs" / "plant_github_key.sh"
+PINNED_HOSTS = REPO / "adapters" / "colab" / "snippets" / "jobs" / "known_hosts_github"
+# GitHub's published github.com host keys (their docs' fingerprint set):
+# the artifact pins these exact key bodies, never a learned-on-first-use set.
+GITHUB_PUBLISHED = {
+    "ssh-ed25519": "AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl",
+    "ecdsa-sha2-nistp256": "AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=",
+    "ssh-rsa": "AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=",
+}
+
+
+def test_plant_job_uploads_pair_the_kit_key_with_the_tracked_pinned_hosts():
+    job = json.loads(PLANT_JOB.read_text())
+    uploads = job["uploads"]
+    # The key (a secret) rides the untracked kit; the known-hosts half
+    # rides the tracked pinned artifact beside the plant script — the
+    # same upload set plants both halves, every plant.
+    assert "var/kit-github/id_ed25519" in uploads
+    assert "adapters/colab/snippets/jobs/known_hosts_github" in uploads
+    assert "var/kit-github/known_hosts_github" not in uploads
+    assert "adapters/colab/snippets/jobs/plant_github_key.sh" in uploads
+
+
+def test_pinned_known_hosts_carry_githubs_published_keys():
+    seen = {}
+    for line in PINNED_HOSTS.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        host, keytype, body = line.split()
+        assert host == "github.com"
+        seen[keytype] = body
+    assert seen == GITHUB_PUBLISHED
+
+
+def test_plant_script_plants_both_halves_to_the_sshcommand_paths():
+    script = PLANT_SCRIPT.read_text()
+    # Both halves are refused loudly when their upload is missing, and
+    # both are planted under $HOME/.ssh in the same run.
+    assert '"key upload missing' in script and '"known-hosts upload missing"' in script
+    assert 'cp "$UP/id_ed25519" "$HOME/.ssh/id_github"' in script
+    assert 'cp "$UP/known_hosts_github" "$HOME/.ssh/known_hosts_github"' in script
+    # The sshCommand the clone reads names the planted pinned file as
+    # its host-key source, with strict checking held at yes — and the
+    # greeting verifies over that same file before the plant is OK.
+    assert "UserKnownHostsFile=$HOME/.ssh/known_hosts_github" in script
+    assert "StrictHostKeyChecking=yes" in script
+    assert "accept-new" not in script and "StrictHostKeyChecking=no" not in script
