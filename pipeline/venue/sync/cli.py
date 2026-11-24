@@ -45,45 +45,18 @@ TOKEN = Path.home() / ".config" / "colab-cli" / "token.json"
 # --- Unified writer seam (register E5; contract 15) --------------------------
 # The funnel's own state writes — the token restore, the
 # session-binding heal, the auth-required marker — ride the
-# platform writer like every other state write in the tree:
-# one writer, never a hand-rolled staging per component.
-# Loaded by path; where no platform tree exists (the pinned
-# source repo's own layout), the fallback is the same
-# protocol inline, mirroring the lease foundation's seam.
+# shared writer route (sync/writer_route.py, the one home
+# for the sync package's non-lease writes): performed by
+# the /ops service where it answers, else the platform
+# writer in-process under denial retry, else the protocol
+# inline. Loaded by path, like every funnel seam.
 
-def _load_writer():
-    cand = _paths.PLATFORM_WRITER
-    if cand.exists():
-        spec = _ilu.spec_from_file_location("pipeline_platform_writer", cand)
-        mod = _ilu.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod
-    return None
+_route_spec = _ilu.spec_from_file_location(
+    "venue_writer_route", Path(__file__).resolve().parent / "writer_route.py")
+_route = _ilu.module_from_spec(_route_spec)
+_route_spec.loader.exec_module(_route)
 
-
-_WRITER = _load_writer()
-
-
-def _staged_write(path: Path, data: bytes, mode: int | None = None) -> None:
-    if _WRITER is not None:
-        _WRITER.staged_write(str(path), data, mode=mode)
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.sched-tmp-{os.getpid()}")
-    try:
-        with open(tmp, "wb") as fh:
-            fh.write(data)
-            fh.flush()
-            os.fsync(fh.fileno())
-        with open(tmp, "rb") as fh:
-            if fh.read() != data:
-                raise OSError(f"read-back mismatch for {path}")
-        if mode is not None:
-            os.chmod(tmp, mode)
-        os.replace(tmp, path)
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
+_staged_write = _route.staged_write
 
 
 def colab_bin() -> str:

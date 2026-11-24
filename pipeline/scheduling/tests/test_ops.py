@@ -509,3 +509,107 @@ class ConfigSshKeysTest(unittest.TestCase):
         )
         self.assertIsNone(values["git_ssh_identity_file"])
         self.assertIsNone(values["git_ssh_known_hosts_file"])
+
+
+class ExtraRootOpsTest(unittest.TestCase):
+    """The /ops endpoint's extra write roots (the writer-route
+    cure): the server's config values name roots beside the
+    workspace that write/patch may target — the venue
+    funnel's credential directory is the standing entry — and
+    nothing else widens: a path outside root + extra roots is
+    refused, exec cwd is never widened, and a request field
+    claiming to name a root is ignored."""
+
+    AUTH = OpsTest.AUTH
+
+    def setUp(self):
+        self._ws = tempfile.TemporaryDirectory()
+        self._cred = tempfile.TemporaryDirectory()
+        self.root = self._ws.name
+        self.cred = self._cred.name
+        self.values = {
+            "workspace_root": self.root,
+            "capture_cap_bytes": 65536,
+            "ops_extra_write_roots": [self.cred],
+        }
+        self.ledger = FakeLedger()
+
+    def tearDown(self):
+        self._ws.cleanup()
+        self._cred.cleanup()
+
+    def perform(self, req, auth=AUTH):
+        return ops.perform(self.ledger, self.values, req, auth=auth)
+
+    def test_write_under_a_configured_extra_root(self):
+        target = os.path.join(self.cred, "token.json")
+        code, payload = self.perform(
+            {
+                "caller": "test",
+                "op": "write",
+                "path": target,
+                "content": "{}",
+                "mode": 0o600,
+            }
+        )
+        self.assertEqual(code, 200)
+        self.assertTrue(payload["ok"])
+        with open(target, encoding="utf-8") as fh:
+            self.assertEqual(fh.read(), "{}")
+        self.assertEqual(stat.S_IMODE(os.stat(target).st_mode), 0o600)
+        # The audit target names the resolved path (it is not
+        # workspace-relative).
+        self.assertEqual(self.ledger.records[-1]["target"], target)
+
+    def test_write_outside_root_and_extra_roots_is_refused(self):
+        target = os.path.join(
+            os.path.dirname(self.root), "escape-extra-root.txt")
+        code, payload = self.perform(
+            {"caller": "test", "op": "write", "path": target, "content": "x"}
+        )
+        self.assertEqual(code, 403)
+        self.assertEqual(payload["error"], "outside_scope")
+        self.assertFalse(os.path.exists(target))
+
+    def test_exec_cwd_is_not_widened_by_extra_roots(self):
+        code, payload = self.perform(
+            {
+                "caller": "test",
+                "op": "exec",
+                "argv": ["/bin/true"],
+                "cwd": self.cred,
+            }
+        )
+        self.assertEqual(code, 403)
+        self.assertEqual(payload["error"], "outside_scope")
+
+    def test_a_request_cannot_name_an_extra_root(self):
+        target = os.path.join(self.cred, "token.json")
+        values = {"workspace_root": self.root, "capture_cap_bytes": 65536}
+        code, payload = ops.perform(
+            self.ledger,
+            values,
+            {
+                "caller": "test",
+                "op": "write",
+                "path": target,
+                "content": "{}",
+                "ops_extra_write_roots": [self.cred],
+            },
+            auth=self.AUTH,
+        )
+        self.assertEqual(code, 403)
+        self.assertEqual(payload["error"], "outside_scope")
+        self.assertFalse(os.path.exists(target))
+
+    def test_extra_roots_default_is_the_funnel_credential_dir(self):
+        from server import config as config_mod
+
+        values, sources = config_mod.resolve(
+            path=os.path.join(tempfile.gettempdir(), "no-such-config.json"),
+            env={},
+        )
+        expected = os.path.join(
+            os.path.expanduser("~"), ".config", "colab-cli")
+        self.assertEqual(values["ops_extra_write_roots"], [expected])
+        self.assertEqual(sources["ops_extra_write_roots"], "default")

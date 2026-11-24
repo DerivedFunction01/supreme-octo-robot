@@ -37,9 +37,11 @@ drive the real repo against the fake CLI. No scheduler on
 the machine means the sync is a silent no-op, as with the
 workbench harness's seam.
 
-Writes ride the unified writer's protocol (contract 15):
-the entry stages to a fresh sibling and renames over, so a
-denied write leaves the standing entry byte-identical.
+Writes ride the shared writer route (sync/writer_route.py,
+contract 15): performed by the /ops service where it
+answers, else the platform writer's staged protocol under
+denial retry, so a denied write leaves the standing entry
+byte-identical.
 """
 from __future__ import annotations
 
@@ -54,6 +56,13 @@ _paths_spec = _ilu.spec_from_file_location(
     "venue_paths", Path(__file__).resolve().parent.parent / "paths.py")
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
+
+# The shared writer route (contract 15): the one home for
+# the sync package's non-lease writes, loaded by path.
+_route_spec = _ilu.spec_from_file_location(
+    "venue_writer_route", Path(__file__).resolve().parent / "writer_route.py")
+_route = _ilu.module_from_spec(_route_spec)
+_route_spec.loader.exec_module(_route)
 
 ENTRY_PREFIX = "colab-liveness-"
 _MODULE_REPO = _paths.REPO_RESOLVED
@@ -73,36 +82,6 @@ def jobs_dir(repo: Path) -> Path | None:
     # and the scheduling dir is a function of that root.
     sibling = _MODULE_REPO.parent / "scheduling" / "jobs"
     return sibling if sibling.is_dir() else None
-
-
-def _staged_write(path: Path, text: str) -> None:
-    """The unified writer's protocol for one registry entry
-    (contract 15): delegate to the platform writer where the
-    pipeline tree provides it, else the same protocol inline
-    (stage to a fresh sibling, fsync, read back, rename)."""
-    import importlib.util as _ilu
-
-    data = text.encode()
-    cand = _paths.PLATFORM_WRITER
-    if cand.exists():
-        spec = _ilu.spec_from_file_location("pipeline_platform_writer", cand)
-        mod = _ilu.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        mod.staged_write(str(path), data)
-        return
-    tmp = path.with_name(f".{path.name}.sched-tmp-{os.getpid()}")
-    try:
-        with open(tmp, "wb") as fh:
-            fh.write(data)
-            fh.flush()
-            os.fsync(fh.fileno())
-        with open(tmp, "rb") as fh:
-            if fh.read() != data:
-                raise OSError(f"read-back mismatch for {path}")
-        os.replace(tmp, path)
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
 
 
 def entry_id(session: str) -> str:
@@ -165,9 +144,9 @@ def sync_for_record(repo: Path, rec: dict) -> str:
         text = render_entry(session)
         if path.exists() and path.read_text() == text:
             return "present"
-        _staged_write(path, text)
+        _route.staged_write(path, text.encode())
         return "written"
-    except OSError as exc:
+    except (OSError, _route.WriterError) as exc:
         return f"error: {exc}"
 
 
@@ -177,7 +156,7 @@ def write_state(path: Path, state: dict) -> None:
     shared with bin/colab-sh's cache writer, and both stage
     through the one platform-writer protocol — never a
     hand-rolled staging per component."""
-    _staged_write(path, json.dumps(state, indent=1))
+    _route.staged_write(path, json.dumps(state, indent=1).encode())
 
 
 def remove_for_session(repo: Path, session: str) -> str:

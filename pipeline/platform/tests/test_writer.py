@@ -150,5 +150,88 @@ class TestOpWriteMode(unittest.TestCase):
         self.assertFalse(os.path.exists(os.path.join(self.tmp.name, "b.txt")))
 
 
+class TestExtraRoots(unittest.TestCase):
+    """The server-configured extra write roots (the writer-
+    route cure): resolve()/perform() accept a target under a
+    root the SERVICE's values name — the venue funnel's
+    credential directory is the standing entry — while a
+    path outside root + extra roots is refused exactly as
+    before, and a request can never name a root of its own:
+    the allowance lives in values, and a request field
+    claiming to carry it is ignored."""
+
+    def setUp(self):
+        self.ws = tempfile.TemporaryDirectory()
+        self.cred = tempfile.TemporaryDirectory()
+        self.elsewhere = tempfile.TemporaryDirectory()
+        self.values = {
+            "workspace_root": self.ws.name,
+            "ops_extra_write_roots": [self.cred.name],
+        }
+
+    def tearDown(self):
+        self.ws.cleanup()
+        self.cred.cleanup()
+        self.elsewhere.cleanup()
+
+    def test_resolve_accepts_a_path_under_an_extra_root(self):
+        target = os.path.join(self.cred.name, "token.json")
+        resolved = writer.resolve(
+            self.ws.name, target, extra_roots=[self.cred.name])
+        self.assertEqual(resolved, os.path.realpath(target))
+
+    def test_resolve_refuses_an_outside_path_with_extra_roots(self):
+        target = os.path.join(self.elsewhere.name, "escape.txt")
+        with self.assertRaises(writer.WriterError) as caught:
+            writer.resolve(self.ws.name, target, extra_roots=[self.cred.name])
+        self.assertEqual(caught.exception.name, "outside_scope")
+
+    def test_perform_write_lands_under_an_extra_root(self):
+        # The funnel's credential write, performed server-
+        # side: the target lives outside the workspace, under
+        # the configured credential root, and the mode
+        # discipline rides it.
+        target = os.path.join(self.cred.name, "token.json")
+        req = {
+            "caller": "test",
+            "op": "write",
+            "path": target,
+            "content": "{}",
+            "mode": 0o600,
+        }
+        code, payload = writer.perform(None, self.values, req)
+        self.assertEqual(code, 200)
+        self.assertTrue(payload["ok"])
+        with open(target, "rb") as fh:
+            self.assertEqual(fh.read(), b"{}")
+        self.assertEqual(os.stat(target).st_mode & 0o777, 0o600)
+
+    def test_perform_refuses_a_non_allowlisted_outside_path(self):
+        target = os.path.join(self.elsewhere.name, "escape.txt")
+        req = {"caller": "test", "op": "write", "path": target, "content": "x"}
+        code, payload = writer.perform(None, self.values, req)
+        self.assertEqual(code, 403)
+        self.assertEqual(payload["error"], "outside_scope")
+        self.assertFalse(os.path.exists(target))
+
+    def test_a_request_cannot_name_its_own_root(self):
+        # The request claims an extra root covering the
+        # target; the service's values name none, so the
+        # claim is ignored and the write is refused.
+        target = os.path.join(self.elsewhere.name, "escape.txt")
+        req = {
+            "caller": "test",
+            "op": "write",
+            "path": target,
+            "content": "x",
+            "ops_extra_write_roots": [self.elsewhere.name],
+        }
+        code, payload = writer.perform(
+            None, {"workspace_root": self.ws.name}, req)
+        self.assertEqual(code, 403)
+        self.assertEqual(payload["error"], "outside_scope")
+        self.assertFalse(os.path.exists(target))
+
+
 if __name__ == "__main__":
     unittest.main()

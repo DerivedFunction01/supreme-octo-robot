@@ -134,11 +134,19 @@ EXCEPTIONS = (
      "kind": "standalone fallback seam — the venue lease "
              "foundation's one writer (register E5)"},
     {"path": "pipeline/venue/sync/cli.py",
+     "kind": "the venue sync funnel's binding-journal "
+             "append — an append-only evidence line "
+             "(var/binding-journal.jsonl), never a state "
+             "store the staged protocol protects; the "
+             "funnel's staged writes ride sync/"
+             "writer_route.py"},
+    {"path": "pipeline/venue/sync/writer_route.py",
      "kind": "standalone fallback seam — the venue sync "
-             "funnel's state writes"},
-    {"path": "pipeline/venue/sync/liveness_entry.py",
-     "kind": "standalone fallback seam — the venue "
-             "liveness entry's registry writes"},
+             "writer route's inline protocol: the one "
+             "writer home for the funnel's and the "
+             "liveness entries' state writes, delegating "
+             "to the platform writer (performed by the "
+             "/ops service first) in-tree"},
     {"path": "pipeline/scheduling/ops/watches/file_registry.py",
      "kind": "standalone fallback seam — the scheduling "
              "file registry watch's state writes"},

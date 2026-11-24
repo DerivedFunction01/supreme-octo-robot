@@ -34,6 +34,15 @@ Failure semantics are contract 04's closed error table reused
 whole, plus the one addition cas-update requires:
 version_conflict (409) — the expected stamp no longer
 matches; nothing was written.
+
+Scope: a caller's path must resolve inside the workspace
+root — plus any extra write roots the SERVER's own
+configuration names in its values (`ops_extra_write_roots`,
+beside `workspace_root`; the venue funnel's credential
+directory is the standing entry). The allowance is
+server-side only: no request form carries a field for it,
+so a caller can never name a root of its own, and a path
+outside root + extra roots is refused exactly as before.
 """
 
 import hashlib
@@ -121,16 +130,22 @@ def staged_write(path, data, mode=None):
         pass
 
 
-def resolve(root, raw):
+def resolve(root, raw, extra_roots=()):
     """Resolve a caller-supplied path against the workspace root
-    and refuse anything that lands outside it."""
+    and refuse anything that lands outside it — or outside a
+    server-configured extra write root (the service's own
+    configuration, never a caller-supplied value)."""
     if not isinstance(raw, str) or not raw:
         raise WriterError("bad_request", "path must be a non-empty string")
     candidate = raw if os.path.isabs(raw) else os.path.join(root, raw)
     resolved = os.path.realpath(candidate)
-    if resolved != root and not resolved.startswith(root + os.sep):
-        raise WriterError("outside_scope", f"{raw} resolves outside the workspace")
-    return resolved
+    if resolved == root or resolved.startswith(root + os.sep):
+        return resolved
+    for extra in extra_roots or ():
+        base = os.path.realpath(extra)
+        if resolved == base or resolved.startswith(base + os.sep):
+            return resolved
+    raise WriterError("outside_scope", f"{raw} resolves outside the workspace")
 
 
 def stamp_of(path):
@@ -152,7 +167,7 @@ def _result_for(path, root, data):
     }
 
 
-def op_write(root, req):
+def op_write(root, req, extra_roots=()):
     content = req.get("content")
     if not isinstance(content, str):
         raise WriterError("bad_request", "content must be a string")
@@ -161,7 +176,7 @@ def op_write(root, req):
         isinstance(mode, bool) or not isinstance(mode, int) or not 0 <= mode <= 0o7777
     ):
         raise WriterError("bad_request", "mode must be an int in 0..0o7777")
-    path = resolve(root, req.get("path"))
+    path = resolve(root, req.get("path"), extra_roots)
     data = content.encode("utf-8")
     staged_write(path, data, mode=mode)
     return _result_for(path, root, data)
@@ -193,16 +208,16 @@ def _patched(text, req):
     return text.replace(old, new, 1)
 
 
-def op_patch(root, req):
-    path = resolve(root, req.get("path"))
+def op_patch(root, req, extra_roots=()):
+    path = resolve(root, req.get("path"), extra_roots)
     text = _read_text(path, req.get("path"))
     data = _patched(text, req).encode("utf-8")
     staged_write(path, data)
     return _result_for(path, root, data)
 
 
-def op_cas_update(root, req):
-    path = resolve(root, req.get("path"))
+def op_cas_update(root, req, extra_roots=()):
+    path = resolve(root, req.get("path"), extra_roots)
     expected = req.get("expected_stamp")
     if not isinstance(expected, str) or not expected:
         raise WriterError("bad_request", "expected_stamp must be a non-empty string")
@@ -226,8 +241,8 @@ def op_cas_update(root, req):
     return _result_for(path, root, data)
 
 
-def op_delete(root, req):
-    path = resolve(root, req.get("path"))
+def op_delete(root, req, extra_roots=()):
+    path = resolve(root, req.get("path"), extra_roots)
     try:
         os.unlink(path)
     except FileNotFoundError:
@@ -259,11 +274,20 @@ def perform(ledger, values, req):
     caller = req.get("caller")
     op = req.get("op")
     root = os.path.realpath(values["workspace_root"])
+    # The extra write roots are the service's own configured
+    # values; a request field of the same name is ignored —
+    # a caller can never widen its own scope.
+    extra_roots = tuple(values.get("ops_extra_write_roots") or ())
     raw_path = req.get("path")
     target = ""
     if isinstance(raw_path, str):
         try:
-            target = os.path.relpath(resolve(root, raw_path), root)
+            resolved = resolve(root, raw_path, extra_roots)
+            target = (
+                os.path.relpath(resolved, root)
+                if resolved == root or resolved.startswith(root + os.sep)
+                else resolved
+            )
         except WriterError:
             target = raw_path
     try:
@@ -272,7 +296,7 @@ def perform(ledger, values, req):
         fn = _OPS.get(op) if isinstance(op, str) else None
         if fn is None:
             raise WriterError("bad_request", f"unknown op: {op!r}")
-        result = fn(root, req)
+        result = fn(root, req, extra_roots)
     except WriterError as exc:
         status = "refused" if exc.name == "outside_scope" else "error"
         _audit(ledger, caller, op, target, status, error=exc.name)
