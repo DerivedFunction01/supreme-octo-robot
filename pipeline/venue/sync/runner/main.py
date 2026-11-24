@@ -20,7 +20,7 @@ from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
 from .claims import ManifestUnreadable, adopt, attach_verdict, load_manifest, option_like_refusal, spawn_daemon, stamp_takeover
-from .replace import acquire_session
+from .replace import acquire_session, record_pin
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
@@ -345,10 +345,12 @@ def main() -> int:
         print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
         return 2
     if pin_session is None and use_lease and rec is not None:
-        # A resume keeps its recorded lineage: the record's pin
-        # (else its launch session) is this fire's pin when the
-        # caller names none; acquire resolves it through renewal.
-        pin_session = rec.get("session_pin") or rec.get("session")
+        # A resume keeps its recorded lineage: the session the
+        # launch actually bound (replace.record_pin) is this
+        # fire's pin when the caller names none — never a
+        # fresh per-invocation resolution, and never the
+        # record's re-stampable current binding.
+        pin_session = record_pin(rec)
     session = run_id  # the lease-disabled fallback's per-run session
     if use_lease:
         if pin_session:
