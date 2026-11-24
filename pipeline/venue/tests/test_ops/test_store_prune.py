@@ -183,7 +183,7 @@ def _job_record(root: Path, run_id: str, job: str, state: str, age_s: int = 0) -
         os.utime(rec, (old, old))
 
 
-def test_terminal_job_payload_files_past_the_floor(tmp_path):
+def test_terminal_job_payload_files_past_the_grace(tmp_path):
     root = _sandbox(tmp_path)
     _job_record(root, "old-job-20260101T000000Z", "old-job", "complete", age_s=49 * 3600)
     job = root / "adapters" / "colab" / "jobs" / "old-job"
@@ -200,6 +200,19 @@ def test_terminal_job_payload_files_past_the_floor(tmp_path):
     assert "adapters/colab/jobs/old-job/verdicts.json" not in chosen
     assert "adapters/colab/jobs/old-job/register.jsonl" not in chosen
     assert "adapters/colab/jobs/old-job/nested/inner.bin" not in chosen
+
+
+def test_terminal_job_payload_files_at_the_evidence_grace_boundary(tmp_path):
+    root = _sandbox(tmp_path)
+    _job_record(root, "cold-job-20260101T000000Z", "cold-job", "complete", age_s=7 * 3600)
+    cold = root / "adapters" / "colab" / "jobs" / "cold-job"
+    _write(cold / "data.bin", age_s=7 * 3600)            # newest activity 7h past: beyond the 6h grace
+    _job_record(root, "warm-job-20260101T000000Z", "warm-job", "complete", age_s=5 * 3600)
+    warm = root / "adapters" / "colab" / "jobs" / "warm-job"
+    _write(warm / "data.bin", age_s=5 * 3600)            # newest activity 5h past: inside the grace
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/cold-job/data.bin" in chosen
+    assert "adapters/colab/jobs/warm-job/data.bin" not in chosen
 
 
 def test_job_with_any_live_record_is_untouched(tmp_path):
@@ -225,13 +238,13 @@ def test_named_excluded_payload_dir_untouched_other_payload_dirs_reclaim(tmp_pat
     assert "adapters/colab/jobs/greenfield-ci-unclaimed-payload/store.bin" in chosen
 
 
-def test_job_with_no_records_and_terminal_job_inside_the_floor_are_untouched(tmp_path):
+def test_job_with_no_records_and_terminal_job_inside_the_grace_are_untouched(tmp_path):
     root = _sandbox(tmp_path)
     ghost = root / "adapters" / "colab" / "jobs" / "ghost-job"
     _write(ghost / "data.bin", age_s=72 * 3600)          # no run records: no evidence of terminality
     _job_record(root, "fresh-job-20260101T000000Z", "fresh-job", "complete", age_s=3600)
     fresh = root / "adapters" / "colab" / "jobs" / "fresh-job"
-    _write(fresh / "data.bin", age_s=72 * 3600)          # terminal, but its newest activity is inside 48h
+    _write(fresh / "data.bin", age_s=72 * 3600)          # terminal, but its newest activity is inside the grace
     chosen = _plan_paths(root)
     assert "adapters/colab/jobs/ghost-job/data.bin" not in chosen
     assert "adapters/colab/jobs/fresh-job/data.bin" not in chosen

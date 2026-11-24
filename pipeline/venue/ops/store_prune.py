@@ -40,7 +40,10 @@ in order:
      files of adapters/colab/jobs/<job>/ when every run
      record stamped with that job is terminal (complete,
      failed, orphaned) and the job's newest record
-     activity is past the same 48 h floor. Never
+     activity is past this class's evidence grace
+     (6 h — terminality is the protection, so the
+     archive classes' 48 h floor does not apply here).
+     Never
      candidates even there: job.json, any *.json or
      *.jsonl file, files git tracks, and protected
      names. A job with no run records, a job with any
@@ -105,6 +108,16 @@ SCRATCH_AGE_FLOOR_S = 3600
 # the low-free window before their consumers re-read
 # them, invisibly, because the prune log named no paths.
 OUTPUT_GRACE_S = 24 * 3600
+
+# The terminal-job payload class's evidence grace: a
+# job's payload files are candidates once its newest
+# record activity is older than this. Terminality is
+# the protection — every record terminal means no run
+# of the job is in flight — so this class does not
+# ride the 48 h archive floor; the grace only leaves
+# room for a terminal run's last evidence to land in
+# its record before the job's payloads read as cold.
+TERMINAL_JOB_EVIDENCE_GRACE_S = 6 * 3600
 
 # Job dirs the terminal-job payload class never enters:
 # shared input stores for in-flight lanes (the segment
@@ -304,7 +317,7 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
                 continue
             if job_dir.name not in job_activity or job_dir.name in job_live:
                 continue
-            if now - job_activity[job_dir.name] <= ARCHIVE_AGE_FLOOR_S:
+            if now - job_activity[job_dir.name] <= TERMINAL_JOB_EVIDENCE_GRACE_S:
                 continue
             for entry in sorted(job_dir.iterdir()):
                 if not entry.is_file():
