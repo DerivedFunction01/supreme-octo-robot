@@ -1,5 +1,5 @@
 """Pass-singleton specimens for the worktree trim (the
-2026-11-24 cure), sharing the fixture harness in
+pass-singleton cure), sharing the fixture harness in
 test_worktree_trim.py: a second parent finding the pass
 lock held exits 0 silently and spawns no workers, worker
 mode never touches the lock, and a dry run is never

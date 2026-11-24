@@ -1,5 +1,5 @@
 """Venue-transport specimens for the worktree trim (the
-2026-11-23 cure): a branch a venue run record names as
+venue-transport cure): a branch a venue run record names as
 its transport base is not trim material while the run
 family is live — non-terminal, or active within the
 6-hour window — in either scope. The held set derives
@@ -23,7 +23,7 @@ def _iso(epoch):
 
 
 class TestVenueTransportHolds(Fixture):
-    """Venue-transport branch holds (2026-11-23 cure).
+    """Venue-transport branch holds.
     The hourly pass twice deleted edgar-sec's
     pperb-base-pin from origin while the PPE packet was
     in flight on it — the packet's emit/check family
