@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""run.py — the mega app's ONE entry point (owner ruling,
-2026-11-14: the proven shape). Every pipeline CLI links
+"""run.py — the mega app's ONE entry point (owner ruling:
+the proven shape). Every pipeline CLI links
 here in-process as a subcommand, and the serving commands
 mount the backends on the platform serving core
 (pipeline/platform/serving.py) — the serving
 implementation remains exactly one. The processes follow
-coupling (owner ruling, 2026-11-15, refining 2026-11-14):
+coupling (owner ruling, refining the entry-point ruling):
 `serve` mounts the two surfaces that stayed coupled —
 scheduling (8796) and attention (8797) — in one process;
 `serve-workbench` mounts the workbench (8792) in its own
@@ -272,8 +272,8 @@ def cmd_serve(argv):
 
 
 def cmd_serve_workbench(argv):
-    """The workbench's own serving process (owner ruling,
-    2026-11-15: process boundaries follow coupling). Its
+    """The workbench's own serving process (owner ruling:
+    process boundaries follow coupling). Its
     feeds assembly saturation must not be able to starve
     the coupled surfaces' health, so this surface serves
     alone, under its own unit and its own health verdict:
@@ -300,8 +300,8 @@ def cmd_serve_workbench(argv):
 
 def cmd_serve_venue(argv):
     """The lease panel's own serving process (owner
-    ruling, 2026-11-15: process boundaries follow
-    coupling, extended to the venue). Its state reads
+    ruling: process boundaries follow coupling,
+    extended to the venue). Its state reads
     shell out synchronously to the lease core — a hung
     call pins its request thread — and the panel faces
     the heaviest polling of the surfaces, so this surface

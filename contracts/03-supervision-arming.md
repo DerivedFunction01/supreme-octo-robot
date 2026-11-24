@@ -27,8 +27,8 @@ never fails the todo write.
   an armed todo whose entry is absent from the registry
   store is the divergence it surfaces; there is no
   never-admitted field state to key on (the pinned
-  doctor keys on `migrated` being false; amendment 3,
-  2026-11-13, replaces that key).
+  doctor keys on `migrated` being false; amendment 3
+  replaces that key).
 - **Sibling seams retained:** the writers locate the
   scheduler registry and the armed directory by
   workspace-relative seams (`WB_SCHEDULER_JOBS_DIR`,
@@ -48,8 +48,8 @@ One entry per armed todo, `wb-progress-<project>-<todo-name>.yaml`
 in the registry (entry form: contract 14; fixture:
 `fixtures/scheduler-entry-wb-progress.yaml`). Written
 through contract 02's writer path — presence in the
-registry store is the entry's admission (amendment 3,
-2026-11-13: no `migrated` / `migrated_at` fields exist
+registry store is the entry's admission (amendment 3:
+no `migrated` / `migrated_at` fields exist
 in the target format; the pinned writer's stamp of the
 todo's arming date does not carry), classified-catalog block
 (origin machine / generality deployment-specific / use_case

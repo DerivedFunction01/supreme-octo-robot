@@ -64,7 +64,7 @@ Outbox). Rules:
   crashes): it polls wakeable pings, wakes the agent
   surface, and acks after work — the wake half of the
   keeper contract; its survival half is frozen in
-  contract 04 (2026-11-13 amendment).
+  contract 04, as amended.
 
 ## The bridge queue (SCH8)
 
@@ -123,7 +123,7 @@ template, target, rule_id, sha256(text)}`.
 - **Settle-first ordering (§9.2a):** the consumer settles
   outstanding bridge records before claiming or enqueueing
   new sends. A merged consumer that enqueues first
-  reintroduces the twin-send class the 2026-11-12 cures
+  reintroduces the twin-send class the cures
   removed — this ordering is contract, not implementation
   detail.
 - **Claim and delivered-only-on-reference (ATT6):** a send
@@ -192,7 +192,7 @@ SCH5, SCH8, SCH4 (ledger format — see the audit-ledger
 note above), SCH9's body-ref + ack-after-work half, ATT2,
 ATT3, ATT5, ATT6, ATT7, ATT8.
 
-## Finding from the frontend build (2026-11-13)
+## Finding from the frontend build
 
 The attention frontend lane records: no owner-item schema
 exists at S0. The item shape the app validates was
@@ -204,7 +204,7 @@ set, and the mock's constructed shape is checked against
 it then. A second, smaller gap: the templates fixture
 carries no `decision-reply` row.
 
-## S6 freeze (2026-11-13) — dispositioned
+## S6 freeze — dispositioned
 
 - **Owner-item schema: FROZEN.** `schemas/owner-item.
   schema.json` joins the schema set, written from the
@@ -230,7 +230,7 @@ carries no `decision-reply` row.
   substrate semantics (`dispatch.sends`), not consumer
   folklore.
 
-## Card-watch source (2026-11-14) — Step 1 freeze
+## Card-watch source — Step 1 freeze
 
 The permission-card watcher's source contract, frozen at
 Step 1 of the card-owner plan for its fan-out lanes. Two
