@@ -1,4 +1,4 @@
-"""The job-end process reap's selection (2026-11-23): the
+"""The job-end process reap's selection: the
 launch stamp wrapper reaps a run's leaked processes at job
 end, scoped to the run's own directories — a process is
 the run's when its working directory or an open file sits

@@ -165,7 +165,7 @@ def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None 
     their sum would fail. The other leases' elapsed burn is already
     inside day/month spent via their live records. For the daily
     check the committed sum is clipped to the current UTC day —
-    the same clipping day_spent gets (owner ruling 2026-11-07):
+    the same clipping day_spent gets (owner ruling):
     a multi-day window charges only today's portion against
     today's cap, and each later day re-prices as it arrives. The
     balance floor and the monthly check keep the full windows:
@@ -181,7 +181,7 @@ def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None 
         # and keepalive bounds.
         return {"ok": False, "reason": "usage-unavailable"}
     if "colab auth required" in (usage_res.stderr or ""):
-        # The wrapper guard's stop-and-surface signal (2026-11-01):
+        # The wrapper guard's stop-and-surface signal:
         # a dead credential is its own refusal reason, never a parse
         # failure — the panel and the reaper both key on it.
         return {"ok": False, "reason": "auth-required"}

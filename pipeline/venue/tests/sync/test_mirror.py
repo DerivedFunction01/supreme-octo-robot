@@ -20,7 +20,7 @@ def report_for(result, item_id):
 
 
 def test_capture_keeps_mirror_when_canonical_is_torn(tmp_path):
-    """2026-11-13: the flap truncated the canonical sessions.json
+    """The flap truncated the canonical sessions.json
     to 0 bytes; json.loads raised on it, the never-capture-empty
     guard fell through, and the capture overwrote the last good
     mirror in the same minute. A torn (unparseable) canonical
@@ -80,7 +80,7 @@ def _token_paths(home):
 
 
 def test_capture_heals_stub_canonical_from_valid_mirror(tmp_path):
-    """2026-11-01: the interactive flow's stub overwrote the canonical
+    """The interactive flow's stub overwrote the canonical
     token and a capture carried the stub into the mirror, destroying
     the last good copy. Capture must now heal instead of propagate."""
     home = tmp_path / "home"

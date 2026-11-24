@@ -75,8 +75,7 @@ WRITER_NAME = "pipeline_platform_writer"
 # leg's provision_config finding). The scheduler-keeper
 # durable-write cure added two more scheduling seams —
 # the ops spine's own staged-write home and the ops
-# client's token store — which the census did not count
-# until the 2026-11-22 drift cure below.
+# client's token store — both counted by the census.
 SEAMS = (
     ("platform release store",
      "pipeline/platform/releases.py",

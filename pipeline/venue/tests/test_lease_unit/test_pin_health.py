@@ -7,7 +7,7 @@ from datetime import timedelta
 
 from unit_harness import NOW, _auto_stub, gate_permissive, lease, repo  # noqa: F401
 
-# --- Session pin + launch health (funnel-hardening, 2026-11-11) ----------------
+# --- Session pin + launch health (funnel-hardening) ----------------
 # The pin is the runner's --session seam: adopt the named lease
 # or refuse pin-unavailable — never substitute, never clear the
 # named record. Launch health demotes a session within its

@@ -57,8 +57,8 @@ three natures that are never blurred.
    file on the client side only (attention review §11).
    Scopes: `read`, `write-state`, `send`, `bridge`, `exec` —
    `bridge` is home-side only, never issued to a venue caller.
-   **`exec` (amendment, 2026-11-14 — the §10.1 input named by
-   contract 04's disposition) denotes delegated execution:**
+   **`exec` (the §10.1 input named by contract 04's
+   disposition) denotes delegated execution:**
    it is the scope the `/ops` surface's `exec` op requires,
    while that surface's `write`/`patch` ops require
    `write-state` (contract 04's frozen mapping). `exec` is

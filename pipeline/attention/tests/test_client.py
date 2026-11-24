@@ -1,5 +1,5 @@
-"""Client pins for the empty-answer cure (2026-11-16,
-C1+C2): a 2xx with an empty or non-JSON body raises the
+"""Client pins for the empty-answer cure (C1+C2): a
+2xx with an empty or non-JSON body raises the
 named EmptyAnswer — the call's landing is unknown —
 instead of a raw JSONDecodeError. The transport is a
 scripted fake opener — no socket, no live surface.

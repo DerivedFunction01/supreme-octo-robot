@@ -10,7 +10,7 @@ The archive is a folder holding the worktree directory itself
 with it, so a move-back restores the tree whole), and a
 manifest. Restoration is mechanical: ops/worktree_restore.sh.
 
-Held set (2026-11-21 cure): a tree that is dirty, unlanded
+Held set: a tree that is dirty, unlanded
 (ahead of base / unmerged), live (a process holds it, or a
 non-terminal run record names it), or explicitly held
 (.trim-hold / holds.txt) is never archived and never counts
@@ -205,7 +205,7 @@ class TestClean(unittest.TestCase):
             self.assertFalse(
                 (root / "repo-a__sib.manifest.txt").exists())
             self.assertTrue((root / "repo-a__fresh").exists())
-            # 2026-11-21 cure: these manifests record no head,
+            # These manifests record no head,
             # so their branches are unverifiable — the purge
             # charges NO branch act for them (branch_local=
             # no-repo here: the fixture workspace holds no
@@ -268,7 +268,7 @@ class TestTrim(Fixture):
             own = fields["tree"].removeprefix("repo-a-").removesuffix("-wt")
             self.assertTrue((adir / "tree" / f"{own}.txt").exists())
             self.assertTrue((adir / "worktree-admin").is_dir())
-        # 2026-11-21 cure: branches are NOT trimmed while
+        # Branches are NOT trimmed while
         # their archives stand — the branch is the restore's
         # registration; the purge trims it (TestPurgeBranch)
         self.assertNotIn("BRANCH-TRIMMED", out.stdout)
@@ -294,9 +294,9 @@ class TestTrim(Fixture):
         self.assertTrue(self.branch_exists("feat/x"))
 
     def test_dirty_tree_is_held(self):
-        # 2026-11-21 cure, replacing the pre-cure pin that a
-        # dirty tree archives whole: uncommitted state is the
-        # held set's first reason (the W-P3NORM-1 loss class —
+        # A dirty tree is held, not archived whole:
+        # uncommitted state is the held set's first reason
+        # (the W-P3NORM-1 loss class —
         # an uncommitted cure archived, then purged). The
         # tree stands, unarchived, branch intact, at cap 0.
         tree = self.add_tree("repo-a-d-wt", "feat/d",
@@ -317,7 +317,7 @@ class TestTrim(Fixture):
         self.assertEqual(self.archives(), [])
 
     def test_branch_trimmed_on_origin(self):
-        # 2026-11-21 cure: the branch trim rides the PURGE,
+        # The branch trim rides the PURGE,
         # not the trim — at trim time the branch stands in
         # both scopes; when the archive expires, the clean
         # phase deletes the local branch (tip == recorded
@@ -416,12 +416,12 @@ class TestTrim(Fixture):
         self.assertIn("act=branch-standdown", ledger)
 
     def test_pins_file_has_no_effect(self):
-        # owner's ruling 2026-11-15: no carve-out by name —
-        # a branch named in a .worktree-trim-pins file is
+        # owner's ruling: no carve-out by name — a branch
+        # named in a .worktree-trim-pins file is
         # treated exactly like any other: its landed tree
         # archives at the cut, and its branch trims at the
-        # purge. (The 2026-11-21 held set is work state, not
-        # a name list; a pins file confers no hold.)
+        # purge. (The held set is work state, not a name
+        # list; a pins file confers no hold.)
         self.add_origin()
         (self.main / ".worktree-trim-pins").write_text("feat/p\n")
         self.add_landed_tree("repo-a-p-wt", "feat/p",
@@ -548,10 +548,10 @@ class TestTrimSecondRepo(Fixture):
     slug = "repo-b"
 
     def test_union_branch_trimmed_like_any_other(self):
-        # owner's ruling 2026-11-15: no carve-out by name —
-        # a form/union-* branch is treated exactly like any
+        # owner's ruling: no carve-out by name — a
+        # form/union-* branch is treated exactly like any
         # other: archived at the cut, branch trimmed at the
-        # purge (2026-11-21 timing), in both scopes
+        # purge, in both scopes
         self.add_origin()
         self.add_landed_tree("repo-b-u-wt", "form/union-x",
                              [("u.txt", "u\n")], NOW - 4000)

@@ -1,4 +1,4 @@
-"""Funnel hardening (2026-11-11) against the fake colab CLI:
+"""Funnel hardening against the fake colab CLI:
 the session pin, launch confirmation and launch-lost closure,
 launch-health journaling, and the sweep's stale-running and
 stale-starting rules."""
@@ -13,7 +13,7 @@ from pathlib import Path
 
 from runner_harness import FAKE, _fire_smoke, _write_run_record, run_bin, run_verb, runner_env, runner_inprocess, runs_dir, terminal_events  # noqa: F401
 
-# --- Funnel hardening (2026-11-11): pin, launch truth, health ----------------
+# --- Funnel hardening: pin, launch truth, health ----------------
 
 
 def _slow_probe_wrapper(tmp_path):
@@ -34,7 +34,7 @@ def _slow_probe_wrapper(tmp_path):
 
 
 def test_probe_timeout_fails_the_run_instead_of_stranding_it(tmp_path):
-    """The consol defect (2026-11-11): the verify-probe exec
+    """The consol defect: the verify-probe exec
     timed out at 300 s and the uncaught TimeoutExpired killed
     the launcher, leaving the record at "starting" — five
     launches in a row. A probe timeout is now an upload failure:
@@ -103,7 +103,7 @@ def test_poll_closes_a_never_landed_run_as_launch_lost(tmp_path, monkeypatch, ca
     total absence past the launch grace closes the record as
     launch-lost instead of reporting still-running forever.
 
-    Determinism cure (2026-11-14): the poll now drives
+    The determinism cure: the poll now drives
     in-process against the fake venue. The subprocess form
     fired a whole smoke run just to stand over a live session,
     then polled through the fake CLI — a live-process pipeline
@@ -199,7 +199,7 @@ def test_sweep_closes_a_stale_starting_record_and_spares_a_fresh_one(tmp_path):
     rewrites the file) is past the stale bound is a phantom
     whose launcher died in the upload phase; it closes
     launch-lost instead of reading as in-flight work forever
-    (2026-11-11: six records sat in "starting" for
+    (six records sat in "starting" for
     hours). A fresh "starting" record — a launch in progress —
     is untouched."""
     env = runner_env(tmp_path)
@@ -239,7 +239,7 @@ def test_sweep_orphans_a_starting_record_on_a_dead_session(tmp_path):
 
 
 def test_launch_record_carries_its_final_phase(tmp_path):
-    """Launch-phase stamps (2026-11-12): a completed launch's
+    """Launch-phase stamps: a completed launch's
     record ends at launch_phase "launched" — the stamps exist
     so a record stranded at "starting" by a killed launcher
     names the phase it died in (uploading / launching), after

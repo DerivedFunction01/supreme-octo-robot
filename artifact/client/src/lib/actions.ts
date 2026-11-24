@@ -1,5 +1,5 @@
-// THE single action layer of the one client (owner ruling
-// 2026-11-16, audit Addendum 3: one integrated frontend).
+// THE single action layer of the one client (owner ruling,
+// audit Addendum 3: one integrated frontend).
 //
 // Every view in this client reaches the server through this
 // module and no other: one `createActionClient` typed over

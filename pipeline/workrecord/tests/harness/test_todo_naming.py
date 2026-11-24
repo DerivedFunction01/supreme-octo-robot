@@ -1,4 +1,4 @@
-"""Slug identity for file todos (the owner's 2026-11-14
+"""Slug identity for file todos (the owner's
 naming ruling): the slug rule's accept/reject table, the
 legacy form's transition acceptance, name derivation,
 and the armed-name shapes the rule produces.

@@ -1,6 +1,5 @@
 // The shared react-query keys, named once here instead
-// of hand-rolled per call site (contracts audit,
-// 2026-11-05). Only keys that more than one surface
+// of hand-rolled per call site (contracts audit). Only keys that more than one surface
 // reads or invalidates live here; a section's private
 // keys stay in its section.
 //

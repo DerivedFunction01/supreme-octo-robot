@@ -8,7 +8,7 @@ import type { LiveHost } from "./host";
 
 
 export function updateSettings(h: LiveHost, patch: Partial<AppSettings>): AppSettings {
-  // W-C5 disposition (ruled local-only, 2026-11-15):
+  // W-C5 disposition (ruled local-only):
   // the writable fields are a
   // client preference (boardLaneWidth) and a local
   // override of a config-served default (guardedSaves

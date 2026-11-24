@@ -1,6 +1,6 @@
 // The route table — ported from the original viewer's
-// sections/shell/ShellRoutes (contracts audit B1,
-// 2026-11-05): which section a route renders. The
+// sections/shell/ShellRoutes (contracts audit B1):
+// which section a route renders. The
 // content is identical for both presentations — only
 // the chrome around it differs — so the switch lives
 // here once and the mount (index.tsx) composes it

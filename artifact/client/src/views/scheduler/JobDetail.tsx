@@ -44,7 +44,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
  * in the full remaining width. On the stat row above,
  * these values wrap inside the row's leftover space as a
  * narrow right-aligned column — faithful text, hard to
- * scan (scheduler critic confirmation, 2026-11-17) — and
+ * scan (scheduler critic confirmation) — and
  * a long value squeezes its label into a sliver. */
 function WideFact({ label, children }: { label: string; children: ReactNode }) {
   return (

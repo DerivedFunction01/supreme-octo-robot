@@ -258,8 +258,8 @@ def _queue_due(queue: list, in_flight: set) -> list:
 
 def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> list:
     """The family-concurrency measure (owner
-    enforcement ruling, 2026-11-19, carried as the
-    registry's staffing contract): fewer families in
+    enforcement ruling, carried as the registry's
+    staffing contract): fewer families in
     flight than the contract's minimum, or all
     compute on one session while another live session
     carries none, or prerequisite-due queue work

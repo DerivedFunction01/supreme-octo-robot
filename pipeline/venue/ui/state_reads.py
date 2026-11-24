@@ -21,7 +21,7 @@ thread the readers wait on only up to the cold-wait
 bound. The bound governs the reader's wait, never the
 build's life: a build slower than the wait still runs
 to completion and warms the cache for the next read
-(2026-11-15: a build slower than the compute's own
+(a build slower than the compute's own
 subprocess bound was killed at the bound on every read,
 so a restarted panel under account load could never
 warm a key and its state routes 502'd permanently).
@@ -74,7 +74,7 @@ class StateReads:
 
     def _prime(self, persister) -> None:
         """Seed the cache from the persisted builds (the
-        panel-restart path, 2026-11-17): a persisted build
+        panel-restart path): a persisted build
         is the last successful build the previous process
         landed, so it enters exactly as a stored build
         does — except born refresh-eligible, its stamp set

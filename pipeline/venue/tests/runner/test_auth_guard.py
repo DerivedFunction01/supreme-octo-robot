@@ -1,12 +1,13 @@
 """bin/colab-run's auth guard, exercised end to end.
 
-2026-11-01: a failed token refresh dropped the Colab CLI into its
-interactive login flow mid-automation; the flow overwrote the stored
-token with a stub and printed its prompt where callers expected data,
-and a live lease's record was deleted under the junk reading. The
-guard in bin/colab-run's colab() is the fix: never invoke the CLI on
-an invalid token, snapshot + atomically restore around every call,
-and turn any prompt-carrying result into an auth-required refusal.
+The failure class: a failed token refresh drops the Colab CLI into
+its interactive login flow mid-automation; the flow overwrites the
+stored token with a stub and prints its prompt where callers expect
+data, and a live lease's record is deleted under the junk reading.
+The guard in bin/colab-run's colab() is the cure: never invoke the
+CLI on an invalid token, snapshot + atomically restore around every
+call, and turn any prompt-carrying result into an auth-required
+refusal.
 
 The fake CLI here is an executable on PATH, NOT $COLAB_BIN — the
 guard is deliberately inert under COLAB_BIN so the fake-CLI suites
@@ -132,7 +133,7 @@ def test_timed_out_flow_still_restores_token(tmp_path):
 
 
 def test_binding_truncated_by_call_is_restored(tmp_path):
-    """2026-11-13: the CLI rewrites sessions.json non-atomically;
+    """The CLI rewrites sessions.json non-atomically;
     a write denied after the truncate left 0 bytes and every
     recorded session read absent. The funnel restores its
     snapshot whenever a call leaves the binding unparseable."""
@@ -163,7 +164,7 @@ def test_binding_rewritten_valid_is_the_clis_own_view(tmp_path):
 
 
 def test_pruned_entry_with_live_lease_record_is_restored(tmp_path):
-    """2026-11-13 evening: under the recovery traffic the CLI's
+    """Under recovery traffic the CLI's
     rewrites dropped individual entries from a parseable binding
     and runs orphaned mid-flight. An entry whose lease record
     still lives is restored verbatim from the snapshot, merged

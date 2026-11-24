@@ -33,15 +33,17 @@ class ScheduleTests(unittest.TestCase):
 
     def test_ec2_spring_forward_gap(self):
         cad = {"type": "daily", "at": "02:30"}
-        # 2026-03-08: 02:30 does not exist in New York; fires at the
-        # first valid instant after the gap, 03:00 EDT = 07:00Z.
+        # On the spring-forward date, 02:30 does not exist in
+        # New York; it fires at the first valid instant after
+        # the gap, 03:00 EDT = 07:00Z.
         point = schedule.first_point_at_or_after(cad, NY, z(2026, 3, 8, 0, 0))
         self.assertEqual(point, z(2026, 3, 8, 7, 0))
 
     def test_ec3_fall_back_repeated_hour_fires_once(self):
         cad = {"type": "daily", "at": "01:30"}
-        # 2026-11-01: 01:30 happens twice; the grid yields the
-        # first occurrence, 01:30 EDT = 05:30Z, exactly once.
+        # On the fall-back date, 01:30 happens twice; the grid
+        # yields the first occurrence, 01:30 EDT = 05:30Z,
+        # exactly once.
         point = schedule.first_point_at_or_after(cad, NY, z(2026, 11, 1, 0, 0))
         self.assertEqual(point, z(2026, 11, 1, 5, 30))
         latest, collapsed, new_due = schedule.advance(cad, NY, point, z(2026, 11, 1, 8, 0))
@@ -51,7 +53,7 @@ class ScheduleTests(unittest.TestCase):
 
     def test_weekly_point(self):
         cad = {"type": "weekly", "dow": ["Wed"], "at": "19:00"}
-        # From Friday 2026-10-30 12:00Z, next is Wed Nov 4 19:00 EST.
+        # From the Friday specimen at 12:00Z, next is Wed 19:00 EST.
         point = schedule.first_point_after(cad, NY, z(2026, 10, 30, 12, 0))
         self.assertEqual(point, z(2026, 11, 5, 0, 0))
 

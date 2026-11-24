@@ -1,7 +1,7 @@
 """Lease unit tests: nameless-assignment adoption — the
 endpoint form of adopt, with the assignments/bind seams
 stubbed at the sessions module (no subprocess, no library).
-The production shapes are the 2026-11-15 rotated pair: an
+The production shapes are the rotated pair: an
 endpoint whose listing line wears "?", an identity stamp and
 a renewal config surviving under its prior name."""
 

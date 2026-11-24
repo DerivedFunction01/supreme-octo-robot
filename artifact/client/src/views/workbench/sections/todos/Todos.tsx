@@ -175,7 +175,7 @@ export function TodosSection({ slug, projectName }: { slug: string; projectName:
     refetchInterval: 30000,
   });
   // "All projects" is assembled from ONE CALL PER PROJECT
-  // (heavy-feed batching, 2026-11-01), not the /api/todos
+  // (heavy-feed batching), not the /api/todos
   // monolith: that aggregate re-derived every project
   // before its first byte (1.3 MB, ~2 s warm, far longer
   // cold) and parked the whole list behind the slowest

@@ -1,4 +1,4 @@
-"""Standing bridge core behaviour (plan: the 2026-11-01 lobby-bridge plan):
+"""Standing bridge core behaviour (plan: the lobby-bridge plan):
 the shared command builder validates under the agent's own rules,
 the duty installs under a grant and cools down, and an armed pass
 ferries the log (mirror, outbox acknowledgement, re-plant) and

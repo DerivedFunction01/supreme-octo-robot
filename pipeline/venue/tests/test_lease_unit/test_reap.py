@@ -1,7 +1,7 @@
 """Lease unit tests: reap, release, heartbeat, and status reads
 with stub colab callables (no subprocess).
 
-Pins the 2026-10-29 failure mode: an unreadable sessions list is
+Pins the failure mode: an unreadable sessions list is
 UNKNOWN, never death — reap must not clear the record, and a
 failed release must keep the record so the lease is never
 forgotten while it may still bill.
@@ -27,7 +27,7 @@ def test_reap_keeps_record_when_sessions_unreadable(repo, tmp_path, monkeypatch)
 
 
 def test_reap_clears_only_on_confirmed_absent(repo, tmp_path, monkeypatch):
-    """Confirmation is across passes (2026-11-13): one absent
+    """Confirmation is across passes: one absent
     read can be the session list's flicker, so the first absent
     reap stamps and keeps; only a pass still absent past the
     confirmation window clears the record."""
@@ -86,7 +86,7 @@ def test_reap_pulses_kernel_when_due_and_skips_when_fresh(repo, tmp_path, monkey
 
 
 def test_reap_pulse_precedes_identity_and_stamps_the_fresh_record(repo, tmp_path, monkeypatch):
-    """2026-11-21 liveness cure, two pins. (1) Order: the
+    """The liveness cure, two pins. (1) Order: the
     kernel pulse is the liveness heartbeat — under a sick
     CLI every furniture dial burns tens of seconds, and
     queued behind the identity exec the pulse starved for
@@ -144,7 +144,7 @@ def test_release_keeps_record_when_stop_fails(repo, tmp_path, monkeypatch):
 
 def test_heartbeat_age_stall_degrades_to_unknown_with_short_bound(repo, tmp_path, monkeypatch):
     """A stalled heartbeat download (the file channel can hang on the
-    egress proxy's IPv4 endpoint, diagnosed 2026-11-01) must degrade
+    egress proxy's IPv4 endpoint) must degrade
     to age-unknown quickly — never wedge a status/state read behind
     the old 120 s bound."""
     seen = {}
@@ -220,7 +220,7 @@ def test_ensure_keepalive_stalled_launch_is_a_result_not_an_exception(repo, tmp_
 
 
 def test_reap_pulses_even_when_keepalive_relaunch_stalls(repo, tmp_path, monkeypatch):
-    """Regression for 2026-11-01: reap died inside the keepalive
+    """Regression: reap died inside the keepalive
     relaunch's stalled upload before ever reaching the kernel pulse,
     leaving the lease with no activity channel at all. The pulse is
     an exec — it must not be starved by a file-channel failure."""
@@ -267,8 +267,7 @@ def test_live_sessions_empty_listing_has_no_phantom(repo):
     """The CLI answers an empty account with '[colab] No active
     sessions.' — its own log prefix is not a session name, and the
     listing must read as empty, never as a session named 'colab'
-    (the phantom the access list stamped unattributed on
-    2026-11-05)."""
+    (the phantom the access list stamped unattributed)."""
 
     def stub(*a, **k):
         if a and a[0] == "sessions":

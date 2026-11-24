@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from fake_harness import PNOW, FakeColab, _spool_kinds, gate_repo, lease_bin, lease_env, lease_mod, record, record_files, run_lease, scratch_repo  # noqa: F401
 
-# --- Caller attribution seams (plan: the 2026-11-04 caller-attribution plan) --
+# --- Caller attribution seams (plan: the caller-attribution plan) --
 # The core stamps the caller it is given (the wrapper seams own
 # validation); these tests pin the stamping, the demand carry, the
 # extend fill, and the CLI's claim-time refusal.

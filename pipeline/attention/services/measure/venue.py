@@ -325,7 +325,7 @@ def orphans_at(records: list, now: datetime, window_minutes: float) -> list:
 def terminal_unconsumed_at(records: list, now: datetime) -> list:
     """A programme's terminal runs in the shapes the
     terminal-unconsumed class covers — the three
-    specimens of the 2026-11-20 commission:
+    specimens of the commission:
 
     failed — a payload finish in state failed (the
     clean specimen: prompt terminal record, zero

@@ -95,7 +95,7 @@ def place_token() -> None:
     staged = KIT / "token.json"
     if staged.exists():
         TOKEN_CANONICAL.parent.mkdir(parents=True, exist_ok=True)
-        # Atomic placement (owner ruling, 2026-11-01): stage to a .tmp
+        # Atomic placement (owner ruling): stage to a .tmp
         # sibling and rename over the live file — the token is never
         # written in place under its live name, so an interrupted
         # placement cannot destroy or expose a half-written credential.

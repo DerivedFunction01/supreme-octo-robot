@@ -11,7 +11,7 @@ extracted write.
   (§10.3 — legacy records are stamped `venue: colab` once;
   no read-time default exists), the panel's venue-keyed
   portions, and the registries' re-homing.
-- **Landed (S5, 2026-11-13):** executed against the advanced
+- **Landed (S5):** executed against the advanced
   baseline `8e9cb9b` (the standing collector ports with the
   tree). The tree here is the venue root in the runner's
   self-rooting shape: `sync/` (lease core + runner),

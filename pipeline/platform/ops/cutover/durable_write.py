@@ -7,7 +7,7 @@ run pass, one in N is denied, and a single denial used to
 kill install-units.sh's generation step outright, which the
 watchdog ladder then read as an unclassifiable unit and
 failed loud on a healthy service (three false "server down"
-wakes on 2026-11-21 alone; the same shape as the 2026-11-20
+wakes in one day alone; the same shape as the earlier
 outage's empty --check classifications).
 
 The write itself is the platform's unified writer

@@ -1,5 +1,5 @@
 // Headless pin for the ?api= HIGH finding's cure
-// (2026-11-16; the runner cure b54ebb2 is the class
+// (the runner cure b54ebb2 is the class
 // standard): the published form's live base is the
 // serving origin, and no injection can point the store
 // off-origin. Four legs —

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Date-uniqueness component: one shared date helper per
-intent (owner ruling 2026-11-16, dup-2026-11-16),
+intent,
 re-expressed as a registry gate leg.
 
 NOT gate.writeruniqueness (the write graph) and not
@@ -12,7 +12,7 @@ is allowed to be implemented.
 The invariant: every date/datetime intent has one homed
 module per cluster — extension only at the home — because
 a private copy drifts: the tree carried 33 production
-copies of five intents (census, dup-2026-11-16), several
+copies of five intents, several
 already divergent in exactly the corners that matter
 (naive stamps forced to UTC or not, malformed stamps
 raising or serving None, second-precision truncation or

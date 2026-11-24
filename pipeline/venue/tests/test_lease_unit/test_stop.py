@@ -55,7 +55,7 @@ def test_stop_session_safe_fallback_call_failed_is_failed(monkeypatch, tmp_path)
 
 
 def test_no_raw_unassign_call_remains():
-    """The bodiless-POST defect (411, 2026-11-04) lived in three raw
+    """The bodiless-POST defect (411) lived in three raw
     call sites; none may return. The sanctioned form replays the
     client's two-step flow with a body attached."""
     lease_src = "".join(

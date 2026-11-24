@@ -2,7 +2,7 @@
 fixture /proc, the collection duty's stamps and throttle, and
 the served state's suspect derivation.
 
-The census exists for the 2026-11-12 leaks: two next-servers
+The census exists for the leaked-server class: two next-servers
 parented to init with deleted cwds held ports 3271/3273 on a
 live session, invisible to every run record, one voiding a
 consumer's draw by answering its health check."""

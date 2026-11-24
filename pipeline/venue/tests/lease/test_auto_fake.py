@@ -113,7 +113,7 @@ def test_unrequest(tmp_path):
     assert run_lease(env, "auto")["action"] == "no-demand"
 
 
-# --- Session shape gate (plan: the 2026-11-04 agent-session-shape-gate plan) --
+# --- Session shape gate (plan: the agent-session-shape-gate plan) --
 # These tests pop the suite's test actor claim so the demand path
 # runs as a plain agent actor, exactly as a thread's demand does.
 

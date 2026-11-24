@@ -2,7 +2,7 @@
 paths, with stub colab callables (no subprocess).
 
 Pins the retry-reachability contract (specimen: ember
-r1794417373, 2026-11-11 — a lock-contended provisioning
+r1794417373 — a lock-contended provisioning
 failure at first registration could never retry, because the
 acquire adoption branch only fired the ensure when NO stamp
 was on file, so the first failed stamp was terminal for the

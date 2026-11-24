@@ -1,5 +1,5 @@
-"""The served classification axis (contract 09, amendment
-2026-11-13): every job view carries `audience`, and for
+"""The served classification axis (contract 09, as amended):
+every job view carries `audience`, and for
 built-ins `family` + `open_in`. The client renders the axis
 and never derives it, so it is served from here.
 

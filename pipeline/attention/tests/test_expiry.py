@@ -344,8 +344,8 @@ class HardStopItemTests(unittest.TestCase):
 
 class ExemptionTests(unittest.TestCase):
     def _returned_item(self, state):
-        """The worked example's shape: ruled 2026-11-13,
-        fulfillment stalled — the ruling stands."""
+        """The worked example's shape: the ruling stands —
+        fulfillment stalled."""
         item = _item(state, "decision", timedelta(days=10))
         item["triage"] = "done"
         item["decision"] = {

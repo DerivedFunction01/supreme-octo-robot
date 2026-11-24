@@ -1,6 +1,6 @@
 """Scheduler entries for armed progress schedules.
 
-RETIRED (supervision plan Step 6, 2026-11-19): the
+RETIRED (supervision plan Step 6): the
 scheduler no longer fires progress-check — the
 attention tick's armed rows are the check now, and
 wb sends the steers. This module is removal-only:
@@ -12,7 +12,7 @@ scheduler entries. The doctor flags any lingering
 entry as drift.
 
 The mechanism behind the progress schedules (the owner's
-2026-10-31 commission: armed work must not stall waiting
+commission: armed work must not stall waiting
 for an agent to create a schedule by hand). The scheduler
 server's registry is local files — one YAML entry per job,
 rescanned every tick — so creating a schedule IS writing
@@ -309,8 +309,8 @@ def check_todo(plans_dir, todo_id, *, now=None):
     recorded hold as a stall — the Edgar greenfield
     Step 3 hold (progress_check: off, a HOLD RECORD on
     the body, one pre-hold checkpoint) drew repeated
-    STALLED escalations from that derivation
-    (2026-11-16). A stop status is still named first
+    STALLED escalations from that derivation.
+    A stop status is still named first
     (finished or paused work), and a todo whose
     cadence does not parse gets a no-verdict line,
     never an on-track."""

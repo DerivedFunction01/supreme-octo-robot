@@ -444,7 +444,7 @@ def test_refused_attach_produces_no_verdict_and_fails(tmp_path):
     + the detached alternative) instead of failing it, so the
     payload never runs and no verdict exists. The driver must
     not report success for a plant that wrote nothing: exit 1,
-    the non-landing named (2026-11-11: lanes built hours of
+    the non-landing named (lanes built hours of
     work on refused plants that exited 0)."""
     driver = make_fake_repo(tmp_path)
     local = tmp_path / "src.txt"

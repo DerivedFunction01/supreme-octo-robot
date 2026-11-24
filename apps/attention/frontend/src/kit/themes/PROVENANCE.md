@@ -1,6 +1,6 @@
 # Vendored kit — provenance
 
-Vendored verbatim 2026-11-13 from the Workhorse Kit v1 home
+Vendored verbatim from the Workhorse Kit v1 home
 (the spec-driven-starter repo's `workhorse-kit/` directory):
 
 - `themes/` — the generated CSS distribution (`index.css`,
@@ -23,7 +23,7 @@ copies under `../components/` + `../lib/`; the AppShell
 re-point deleted them — the alias is the standing form, the
 same consumption the runner and workbench apps use.)
 
-Re-vendored 2026-11-13 (kit pass): `index.css`, `olive.css`,
+Re-vendored (kit pass): `index.css`, `olive.css`,
 and `teal.css` regenerated in the kit's home and re-vendored
 byte-identical — `index.css` no longer imports a `katex.css`
 (gap K2, closed in the kit: the kit ships no math component

@@ -53,7 +53,7 @@ REQUIRED_TODO_FIELDS = ("id", "title", "status",
                         "created", "updated")
 
 # A todo's name is its id: a GitHub-like slug (the
-# owner's 2026-11-14 naming ruling — todos carry
+# owner's naming ruling — todos carry
 # descriptive names like `venue-runner`, not opaque
 # tokens). The rule mirrors repository-name rules,
 # adapted to the charset the store's filenames, entry
@@ -143,7 +143,7 @@ def parse_cadence(value):
 # by the writer at PROGRESS_DEFAULT_CADENCE on the
 # doing move — arming is automatic, so monitored work
 # never depends on someone remembering a flag. The
-# default is 15m (the owner's 2026-11-03 ruling: the
+# default is 15m (the owner's ruling: the
 # shorter interval catches dead or erroring work a lot
 # earlier); an explicit cadence remains the override,
 # and no cadence runs longer than 30m by convention.
@@ -151,8 +151,8 @@ PROGRESS_OPT_OUT = "off"
 PROGRESS_DEFAULT_CADENCE = "15m"
 
 
-# The goal contract (goal-prompt contract plan,
-# 2026-11-12): a programme's standing bundle may carry
+# The goal contract (goal-prompt contract plan):
+# a programme's standing bundle may carry
 # a contract — contract.md in the bundle directory —
 # as a field block. Four fields are filled per
 # programme (Programme, Objective, Complete when,

@@ -4,7 +4,7 @@ sits behind a session name, stamped and re-checked.
 A session's runtime can be replaced under its lease name — a
 platform recycle, a renewal-adjacent swap — and before this
 module nothing recorded which runtime a lease was talking
-to: the cozy-pilot-61 recycle (2026-11-11) erased a running
+to: the cozy-pilot-61 recycle erased a running
 job's entire /content footprint and the keepalive's silence
 read as staleness and relaunched onto the new runtime, a
 silent self-heal masking the loss; the ember renewal swap the

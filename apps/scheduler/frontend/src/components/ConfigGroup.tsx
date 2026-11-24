@@ -1,6 +1,6 @@
 // The Config group — rendered on a job's detail ONLY when
 // the served detail carries a config block (knob-bearing
-// entries; contract 09, amendment 2026-11-13). The form is
+// entries; contract 09, amendment). The form is
 // the served form: every knob's label, type, unit, value,
 // and allowed range come from the adapter's ConfigView —
 // this component hardcodes no knob. Saves go through the
@@ -62,12 +62,12 @@ export function ConfigGroup({
       <Group>
         {config.knobs.map((knob) => (
           // Stacked two-line discipline (the owner's row
-          // ruling, 2026-11-13): the knob label gets its own
+          // ruling): the knob label gets its own
           // full-width line — beside the input it truncated
           // ("Low tier — home free sp…") — and the input +
           // unit ride the line below, with the served range
           // as that line's details text. Neither line
-          // truncates (mobile critic, 2026-11-15): at phone
+          // truncates (mobile critic): at phone
           // width the label still ellipsized ("Topic set
           // register — per-topic allow…") and the range —
           // the parameter being edited — cut mid-number

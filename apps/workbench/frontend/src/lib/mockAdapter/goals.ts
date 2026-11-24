@@ -32,7 +32,7 @@ export async function postGoalStatus(h: MockHost, slug: string, post: Omit<Statu
   const g = h.s.db.goals.find((x) => x.slug === slug);
   if (!g) throw new Error(`unknown goal ${slug}`);
   if (post.status_code === "BLOCKED-OWNER" || post.status_code === "BLOCKED-HARD") {
-    // Contract 11 amendment (2026-11-13): a blocked post
+    // Contract 11 amendment: a blocked post
     // without its cited basis is invalid at the writer.
     // The citation is the poster's; the verification stamp
     // is applied here, by the verifying party (main), as

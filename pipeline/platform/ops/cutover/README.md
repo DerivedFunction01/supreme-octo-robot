@@ -13,7 +13,7 @@ against scratch copies (manifest format:
 `{driver: "pass"}`); the freeze inputs still owed are
 named at the end, not worked around.
 
-## Topology note (owner rulings, 2026-11-14)
+## Topology note (owner rulings)
 
 - **One serving process.** The mega app serves through a
   single root entry (`run.py`, repo root): every pipeline
@@ -333,7 +333,7 @@ being runnable.
   the verification output as proof). An artifact still
   carrying a pre-cure embedded build blocks C3.
 - **C3.** Push the remade history to origin (authorized
-  as a cutover step by the 2026-11-14 ruling). Record
+  as a cutover step by the owner's ruling). Record
   sha + time.
 - **C4.** The two successors are named in the record —
   frontend handler, backend handler — the `@workhorse`

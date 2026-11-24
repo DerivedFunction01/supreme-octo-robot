@@ -1,5 +1,5 @@
 // Client build — ONE client, ONE bundle, ONE document
-// (owner ruling 2026-11-16, audit Addendum 3: a single
+// (owner ruling, audit Addendum 3: a single
 // integrated frontend shell; the four apps are views of
 // this client).
 //
@@ -11,17 +11,16 @@
 // graph, one entry document, one router, one action
 // layer; no per-app document, page build, or relay.
 //
-// The per-view split this build carried from the
-// 2026-11-20 remake (perf lane L-D's `splitting: true`
-// delta, one lazy chunk per app view) is RETIRED
-// (2026-11-22): the platform's CVM publish stage
-// requires exactly one JS bundle in the staged client,
-// and the split build failed that stage with 85 JS
-// files on the 2026-11-22 republish attempt — a split
-// bundle cannot be published at all, so the delta's
-// perf intent has no served surface to act on. The
-// canonical single bundle is the form the 2026-11-20
-// published build carries. The mount seam's dynamic
+// The per-view split this build once carried (perf
+// lane L-D's `splitting: true` delta, one lazy chunk
+// per app view) is RETIRED: the platform's CVM publish
+// stage requires exactly one JS bundle in the staged
+// client, and the split build failed that stage with
+// 85 JS files on a republish attempt — a split bundle
+// cannot be published at all, so the delta's perf
+// intent has no served surface to act on. The
+// canonical single bundle is the published form. The
+// mount seam's dynamic
 // imports stay in the source; if the platform grows a
 // split-capable publish stage, the delta can return
 // behind this file's shape check.

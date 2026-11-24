@@ -63,8 +63,8 @@ export function jobView(store: Store, rt: JobRuntime, now: number): JobView {
     else break;
   }
   const suspended = entry.status === "suspended";
-  // The served classification (contract 09, amendment
-  // 2026-11-13): projected from the store's classification
+  // The served classification (contract 09, amendment):
+  // projected from the store's classification
   // table; the client never derives it. The schema checker
   // proves the table covers every seeded entry.
   const cls = CLASSIFICATION[entry.id] ?? {

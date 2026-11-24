@@ -231,7 +231,7 @@ class TestWriters(SeamCase):
                          [])
 
     def test_doing_move_without_flag_writes_no_entry(self):
-        # End to end through the writer (2026-11-03):
+        # End to end through the writer:
         # no --progress anywhere, and the doing move
         # still arms the todo (15m) — but the arm now
         # writes the attention row, not a scheduler
@@ -286,7 +286,7 @@ class TestCheck(SeamCase):
         self.assertIn(todo["id"], line)
 
     def test_opt_out_gap_reads_opted_out_not_stalled(self):
-        # The Edgar greenfield Step 3 shape (2026-11-16)
+        # The Edgar greenfield Step 3 shape
         # as a fixture: an opted-out todo, deliberately
         # held, with historical conforming checkpoints
         # on file. The check once derived a verdict from
@@ -342,7 +342,7 @@ class TestCheck(SeamCase):
 
     def test_done_flip_checkpoint_is_not_a_stall(self):
         # The refresh-step-6-verdict-v2 zombie stall
-        # (2026-11-16) as a fixture: a todo whose last
+        # as a fixture: a todo whose last
         # conforming checkpoint is its done flip at
         # 04:46:05Z, read at T + 3 cadences. The watch
         # pinged the real todo STALLED in two consecutive
@@ -585,7 +585,7 @@ class TestDoctor(SeamCase):
 
 class TestTempGuard(unittest.TestCase):
     """The leak guard: a scratch (temp-root) project's
-    sync never touches the LIVE jobs dir. The 2026-11-08
+    sync never touches the LIVE jobs dir. The
     incident: a suite arming fixture todos with no jobs
     seam rendered ${WS}/tmp-gate/... entries into the
     live registry; the fixture dirs died with their runs

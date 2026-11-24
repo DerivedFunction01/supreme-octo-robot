@@ -292,7 +292,7 @@ def derive_orphan(repo: Path, live_entry: dict, evidence_session: str | None = N
 #
 # Local why: an assignment whose name is lost server-side is
 # invisible to the name-keyed census above — it bills on with
-# no row anywhere (2026-11-15: the first-rotation pair stood
+# no row anywhere (the first-rotation pair stood
 # assigned for hours before a human read the assignments list
 # by hand). The reap pass detects them (detect_nameless,
 # beside unattributed detection) and the census serves them

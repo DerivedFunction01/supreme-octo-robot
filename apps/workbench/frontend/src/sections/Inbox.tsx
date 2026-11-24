@@ -91,7 +91,7 @@ export function Inbox() {
         {awaiting.map((m, i) => (
           <Row key={m.id} last={i === awaiting.length - 1}>
             {/* Two-line discipline (the kit Row form, owner's
-                row ruling 2026-11-13): line 1 is the kind chip +
+                row ruling): line 1 is the kind chip +
                 the truncating title; the actions ride line 2
                 beside the truncating sub, flex-none — neither
                 text line competes with the chips for width, so

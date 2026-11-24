@@ -216,7 +216,7 @@ _UNSET = object()
 
 def set_budget_caps(repo: Path, daily=_UNSET, monthly=_UNSET, standing_daily=_UNSET, venue: str | None = None, account: str | None = None) -> dict:
     """Update the budget caps in config/lease.json — the operator's
-    throttle, set from the panel (2026-11-01: the caps are the operator's to
+    throttle, set from the panel (the caps are the operator's to
     set, not a fixed system wall; he holds 700+ CU banked with no
     competing use for it). Each cap is a non-negative number or None
     (no cap — the budget guard's own semantics); an omitted argument
@@ -383,8 +383,8 @@ def state_records(colab, repo: Path) -> dict:
     slowest record, not their sum. The session listing itself is
     one shared snapshot for the whole portion (the reap pass's
     shape): per-record listings under account load measured
-    12–15 s each and summed past the panel's read bound
-    (2026-11-15); one dial classifies every record, exactly as
+    12–15 s each and summed past the panel's read bound;
+    one dial classifies every record, exactly as
     the per-record reads did (state_in_snapshot is the same
     test), and a failed listing classifies unknown, never dead."""
     recs = _mod_records.all_records(repo)
@@ -405,7 +405,7 @@ def state_records(colab, repo: Path) -> dict:
             records = list(pool.map(entry, recs))
     # The access list rides this portion: the panel's records
     # section is where live-but-unrecorded sessions surface.
-    # The binding finding rides it too (2026-11-17): the
+    # The binding finding rides it too: the
     # funnel's served state for the CLI's session-binding
     # store, so a damaged binding renders as binding-damaged
     # in the same document whose records it would otherwise
@@ -528,8 +528,8 @@ def state_extend_guard(repo: Path) -> dict:
 
 
 def _deadline_past(deadline: str | None, now_dt: datetime) -> bool:
-    """The served past-deadline determination (register E4,
-    ruled 2026-11-14): the orphan's evidenced deadline at or
+    """The served past-deadline determination (register E4):
+    the orphan's evidenced deadline at or
     before the served now, computed here where the census is
     composed — never in a consumer. An absent deadline is not
     past; an unparseable one is not past either — the census
