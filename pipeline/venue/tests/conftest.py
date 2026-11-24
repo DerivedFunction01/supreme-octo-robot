@@ -10,10 +10,14 @@ rooted at the session's basetemp (every fixture repo and
 scratch var in the suite lives under it), and points the
 client's own resolution seams at it: SCHEDULER_HOST /
 SCHEDULER_PORT for the endpoint, SCHED_OPS_TOKEN_DIR for
-the venue caller's token. Authentication mirrors the
-real HTTP layer's contract: the server side holds only
-the token's SHA-256; a match authenticates the venue
-machinery caller with the write-state scope.
+the token home. The home mirrors production's: one token
+file per caller the suite's seams present — the lease
+foundation's writer seam as "venue", the funnel writer
+route (sync/writer_route.py, contract 15) as "workhorse".
+Authentication mirrors the real HTTP layer's contract:
+the server side holds only each token's SHA-256; a match
+authenticates the token's own caller with its registered
+scopes.
 
 Two honest absences: when the operator's environment
 already names an endpoint (SCHEDULER_PORT set), the
@@ -37,7 +41,15 @@ import pytest
 
 CHECKOUT = Path(__file__).resolve().parent.parent
 SCHEDULING_ROOT = CHECKOUT.parent / "scheduling"
-CALLER = "venue"
+# The callers the suite's writer seams present, with the
+# scopes each is registered with: the lease foundation's
+# seam writes as "venue"; the funnel writer route writes
+# as "workhorse" (its token in production carries the
+# write-state and exec scopes).
+CALLERS = {
+    "venue": ["write-state"],
+    "workhorse": ["write-state", "exec"],
+}
 
 
 class _OpsHandler(BaseHTTPRequestHandler):
@@ -59,8 +71,7 @@ class _OpsHandler(BaseHTTPRequestHandler):
             digest = hashlib.sha256(
                 presented[len("Bearer ") :].encode("utf-8")
             ).hexdigest()
-            if digest == self.server.token_sha256:
-                auth = (CALLER, ["write-state"])
+            auth = self.server.token_auth.get(digest)
         code, payload = self.server.ops.perform(
             None, self.server.values, req, auth=auth
         )
@@ -87,17 +98,21 @@ def ops_service_double(tmp_path_factory):
         yield
         return
     basetemp = tmp_path_factory.getbasetemp()
-    token = secrets.token_urlsafe(24)
     token_dir = basetemp / "ops-double-tokens"
     token_dir.mkdir(parents=True, exist_ok=True)
-    token_file = token_dir / f"{CALLER}.token"
-    token_file.write_text(token + "\n", encoding="utf-8")
-    os.chmod(token_file, 0o600)
+    token_auth = {}
+    for caller, scopes in CALLERS.items():
+        token = secrets.token_urlsafe(24)
+        token_file = token_dir / f"{caller}.token"
+        token_file.write_text(token + "\n", encoding="utf-8")
+        os.chmod(token_file, 0o600)
+        digest = hashlib.sha256(token.encode("utf-8")).hexdigest()
+        token_auth[digest] = (caller, scopes)
 
     server = ThreadingHTTPServer(("127.0.0.1", 0), _OpsHandler)
     server.ops = ops
     server.values = {"workspace_root": str(basetemp), "capture_cap_bytes": 65536}
-    server.token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    server.token_auth = token_auth
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
 
