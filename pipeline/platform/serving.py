@@ -1,6 +1,6 @@
 """The platform serving core — the ONE HTTP serving
-implementation for the whole mega app (owner ruling,
-2026-11-14: multiple processes collapse to one process,
+implementation for the whole mega app (owner ruling:
+multiple processes collapse to one process,
 and the serving implementations collapse to one core).
 
 Before this module the tree carried a hand-rolled

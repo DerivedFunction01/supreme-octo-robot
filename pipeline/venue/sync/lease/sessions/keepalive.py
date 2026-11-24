@@ -59,7 +59,7 @@ def ensure_keepalive(colab, repo: Path, session: str) -> dict:
     """Launch the detached keepalive loop on the session (single-instance
     on the VM side; safe to call repeatedly). The loop exists because an
     idle Colab runtime is reaped — the first away lease died at ~3 h —
-    so a leased session must never sit truly idle (operator ruling, 2026-10-30).
+    so a leased session must never sit truly idle (operator ruling).
     Never raises: a stalled or failed launch returns launch-failed and
     the caller carries on (the reaper retries on its next cycle)."""
     cfg = foundation.load_config(repo).get("keepalive", {})
@@ -97,7 +97,7 @@ def kernel_pulse(colab, repo: Path, session: str) -> str:
     """One trivial execution in the session's kernel. The detached
     keepalive loop cannot produce kernel activity, and lease #2 died at
     ~6 h with the loop beating perfectly — so the reaper pulses the
-    kernel itself (operator ruling, 2026-10-30). Returns ok | busy | failed; a
+    kernel itself (operator ruling). Returns ok | busy | failed; a
     local timeout reads as busy, because a kernel that cannot take the
     pulse is a kernel already executing, which is the activity being
     proven. The pulse body is an inert assignment."""
@@ -124,7 +124,7 @@ BIND_PROBE_TIMEOUT_S = 30
 
 def bind_probe(colab, repo: Path, session: str) -> dict:
     """Prove a session's kernel channel answers before a launch
-    binds to it (adoption-liveness cure, 2026-11-24): the
+    binds to it (adoption-liveness cure): the
     session list reads a renewed lease alive while its
     endpoint is dead, and adoption on that evidence fed
     launches into a channel that timed out at their first
@@ -155,8 +155,8 @@ def bind_probe(colab, repo: Path, session: str) -> dict:
 
 def _capture_session_host(repo: Path, rec: dict, origin: str, spool_on_first: bool) -> bool:
     """Record the session's current tunnel host on the lease record
-    (initiation-time approval plan, .plans/2026-11-03-initiation-time-
-    approval.md). A host is born at exactly three moments — a fresh
+    (initiation-time approval plan). A host is born at exactly
+    three moments — a fresh
     acquire, a renewal swap, an adoption — and network approvals are
     granted per exact host per caller scope, so each birth must
     surface at initiation instead of being discovered by a background

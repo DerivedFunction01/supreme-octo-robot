@@ -3,7 +3,7 @@
  * check-truncation — the truncation / border-touch guard.
  *
  * Fails the build when app source reintroduces one of the
- * defect shapes the 2026-11-15 truncation sweep cured:
+ * defect shapes the truncation sweep cured:
  *
  *   T1  Squeezable truncating control — a className that
  *       combines `truncate` + `min-w-0` on a pill

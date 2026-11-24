@@ -26,7 +26,7 @@ TOP_FIELDS = {
     "classification", "lifetime", "self_removal",
     "catalog", "source", "config",
 }
-# The entry config block (contract 09, amendment 2026-11-13):
+# The entry config block (contract 09, as amended):
 # a knob-bearing entry carries its knobs on the entry record
 # — the store is the source, edits write back through the one
 # writer path, the engine reads the record at fire time. The
@@ -58,7 +58,7 @@ CADENCE_FIELDS = {"type", "every", "at", "dow"}
 RUN_FIELDS = {"argv", "cwd", "env_names", "shell", "shell_reason"}
 REPORT_FIELDS = {"when", "ok_exit_codes", "fail_patterns", "report_patterns", "quiet_patterns"}
 
-# The classified-catalog vocabulary (plan 2026-11-08): a catalog
+# The classified-catalog vocabulary: a catalog
 # block classifies an example entry on three axes beyond the
 # admission classification; a source block stamps a live entry
 # adopted from the catalog with its origin and the parameters

@@ -3,7 +3,7 @@
 The platform serving core's Listener runs an unbounded
 ThreadingHTTPServer — one handler thread per request,
 spawned as fast as connections arrive. In the panel's
-own process (owner ruling, 2026-11-15: the venue serves
+own process (owner ruling: the venue serves
 alone because it faces the heaviest usage of the
 surfaces) that is the pile-up shape the split exists to
 end: parallel state polls against a slow core must queue

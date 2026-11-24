@@ -4,8 +4,8 @@ read — cadence, staffing band, escalation bound, venue,
 coordinator route, measure classes, drain tail set, and
 the staffing contract where one is ruled. Seeded from
 the live fleet's actual contracts: the edgar family-
-concurrency measure (owner enforcement ruling,
-2026-11-19), the gap-closure sweep's programme rows and
+concurrency measure (owner enforcement ruling), the
+gap-closure sweep's programme rows and
 gap classes, and the armed todos' cadences.
 
 The registry is data the measures read; no measure
@@ -45,7 +45,7 @@ MEASURE_CLASSES = (
 )
 
 # The standing drain tail defaults (owner answer at
-# adoption, 2026-11-19): every programme's tail set
+# adoption): every programme's tail set
 # starts from these; a programme's baked-in extras are
 # its own declaration, appended per row below.
 DEFAULT_DRAIN_TAIL = (
@@ -56,7 +56,7 @@ DEFAULT_DRAIN_TAIL = (
 
 # The edgar staffing contract, verbatim as data from
 # the edgar-parallel-staffing reminder's measure
-# section (owner enforcement ruling, 2026-11-19): the
+# section (owner enforcement ruling): the
 # unit of staffing is the table family in flight, a
 # family counts on a run in flight or evidence
 # advancing within 30 minutes, fewer than 2 families
@@ -70,13 +70,13 @@ DEFAULT_DRAIN_TAIL = (
 # only on a later measure showing at least 2 families
 # in flight across at least 2 sessions, and a defect
 # surviving two consecutive runs names the
-# coordinator's non-response. Amended 2026-11-21
-# under the owner's fleet ruling of the same day —
-# the fleet target is 3 standing High-RAM sessions
-# and all three must actually be used — so the
-# carrying floor is 3: family work spread over only
-# 2 sessions while a third stands live and idle is
-# the serial defect, priced by the same condition.
+# coordinator's non-response. Under the owner's
+# fleet ruling the fleet target is 3 standing
+# High-RAM sessions and all three must actually be
+# used, so the carrying floor is 3: family work
+# spread over only 2 sessions while a third stands
+# live and idle is the serial defect, priced by the
+# same condition.
 EDGAR_STAFFING_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
@@ -115,7 +115,7 @@ EDGAR_STAFFING_CONTRACT = {
             "key": "segment-packet-landing",
             "label": "Segment packet landing (composed tree settles)",
             "marker": True,
-            "landed": False,
+            "landed": True,
         },
         {
             "key": "round4-instrument-build",

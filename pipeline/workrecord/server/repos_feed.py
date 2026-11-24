@@ -51,7 +51,7 @@ def _census(deadline=None) -> dict:
 
 
 # ----------------------------------------------------------------
-# Census cache (the lazy restore, 2026-11-16)
+# Census cache (the lazy restore)
 #
 # The walk is the discovery cost: seconds even in its
 # fast form, and it used to run fresh inside every
@@ -71,8 +71,8 @@ def _census(deadline=None) -> dict:
 # the census — a registry curation changes no repo's
 # existence.
 #
-# Persistence (the owner's database ruling,
-# 2026-11-17): every walk also persists its census to
+# Persistence (the owner's database ruling):
+# every walk also persists its census to
 # the shapes database (server/shapestore) — the
 # record set, the walk instant, and a stat
 # fingerprint of the census's own footprint — and
@@ -320,8 +320,8 @@ def _compute_repos_feed() -> dict:
     repos × a dozen calls burn minutes in sequence; at
     the deadline the remaining repos degrade to their
     error shape and the payload still lands, with the
-    stale payload serving meanwhile (wedge fix,
-    2026-11-10). The census itself comes from the
+    stale payload serving meanwhile (wedge fix).
+    The census itself comes from the
     shared census cache (_census_cached): the walk is
     that cache's to refresh, never this pass's."""
     deadline = time.monotonic() + repos_mod.CENSUS_BUDGET_S

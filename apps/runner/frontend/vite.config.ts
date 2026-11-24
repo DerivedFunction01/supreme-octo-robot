@@ -21,7 +21,7 @@ export default defineConfig({
   // from this config, and with the default base "/" the built
   // CSS referenced its fonts at absolute /assets/*.woff2
   // paths, which 404 inside the shell artifact (the kit-pass
-  // part 2 font fix, 2026-11-13). Relative URLs resolve
+  // part 2 font fix). Relative URLs resolve
   // against the bundle's own directory, standalone and
   // embedded alike.
   base: "./",

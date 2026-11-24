@@ -5,7 +5,7 @@
 // this entry runs the data selection below, then loads
 // the mounted tree in embedded.tsx).
 //
-// Data selection (the live-feed cure, 2026-11-15 — the
+// Data selection (the live-feed cure — the
 // published form previously mounted the mock with nothing
 // saying so, because the feeds document existed only as a
 // serving-shell injection the artifact never made):

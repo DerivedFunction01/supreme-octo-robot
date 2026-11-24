@@ -1,5 +1,5 @@
 """The feeds document's lazy freshness contract (the
-restore, 2026-11-16): freshness is read-triggered and
+restore): freshness is read-triggered and
 TTL-bound — there is no keeper thread, no fingerprint,
 and no cooldown machinery in assemble at all; with no
 reads, no reassembly is ever kicked however far past

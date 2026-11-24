@@ -2,7 +2,7 @@
 server process on behalf of a caller whose own process cannot be
 trusted to land a write (the write-denial flap denies agent-class
 processes in waves; the server's class is never denied — flap
-plan Step 1 findings, 2026-11-08).
+plan Step 1 findings).
 
 `perform()` is the whole surface: it validates the request shape,
 enforces the workspace scope server-side, performs the operation,

@@ -20,7 +20,7 @@ import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 
 /** Frame 4 — Orphans: sessions with evidence but no live lease
  *  record. Adopt (under a registered caller) and Release work.
- *  E4 forms (ruled 2026-11-14): a past-deadline orphan's
+ *  E4 forms (as ruled): a past-deadline orphan's
  *  headline carries the served deadline time plus a
  *  past-deadline chip, and the Jobs control opens the orphan's
  *  in-flight jobs in the kit Sheet drawer.

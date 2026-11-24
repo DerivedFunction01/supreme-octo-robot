@@ -1,5 +1,5 @@
 """The health probe's per-unit form (the survival
-build, 2026-11-15): --unit probes only the surfaces the
+build): --unit probes only the surfaces the
 named systemd unit serves, and its verdict carries the
 unit name, so a per-unit watchdog ladder confirms
 against its own unit's surfaces — never through another

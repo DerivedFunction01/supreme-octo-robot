@@ -1,5 +1,5 @@
 // Entry-detail data for the drill-in (split from
-// MockupDetail.tsx, 2026-11-05 follow-up): the detail +
+// MockupDetail.tsx, follow-up): the detail +
 // active-feed queries and the feed-row fallback
 // derivation — returning the shaped state the component
 // renders from.

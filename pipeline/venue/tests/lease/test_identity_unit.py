@@ -1,6 +1,6 @@
 """Runtime-identity unit tests with a stub colab callable.
 
-Pins the runtime-identity contract (2026-11-11): a live
+Pins the runtime-identity contract: a live
 lease's runtime identity (host endpoint + boot identity) is
 captured at first registration into a side-file stamp, the
 reap cycle's check baselines a stamp-less lease silently,

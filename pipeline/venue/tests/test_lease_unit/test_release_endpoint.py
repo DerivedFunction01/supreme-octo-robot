@@ -2,7 +2,7 @@
 endpoint form of release-session, with the assignments
 and stop seams stubbed at the sessions module (no
 subprocess, no library). The production shape is the
-2026-11-15 rotated pair's: an endpoint-keyed census row
+rotated pair's: an endpoint-keyed census row
 whose prior name may or may not hold a record."""
 
 import json

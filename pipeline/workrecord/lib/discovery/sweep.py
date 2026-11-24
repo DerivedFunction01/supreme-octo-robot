@@ -35,8 +35,8 @@ directory itself is the project — unless a git checkout
 claims the same slug in the same sweep (the export
 exclusion below).
 
-Registration hygiene rules ride on top (2026-11-09;
-export exclusion 2026-11-11): scratch never registers —
+Registration hygiene rules ride on top (export
+exclusion included): scratch never registers —
 a candidate under a temp root, or under a scratch-marked
 component (dot-directory, tmp / scratch name) below its
 sweep root, is pruned from the walk, so test fixtures
@@ -160,12 +160,12 @@ class SweepResult:
 
 
 # Aggregate wall-clock budget for ONE sweep's git calls
-# (wedge fix, 2026-11-10): the per-call timeout bounds a
+# (wedge fix): the per-call timeout bounds a
 # single child, but under a storage stall every call burns
 # its full timeout in sequence — three identity calls per
 # candidate times every candidate — and the sweep that
 # should take seconds runs for minutes while every caller
-# queues behind it (the 2026-11-10 capture: the sweep's
+# queues behind it (the capture: the sweep's
 # git child parked in select, the whole server behind the
 # compute lock). The healthy full sweep is ~1–3 s; the
 # budget sits an order above it. When it is exhausted,
@@ -359,7 +359,7 @@ def _fold_duplicate_slugs(result: SweepResult) -> None:
     AMONG THE ROOTS THAT CARRY THE PROJECT'S REGISTRY —
     a data-less copy never outranks the copy holding
     the data of record. Activity alone elected a fresh
-    working clone over the main checkout on 2026-11-12:
+    working clone over the main checkout:
     the clone's live .git made it the winner while its
     registry did not exist, so the project's entries
     served as uninitialized and its doctor findings

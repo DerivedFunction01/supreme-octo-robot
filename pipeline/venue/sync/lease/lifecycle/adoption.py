@@ -3,7 +3,7 @@
 Local why: adoption was name-keyed end to end, so a live
 assignment whose name was lost server-side — absent by name
 from the listing, or wearing "?" — could not re-enter the
-lease at all (2026-11-15: the first-rotation pair, assigned
+lease at all (the first-rotation pair, assigned
 and billing for hours, released unadopted). The name is the
 machinery's own identifier, not evidence: this flow mints a
 fresh one through the naming module, binds it to the

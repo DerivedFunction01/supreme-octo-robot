@@ -1,6 +1,6 @@
 """claim_first_save: a fresh run's first save claims its id.
 
-2026-11-14 specimen: run ids mint from a
+The specimen: run ids mint from a
 second-resolution timestamp, so two launches of the
 same job inside one second minted the identical id and the
 second run's unconditional saves silently absorbed the
@@ -100,9 +100,9 @@ def test_exhaustion_raises_and_restores_the_base_id(tmp_path):
 
 
 def test_denied_claim_consumes_no_id_and_leaves_no_file(tmp_path, monkeypatch):
-    """2026-11-21 atomicity cure: the pre-cure claim wrote
-    directly into the claimed file, so a write denied
-    mid-write left a 0-byte record at the claimed name —
+    """The atomicity pin: a claim that writes directly
+    into the claimed file leaves, when a write is denied
+    mid-write, a 0-byte record at the claimed name —
     the id consumed, the record a phantom. The link claim
     denied creates nothing: no file, no stage residue, and
     the same id answers the launch's retry."""

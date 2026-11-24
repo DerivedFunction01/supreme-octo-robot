@@ -214,13 +214,12 @@ this cycle.
 
 **Case 25 — adopted plan start.** The window is open and
 the idle-plans config lists the alpha import rework as
-unstarted, with a commissioning record on file (ruling,
-2026-10-30).
+unstarted, with a commissioning record on file (ruling).
 → `DECISION send continue-standing-rule` to the plan's
 owning chat: "Continue: begin the alpha import rework in
 a worktree. Standing rule: adopted plans begin when
 capacity is idle; nothing builds from a wish — this
-plan's commissioning is on record (ruling, 2026-10-30).
+plan's commissioning is on record (ruling).
 Proceed without asking again."
 
 **Case 26 — unstarted plan, no commissioning record.**
@@ -236,8 +235,8 @@ entirely, commissioned or not.
 **Case 27 — docs reconciliation.** The window is open,
 no idle-plan case fires, and the reconciliation config
 lists the alpha tracked docs with last_reconciled null
-and the beta runbook at 2026-10-20 (19 days before the
-check date) — null is the stalest record.
+and the beta runbook with a timestamp 19 days before the
+check date — null is the stalest record.
 → `DECISION send continue-standing-rule` to the alpha
 docs' owning chat: "Continue: reconcile the alpha
 service tracked docs against the records. Standing rule:
@@ -258,7 +257,7 @@ fires alone; remove both and profiling fires, as case
 
 ## Statement rules
 
-Two detection-only rules (owner ruling, 2026-11-08). They
+Two detection-only rules (owner ruling). They
 state a condition through the escalation path; neither
 sends anything to a thread, and neither concludes anything
 beyond the statement. The long-running window is 1 hour —
@@ -327,7 +326,7 @@ restarts the clock.
 
 ## Venue-question rule
 
-One send rule (owner ruling, 2026-11-08): work running on
+One send rule (owner ruling): work running on
 a low-end venue is always questioned, and the question
 carries the High-RAM situation as recorded. Justification
 is the thread's to state; the checker only reads records.
@@ -392,8 +391,8 @@ text is the pre-v2 rendering, byte for byte.
 
 ## Grouped status reports
 
-The status-request template is v3 (report-forms plan,
-2026-11-08): a one-line code alone is not a status
+The status-request template is v3 (report-forms plan):
+a one-line code alone is not a status
 report. The code line is the report's header and its
 classification key; beneath it the thread reports in
 its own state's form — the groups its state carries,
@@ -506,7 +505,7 @@ no outage fact; honest absence over a false alarm.
 ## Unarmed progress watch (stall signature, scripted)
 
 The unarmed-progress stall signature (report-forms
-plan Step 6, 2026-11-08) reads, for the stalled chat's
+plan Step 6) reads, for the stalled chat's
 repo in the thread-repos config: todo files in active
 bundles (front-matter status and progress_check), and
 the registry's wb-progress entries. An interval counts
@@ -549,7 +548,7 @@ from "never armed" by that record alone.
 
 ## Frozen run records and escalation consumption (record rules, scripted)
 
-The record rules (unstaffed-doing plan, 2026-11-09;
+The record rules (unstaffed-doing plan;
 ops/sweeper_nudge_records.py) read other systems'
 records as records: the runner's run records and the
 scheduler ledger's wb-progress outcomes. A frozen

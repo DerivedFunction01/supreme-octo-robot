@@ -1,5 +1,5 @@
-"""The lease panel's heavy-usage hardening (venue split,
-2026-11-15): state reads serve stale-while-recompute so
+"""The lease panel's heavy-usage hardening (the venue
+split): state reads serve stale-while-recompute so
 a blocked core call never blocks a warm read; the cold
 read computes once, single-flighted, off the request
 path — the reader's wait is bounded by
@@ -62,7 +62,7 @@ def _panel(tmp_path, monkeypatch, refresh_after_s=None):
         # The cadence's owning module is state_surface:
         # build_state_reads reads its global at build time.
         # server's same-named alias is an import-time snapshot
-        # and patching it changes nothing (the 2026-11-16
+        # and patching it changes nothing (the
         # extraction seam defect).
         monkeypatch.setattr(
             server.state_surface, "STATE_REFRESH_AFTER_S",
@@ -218,7 +218,7 @@ def test_read_timeout_scoped_to_state_not_actions(
     assert server.STATE_READ_TIMEOUT_S == 30
     assert server.STATE_READ_TIMEOUT_S < server.CORE_TIMEOUT_S
     assert real_default == server.CORE_TIMEOUT_S
-    # The split bounds (2026-11-15 wedge cure): the state
+    # The split bounds (the wedge cure): the state
     # build runs under the compute bound, far above the
     # reader's wait, and the cache's cold wait is the
     # read bound itself.

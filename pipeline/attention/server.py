@@ -1,7 +1,7 @@
 """The attention surface's serving shell, on the platform
 serving core (pipeline/platform/serving.py) — the one
 serving implementation for the whole mega app (owner
-ruling, 2026-11-14). Run standalone:
+ruling). Run standalone:
 `python3 -m attention.server` from the pipeline root;
 the mega app's one process (the repo-root run.py) builds
 the same mount beside the other three surfaces.
@@ -28,7 +28,7 @@ pinned server's discipline, whole:
   dies surfaces through the core's supervision instead
   of expiring silently on a daemon thread).
 - The digest assembly is persisted, not per-request
-  (perf lane L-B, 2026-11-16): build_digest costs
+  (perf lane L-B): build_digest costs
   seconds — its staffing measure scans the detached run
   records on every call — so a third supervised worker
   assembles it off the request path and the digest route

@@ -225,7 +225,7 @@ def detached_activity(repo: Path, session: str) -> str | None:
     detached shell work is session use even though no lease
     path stamps the lease record for it — the panel read cozy
     as unused since 15:55Z while a detached probe ran there
-    from 15:58Z (2026-11-11)."""
+    from 15:58Z."""
     latest = None
     detached = repo / "results" / "detached"
     if detached.is_dir():
@@ -304,7 +304,7 @@ def save_record(repo: Path, rec: dict) -> None:
     file holding a record for the same session is removed, so a
     stale copy can never resurrect the lease's old shape."""
     # The pulse stamp is the reap's field, written on its own
-    # cadence into a fresh load (the 2026-11-21 reap cure);
+    # cadence into a fresh load (the reap cure);
     # every other writer saves a whole record from a copy it
     # loaded for its own mutation — jobs, deadline, lifecycle —
     # and a save whose load straddled the reap's stamp used to
@@ -389,7 +389,7 @@ def save_record(repo: Path, rec: dict) -> None:
 
 def retire_superseded(repo: Path, old_session: str, new_session: str, now_dt: datetime | None = None) -> str | None:
     """Retire a superseded generation's record at a renewal
-    swap (2026-11-23): the old session's record leaves the live
+    swap: the old session's record leaves the live
     namespace in the swap's own act, preserved as a tombstone
     beside it — <file>.superseded-<ts>, the quarantine_torn
     rename-out form — carrying the record as it stood plus
@@ -449,8 +449,7 @@ def _superseded_pointers(repo: Path) -> dict[str, str]:
 
 def resolve_session_record(repo: Path, session: str) -> dict | None:
     """Resolve a session name to the live lease record that
-    currently carries its lineage (adoption-liveness cure,
-    2026-11-24): the name's own record when it stands; else
+    currently carries its lineage (adoption-liveness cure): the name's own record when it stands; else
     the renewal chain — tombstone superseded_by pointers
     followed to the live generation; else the live record
     sharing the name's lineage (naming.lineage, renewal's own

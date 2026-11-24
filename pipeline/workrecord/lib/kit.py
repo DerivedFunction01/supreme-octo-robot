@@ -1,5 +1,5 @@
 """The choice kit: spec handling for starter study
-artifacts (choice-kit plan, 2026-11-08).
+artifacts (choice-kit plan).
 
 A kit artifact is a registry entry of kind "artifact" whose
 main file (index.html) is the shared kit runtime with one
@@ -34,8 +34,8 @@ SPEC_TYPES = ("toggle", "single", "multi", "slider",
               "input-text", "input-number")
 
 # The back control's target is deployment data, never a
-# tracked default (byte-route plan, 2026-11-10;
-# portability fix, 2026-11-11): the target is recorded
+# tracked default (byte-route plan;
+# portability fix): the target is recorded
 # in the spec at stamp time, and the only default a
 # stamp applies comes from the environment override
 # (BACK_HREF_ENV) — a deployment points its kit pages

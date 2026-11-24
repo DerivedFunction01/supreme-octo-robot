@@ -9,8 +9,8 @@ A caller of the engine — the engine never imports this module.
 
 The routes ride the platform serving core
 (pipeline/platform/serving.py) — the one serving
-implementation for the whole mega app (owner ruling,
-2026-11-14). This module owns the routes and their
+implementation for the whole mega app (owner ruling).
+This module owns the routes and their
 payloads; the wire, the reply framing, and the containment
 are the core's — a fault in any route is contained in its
 request and can never reach the engine's tick.

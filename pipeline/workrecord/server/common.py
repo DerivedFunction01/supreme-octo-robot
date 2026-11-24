@@ -114,7 +114,7 @@ def get_sweep(force: bool = False):
     computes on the caller's thread, single-flighted so
     a burst of cold requests shares one walk.
 
-    The pre-2026-11-10 shape computed inline past the
+    The earlier shape computed inline past the
     TTL behind the lock, so under a storage stall every
     request queued behind one slow recompute while the
     last good result sat in memory (the wedge capture:
@@ -228,7 +228,7 @@ def get_fingerprints() -> dict:
     walks stand on the last sweep's known project roots
     and refresh on their own path — same cadence value as
     the sweep TTL, but stale-while-recompute (the lazy
-    restore, 2026-11-16): a read past the cadence serves
+    restore): a read past the cadence serves
     the cached map and kicks ONE background refresh, so
     no read ever waits on the stat walks; only a
     never-filled cache computes on the caller's thread,

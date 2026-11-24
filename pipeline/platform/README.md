@@ -7,7 +7,7 @@ deployment/release record (P2), and state-store backup
 (P3) — plus the survival services (watchdog, stackdump,
 file-registry check).
 
-- **Landed at S3 (2026-11-13):** `writer.py` — the unified
+- **Landed at S3:** `writer.py` — the unified
   state writer's base implementation (contract 15): the
   staged-write protocol core (stage → fsync → read-back →
   rename-over → directory fsync) and the writer operation
@@ -24,7 +24,7 @@ file-registry check).
   `sweeper_state_write`, and `nudge_append` with its inlined
   schema left the moved connector; the sweeper's records
   stay on disk, unread by the pipeline.
-- **Landed at S9 — P2 + P3 (2026-11-13):** `releases.py`
+- **Landed at S9 — P2 + P3:** `releases.py`
   — the deployment/release record: an append-only JSONL
   store tying artifact ↔ repo commit ↔ stage, written
   through the unified writer (first entry `write`, then

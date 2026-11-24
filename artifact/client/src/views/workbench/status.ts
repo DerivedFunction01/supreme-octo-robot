@@ -1,6 +1,6 @@
 // The view's status model — ported from the original
 // viewer's sections/shell/ShellStatus (contracts audit
-// B1, 2026-11-05): the queries the workbench views live
+// B1): the queries the workbench views live
 // on — projects, health, home, config,
 // the board portions behind the doing badge, and the
 // per-project triage counts — with their derivations.

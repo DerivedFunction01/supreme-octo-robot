@@ -1,6 +1,6 @@
 """Lease unit tests: the pulse-stamp merge at save_record.
 
-Pins the writer-side lost update (2026-11-21): the reap
+Pins the writer-side lost update: the reap
 stamps last_pulse_at/last_pulse_result onto a fresh load on
 its own cadence, but every other lease writer saves a whole
 record from a copy loaded for its own mutation — a save

@@ -1,6 +1,6 @@
 """Binding-guard units: the funnel's heal is loud and sticky.
 
-Pins the 2026-11-17 cure for the binding-store truncation
+Pins the cure for the binding-store truncation
 class. The old guard restored a clobbered sessions.json from
 its per-call snapshot and swallowed every failure: a restore
 denied in the same write-denial wave that truncated the file

@@ -29,7 +29,7 @@ def test_colab_run_smoke_end_to_end(tmp_path, monkeypatch, capsys):
     hash-match the deterministic control and the record closes
     complete with its usage stamps.
 
-    Determinism cure (2026-11-14): the fire now drives the
+    The determinism cure: the fire now drives the
     runner's own main() in-process against the fake venue
     instead of through the bin/colab-run subprocess and the
     fake CLI. The subprocess form's payload ran as a detached
@@ -70,7 +70,7 @@ def test_orphan_sweep_marks_dead_session(tmp_path):
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 0, r.stdout + r.stderr
     assert json.loads(stale.read_text())["state"] == "running", "the launch path swept a record it had no business touching"
-    # Orphaning needs a confirmed absence (2026-11-13): one
+    # Orphaning needs a confirmed absence: one
     # sweep's absent reading only stamps; the run survives until
     # a later sweep still finds the session gone past the window.
     r = run_verb(env, "--sweep")
@@ -85,7 +85,7 @@ def test_orphan_sweep_marks_dead_session(tmp_path):
 
 
 def test_orphan_sweep_keeps_cotenants_of_a_live_session(tmp_path):
-    """Machine model (2026-11-06): jobs on one session are
+    """Machine model: jobs on one session are
     co-tenants, not rivals. The sweep's predicate is the
     session's liveness, so two in-flight runs sharing a live
     session are left exactly as they are — by a second fire

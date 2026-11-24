@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Folder-census component: no long lists of flat files in
-a single folder (owner ruling 2026-11-13, on the
-2026-11-09 doctrine: a flat folder is the same
+a single folder (a flat folder is the same
 serialization defect as a fat file — one folder's growth
 serializes every change that has to find, order, or merge
 files in it).
@@ -9,9 +8,9 @@ files in it).
 The census counts tracked files per directory over the
 tracked enumeration (gate.linecap's
 enumerate_tracked_files: git ls-files --cached, run at
-the repo root). Tracked only, by the 2026-11-21
-enforcement plan: untracked staging in a working tree is
-not the tree the verdict names, and an earlier form of
+the repo root). Tracked only: untracked staging in a
+working tree is not the tree the verdict names, and an
+earlier form of
 this census that counted untracked files failed a clean
 tracked tree on venue job staging. Every folder counts
 by default — a folder is never registered into the

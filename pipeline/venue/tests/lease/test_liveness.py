@@ -166,7 +166,7 @@ def test_pulse_failing_and_stale(tmp_path):
 
 
 def test_tonight_shape_approval_escalates_once_per_episode(tmp_path):
-    """2026-11-05/06 lilac: gate blocked, pulse failing, jobs
+    """The lilac specimen: gate blocked, pulse failing, jobs
     empty. The approval finding stays unspoken below the
     threshold, escalates exactly once past it, and the
     mechanical pulse finding speaks on its own first sight."""

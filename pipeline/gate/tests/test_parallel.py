@@ -1,5 +1,5 @@
-"""The parallel test machinery (owner ruling 2026-11-13:
-tests always run parallel): worker derivation, module
+"""The parallel test machinery (tests always run
+parallel): worker derivation, module
 sharding, shard-output parsing, and the sharded run's
 aggregation — a parallel failure is named, never
 retried into green."""

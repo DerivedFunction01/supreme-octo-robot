@@ -3,7 +3,7 @@
 **Canonical owner:** the pipeline platform — the writer is a
 platform service (plan §6, P4), built on the ops service
 that moves into `pipeline/platform/` at S3. (Plan §4.15,
-added by amendment 4, 2026-11-13, owner's ruling.)
+added by amendment 4, owner's ruling.)
 
 **The contract in one line:** every state mutation on this
 machine — every pipeline store write, every app state
@@ -21,7 +21,7 @@ write side effect).
 ## Why one writer — the machine's flaw
 
 This machine denies writes in waves (the write-denial
-flap, probed 2026-11-08 and standing since): Python
+flap, probed and standing since): Python
 `open('w')` / `write_text` is the most reliably denied
 mechanism, `fsync` is denied whenever tested from an
 agent-class process, and a truncate that succeeds
@@ -189,7 +189,7 @@ set (stage, verify, rename, and a denied-stage case
 leaving the target byte-identical) lands with the §6 P4
 flap-simulation drill at S9.
 
-**Landed (S9/P4, 2026-11-13):** the drill ran over one
+**Landed (S9/P4):** the drill ran over one
 store of each re-pointed class (scheduling registry
 entry, dispatch outbox, work-record armed row and todo
 file, venue lease record, pipeline registry store,

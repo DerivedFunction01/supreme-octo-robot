@@ -1,5 +1,5 @@
-"""The repo-scoped default-on legs (2026-11-21 reversal):
-coverage derives from the tree, never from a per-package
+"""The repo-scoped default-on legs (the default-on
+reversal): coverage derives from the tree, never from a per-package
 declaration. Pinned here:
 
 - writer-uniqueness in its repo form scans the tracked

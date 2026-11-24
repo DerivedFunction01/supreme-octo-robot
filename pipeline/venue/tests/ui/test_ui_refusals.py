@@ -1,4 +1,4 @@
-"""R-2 refusals (2026-11-15): the panel's actuating endpoints must
+"""R-2 refusals: the panel's actuating endpoints must
 refuse a body that names no target, exactly like their siblings —
 an empty-body POST /api/lease/stop released the standing lease
 live during the usability audit, because the handler built

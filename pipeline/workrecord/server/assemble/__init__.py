@@ -14,7 +14,7 @@ Per-surface notes:
 - /api/health is not here: it is process identity
   (uptime, commit, stackdump state) — the serving
   process's own surface, not app data.
-- Projects index (SPEC §21, 2026-11-20): the document
+- Projects index (SPEC §21): the document
   carries the unified project index (projects_feed —
   adopted and repository-only projects, code summaries
   on the rows) and NO repo detail. The retired
@@ -27,8 +27,8 @@ Per-surface notes:
   of repos, and detailing any of them eagerly was
   what kept the assembly from finishing at production
   scale (the detail-scope history: W4 project-linked
-  only, the 2026-11-15 leg 7a extension to top-level
-  repos, the 2026-11-16 scratch exclusion — all of it
+  only, the leg 7a extension to top-level
+  repos, the scratch exclusion — all of it
   superseded by on-demand serving).
 - goals: contract 11's goal-record store (lib/goals)
   serves its records through server/goals; `goalsSource`
@@ -40,7 +40,7 @@ Per-surface notes:
   seed state — the migrated store's backfill source;
   the live store read re-points at S11's cutover).
 
-Caching (the lazy restore, 2026-11-16 — the original
+Caching (the lazy restore — the original
 workbench-viewer's shape, per the owner's ruling that
 continuous enumeration was the divergence): the
 assembled document serves from a TTL cache
@@ -133,7 +133,7 @@ production scale; the sections are measured where
 they run, permanently, so the next diagnosis reads
 the server log instead of guessing.
 
-Footprint (the OOM cure, 2026-11-16): the service was
+Footprint (the OOM cure): the service was
 OOM-killed in a pattern (kills at 08:21Z and 08:49Z,
 each mid-refresh-cycle) — the assembly's peak is two
 document generations by contract (the stale document

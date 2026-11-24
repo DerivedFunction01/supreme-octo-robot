@@ -70,7 +70,7 @@ export function OutcomeChip({
   // shrink-0: a chip never yields its width to a flex
   // sibling — inside the Pings row's label span the summary
   // text squeezed the chip until its own label ellipsized
-  // ("Wake" rendered "W…", mobile critic 2026-11-15). The
+  // ("Wake" rendered "W…", mobile critic). The
   // sibling text truncates instead; the chip stays whole.
   const classes =
     "inline-flex max-w-full shrink-0 items-center gap-1.5 overflow-hidden px-2.5 py-[2.5px] text-xs font-semibold whitespace-nowrap";
@@ -145,7 +145,7 @@ export function runChip(
       if (run.detail?.startsWith("Skipped · ")) {
         // The skip's reason is detail prose, not chip text:
         // the chip carries the bare outcome, matching the
-        // skipped_overlap chip (owner ruling, 2026-11-13).
+        // skipped_overlap chip (owner ruling).
         return { tone: "warn", text: "Skipped" };
       }
       return {
@@ -206,7 +206,7 @@ export function Row({
   chevron?: boolean;
   onClick?: () => void;
 }) {
-  // Two-line discipline (the owner's row ruling, 2026-11-13
+  // Two-line discipline (the owner's row ruling
   // — the same cure the Runner's lease rows took when the
   // "Renewal due" chip clipped against the name): the label
   // gets its own line and flexes across the full row width,

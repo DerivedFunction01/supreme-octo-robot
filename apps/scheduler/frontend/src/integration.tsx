@@ -9,7 +9,7 @@
 // the pipeline's /api/v1 — same-origin, full stop: the live
 // base is the serving origin and no query parameter or
 // injected value can repoint it (the ?api= base override
-// was removed 2026-11-16, the HIGH finding the runner
+// was removed, the HIGH finding the runner
 // entry's cure at b54ebb2 diagnosed: the adapter POSTs the
 // graduated config write to its base, so a crafted link
 // carrying ?api= could have pointed that write at an
@@ -22,7 +22,7 @@
 // failed) and adopt served data as it lands. ?adapter=mock mounts the
 // stateful mock (the demo persona) explicitly; the embedding
 // shell passes no adapter parameter, so the published form
-// is live by default (the silent-mock cure, 2026-11-15 —
+// is live by default (the silent-mock cure —
 // the shell's plain iframe src previously landed on the
 // mock with nothing saying so).
 //

@@ -52,7 +52,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     caller is journaled as a claim on the session — attribution
     records who called; it never gates use.
 
-    Session pin (funnel-hardening, 2026-11-11): `prefer_session`
+    Session pin (funnel-hardening): `prefer_session`
     names one lease the call must adopt — the runner's --session
     seam, for lanes that must target a specific session (a gate
     that cannot execute on the session the deadline rule would
@@ -79,7 +79,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     failed probe skips the candidate without clearing it, and
     a pinned candidate refuses `pin-lineage-unhealthy`.
 
-    Load-aware assignment (2026-11-21): inside a tier, a
+    Load-aware assignment: inside a tier, a
     warm session (its provisioning verdict stands —
     sync/lease/sessions/load.py) ranks before a cold one,
     and the least in-flight load ranks before health and
@@ -170,10 +170,10 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         state = sessions.session_state(colab, session)
         if state == "unknown":
             # Never stop, delete, or recreate on an unreadable session
-            # list: on 2026-11-01 an auth-dead CLI made a live lease
+            # list: an auth-dead CLI made a live lease
             # read as dead through the old boolean check and its
             # record was destroyed under a healthy session (the
-            # 2026-10-29 incident's class). The record stays exactly
+            # same incident class). The record stays exactly
             # as it is; a later call retries.
             return {"action": "acquire-unknown", "record": cand, "session": session}
         if now_dt < foundation.parse_dt(cand["deadline"]) and state == "alive":
@@ -214,7 +214,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
                 # The reap's confirmation discipline, shared
                 # stamp: an unconfirmed absence clears nothing —
                 # the candidate is skipped with its record
-                # intact (2026-11-13: one unpinned fire cleared
+                # intact (one unpinned fire cleared
                 # every panel record that flickered). An expired
                 # candidate needs no confirmation: its deadline
                 # is record-local truth, not a reading.
@@ -262,7 +262,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         # at this site made the retry unreachable for any
         # registered session, so a first failed stamp was
         # terminal for the session's life (specimen: ember
-        # r1794417373's lock-contended failure, 2026-11-11).
+        # r1794417373's lock-contended failure).
         out.update(provisioning.ensure_provisioning(colab, repo, session))
         # The same first-registration moment captures the
         # runtime identity (a no-op once a stamp carries one):
@@ -282,8 +282,8 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
         return out
     effective_hours = float(hours) if hours is not None else float(cfg.get("max_hours", 8))
     if max_hours_cap is not None:
-        # Only a caller passing its own cap clamps the window. Until
-        # 2026-11-01 the config max_hours clamped every acquire, so
+        # Only a caller passing its own cap clamps the window. The
+        # config max_hours once clamped every acquire, so
         # an ordered 24 h window silently came up as 8 h.
         effective_hours = min(effective_hours, float(max_hours_cap))
     # In-scope acquires price against the envelope's snapshot caps,
@@ -311,7 +311,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
     if r.returncode == 0 and gate.session_gate_policy(repo)["enabled"]:
         # Post-start shape assertion: the shape the CLI was
         # handed is not proof of the shape the server assigned
-        # (the 2026-11-04 Standard session bound under a
+        # (a Standard session bound under a
         # High-RAM profile name). Only a fresh create is
         # asserted — the "already" path above is a reuse, which
         # is never gated. A proven mismatch is stopped and
@@ -374,7 +374,7 @@ def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, ho
 
 def extend(colab, repo: Path, session: str, hours: float, now_dt: datetime | None = None, caller: str | None = None) -> dict:
     """Move one lease's deadline later by `hours` without touching
-    its session (plan: the 2026-11-01 lease-extension plan). The
+    its session (plan: the lease-extension plan). The
     budget guard prices only the delta (the shape's rate x hours)
     before anything changes; a refusal changes nothing. A
     successful extension sets renew: true — the lease becomes a

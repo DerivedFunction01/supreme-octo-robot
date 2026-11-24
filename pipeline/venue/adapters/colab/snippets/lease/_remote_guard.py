@@ -1,4 +1,4 @@
-"""Remote-only guard for limit/OOM snippets (operator ruling, 2026-10-29).
+"""Remote-only guard for limit/OOM snippets (operator ruling).
 
 The OOM loop is for Colab, not this machine: these snippets allocate until
 the ceiling and would OOM the local 2-vCPU VM if run here. They refuse to

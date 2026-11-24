@@ -3,9 +3,9 @@
 record (the enforcement half of local_test_watch.py).
 
 Detection alone pooled findings in the scheduler outbox,
-acked unseen (2026-11-15 audit, S-5) — a flag explained in
-a relay note was closed with its reason nowhere on record
-(the 2026-11-14 programme flags). This module is the
+acked unseen (audit S-5) — a flag explained in a relay
+note was closed with its reason nowhere on record (the
+programme flags). This module is the
 consumer the watcher was missing, kept mechanical: fixed
 branches on recorded fields, no content judgment.
 

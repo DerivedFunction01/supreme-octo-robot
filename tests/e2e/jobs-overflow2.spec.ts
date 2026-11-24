@@ -1,6 +1,6 @@
 /**
- * The jobs-overflow after-proof (clean-room lane 2,
- * 2026-11-20): measures the Scheduler Jobs surface
+ * The jobs-overflow after-proof (clean-room lane 2):
+ * measures the Scheduler Jobs surface
  * against the CAPTURED live payloads — serve.mjs with
  * E2E_SCHED_FIXTURES=1 answers getJobs / getOverview
  * from the staged live-jobs.json / live-overview.json —

@@ -66,13 +66,13 @@ function BundleRow({
       ? plan.derived.age_days
       : null;
   const staleBadge = staleAge != null ? <Badge kind="stale" text={`Stale · ${staleAge}d`} /> : null;
-  // Phone (the owner, 2026-10-25): the row stacks — the title
+  // Phone (the owner): the row stacks — the title
   // takes the full row width on its own line(s) and the
   // metadata line renders beneath it. A column direction
   // stacks deterministically; the earlier flex-wrap +
   // 100%-basis title still reached his phone side by side,
-  // the title squeezed into a narrow column (screenshot,
-  // 2026-10-25). Desktop's single line is untouched.
+  // the title squeezed into a narrow column (screenshot).
+  // Desktop's single line is untouched.
   const rowStyle: React.CSSProperties = isPhone
     ? { ...listRowStyle, flexDirection: "column", alignItems: "stretch" }
     : listRowStyle;

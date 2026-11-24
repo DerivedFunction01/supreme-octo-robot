@@ -18,7 +18,7 @@ from . import lifecycle
 # its sequential furniture (identity exec, freshness download,
 # keepalive launch, kernel pulse, listener census — per record)
 # summed past the bound and the cycle died mid-flight
-# (2026-11-13, three exit-124s). Lifecycle legs always survived
+# (three exit-124s). Lifecycle legs always survived
 # only because they happen to run first inside each record. The
 # budget makes that ordering structural: lifecycle for every
 # record completes before any furniture starts, furniture runs
@@ -50,7 +50,7 @@ def _budget_s() -> float:
 # Before this scope existed, the hook expressed the gate by
 # skipping the whole reap whenever any host was pending, which
 # froze every proven host's pulse, keepalive, and deadline
-# enforcement between probes (2026-11-23: one renewed host's
+# enforcement between probes (one renewed host's
 # unproven tunnel stalled three sessions' liveness for an hour
 # at a time and read as three session stalls). The scope moves
 # the boundary inside the pass: the hook now supplies the
@@ -155,7 +155,7 @@ def _reap_lifecycle(colab, repo: Path, cfg: dict, rec: dict, grant: dict | None,
             return {"action": "renewal-failed", "session": rec["session"]}, False
         # Deletion needs the absence confirmed across passes: a
         # single absent read is as often the session list's
-        # flicker as the runtime's death (2026-11-13: adopted
+        # flicker as the runtime's death (adopted
         # records were cleared within one cycle of a false
         # absent while their sessions lived and worked). The
         # first absent read stamps and keeps; a later pass still
@@ -221,7 +221,7 @@ def _reap_furniture(colab, repo: Path, cfg: dict, rec: dict, out: dict, now_dt: 
     is the contact evidence both gate latches read. A scoped
     record never owes a keepalive launch.
 
-    The pulse runs FIRST (2026-11-21 cure): it is the
+    The pulse runs FIRST (the pulse-first cure): it is the
     liveness heartbeat the whole layer reads, and under a
     sick CLI every dial in this function burns tens of
     seconds — queued behind the identity exec and the
@@ -312,8 +312,8 @@ def _reap_lock(repo: Path):
     poll and kills its wait at a timeout, but the reap process
     itself used to run on — the next poll then started a second
     pass over the same records, and two passes renewing the same
-    lease in parallel minted duplicate successor leases
-    (2026-11-08). The lock is an flock on a var/ file: held only
+    lease in parallel minted duplicate successor leases.
+    The lock is an flock on a var/ file: held only
     while a pass runs, released by the OS when the holder dies
     (a kill included), so it can never go stale."""
     path = foundation.var_dir(repo) / "reap.lock"
@@ -383,8 +383,8 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
         return out
     grant = grants.load_grant(repo)
     for rec in recs:
-        # Host reconcile (initiation-time approval follow-up,
-        # 2026-11-04): a birth capture is not the last word — the
+        # Host reconcile (initiation-time approval follow-up):
+        # a birth capture is not the last word — the
         # record's first saves and the capture save are seconds
         # apart (keepalive + pulse run between them), and a
         # concurrent writer holding a pre-capture copy (a keepwarm
@@ -435,7 +435,7 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
             entry["keepalive"] = "launch-deferred"
             continue
         entry["keepalive"] = keepalive.ensure_keepalive(colab, repo, rec["session"]).get("keepalive")
-    # Listener census (standing hygiene, 2026-11-12): throttled
+    # Listener census (standing hygiene): throttled
     # per session inside maybe_collect; the collector stamps its
     # own failures and never raises, and this guard keeps even a
     # collector defect out of the reap's path.

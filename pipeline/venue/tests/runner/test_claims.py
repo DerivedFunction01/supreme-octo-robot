@@ -1,6 +1,6 @@
 """Single-flight claims: one run id, one execution.
 
-The 2026-11-21 twin-execution root: a daemonized claim landed
+The twin-execution root: a daemonized claim landed
 after its parent's wait had declared it dead, and a resume
 relaunched the id — two executions, one record. These pins
 drive claims.py against a stub foundation rooted in a tmp dir:

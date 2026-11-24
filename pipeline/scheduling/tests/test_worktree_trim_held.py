@@ -1,5 +1,5 @@
 """Held-set, purge-branch, and restore specimens for the
-worktree trim (the 2026-11-21 cure), sharing the fixture
+worktree trim, sharing the fixture
 harness in test_worktree_trim.py: one specimen per hold
 reason, the purge branch dispositions, and the mechanical
 restore verb round-trips and refusals.
@@ -13,7 +13,7 @@ from tests.test_worktree_trim import (
 
 
 class TestHeldSet(Fixture):
-    """The 2026-11-21 held set, one specimen per reason."""
+    """The held set, one specimen per reason."""
 
     def test_unlanded_tree_is_held(self):
         # The DF-NEXT-101 specimen shape: a formation tree
@@ -192,7 +192,7 @@ class TestPurgeBranch(Fixture):
         self.assertIn("branch_local=kept-moved", out.stdout)
         # the seat moved the branch onto main itself — its
         # tip now EQUALS main's tip, and under the
-        # 2026-11-23 tip-equal exclusion (test_worktree_
+        # tip-equal exclusion (test_worktree_
         # trim_sweep.py, TestTipEqual) the branch sweep
         # spares a ref standing at the base's own position:
         # it draws the skip line and the branch stands. (At

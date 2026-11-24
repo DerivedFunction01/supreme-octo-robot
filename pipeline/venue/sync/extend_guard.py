@@ -1,9 +1,9 @@
-"""Auto-extension guard (owner-ordered 2026-11-06): every live
+"""Auto-extension guard (owner-ordered): every live
 lease is extended before it lapses, so a venue is standing when
 work fires. Extending an existing lease is lifecycle, never a
 fresh start — the guard creates nothing.
 
-The policy (the 2026-11-06 extend-guard policy) lives in
+The policy (the extend-guard policy) lives in
 the lease config's `extend_guard` block — tracked example,
 untracked live file. Each shape, and optionally each caller,
 carries a mode: `active-only` (extend only a lease with work

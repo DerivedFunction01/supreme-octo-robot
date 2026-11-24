@@ -22,9 +22,9 @@ instead of guessing.
 
 Thresholds are byte counts on free space. The home filesystem
 uses the owner's figures (low 50 GB, critical 45 GB — retuned
-2026-11-11: the app locked the owner out at ~42 GB free twice,
-2026-11-08 and 2026-11-11, so both tiers now precede that
-cutoff; the earlier 25/10 GB tiers sat below it and could
+because the app has locked the owner out at ~42 GB free
+twice, so both tiers now precede that cutoff; the earlier
+25/10 GB tiers sat below it and could
 never warn in time). Those figures are the compiled defaults:
 the entry's config block (contract 09) carries the same tiers
 as its live-tunable knobs, and at fire time the engine sets
@@ -51,17 +51,17 @@ fire time; absent or unparseable → the compiled constants).
 Paths derive from this script's own location; nothing is
 hardcoded to this machine.
 
-Register leg (2026-11-22): the per-owner holdings register in
+Register leg: the per-owner holdings register in
 the state dir (register.json) is re-measured every run — a
-register that is not re-measured rots (the 2026-11-18 baseline
-still stood while two rows grew past 20 GB between them, so
-the growth rule could never fire). A row measured more than
+register that is not re-measured rots (a stale baseline
+can stand while two rows grow past 20 GB between them, so
+the growth rule can never fire). A row measured more than
 1 GB above its recorded figure reports as an owning-thread
 defect; measured rows are written back with their new figure
 in the same run. A row that cannot be measured this run keeps
 its recorded figure and stays silent.
 
-Trash leg (2026-11-22): the recoverable trash has no other
+Trash leg: the recoverable trash has no other
 watcher — cleanup waves "deleted" through it for zero relief
 while gigabytes accumulated awaiting expiry. While the home
 filesystem is below its low tier, the leg purges the CONTENTS

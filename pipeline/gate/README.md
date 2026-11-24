@@ -12,7 +12,7 @@ it does not invoke per-repo check files.
 ## Contracts
 
 - **Components, one implementation each.** `linecap.py`
-  (the line cap, repo-scoped since 2026-11-21: 800 lines,
+  (the line cap, repo-scoped: 800 lines,
   a file at the cap passes; a 700-line creep band lists
   non-test files on every run and bans growth past the
   file's committed count at HEAD; the root check runs it
@@ -35,7 +35,7 @@ it does not invoke per-repo check files.
   `venvbuild.py` (one `find_uv`, one venv builder,
   parameterized by per-package config). Three more
   components run repo-scoped by default since the
-  2026-11-21 reversal, in the line cap's form — the root
+  default-on reversal, in the line cap's form — the root
   check executes each once per run, their recorded
   exceptions ride this package's repo leg declarations as
   data, and no package declares coverage:
@@ -64,8 +64,8 @@ it does not invoke per-repo check files.
 
 - Attention's `check.py` legs over the tree that moved
   at S7 (`pipeline/registry`, the migrated attention
-  store's home) landed as declarations at S10
-  (2026-11-14): the portability component leg and the
+  store's home) landed as declarations at S10: the
+  portability component leg and the
   suite in its isolation-wrapped form over the live
   state home (`var/`). Two of the original legs remain
   open as named findings, not exemptions: the ruff

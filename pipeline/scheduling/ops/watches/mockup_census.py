@@ -32,7 +32,7 @@ when there is something to say:
   are never removed by this leg.
 
 The same-state skip keys on the disposition-relevant inputs, not on
-the census alone (owner's edge-case ruling, 2026-11-08): a mockup goes
+the census alone (owner's edge-case ruling): a mockup goes
 stale because of state outside the census — a landing in its owning
 repo, a successor appearing, its attribution record arriving. So each
 project carries a digest over its census rows, its per-entry

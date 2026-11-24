@@ -197,7 +197,7 @@ def test_pull_routes_an_oversize_output_through_the_chunked_transfer(tmp_path):
 
 
 def test_poll_reconciles_a_foreground_shaped_record(tmp_path):
-    """The resolution seam is launch-form-agnostic (2026-11-12
+    """The resolution seam is launch-form-agnostic (the
     commission): a "polling" record whose launcher died — the
     foreground form, no detached_launch marker — reconciles
     through --poll exactly like a detached one, because the
