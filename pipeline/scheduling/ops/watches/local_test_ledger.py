@@ -23,12 +23,26 @@ once; this note is so no check pays that again.
 This module is the consult: given a finding (argv + cwd) and
 the sighting instant, it answers whether a ledger op covers
 the sampled process — the op started inside the window
-before the sighting, its target names the finding's cwd, and
+before the sighting, its target names the finding's cwd,
 every distinctive argv token (a path or a script filename)
-appears in the target. The match is deliberately strict: a
-loose match would clear real violations. Any failure to read
-the ledger — missing file, locked, schema drift — answers
-None, leaving the warning standing (fail-safe).
+appears in the target, AND the target executes the
+scheduler's own automation surface (a script under a repo's
+ops/ or bin/ directory). The surface condition is the
+discriminator the first cut lacked: every kind-'op' entry
+is an agent-initiated sched call (the callers on record are
+repo identities — venue, edgar-sec, workhorse, a programme
+slug), so an op's mere existence proves only that the work
+was ledgered, never that it was sanctioned machinery. An
+agent's ad-hoc command routed through sched exec — a
+check.py gate is the standing specimen (2026-11-24: two
+monitor gates swallowed whole, no disposition, no item) —
+never auto-covers; it takes the defect path, and a human
+clears it with the disposition verb's --ledger-op citation
+when the run was in fact legitimate. The match is
+deliberately strict: a loose match would clear real
+violations. Any failure to read the ledger — missing file,
+locked, schema drift — answers None, leaving the warning
+standing (fail-safe).
 
 Stdlib only; the database opens read-only, in the same form
 as the sibling census watch.
@@ -37,6 +51,7 @@ as the sibling census watch.
 import importlib.util as _importlib_util
 import json
 import os
+import re
 import sqlite3
 import sys as _sys
 import types as _types
@@ -91,6 +106,32 @@ def _distinctive_tokens(argv):
             if "/" in a or a.endswith((".py", ".sh", ".mjs"))]
 
 
+_NON_SURFACE_BIN_PARENTS = {"venv", ".local", "usr", "opt",
+                            "node_modules"}
+
+
+def target_runs_surface(target):
+    """The op's target executes the scheduler's automation
+    surface: a token naming a script under a repo's ops/
+    directory (any depth — the mega repo's surface sits at
+    pipeline/scheduling/ops/), or under a repo's bin/
+    directory (bin segment not owned by a venv, a tool
+    install, or node_modules). Ad-hoc repo-root scripts and
+    gate commands never qualify."""
+    for token in re.findall(r"[\w./~+-]+", target or ""):
+        if "/venv/" in token or token.startswith("venv/"):
+            continue
+        parts = [p for p in token.split("/") if p]
+        if "ops" in parts[:-1] and parts[-1].endswith(
+                (".py", ".sh", ".mjs", ".js")):
+            return True
+        if "bin" in parts[:-1]:
+            i = parts.index("bin")
+            if i > 0 and parts[i - 1] not in _NON_SURFACE_BIN_PARENTS:
+                return True
+    return False
+
+
 def _connect(db_path):
     return sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
 
@@ -124,7 +165,8 @@ def covered_by_op(finding, at, db_path=None):
         except (TypeError, ValueError):
             continue
         target = record.get("target") or ""
-        if cwd in target and all(t in target for t in tokens):
+        if cwd in target and all(t in target for t in tokens) \
+                and target_runs_surface(target):
             return {"op_id": op_id, "caller": record.get("caller"),
                     "ts": ts}
     return None

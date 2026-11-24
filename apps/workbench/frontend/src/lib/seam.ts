@@ -36,6 +36,9 @@ import type {
   WorktreeDetail,
 } from "./types";
 import type { FeedSegmentBlock } from "./feeds";
+import type { TaskManagerResult } from "./liveAdapter/taskManager";
+
+export type { TaskManagerResult } from "./liveAdapter/taskManager";
 
 export interface BoardCard {
   id: string;
@@ -144,6 +147,12 @@ export interface WorkbenchAdapter {
    *  segments in the same shape. Async for the same
    *  reason as entryPage — the feed is a fetch. */
   entrySegments(id: string): Promise<EntrySegmentsResult>;
+  /** The Task Manager feed (the load monitor's snapshot,
+   *  served ready by GET /api/task-manager): the live
+   *  adapter fetches it; the mock serves a fake snapshot
+   *  in the same shape. Async for the same reason as
+   *  entryPage — the feed is a fetch. */
+  taskManager(): Promise<TaskManagerResult>;
 
   // -- mutations ---------------------------------------------
   /** Entry disposition (mockup drill-in): approve / needs

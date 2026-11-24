@@ -20,3 +20,4 @@ _spec.loader.exec_module(_foundation)
 
 WORKRECORD_ROOT = _foundation.PACKAGE_DIR
 PIPELINE_ROOT = _foundation.PIPELINE_ROOT
+LOAD_MONITOR_SNAPSHOT = _foundation.LOAD_MONITOR_SNAPSHOT

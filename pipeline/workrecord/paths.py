@@ -32,6 +32,9 @@ PLATFORM_WRITER = PIPELINE_ROOT / "platform" / "writer.py"
 SCHEDULING_REGISTRY = (
     PIPELINE_ROOT / "scheduling" / "server" / "registry.py")
 SCHEDULING_JOBS_DIR = PIPELINE_ROOT / "scheduling" / "jobs"
+LOAD_MONITOR_SNAPSHOT = (
+    PIPELINE_ROOT / "scheduling" / "state"
+    / "load-monitor-snapshot.json")
 WORKTREE_TRIM_SCRIPT = (
     PIPELINE_ROOT / "scheduling" / "ops" / "worktree_trim.sh")
 

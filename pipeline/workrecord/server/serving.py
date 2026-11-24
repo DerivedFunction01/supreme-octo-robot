@@ -42,7 +42,7 @@ from lib import registry as reg  # noqa: E402
 from lib.plans import parser as plan_parser  # noqa: E402
 
 from . import config as cfgmod  # noqa: E402
-from . import feedcache  # noqa: E402
+from . import feedcache, task_manager as _task_manager  # noqa: E402
 from . import paths as _paths  # noqa: E402
 from . import stackdump as stackdump_mod  # noqa: E402
 from .actions import (_require_registry, drain_action,  # noqa: E402
@@ -612,10 +612,10 @@ def build_mount():
     r.add("GET", "/api/health", health)
     r.add("GET", "/api/config", config_route)
     r.add("GET", "/api/feeds", feeds_document)
-    r.add("GET", "/api/home",
-          lambda request: reply(200, home_feed()))
-    r.add("GET", "/api/projects-index",
-          lambda request: reply(200, projects_index_feed()))
+    r.add("GET", "/api/home", lambda request: reply(200, home_feed()))
+    r.add("GET", "/api/projects-index", lambda request: reply(200, projects_index_feed()))
+    r.add("GET", "/api/task-manager",
+          lambda request: reply(200, _task_manager.task_manager_feed()))
     r.add("GET", "/api/projects/registry",
           lambda request: reply(200, projects_registry_feed()))
     r.add("GET", "/api/projects/code/{tail...}", code_dispatch)

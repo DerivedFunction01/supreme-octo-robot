@@ -18,6 +18,7 @@ import { Board } from "./sections/Board";
 import { Inbox } from "./sections/Inbox";
 import { MessageThreads } from "./sections/MessageThreads";
 import { RepoDetail } from "./sections/Repos";
+import { TaskManager } from "./sections/TaskManager";
 import { Browse, PeekPage } from "./sections/Explorer";
 import { Editor } from "./sections/Editor";
 import { Settings } from "./sections/Settings";
@@ -95,6 +96,7 @@ export function App() {
           <Plans key={`${project}/${nav.bundle ?? ""}`} initialBundle={nav.bundle} />
         ) : null}
         {nav.section === "todos" ? <Todos key={project} /> : null}
+        {nav.section === "taskmanager" ? <TaskManager /> : null}
         {nav.section === "board" ? <Board /> : null}
         {nav.section === "inbox" ? (
           <>

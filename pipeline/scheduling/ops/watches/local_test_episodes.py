@@ -43,9 +43,11 @@ def handle_first_sighting(ctx):
                ctx["live_count"], label, sig, at)), False
     citation = ctx["ledger_lookup"](finding, at)
     if citation is not None:
-        # Covered by a scheduler op: the process is a server
-        # child executing through the ops route, ledgered as
-        # kind 'op' — recorded here, never warned.
+        # Covered by a scheduler op whose target runs the
+        # automation surface (the consult's surface test is
+        # the discriminator): recorded here, never warned.
+        # An ad-hoc sched-exec command never reaches this
+        # branch — it takes the defect path below.
         return (
             "LOCAL-EXEC OPS-ROUTE kind=%s runner=%s cwd=%s%s "
             "argv=%s load=%s sessions_live=%d thread=%s "

@@ -62,10 +62,10 @@ through this watcher's `disposition` verb (reason,
 actor, stamp in the record), never by an ack or by the
 episode ending. Before any of that, a first sighting is
 consulted against the scheduler ledger (local_test_ledger.py):
-a process covered by a kind-'op' ledger entry — a scheduler-
-server child executing through the ops route — is recorded
-as ops-route on the cycle line and never warned; an
-unreadable ledger leaves the warning standing. A reappearing episode whose signature
+a process covered by a kind-'op' ledger entry whose target runs
+the automation surface (ops/ or bin/ script) is recorded as
+ops-route and never warned; an ad-hoc sched-exec command flags
+normally; an unreadable ledger leaves the warning standing. A reappearing episode whose signature
 carries a closed, reasoned disposition is the same
 explained process: it raises nothing and prints one
 line saying so. A failed or unconfigured send never

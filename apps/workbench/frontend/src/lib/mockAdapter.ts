@@ -22,6 +22,7 @@ import type {
   EntryFileResult,
   EntryPageResult,
   EntrySegmentsResult,
+  TaskManagerResult,
   SaveResult,
   WorkbenchAdapter,
 } from "./seam";
@@ -147,6 +148,10 @@ export class MockWorkbenchAdapter implements WorkbenchAdapter {
 
   async entrySegments(id: string): Promise<EntrySegmentsResult> {
     return reads.entrySegments(this.host, id);
+  }
+
+  async taskManager(): Promise<TaskManagerResult> {
+    return reads.taskManager();
   }
 
   plans(project: string) {

@@ -13,6 +13,7 @@ import type {
   BoardCard,
   EntryPageResult,
   EntrySegmentsResult,
+  TaskManagerResult,
 } from "../seam";
 import { STATUS_VOCABULARY } from "../seed";
 import { FIXTURE_SEGMENT_BLOCKS } from "../segmentFixture";
@@ -232,6 +233,43 @@ export function goalTodos(h: MockHost, goal: GoalRecord): FileTodo[] {
     }
   }
   return [...ordered, ...byId.values()];
+}
+
+/** The Task Manager fake: a working snapshot in the served
+ *  shape (the demo persona's box under load), so the section
+ *  renders and its route-a-finding act composes against the
+ *  fake like every other mock surface. */
+export async function taskManager(): Promise<TaskManagerResult> {
+  return {
+    ok: true,
+    snapshot: {
+      stamp: "2026-11-24T18:00:00Z",
+      stale: false,
+      load: [22.4, 19.8, 17.1],
+      cpus: 2,
+      mem: { total_kb: 8126464, available_kb: 512000, used_kb: 7614464 },
+      processes: [
+        {
+          pid: 169052, ppid: 169049, cpu_pct: 98.2, mem_pct: 6.1,
+          elapsed_s: 336,
+          argv: ["var/venv/bin/python", "check.py", "backend/apps", "--workers", "2"],
+          cwd: "workspace/usmc-pay-monitor-v2", repo: "usmc-pay-monitor-v2",
+          thread: "usmc-pay-monitor-v2 — backend",
+        },
+        {
+          pid: 67, ppid: 0, cpu_pct: 19.9, mem_pct: 9.6,
+          elapsed_s: 5820,
+          argv: ["hatch", "daemon"],
+          cwd: "workspace", repo: null, thread: null,
+        },
+      ],
+      venues: [
+        { kind: "msi", name: "local", live: true, in_flight: 2 },
+        { kind: "colab", name: "noble-shore-15", live: true, in_flight: 3 },
+      ],
+      jobs: [],
+    },
+  };
 }
 
 export function counts(h: MockHost) {

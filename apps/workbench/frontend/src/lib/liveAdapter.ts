@@ -89,10 +89,12 @@ import * as documents from "./liveAdapter/documents";
 import * as entryMutations from "./liveAdapter/entryMutations";
 import * as goalsModule from "./liveAdapter/goals";
 import type { LiveHost, LiveState } from "./liveAdapter/host";
+import type { TaskManagerResult } from "./liveAdapter/taskManager";
 import * as panels from "./liveAdapter/panels";
 import * as plansModule from "./liveAdapter/plans";
 import * as reads from "./liveAdapter/reads";
 import * as repoFiles from "./liveAdapter/repoFiles";
+import * as taskManagerModule from "./liveAdapter/taskManager";
 import { buildLiveState } from "./liveAdapter/state";
 import * as threadsModule from "./liveAdapter/threads";
 import * as todoMutations from "./liveAdapter/todoMutations";
@@ -340,6 +342,10 @@ export class LiveWorkbenchAdapter implements WorkbenchAdapter {
 
   async entrySegments(id: string): Promise<EntrySegmentsResult> {
     return documents.entrySegments(this.host, id);
+  }
+
+  async taskManager(): Promise<TaskManagerResult> {
+    return taskManagerModule.taskManager(this.host);
   }
 
   // -- mutations -------------------------------------------------

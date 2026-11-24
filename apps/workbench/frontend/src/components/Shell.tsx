@@ -46,6 +46,7 @@ const NAV_ITEMS: { key: string; label: string; target: NavTarget }[] = [
   { key: "todos", label: "Todos", target: { section: "todos" } },
   { key: "board", label: "Board", target: { section: "board" } },
   { key: "inbox", label: "Inbox", target: { section: "inbox" } },
+  { key: "taskmanager", label: "Task Manager", target: { section: "taskmanager" } },
   { key: "code", label: "Code", target: { section: "code" } },
 ];
 
@@ -81,6 +82,8 @@ function crumbFor(
       return { left: project, bold: "Board" };
     case "inbox":
       return { left: "Workbench", bold: "Inbox" };
+    case "taskmanager":
+      return { left: "Workbench", bold: "Task Manager" };
     case "code":
       return { left: project, bold: "Code" };
     case "repo":

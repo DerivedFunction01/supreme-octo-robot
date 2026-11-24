@@ -34,6 +34,9 @@ Modules:
 - goals: the contract 11 goal-records feed — the
   goal-record store's projection (lib/goals owns the
   store and its writer; this module only serves it).
+- task_manager: the Task Manager feed — the load
+  monitor's snapshot store, served ready (fresh shape
+  or honest absence when stale), read-only.
 - assemble: the route-keyed feeds document the app's
   live adapter consumes — every payload above, assembled
   once, in the pinned routes' shapes.
