@@ -63,6 +63,8 @@ class ScriptedColab:
         outcome = self.script.pop(0)
         if outcome[0] == "timeout":
             raise subprocess.TimeoutExpired(argv, timeout)
+        if outcome[0] == "fail":
+            return subprocess.CompletedProcess(argv, 1, "", outcome[1])
         if outcome[0] == "stdout":
             return subprocess.CompletedProcess(argv, 0, outcome[1], "")
         if outcome[0] == "size":
@@ -133,15 +135,62 @@ def test_upload_one_remote_dir_chunked_carries_the_prefixed_name(tmp_path):
     assert colab.exec_calls == 0 and colab.uploads == []
 
 
-def test_ensure_run_dir_ok_and_timeout(tmp_path):
+def test_ensure_run_dir_ok_and_timeout(tmp_path, monkeypatch):
+    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
     colab = ScriptedColab([("stdout", '{"ok": true}\n')])
     launch, _journal = load_launch(tmp_path, colab)
     assert launch.ensure_run_dir("sess", "run-9") is None
     assert colab.exec_calls == 1
-    colab2 = ScriptedColab([("timeout",)])
+    # The far-side create is idempotent: an existing directory
+    # is success (makedirs exist_ok), so a retry after a
+    # timed-out create completes rather than failing on the
+    # partial directory the first attempt may have left.
+    script_text = (tmp_path / "var" / "run-dir-run-9.py").read_text()
+    assert "exist_ok=True" in script_text
+    # A timeout is a stall signature, retried to the attempt
+    # bound (default 3) before the stage fails.
+    colab2 = ScriptedColab([("timeout",), ("timeout",), ("timeout",)])
     launch2, _journal2 = load_launch(tmp_path, colab2)
     err = launch2.ensure_run_dir("sess", "run-9")
-    assert err is not None and "runs/run-9" in err
+    assert err is not None and "runs/run-9" in err and "timed out" in err
+    assert colab2.exec_calls == 3
+
+
+def test_ensure_run_dir_retries_stalls_then_lands(tmp_path, monkeypatch):
+    """VENUE DEFECT 2, leg b: the exec proxy's read timeout
+    (~10 s, inside the CLI's HTTP transport) killed launches
+    whose sessions were healthy — one attempt, no retry. Each
+    stall form now retries and the create lands."""
+    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
+    # A subprocess timeout, then success.
+    colab = ScriptedColab([("timeout",), ("stdout", '{"ok": true}\n')])
+    launch, _journal = load_launch(tmp_path, colab)
+    assert launch.ensure_run_dir("sess", "run-9") is None
+    assert colab.exec_calls == 2
+    # The proxy's own failure form: rc 1 carrying the
+    # transport's ReadTimeout, then success.
+    colab2 = ScriptedColab([("fail", "HTTPSConnectionPool: ReadTimeout (read timeout=10)\n"), ("stdout", '{"ok": true}\n')])
+    launch2, _journal2 = load_launch(tmp_path, colab2)
+    assert launch2.ensure_run_dir("sess", "run-9") is None
+    assert colab2.exec_calls == 2
+    # An unreadable response (the channel ate the answer) is
+    # the same stall class, not a far-side failure.
+    colab3 = ScriptedColab([("stdout", "channel noise, no verdict\n"), ("stdout", '{"ok": true}\n')])
+    launch3, _journal3 = load_launch(tmp_path, colab3)
+    assert launch3.ensure_run_dir("sess", "run-9") is None
+    assert colab3.exec_calls == 2
+
+
+def test_ensure_run_dir_real_failure_returns_at_once(tmp_path, monkeypatch):
+    """A far-side failure with no stall signature is a real
+    refusal: it returns on the first attempt, never retried
+    into a different verdict."""
+    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
+    colab = ScriptedColab([("fail", "PermissionError: [Errno 13] Permission denied\n")])
+    launch, _journal = load_launch(tmp_path, colab)
+    err = launch.ensure_run_dir("sess", "run-9")
+    assert err is not None and "failed (rc 1)" in err
+    assert colab.exec_calls == 1
 
 
 def test_rewrite_upload_args(tmp_path):

@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from .foundation import REPO, RUNS, colab, lease, now
 from .claims import claim_lost, pid_alive
 from .records import TERMINAL_STATES, collector_stale, emit_terminal_event, mark_terminal, save_record
+from .reader import read_reader, write_reader
 
 # A record still in "running" (the pre-confirmation state) this
 # long after its start, with no fresher evidence, had its
@@ -54,6 +55,29 @@ def _daemon_orphan(rec: dict) -> bool:
     return not pid_alive(rec.get("daemon_child_pid"))
 
 
+def _launch_reading(rec: dict) -> str:
+    """One reader pass over the session the run's launch
+    landed on, for the stale-"running" verdict: "footprint"
+    (the launch landed — job pids, an exit stamp, a log tail,
+    or a checkpoint, the launch confirmation's own test),
+    "absent" (a readable pass with no footprint at all: the
+    launch provably never landed), or "unknown" (the pass
+    itself could not be read — a timeout is a lost response,
+    never a proven negative)."""
+    session = rec.get("launch_session") or rec.get("session")
+    remote_out = rec.get("remote_out")
+    if not session or not remote_out:
+        return "unknown"
+    reader = write_reader(str(rec.get("run_id")), remote_out, [])
+    confirm_timeout = int(os.environ.get("COLAB_RUN_CONFIRM_TIMEOUT_S") or min(int(os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300")), 120))
+    state, _err = read_reader(session, reader, confirm_timeout)
+    if state is None:
+        return "unknown"
+    if state.get("job_pids") or state.get("exit_stamp") is not None or state.get("job_log_tail") or state.get("checkpoint"):
+        return "footprint"
+    return "absent"
+
+
 def orphan_sweep() -> tuple[list[dict], bool]:
     """Reconcile non-terminal run records against live sessions.
 
@@ -81,11 +105,18 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             rec = json.loads(f.read_text())
         except (OSError, json.JSONDecodeError):
             continue
-        if rec.get("state") in ("running", "polling", "starting") and rec.get("session") and rec.get("session") in live_names:
+        # A launched record reconciles against the session its
+        # launch landed on (launch_session), not a later
+        # resume's re-stamped binding — the poll's routing
+        # (VENUE DEFECT 2, leg c). Pre-launch records carry no
+        # launch_session; their binding is the record's
+        # session, unchanged.
+        eff_session = rec.get("launch_session") or rec.get("session")
+        if rec.get("state") in ("running", "polling", "starting") and eff_session and eff_session in live_names:
             # A live sighting resets the absence clock, whatever
             # branch below then handles the record.
-            lease.foundation.clear_absent_stamp(REPO, rec["session"])
-        if rec.get("state") in ("running", "polling", "starting") and rec.get("session") and rec.get("session") not in live_names:
+            lease.foundation.clear_absent_stamp(REPO, eff_session)
+        if rec.get("state") in ("running", "polling", "starting") and eff_session and eff_session not in live_names:
             # Orphaning needs the absence confirmed across
             # observations: the live list comes back
             # partial under load, so a name missing from one list
@@ -99,14 +130,14 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             # record's confirmation clears it, its siblings must
             # not read the cleared stamp as a first absence —
             # the pass remembers the confirmation itself.
-            if rec["session"] not in confirmed_absent:
-                since = lease.foundation.absent_since(REPO, rec["session"])
+            if eff_session not in confirmed_absent:
+                since = lease.foundation.absent_since(REPO, eff_session)
                 now_dt = datetime.now(timezone.utc)
                 if since is None or (now_dt - since).total_seconds() < lease.foundation.ABSENT_CONFIRM_S:
-                    lease.foundation.stamp_absent(REPO, rec["session"], since or now_dt, now_dt)
+                    lease.foundation.stamp_absent(REPO, eff_session, since or now_dt, now_dt)
                     continue
-                confirmed_absent.add(rec["session"])
-                lease.foundation.clear_absent_stamp(REPO, rec["session"])
+                confirmed_absent.add(eff_session)
+                lease.foundation.clear_absent_stamp(REPO, eff_session)
             rec["state"] = "orphaned"
             rec["orphan_noted_at"] = now()
             save_record(rec)
@@ -120,8 +151,9 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             # launch path's timeout guards). "running" is a
             # minutes-long state for any live launcher, and an
             # actively reconciled run keeps last_evidence_at
-            # fresh, so staleness on both clocks is a dead
-            # launcher, never live work. The remote_out gate is
+            # fresh, so staleness on both clocks earns the
+            # record one reader pass over its launch session —
+            # the pass, not the clocks, decides (below). The remote_out gate is
             # the discriminator: a launched record always carries
             # it (stamped in the same save as "running"), while a
             # registration-style record without one is co-tenancy
@@ -132,9 +164,28 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             except (KeyError, ValueError):
                 started_age, evidence_age = 0, None
             if started_age > STALE_RUNNING_S and (evidence_age is None or evidence_age > STALE_RUNNING_S):
-                mark_terminal(rec, "failed", launch_lost=True, error=f"record still 'running' {int(started_age // 60)} min after start with no launch confirmation and no fresher evidence: the launcher died mid-launch; relaunch with --resume {rec['run_id']} to continue from its remote run-id")
-                findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "marked failed (launch-lost): stale 'running' record whose launcher died mid-launch; relaunch with --resume RUN_ID"})
-        elif rec.get("state") in ("claiming", "starting") and (rec.get("session") in live_names or not rec.get("session")) and _daemon_orphan(rec):
+                # Time alone never writes the run off: one
+                # reader pass over the launch session decides
+                # (VENUE DEFECT 2, leg c — a launch that had
+                # landed on a healthy session was written off
+                # launch-lost because its confirmation window
+                # outlived the client that waited on it). A
+                # footprint rescues the record to polling for
+                # collection; a readable total absence is the
+                # proven no-launch and the write-off proceeds;
+                # an unreadable pass is unknown and the record
+                # stays collectable for a later pass.
+                verdict = _launch_reading(rec)
+                if verdict == "footprint":
+                    rec["state"] = "polling"
+                    rec["launch_confirmed_at"] = now()
+                    rec["last_evidence_at"] = now()
+                    save_record(rec)
+                    findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "launch confirmed on a sweep reader pass over the launch session; record moved to polling for collection"})
+                elif verdict == "absent":
+                    mark_terminal(rec, "failed", launch_lost=True, error=f"record still 'running' {int(started_age // 60)} min after start with no launch confirmation and no fresher evidence, and a reader pass over the launch session read no job footprint: the launcher died mid-launch; relaunch with --resume {rec['run_id']} to continue from its remote run-id")
+                    findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "marked failed (launch-lost): stale 'running' record whose launcher died mid-launch (reader pass read no footprint); relaunch with --resume RUN_ID"})
+        elif rec.get("state") in ("claiming", "starting") and (eff_session in live_names or not eff_session) and _daemon_orphan(rec):
             # Daemon-orphaned: decidable NOW, by the driver
             # stamp, without the stale-starting branch's
             # two-hour wait — a dead daemon launches nothing,
@@ -147,7 +198,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             # the claims discipline and relaunches the id.
             mark_terminal(rec, "failed", launch_lost=True, error=f"record still '{rec['state']}' with its daemon driver (pid {rec.get('daemon_child_pid')}) dead and no launch begun: the daemonized launch died before the launch landed; relaunch with --resume {rec['run_id']} to retry")
             findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": f"marked failed (launch-lost): daemon-orphaned '{rec['state']}' record whose daemon driver died pre-launch; relaunch with --resume RUN_ID"})
-        elif rec.get("state") == "starting" and (rec.get("session") in live_names or not rec.get("session")):
+        elif rec.get("state") == "starting" and (eff_session in live_names or not eff_session):
             # Stale-"starting": the launcher died before its
             # launch landed (the upload-phase deaths on a wedged
             # session — six records sat in "starting"

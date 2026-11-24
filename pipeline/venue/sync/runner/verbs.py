@@ -116,7 +116,13 @@ def poll_run(run_id: str) -> int:
     if rec.get("state") in TERMINAL_STATES:
         print(json.dumps({"run_id": run_id, "state": rec["state"]}, indent=2))
         return 0 if rec["state"] == "complete" else 1
-    session = rec.get("session")
+    # Collection routes by the launch record: the session the
+    # launch landed on, not the record's current binding — a
+    # resume that died mid-window re-stamps "session" with its
+    # own acquire while remote_out still names the earlier
+    # launch's out dir, and polling the re-stamped name read
+    # total absence on a healthy run (VENUE DEFECT 2, leg c).
+    session = rec.get("launch_session") or rec.get("session")
     remote_out = rec.get("remote_out")
     if not session or not remote_out:
         print(json.dumps({"run_id": run_id, "state": rec.get("state"), "error": "record predates launch (no session/remote_out); --resume relaunches it"}, indent=2))

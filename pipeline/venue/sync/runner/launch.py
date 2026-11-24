@@ -73,12 +73,29 @@ def ensure_run_dir(session: str, run_id: str) -> str | None:
     first upload: an upload into a directory that does not
     exist fails on the far side (the kit-install precedent),
     and the plain upload carries no far-side mkdir of its
-    own. One exec per launch, ahead of the upload sequence —
-    a failure is a launch failure at this named stage, never
-    a missing file discovered inside the job. The script
+    own. A failure is a launch failure at this named stage,
+    never a missing file discovered inside the job. The script
     addresses the session root the transfer layer's way
     (BASE: /content on a real VM, the working dir under the
-    fake CLI). Returns an error string, or None."""
+    fake CLI). Returns an error string, or None.
+
+    The create rides a bounded retry (the upload verify
+    probe's discipline, env-tunable the same way:
+    COLAB_RUN_DIR_ATTEMPTS / COLAB_RUN_DIR_BACKOFF_S). The
+    diagnosed failure (VENUE DEFECT 2, leg b): the exec rides
+    the CLI's HTTP transport to the session's exec proxy, and
+    that transport's read timeout (~10 s, inside the CLI —
+    no constant in this repo owns it; the repo-side bounds are
+    the kernel --timeout 120 below and the subprocess bound)
+    fires under proxy load while the session is healthy, so a
+    single attempt turned a transient stall into a dead
+    launch. A stall signature — a subprocess timeout, a
+    timeout in the call's output, or an unreadable response —
+    retries; a real far-side failure returns at once. The
+    create is idempotent (makedirs exist_ok, and nothing else
+    writes into the directory before this returns — uploads
+    gate on it), so a timed-out attempt that landed far-side
+    completes on the retry instead of poisoning it."""
     rel = run_upload_dir(run_id)
     script = REPO / "var" / f"run-dir-{run_id}.py"
     script.parent.mkdir(parents=True, exist_ok=True)
@@ -88,19 +105,29 @@ def ensure_run_dir(session: str, run_id: str) -> str | None:
         f"os.makedirs(os.path.join(BASE, {rel!r}), exist_ok=True)\n"
         "print(json.dumps({'ok': True}))\n"
     )
-    try:
-        r = colab("exec", "-s", session, "--timeout", "120", "-f", str(script), timeout=300)
-    except subprocess.TimeoutExpired:
-        return f"run dir: creating {rel} timed out"
-    ok = False
-    try:
-        landed = json_object_from_output(r.stdout)
-        ok = isinstance(landed, dict) and bool(landed.get("ok"))
-    except ValueError:
+    attempts = max(1, int(os.environ.get("COLAB_RUN_DIR_ATTEMPTS", "3")))
+    backoff = float(os.environ.get("COLAB_RUN_DIR_BACKOFF_S", "10"))
+    error = None
+    for attempt in range(attempts):
+        if attempt:
+            time.sleep(backoff * attempt)
+        try:
+            r = colab("exec", "-s", session, "--timeout", "120", "-f", str(script), timeout=300)
+        except subprocess.TimeoutExpired:
+            error = f"run dir: creating {rel} timed out"
+            continue
         ok = False
-    if r.returncode != 0 or not ok:
-        return f"run dir: creating {rel} failed (rc {r.returncode}): {(r.stderr or r.stdout).strip()[-300:]}"
-    return None
+        try:
+            landed = json_object_from_output(r.stdout)
+            ok = isinstance(landed, dict) and bool(landed.get("ok"))
+        except ValueError:
+            ok = False
+        if r.returncode == 0 and ok:
+            return None
+        error = f"run dir: creating {rel} failed (rc {r.returncode}): {(r.stderr or r.stdout).strip()[-300:]}"
+        if r.returncode != 0 and "timeout" not in ((r.stderr or "") + (r.stdout or "")).casefold():
+            return error
+    return error
 
 
 def rewrite_upload_args(args, upload_names, run_id) -> list:

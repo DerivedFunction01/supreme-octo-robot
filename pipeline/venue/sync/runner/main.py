@@ -20,6 +20,7 @@ from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
 from .claims import adopt, attach_verdict, option_like_refusal, spawn_daemon, stamp_takeover
+from .replace import acquire_session
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
@@ -356,7 +357,7 @@ def main() -> int:
         # owns windows beyond that; the floor only keeps a
         # fire off a lease in its final hour.
         window_floor_s = min(int(job.get("timeout", 18000)), 3600)
-        got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session, min_window_s=window_floor_s)
+        got = acquire_session(rec, shape_id, caller, pin_session, window_floor_s, resume)
         if got["action"] in ("refused-budget", "create-failed", "shape-refused", "shape-mismatch", "caller-start-refused", "unknown-shape", "pin-unavailable"):
             if got.get("probe"):
                 rec["bind_probe"] = got["probe"]
@@ -564,7 +565,7 @@ def main() -> int:
         # Per-run: a fixed dir leaks the previous run's heartbeat tail,
         # checkpoint, and outputs into this run's completion check.
         remote_out = f"{job_name}-out-{run_id}"
-        rec.update(state="running", remote_out=remote_out, extra_args=extra_args, launch_phase="launching")
+        rec.update(state="running", remote_out=remote_out, launch_session=session, extra_args=extra_args, launch_phase="launching")
         save_record(rec)
         # Detached launch (default pending the kill-matrix verdict): a short
         # exec starts the job under nohup; the CLI is never the job's lifeline.

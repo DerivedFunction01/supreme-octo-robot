@@ -14,6 +14,8 @@ moved verbatim, no behaviour change):
 - pull: output pulls and the terminal finalize (pull_outputs,
   finalize_run).
 - sweep: the orphan / stale-record reconcile (orphan_sweep).
+- replace: re-placement of a run whose recorded session
+  binding is proven absent (acquire_session).
 - launch: verified pre-launch uploads and the acquire-refusal
   orphan notes (upload_one, orphan_notes).
 - verbs: the non-launch verbs (poll_run, wait_run) and the
@@ -28,13 +30,14 @@ names from here.
 """
 
 from . import foundation
-from . import launch, pull, reader, records, sweep, verbs
+from . import launch, pull, reader, records, replace, sweep, verbs
 
 from .foundation import REPO, RUNS, cli, colab, colab_bin, colab_env, TOKEN, lease, mirror, now, repo_registry, transfer
 from .records import TERMINAL_STATES, claim_first_save, emit_terminal_event, load_run_record, mark_terminal, outbox_path, save_record
 from .reader import LAUNCH_ABSENCE_GRACE_S, POLL_FAILURE_BOUND, _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .pull import SINGLE_FILE_CEILING_BYTES, finalize_run, pull_outputs
 from .sweep import STALE_RUNNING_S, STALE_STARTING_S, orphan_sweep
+from .replace import acquire_session
 from .launch import UPLOAD_CHUNK_THRESHOLD_BYTES, orphan_notes, upload_one
 from .verbs import close_out_lease, poll_run, wait_run
 from .main import main
@@ -50,6 +53,7 @@ __all__ = [
     "write_reader", "read_reader", "register_poll_failure",
     "SINGLE_FILE_CEILING_BYTES", "pull_outputs", "finalize_run",
     "STALE_RUNNING_S", "STALE_STARTING_S", "orphan_sweep",
+    "acquire_session",
     "UPLOAD_CHUNK_THRESHOLD_BYTES", "upload_one", "orphan_notes",
     "close_out_lease", "poll_run", "wait_run", "main",
 ]

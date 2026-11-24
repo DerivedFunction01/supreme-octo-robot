@@ -44,6 +44,29 @@ def test_detach_returns_at_once_and_poll_reconciles_to_complete(tmp_path):
     assert run_verb(env, "--wait", out["run_id"], "--max", "5").returncode == 0
 
 
+def test_poll_routes_by_the_launch_session_not_the_binding(tmp_path):
+    """VENUE DEFECT 2, leg c: the launch stamps launch_session
+    in the same save as remote_out, and collection reads the
+    session the launch landed on — a record whose binding was
+    re-stamped by a resume that died mid-window (its session
+    now naming a session the run never launched on) still
+    collects from its launch session."""
+    env = runner_env(tmp_path)
+    out = _detach_smoke(env)
+    path = runs_dir(env) / f"{out['run_id']}.json"
+    rec = json.loads(path.read_text())
+    assert rec["launch_session"] == out["session"], "the launch never stamped its session as the launch record"
+    rec["session"] = "reaped-binding-name"
+    path.write_text(json.dumps(rec))
+    rc = 3
+    deadline = time.time() + 180
+    while rc == 3 and time.time() < deadline:
+        rc = run_verb(env, "--poll", out["run_id"]).returncode
+    assert rc == 0, "the poll never collected the run from its launch session"
+    rec = json.loads(path.read_text())
+    assert rec["state"] == "complete"
+
+
 def test_wait_reads_only_the_local_record(tmp_path):
     """E13: --wait exits 0/1/3 by the record's state and makes
     zero CLI calls — the counting wrapper proves the wait never
