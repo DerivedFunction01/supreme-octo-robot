@@ -26,6 +26,7 @@ payload keyed on it. The cure removes both faces:
   claims.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -36,6 +37,70 @@ from .foundation import REPO, RUNS, epoch, now
 from .records import claim_first_save, load_run_record, save_record
 
 CLAIM_DEADLINE_S = 180
+
+# The manifest read (2026-11-24): a job manifest is written
+# by tooling outside the runner, through channels whose
+# landing a reader can race — a staged write's rename, a
+# shell write still flushing under the flap — so the file
+# observed at load can read empty or torn. The daemon child
+# died on exactly that with a raw JSONDecodeError at the
+# load and its record read launch-lost; several gate
+# manifests were later found standing at 0 bytes, their
+# creating writes lost before the fire. The read therefore
+# retries on the sessions form (bounded attempts, a backoff
+# ladder) and exhaustion raises ManifestUnreadable naming
+# the path and the last face — honest and decidable, never
+# a bare traceback. A durably empty manifest still refuses:
+# no reader can resurrect content that never landed — but
+# it refuses NAMED, at the daemonize parent before any
+# claim is written (spawn_daemon validates through this
+# same load) or at the child before any session work.
+MANIFEST_READ_ATTEMPTS = 3
+MANIFEST_READ_BACKOFF_S = (2, 5)
+
+
+class ManifestUnreadable(Exception):
+    """The job manifest could not be read within the bounded
+    retries. `missing` is True when the file never appeared
+    (the fire's usage refusal), False when it stood but
+    stayed unreadable, empty, or unparseable."""
+
+    def __init__(self, path, face, missing):
+        super().__init__(f"job manifest {path}: {face} (after {MANIFEST_READ_ATTEMPTS} read attempts)")
+        self.path = path
+        self.face = face
+        self.missing = missing
+
+
+def load_manifest(manifest_path):
+    """Read and parse the job manifest at manifest_path,
+    retrying empty or torn reads on the bounded ladder;
+    returns the manifest dict. Raises ManifestUnreadable
+    on exhaustion."""
+    face = "missing"
+    missing = True
+    for attempt in range(MANIFEST_READ_ATTEMPTS):
+        if attempt:
+            time.sleep(MANIFEST_READ_BACKOFF_S[min(attempt - 1, len(MANIFEST_READ_BACKOFF_S) - 1)])
+        try:
+            text = manifest_path.read_text()
+        except OSError as exc:
+            face = f"unreadable ({type(exc).__name__}: {exc})"[:160]
+            missing = isinstance(exc, FileNotFoundError)
+            continue
+        if not text.strip():
+            face, missing = "empty", False
+            continue
+        try:
+            job = json.loads(text)
+        except ValueError as exc:
+            face, missing = f"unparseable ({exc})"[:160], False
+            continue
+        if not isinstance(job, dict):
+            face, missing = f"not a JSON object ({type(job).__name__})", False
+            continue
+        return job
+    raise ManifestUnreadable(manifest_path, face, missing)
 
 
 def option_like_refusal(job_name, resume) -> "str | None":
@@ -124,13 +189,18 @@ def attach_verdict(rec: dict):
     return None
 
 
-def spawn_daemon(job_name: str, args: list) -> tuple[str, str]:
+def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     """The daemonize parent's act: pre-claim the minted id,
     spawn the child in its own session with stdio on the run's
     daemon log, stamp the child's pid onto the claim, and
     return (claimed_id, log_path). A failed pre-claim raises —
     the parent then spawns nothing, so no execution ever
-    exists without its record already on disk."""
+    exists without its record already on disk. The manifest
+    is validated through load_manifest BEFORE the claim: a
+    manifest that cannot be read dooms the child at its own
+    load, so refusing here — named, with no record written —
+    is the honest fire-time form of that death."""
+    load_manifest(manifest_path)
     minted = f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
     rec = pre_claim(job_name, minted, None, None)
     claimed = rec["run_id"]

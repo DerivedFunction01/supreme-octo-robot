@@ -19,7 +19,7 @@ from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
-from .claims import adopt, attach_verdict, option_like_refusal, spawn_daemon, stamp_takeover
+from .claims import ManifestUnreadable, adopt, attach_verdict, load_manifest, option_like_refusal, spawn_daemon, stamp_takeover
 from .replace import acquire_session
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
@@ -155,17 +155,18 @@ def main() -> int:
             print(f"no job manifest at {JOBS / job_name / 'job.json'}", file=sys.stderr)
             return 2
         try:
-            claimed, log_path = spawn_daemon(job_name, args)
+            claimed, log_path = spawn_daemon(job_name, args, JOBS / job_name / "job.json")
         except Exception as exc:
             print(f"colab-run: daemonize pre-claim failed for {job_name}: {exc}", file=sys.stderr)
             return 1
         print(json.dumps({"run_id": claimed, "state": "daemonized", "log": log_path}))
         return 0
     manifest_path = JOBS / job_name / "job.json"
-    if not manifest_path.exists():
-        print(f"no job manifest at {manifest_path}", file=sys.stderr)
-        return 2
-    job = json.loads(manifest_path.read_text())
+    try:
+        job = load_manifest(manifest_path)
+    except ManifestUnreadable as exc:
+        print(f"no job manifest at {manifest_path}" if exc.missing else f"colab-run: {exc}", file=sys.stderr)
+        return 2 if exc.missing else 1
     # Manifest shape, settled once at load, before any session
     # work: outputs normalize to plain local names (mapped
     # entries tolerated), while uploads / args entries that are

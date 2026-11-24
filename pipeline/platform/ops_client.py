@@ -35,6 +35,24 @@ face named in the detail ("io_error", the writer's table).
 A server refusal or error raises WriterError under the
 endpoint's own error name. This client never writes the
 target itself: no local fallback exists to fall back to.
+
+Transient retry (the sessions-read form: bounded attempts,
+a backoff ladder, exhaustion honest and named): a provably
+unsent request is retried by every perform — nothing was
+performed, so a repeat cannot double-perform — on a ladder
+spanning one serve restart cycle, because a launch's claim
+phase died outright on a single refused connect while the
+serve was mid-restart (the 2026-11-24 gate losses). A lost
+response is retried ONLY inside staged_write, whose op is
+a full replace of identical bytes with the result verified
+against them (length + SHA-256) before success is
+reported: performed or not, the repeat leaves
+byte-identical state, so the verify-before-repeating
+caution is discharged by construction for that one op.
+perform() itself never retries a lost response: a generic
+op may have performed, and repeating it is the caller's
+decision, never the client's. A well-formed server answer
+— success or refusal — is never retried.
 """
 
 import hashlib
@@ -42,6 +60,7 @@ import importlib.util as _ilu
 import json
 import os
 import socket
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -114,6 +133,22 @@ def server_url(env=None):
 UNREACHABLE = "unreachable"
 UNKNOWN = "unknown"
 
+# The transient-retry bounds (see the module note): the
+# backoff ladder spans one serve restart cycle — the
+# coupled serve's RestartSec is 30 s — so a claim phase
+# firing into a restart window rides it out instead of
+# dying on the first refused connect. TRANSIENT_ATTEMPTS
+# caps every perform's total tries; LOST_ATTEMPTS caps the
+# tries a staged_write spends on lost responses, each of
+# which may burn a full http_timeout before failing.
+TRANSIENT_ATTEMPTS = 4
+TRANSIENT_BACKOFF_S = (3, 8, 20)
+LOST_ATTEMPTS = 3
+
+
+def _sleep_before_retry(tries: int) -> None:
+    time.sleep(TRANSIENT_BACKOFF_S[min(tries - 1, len(TRANSIENT_BACKOFF_S) - 1)])
+
 
 def _pre_send(reason) -> bool:
     """True when a transport failure provably happened
@@ -157,30 +192,55 @@ def post(req, http_timeout, env=None):
         return UNKNOWN
 
 
+def _perform(caller, req, http_timeout, env, retry_lost):
+    """One op, with the transient retry the module note
+    describes. `retry_lost` is staged_write's alone: its op
+    is a full replace of identical bytes, verified on the
+    result, so a lost response may be re-asked; every other
+    caller passes False and a lost response raises on the
+    first attempt, exactly as the contract has always held.
+    A server answer (success or refusal) returns or raises
+    on the attempt that produced it — never retried."""
+    req = dict(req)
+    req["caller"] = caller
+    tries = 0
+    lost = 0
+    while True:
+        tries += 1
+        payload = post(req, http_timeout, env)
+        if payload == UNREACHABLE:
+            if tries < TRANSIENT_ATTEMPTS:
+                _sleep_before_retry(tries)
+                continue
+            raise WriterError("io_error", "ops server unreachable — nothing was performed")
+        if payload == UNKNOWN or not isinstance(payload, dict):
+            lost += 1
+            if retry_lost and lost < LOST_ATTEMPTS and tries < TRANSIENT_ATTEMPTS:
+                _sleep_before_retry(tries)
+                continue
+            raise WriterError(
+                "io_error",
+                "ops request sent but its response was lost — the "
+                "outcome is unknown and the op may have performed; "
+                "verify before repeating",
+            )
+        if not payload.get("ok"):
+            raise WriterError(
+                payload.get("error") or "io_error",
+                payload.get("detail") or "ops request failed",
+            )
+        return payload
+
+
 def perform(caller, req, http_timeout=30, env=None):
     """Perform one op under `caller` and return the result
     payload. Every failure raises WriterError: the
     endpoint's own error name for a server answer, or
     io_error with the transport face named for a request
-    that never got one."""
-    req = dict(req)
-    req["caller"] = caller
-    payload = post(req, http_timeout, env)
-    if payload == UNREACHABLE:
-        raise WriterError("io_error", "ops server unreachable — nothing was performed")
-    if payload == UNKNOWN or not isinstance(payload, dict):
-        raise WriterError(
-            "io_error",
-            "ops request sent but its response was lost — the "
-            "outcome is unknown and the op may have performed; "
-            "verify before repeating",
-        )
-    if not payload.get("ok"):
-        raise WriterError(
-            payload.get("error") or "io_error",
-            payload.get("detail") or "ops request failed",
-        )
-    return payload
+    that never got one. A provably unsent request is
+    retried on the transient ladder; a lost response is
+    never retried here (see the module note)."""
+    return _perform(caller, req, http_timeout, env, retry_lost=False)
 
 
 def staged_write(caller, path, data, mode=None, http_timeout=30, env=None):
@@ -195,7 +255,11 @@ def staged_write(caller, path, data, mode=None, http_timeout=30, env=None):
     server-side — the credential-class discipline is
     never dropped at this seam. The server's result is
     verified against the bytes handed over (length +
-    SHA-256) before success is reported."""
+    SHA-256) before success is reported. A lost response
+    is retried (LOST_ATTEMPTS): the op is this same full
+    replace of these same bytes, so a performed first
+    attempt and its repeat leave byte-identical state,
+    and the verification below is what reports success."""
     if not isinstance(data, (bytes, bytearray)):
         raise WriterError("bad_request", "content must be bytes")
     data = bytes(data)
@@ -209,7 +273,7 @@ def staged_write(caller, path, data, mode=None, http_timeout=30, env=None):
     req = {"op": "write", "path": path, "content": content}
     if mode is not None:
         req["mode"] = mode
-    payload = perform(caller, req, http_timeout=http_timeout, env=env)
+    payload = _perform(caller, req, http_timeout, env, retry_lost=True)
     if (
         payload.get("bytes") != len(data)
         or payload.get("sha256") != hashlib.sha256(data).hexdigest()
