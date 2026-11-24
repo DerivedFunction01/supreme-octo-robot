@@ -471,8 +471,7 @@ def chunked_download(session: str, remote_name: str, dest: Path, progress=None) 
         # different files whose parts share a basename — every
         # run's outputs carry the same names — stage onto the
         # same local files, the shape the upload side's local
-        # staging was cured of by its per-transfer token
-        # (2026-11-21). Keyed by the source path, a re-run of
+        # staging was cured of by its per-transfer token. Keyed by the source path, a re-run of
         # the same download still finds its parts (resume),
         # and another source's parts never share the file. A
         # part name outside the staging directory (a split
