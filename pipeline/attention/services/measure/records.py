@@ -49,7 +49,19 @@ SHA_TOKEN = re.compile(r"\b(?=[0-9a-f]*[a-f])[0-9a-f]{7,40}\b")
 TAIL_BYTES = 65536
 
 
-def _parse_stamp(text: str) -> datetime | None:
+def _parse_stamp(text) -> datetime | None:
+    """Parse one stamp in either of the state's two
+    shapes: the text a record file carries, and the
+    datetime the store's decoder restores a persisted
+    stamp to on load. A prior snapshot's entries
+    arrive in the second shape; a parser that only
+    takes text dies on them (the capacity freeze of
+    2026-11-24: this parser, fed a decoded prior
+    claim, raised TypeError inside the pass)."""
+    if isinstance(text, datetime):
+        return text if text.tzinfo else text.replace(tzinfo=UTC)
+    if not isinstance(text, str):
+        return None
     try:
         stamp = datetime.fromisoformat(text.replace("Z", "+00:00"))
     except ValueError:
@@ -324,10 +336,22 @@ def collect_unlanded(state: dict, settings: Settings, now: datetime) -> bool:
                     "landed": _is_landed(repo, sha) if repo else None,
                 }
             )
-        before = [{k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in prior]
-        after = [
-            {k: e.get(k) for k in ("sha", "claimed_at", "landed")} for e in entries
-        ]
+
+        # The prior entries arrive store-decoded (their
+        # stamps are datetimes); the fresh entries carry
+        # text. Project both through the one parser, so
+        # the comparison measures the claims, not the
+        # shapes they arrived in.
+        def _projection(entry: dict) -> dict:
+            stamp = _parse_stamp(entry.get("claimed_at"))
+            return {
+                "sha": entry.get("sha"),
+                "claimed_at": stamp.isoformat() if stamp else None,
+                "landed": entry.get("landed"),
+            }
+
+        before = [_projection(e) for e in prior]
+        after = [_projection(e) for e in entries]
         if after != before:
             snapshot[slug] = {"at": now, "claims": entries}
             changed = True

@@ -627,7 +627,11 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
     panel reads cost tens of seconds, so they run on their
     own slow cadence into the cached snapshot the staffing
     measure reads. A failed collection never kills the
-    serve."""
+    serve — and never goes silent either: the failure is
+    recorded in the served state (capacity_pass_error,
+    with the pass's instant and the exception's identity)
+    so a frozen snapshot names its own cause, and the
+    next clean pass clears the record in its merge."""
     try:
         now = datetime.now().astimezone()
         fresh = store.load_state()
@@ -648,6 +652,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
         after = (fresh.get("capacity_snapshot"), fresh.get("capacity_error"))
         if (
             after != before
+            or fresh.get("capacity_pass_error")
             or trees_changed
             or records_changed
             or lanes_changed
@@ -665,6 +670,7 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
                 state = store.load_state()
                 state["capacity_snapshot"] = after[0]
                 state["capacity_error"] = after[1]
+                state["capacity_pass_error"] = None
                 if trees_changed:
                     state["worktree_snapshot"] = fresh["worktree_snapshot"]
                 if records_changed:
@@ -691,8 +697,23 @@ def _capacity_pass(store: Store, settings: Settings, lock) -> None:
                 if digest_changed:
                     state["digest_wb_snapshot"] = fresh["digest_wb_snapshot"]
                 store.save_state(state)
-    except Exception:
-        pass  # a failed collection never kills the serve
+    except Exception as err:
+        # The merge above never ran, so nothing in this
+        # pass landed; record why, under the same lock
+        # and load-merge discipline, against the current
+        # state — never over another loop's fresher keys.
+        # A failure to record is itself contained: it
+        # must not kill the serve either.
+        try:
+            with lock:
+                state = store.load_state()
+                state["capacity_pass_error"] = {
+                    "at": datetime.now().astimezone(),
+                    "error": f"{type(err).__name__}: {err}",
+                }
+                store.save_state(state)
+        except Exception:
+            pass
 
 
 def _capacity_loop(stop, store: Store, settings: Settings, lock) -> None:

@@ -133,5 +133,75 @@ class MountTests(unittest.TestCase):
             self.assertEqual(resp.headers.get("X-Frame-Options"), "DENY")
 
 
+class CapacityPassCase(unittest.TestCase):
+    """The capacity pass's failure discipline: a throw
+    anywhere in the collection is recorded in the
+    served state — the pass's instant and the
+    exception's identity under capacity_pass_error —
+    never swallowed into a silent freeze; the next
+    clean pass clears the record as its merge lands."""
+
+    def _run_pass(self, store, settings, unlanded):
+        from unittest import mock
+
+        def fake_capacity(state, _settings, now):
+            state["capacity_snapshot"] = {"at": now, "sessions": []}
+            state["capacity_error"] = None
+            return True
+
+        quiet = lambda *args: False  # noqa: E731
+        with (
+            mock.patch.object(server_mod.staffing, "collect_capacity", fake_capacity),
+            mock.patch.object(server_mod.worktrees, "collect", quiet),
+            mock.patch.object(server_mod.records, "collect", quiet),
+            mock.patch.object(server_mod.lanes, "collect", quiet),
+            mock.patch.object(server_mod.records, "collect_consumption", quiet),
+            mock.patch.object(server_mod.records, "collect_unlanded", unlanded),
+            mock.patch.object(server_mod.records, "collect_goals", quiet),
+            mock.patch.object(server_mod.stamps, "collect", quiet),
+            mock.patch.object(server_mod.venue, "collect", quiet),
+            mock.patch.object(server_mod.venue, "collect_frontier", quiet),
+            mock.patch.object(server_mod.plans, "collect", quiet),
+            mock.patch.object(server_mod.contracts, "sync", quiet),
+            mock.patch.object(server_mod.digest, "collect_wb_facts", quiet),
+        ):
+            server_mod._capacity_pass(store, settings, threading.Lock())
+
+    def test_failure_is_recorded_and_success_clears_it(self):
+        from datetime import UTC, datetime, timedelta
+
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Settings(data_path=_fixture_store(tmp))
+            store = server_mod.make_store(settings)
+            old = {
+                "at": datetime(2026, 11, 22, 1, 0, tzinfo=UTC),
+                "sessions": [],
+            }
+            state = store.load_state()
+            state["capacity_snapshot"] = old
+            state["capacity_error"] = "stale reason"
+            store.save_state(state)
+
+            def boom(*args):
+                raise RuntimeError("boom")
+
+            self._run_pass(store, settings, boom)
+            state = store.load_state()
+            record = state.get("capacity_pass_error")
+            self.assertIsInstance(record, dict)
+            self.assertEqual(record["error"], "RuntimeError: boom")
+            self.assertGreater(record["at"], datetime.now(UTC) - timedelta(minutes=5))
+            # The failed pass's merge never landed: the
+            # snapshot is still the seeded one.
+            self.assertEqual(state["capacity_snapshot"]["at"], old["at"])
+            self.assertEqual(state["capacity_error"], "stale reason")
+
+            self._run_pass(store, settings, lambda *args: False)
+            state = store.load_state()
+            self.assertIsNone(state.get("capacity_pass_error"))
+            self.assertGreater(state["capacity_snapshot"]["at"], old["at"])
+            self.assertIsNone(state["capacity_error"])
+
+
 if __name__ == "__main__":
     unittest.main()
