@@ -80,7 +80,8 @@ class Env:
             runs_dir=self.runs, state_path=self.state,
             owners_path=self.owners, state_dir=self.tmp.name,
             boot_id=boot_id, boot_time=boot_time, now=now,
-            outbox=self.outbox)
+            outbox=self.outbox,
+            ledger_db=os.path.join(self.tmp.name, "no-ledger.db"))
 
 
 class RestartLegTests(unittest.TestCase):
@@ -230,6 +231,141 @@ class OwnerResolutionTests(unittest.TestCase):
         env.put(record("r1", evidence=NOW - timedelta(hours=2)))
         lines = env.run()
         self.assertIn("unreadable=1", lines[0])
+
+
+def fired(ledger, job_id, due, started, timeout_secs=3600,
+          kind="run_started"):
+    """One ledger event for a fire, ts-stamped at `started`
+    (the _insert seam the ledger suite itself uses)."""
+    rec = {"ts": started.isoformat(), "kind": kind,
+           "job_id": job_id, "due": due.isoformat()}
+    if kind == "run_started":
+        rec["timeout_secs"] = timeout_secs
+    if kind == "run":
+        rec["status"] = "ok"
+    ledger._insert(rec)
+
+
+class FiredEnv:
+    """A seeded fake workspace for the fired population: an
+    empty runs dir, a real ledger, owners keyed by job id."""
+
+    def __init__(self, test):
+        self.tmp = tempfile.TemporaryDirectory()
+        test.addCleanup(self.tmp.cleanup)
+        root = self.tmp.name
+        self.runs = os.path.join(root, "runs")
+        os.makedirs(self.runs)
+        self.state = os.path.join(root, "reconcile.json")
+        self.owners = os.path.join(root, "owners.yaml")
+        with open(self.owners, "w", encoding="utf-8") as fh:
+            fh.write('owners:\n  daily-job:\n'
+                     '    chat: "chat-fired"\n')
+        self.ledger_dir = os.path.join(root, "ledger")
+        self.ledger = restart_reconcile.Ledger(self.ledger_dir)
+        self.outbox = FakeOutbox()
+
+    def seed_boot(self, boot_id):
+        with open(self.state, "w", encoding="utf-8") as fh:
+            json.dump({"boot_id": boot_id, "reported": {}}, fh)
+
+    def run(self, boot_id=BOOT_A, boot_time=BOOT_TIME, now=NOW):
+        return restart_reconcile.run(
+            runs_dir=self.runs, state_path=self.state,
+            owners_path=self.owners, state_dir=self.tmp.name,
+            boot_id=boot_id, boot_time=boot_time, now=now,
+            outbox=self.outbox,
+            ledger_db=os.path.join(self.ledger_dir, "scheduler.db"),
+            ledger=self.ledger)
+
+    def interrupted(self):
+        return [r for r in self.ledger.read_all()
+                if r["kind"] == "interrupted"]
+
+
+DUE = datetime(2026, 11, 12, 15, 20, 0, tzinfo=UTC)
+
+
+class FiredLegTests(unittest.TestCase):
+    def test_boot_change_marks_frozen_fire_interrupted(self):
+        # (a) a fire started before the boot, never completed:
+        # the restart leg marks it interrupted, the boot cause
+        # on the record, and one ping surfaces it the same pass.
+        env = FiredEnv(self)
+        env.seed_boot(BOOT_A)
+        fired(env.ledger, "daily-job", DUE,
+              BOOT_TIME - timedelta(minutes=10))
+        lines = env.run(boot_id=BOOT_B)
+        self.assertTrue(any("fired=1" in l for l in lines))
+        marks = env.interrupted()
+        self.assertEqual(len(marks), 1)
+        self.assertEqual(marks[0]["job_id"], "daily-job")
+        self.assertEqual(marks[0]["due"], DUE.isoformat())
+        self.assertEqual(marks[0]["leg"], "restart")
+        self.assertIn(BOOT_B, marks[0]["cause"])
+        self.assertEqual(len(env.outbox.planted), 1)
+        detail = env.outbox.planted[0]["detail"]
+        self.assertEqual(detail["target_chat"], "chat-fired")
+        item = detail["items"][0]
+        self.assertEqual(item["state"], "interrupted")
+        self.assertEqual(item["due"], DUE.isoformat())
+        self.assertIn(BOOT_B, item["cause"])
+        # the mark closes the pair for every later pass
+        open_records, closed = restart_reconcile.scan_fired(
+            os.path.join(env.ledger_dir, "scheduler.db"))
+        self.assertEqual(open_records, [])
+        self.assertIn(("daily-job", DUE.isoformat()), closed)
+
+    def test_within_budget_fire_is_untouched(self):
+        # (b) a fire inside its timeout budget, same boot:
+        # no mark, no ping, no output.
+        env = FiredEnv(self)
+        env.seed_boot(BOOT_A)
+        fired(env.ledger, "daily-job", DUE,
+              NOW - timedelta(minutes=5))
+        self.assertEqual(env.run(), [])
+        self.assertEqual(env.interrupted(), [])
+        self.assertEqual(env.outbox.planted, [])
+
+    def test_completed_fire_never_moves(self):
+        # (c) a fire whose completion landed is terminal: a
+        # boot change does not mark or report it.
+        env = FiredEnv(self)
+        env.seed_boot(BOOT_A)
+        started = BOOT_TIME - timedelta(minutes=10)
+        fired(env.ledger, "daily-job", DUE, started)
+        fired(env.ledger, "daily-job", DUE,
+              started + timedelta(minutes=2), kind="run")
+        self.assertEqual(env.run(boot_id=BOOT_B), [])
+        self.assertEqual(env.interrupted(), [])
+        self.assertEqual(env.outbox.planted, [])
+
+    def test_second_sweep_posts_no_second_ping(self):
+        # (d) the same episode re-swept: no second ping, and
+        # the mark itself is never written twice.
+        env = FiredEnv(self)
+        env.seed_boot(BOOT_A)
+        fired(env.ledger, "daily-job", DUE,
+              BOOT_TIME - timedelta(minutes=10))
+        env.run(boot_id=BOOT_B)
+        self.assertEqual(env.run(boot_id=BOOT_B), [])
+        self.assertEqual(len(env.outbox.planted), 1)
+        self.assertEqual(len(env.interrupted()), 1)
+
+    def test_budget_leg_marks_without_a_restart(self):
+        # No boot change: a fire past its timeout budget plus
+        # the staleness bound, with no completion, is marked
+        # under the budget leg.
+        env = FiredEnv(self)
+        env.seed_boot(BOOT_A)
+        fired(env.ledger, "daily-job", DUE,
+              NOW - timedelta(hours=3), timeout_secs=120)
+        lines = env.run()
+        self.assertTrue(any("fired=1" in l for l in lines))
+        marks = env.interrupted()
+        self.assertEqual(len(marks), 1)
+        self.assertEqual(marks[0]["leg"], "budget")
+        self.assertIn("past budget", marks[0]["cause"])
 
 
 if __name__ == "__main__":
