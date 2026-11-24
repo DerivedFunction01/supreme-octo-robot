@@ -1,4 +1,4 @@
-"""Adoption liveness (2026-11-24) against the fake colab CLI:
+"""Adoption liveness against the fake colab CLI:
 a pin written before a renewal adopts the lineage's live
 generation, a pin on a dead kernel channel fails fast at the
 bind with the probe on the run record, and a resume keeps its
