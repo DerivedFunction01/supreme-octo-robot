@@ -91,6 +91,49 @@ EDGAR_STAFFING_CONTRACT = {
     "clearing": "later_measure_only",
     "non_response_after_consecutive_runs": 2,
     "reminder_cadence_minutes": 30,
+    # The staffable queue (staffing-commission
+    # amendment): the ordered named work the measure
+    # commissions by name. A work item carries the
+    # family it flies under and the queue key that
+    # gates it (null = staffable now); a marker
+    # carries a precondition that is not itself
+    # staffable work, flipped landed by amendment
+    # when the precondition resolves. Family keys
+    # are the venue measure's workstream stems: the
+    # job name minus the fleet's shared prefix and
+    # its trailing run-kind segments.
+    "staffable_queue": [
+        {
+            "key": "ci-gold-trace-pricing",
+            "label": "CI-gold dominance-instrumented trace pricing",
+            "family": "cigold",
+            "staffable_when": None,
+        },
+        {
+            "key": "segment-register-close",
+            "label": "Segment register close",
+            "marker": True,
+            "landed": False,
+        },
+        {
+            "key": "segment-caption-reader-pricing",
+            "label": "Segment caption-channel reader pricing",
+            "family": "segcaption",
+            "staffable_when": "segment-register-close",
+        },
+        {
+            "key": "segment-packet-landing",
+            "label": "Segment packet landing (composed tree settles)",
+            "marker": True,
+            "landed": False,
+        },
+        {
+            "key": "round4-instrument-build",
+            "label": "Round 4 instrument build",
+            "family": "round4",
+            "staffable_when": "segment-packet-landing",
+        },
+    ],
 }
 
 REQUIRED_FIELDS = (
@@ -168,6 +211,60 @@ def _validate_contract(slug: str, contract, problems: list) -> None:
     for field in ("no_parallel_work_claim", "clearing"):
         if not isinstance(contract.get(field), str) or not contract.get(field):
             problems.append(f"{slug}.staffing_contract.{field}: a non-empty string")
+    if "staffable_queue" in contract:
+        _validate_queue(slug, contract, problems)
+
+
+def _validate_queue(slug: str, contract: dict, problems: list) -> None:
+    """The staffable queue, checked whole: unique
+    keys, every gate naming a key in the queue, work
+    items carrying a family, markers carrying an
+    explicit landed flag and neither a family nor a
+    gate of their own."""
+    queue = contract.get("staffable_queue")
+    prefix = f"{slug}.staffing_contract.staffable_queue"
+    if not isinstance(queue, list):
+        problems.append(f"{prefix}: a list of queue entries")
+        return
+    keys: list = []
+    for entry in queue:
+        if not isinstance(entry, dict):
+            problems.append(f"{prefix}: each entry is a mapping")
+            return
+        key = entry.get("key")
+        if not (isinstance(key, str) and key):
+            problems.append(f"{prefix}: each entry carries a non-empty key")
+            return
+        keys.append(key)
+        if not (isinstance(entry.get("label"), str) and entry.get("label")):
+            problems.append(f"{prefix}.{key}: a non-empty label")
+        if entry.get("marker") is True:
+            if "family" in entry or "staffable_when" in entry:
+                problems.append(
+                    f"{prefix}.{key}: a marker carries no family or staffable_when"
+                )
+            if not isinstance(entry.get("landed"), bool):
+                problems.append(
+                    f"{prefix}.{key}: a marker carries an explicit landed flag"
+                )
+        else:
+            if not (isinstance(entry.get("family"), str) and entry.get("family")):
+                problems.append(f"{prefix}.{key}: a work item carries a family")
+            when = entry.get("staffable_when")
+            if when is not None and not (isinstance(when, str) and when):
+                problems.append(
+                    f"{prefix}.{key}: staffable_when is null or a queue key"
+                )
+    if len(set(keys)) != len(keys):
+        problems.append(f"{prefix}: duplicate entry keys")
+    known = set(keys)
+    for entry in queue:
+        when = entry.get("staffable_when")
+        if isinstance(when, str) and when and when not in known:
+            problems.append(
+                f"{prefix}.{entry['key']}: staffable_when names "
+                f"unknown queue key {when}"
+            )
 
 
 def validate_declaration(row) -> dict:

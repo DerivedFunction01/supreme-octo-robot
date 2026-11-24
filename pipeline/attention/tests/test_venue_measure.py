@@ -35,6 +35,7 @@ from attention.services.measure import (  # noqa: E402
     records,
     registry,
     staffing,
+    staffing_venue,
     venue,
 )
 from attention.services.measure import staffing_rows  # noqa: E402
@@ -116,17 +117,32 @@ def serial_rows(view):
 
 
 class SpecimenWindows(unittest.TestCase):
-    def test_staffed_window_reads_staffed(self):
+    def test_staffed_window_bands_met_only_the_queue_row_stands(self):
         # Inside 10:00–12:25Z the records show several
-        # families across both live sessions: no defect.
-        # The 13:30Z instant is not probed here — under
-        # the cured derivation it reads defect (the
-        # launch-lost records that made it read staffed
-        # are excluded), and it is probed as defect
-        # below.
+        # families across both live sessions: the count
+        # bands read staffed, and no count condition
+        # stands. Under the staffing-commission
+        # amendment the one standing serial row is the
+        # queue row: the contract's staffable-now item
+        # (the CI-gold trace pricing, family cigold)
+        # is not in the recorded flight, so it reads
+        # due at these instants; the gated items do
+        # not. The 13:30Z instant is not probed here —
+        # it is probed as defect below.
         for now in (at(11), at(12), at(12, 15)):
             view = staffing.build_staffing(specimen_state(now), settings(), now)
-            self.assertEqual(serial_rows(view), [], f"at {now}")
+            rows = serial_rows(view)
+            self.assertEqual(len(rows), 1, f"at {now}")
+            self.assertEqual(
+                rows[0]["conditions"],
+                ["prerequisite_due_family_unstaffed"],
+                f"at {now}",
+            )
+            self.assertEqual(
+                [e["key"] for e in rows[0]["queue_unstaffed"]],
+                ["ci-gold-trace-pricing"],
+                f"at {now}",
+            )
             facts = venue.families_at(edgar_records(now), now, 30)
             self.assertGreaterEqual(len(facts["families"]), 2, f"at {now}")
             carrying = {
@@ -225,6 +241,126 @@ class FamilyDerivation(unittest.TestCase):
             "steampowernj",
         )
         self.assertIsNone(venue.attribute_slug("panel", declarations))
+
+
+def queue_state(families):
+    """A synthetic venue snapshot for the edgar
+    programme, in the served shape: the named
+    families in flight on the named sessions, the
+    programme's open work armed."""
+    now = at(15, 22)
+    state = {
+        "armed_rows": [
+            {
+                "project": "edgar-sec",
+                "todo": "ci-corefin-coci-build",
+                "row": {"project": "edgar-sec", "programme": "edgar-sec"},
+            }
+        ],
+        "venue_snapshot": {
+            "edgar-greenfield": {
+                "at": now,
+                "jobs": 4,
+                "families": {
+                    name: {"sessions": sessions, "runs": 1, "child_runs": 0}
+                    for name, sessions in families.items()
+                },
+                "workers": len(families),
+                "child_workers": 0,
+                "coordinator_caller": "edgar-specimen",
+            }
+        },
+    }
+    idle = {SCARLET: now - timedelta(minutes=52)}
+    return now, state, [CALM, SCARLET], idle
+
+
+class QueueMeasure(unittest.TestCase):
+    """The queue condition (staffing-commission
+    amendment): due items named on the serial row,
+    gated items never due before their gate
+    resolves, an in-flight family never due."""
+
+    def test_due_item_named_gated_items_not_due(self):
+        now, state, live, idle = queue_state({"cocisep": [CALM]})
+        rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertIn("prerequisite_due_family_unstaffed", row["conditions"])
+        self.assertEqual(
+            [e["key"] for e in row["queue_unstaffed"]],
+            ["ci-gold-trace-pricing"],
+        )
+        self.assertIn("CI-gold dominance-instrumented trace pricing", row["detail"])
+
+    def test_bands_met_but_queue_due_still_raises(self):
+        now, state, live, idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["conditions"], ["prerequisite_due_family_unstaffed"])
+
+    def test_in_flight_family_is_never_due(self):
+        now, state, live, idle = queue_state(
+            {
+                "cocisep": [CALM],
+                "corefin-coci": [SCARLET],
+                "cigold": [CALM],
+            }
+        )
+        self.assertEqual(staffing_rows._family_rows(state, now, live, idle), [])
+
+    def test_marker_flip_makes_the_gated_item_due(self):
+        from unittest import mock
+
+        real = registry.staffing_contract_for
+
+        def flipped(slug):
+            contract = real(slug)
+            if contract:
+                for entry in contract["staffable_queue"]:
+                    if entry["key"] == "segment-register-close":
+                        entry["landed"] = True
+            return contract
+
+        now, state, live, idle = queue_state(
+            {
+                "cocisep": [CALM],
+                "corefin-coci": [SCARLET],
+                "cigold": [CALM],
+            }
+        )
+        with mock.patch.object(registry, "staffing_contract_for", flipped):
+            rows = staffing_rows._family_rows(state, now, live, idle)
+        self.assertEqual(len(rows), 1)
+        # The register item reads due; the Round 4
+        # item's gate stands unlanded, so it does not.
+        self.assertEqual(
+            [e["key"] for e in rows[0]["queue_unstaffed"]],
+            ["segment-caption-reader-pricing"],
+        )
+
+    def test_queue_due_gate_semantics(self):
+        queue = [
+            {"key": "a", "label": "A", "family": "fa", "staffable_when": None},
+            {"key": "gate", "label": "G", "marker": True, "landed": False},
+            {"key": "b", "label": "B", "family": "fb", "staffable_when": "gate"},
+            {"key": "c", "label": "C", "family": "fc", "staffable_when": "a"},
+        ]
+        due = staffing_venue._queue_due(queue, set())
+        self.assertEqual([e["key"] for e in due], ["a"])
+        # A landed marker resolves its gate; a work
+        # item still standing in the queue does not
+        # resolve its own.
+        queue[1]["landed"] = True
+        due = staffing_venue._queue_due(queue, set())
+        self.assertEqual([e["key"] for e in due], ["a", "b"])
+        # Landed work is pruned by amendment: with
+        # the gating item gone, its dependent is due.
+        pruned = [e for e in queue if e["key"] != "a"]
+        due = staffing_venue._queue_due(pruned, set())
+        self.assertEqual([e["key"] for e in due], ["b", "c"])
 
 
 PLAN_TEXT = """# Fixture plan

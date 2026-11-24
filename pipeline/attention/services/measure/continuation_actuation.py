@@ -182,6 +182,30 @@ def _staffing_bound_hours(slug: str | None) -> float | None:
     return None
 
 
+def _commission_text(queue_due: list, contract) -> str:
+    """The commission form of a serial steer's next
+    act: the due queue items named in queue order as
+    the acts to staff, then one gate clause for each
+    later queue item still gated on an unlanded
+    marker."""
+    labels = [entry["label"] for entry in queue_due]
+    text = f"Staffing commission — staff: {labels[0]}"
+    for label in labels[1:]:
+        text += f"; then {label}"
+    text += "."
+    queue = (contract or {}).get("staffable_queue") or []
+    by_key = {entry.get("key"): entry for entry in queue}
+    due_keys = {entry.get("key") for entry in queue_due}
+    for entry in queue:
+        when = entry.get("staffable_when")
+        if entry.get("key") in due_keys or not when:
+            continue
+        gate = by_key.get(when) or {}
+        if gate.get("marker") is True and gate.get("landed") is not True:
+            text += f" {entry['label']} staffs on {gate.get('label')}."
+    return text
+
+
 def _serial_steer(row: dict, slug: str | None, escalated: bool, bound) -> tuple:
     """The steer for a serial staffing row: families in
     flight, idle sessions, and the unstaffed remainder,
@@ -223,10 +247,14 @@ def _serial_steer(row: dict, slug: str | None, escalated: bool, bound) -> tuple:
         )
     if row.get("conditions"):
         parts.append(f"Conditions met: {', '.join(row['conditions'])}.")
-    parts.append(
-        "Next act: staff a second family on a live session, or verify "
-        "family by family that no parallelizable work stands."
-    )
+    queue_due = row.get("queue_unstaffed") or []
+    if queue_due:
+        parts.append(_commission_text(queue_due, contract))
+    else:
+        parts.append(
+            "Next act: staff a second family on a live session, or verify "
+            "family by family that no parallelizable work stands."
+        )
     if escalated:
         parts.insert(
             0,

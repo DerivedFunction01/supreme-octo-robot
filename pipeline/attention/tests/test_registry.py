@@ -44,6 +44,46 @@ EXPECTED_EDGAR_CONTRACT = {
     "clearing": "later_measure_only",
     "non_response_after_consecutive_runs": 2,
     "reminder_cadence_minutes": 30,
+    # The staffable queue, from the staffing-
+    # commission amendment as commissioned: the
+    # CI-gold trace pricing staffable now, the
+    # caption-channel reader pricing gated on the
+    # segment register's close, the Round 4
+    # instrument build gated on the segment
+    # packet's landing. Family keys are the venue
+    # measure's workstream stems.
+    "staffable_queue": [
+        {
+            "key": "ci-gold-trace-pricing",
+            "label": "CI-gold dominance-instrumented trace pricing",
+            "family": "cigold",
+            "staffable_when": None,
+        },
+        {
+            "key": "segment-register-close",
+            "label": "Segment register close",
+            "marker": True,
+            "landed": False,
+        },
+        {
+            "key": "segment-caption-reader-pricing",
+            "label": "Segment caption-channel reader pricing",
+            "family": "segcaption",
+            "staffable_when": "segment-register-close",
+        },
+        {
+            "key": "segment-packet-landing",
+            "label": "Segment packet landing (composed tree settles)",
+            "marker": True,
+            "landed": False,
+        },
+        {
+            "key": "round4-instrument-build",
+            "label": "Round 4 instrument build",
+            "family": "round4",
+            "staffable_when": "segment-packet-landing",
+        },
+    ],
 }
 
 EXPECTED_SLUGS = {
@@ -143,6 +183,88 @@ class EdgarContract(unittest.TestCase):
     def test_no_other_programme_carries_a_staffing_contract(self):
         for slug in ("edgar-sec", "steampowernj", "supreme-octo-robot"):
             self.assertIsNone(registry.staffing_contract_for(slug))
+
+
+class StaffableQueue(unittest.TestCase):
+    def _row(self):
+        return copy.deepcopy(registry.for_slug("edgar-greenfield"))
+
+    def _queue(self, row):
+        return row["staffing_contract"]["staffable_queue"]
+
+    def test_seeded_queue_loads_in_order(self):
+        contract = registry.staffing_contract_for("edgar-greenfield")
+        queue = contract["staffable_queue"]
+        self.assertEqual(
+            [entry["key"] for entry in queue],
+            [
+                "ci-gold-trace-pricing",
+                "segment-register-close",
+                "segment-caption-reader-pricing",
+                "segment-packet-landing",
+                "round4-instrument-build",
+            ],
+        )
+        markers = {e["key"]: e["landed"] for e in queue if e.get("marker")}
+        self.assertEqual(
+            markers,
+            {"segment-register-close": False, "segment-packet-landing": False},
+        )
+
+    def test_valid_queue_amendments_load(self):
+        row = self._row()
+        queue = self._queue(row)
+        queue[1]["landed"] = True
+        del queue[0]
+        self.assertIs(registry.validate_declaration(row), row)
+
+    def test_duplicate_keys_refuse(self):
+        row = self._row()
+        self._queue(row).append(dict(self._queue(row)[0]))
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+
+    def test_gate_naming_an_unknown_key_refuses(self):
+        row = self._row()
+        self._queue(row)[2]["staffable_when"] = "no-such-key"
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+        self.assertIn("no-such-key", str(caught.exception))
+
+    def test_work_item_without_a_family_refuses(self):
+        row = self._row()
+        del self._queue(row)[0]["family"]
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+
+    def test_marker_carrying_a_family_refuses(self):
+        row = self._row()
+        self._queue(row)[1]["family"] = "segform"
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+
+    def test_marker_carrying_a_gate_refuses(self):
+        row = self._row()
+        self._queue(row)[1]["staffable_when"] = None
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+
+    def test_marker_without_a_landed_flag_refuses(self):
+        row = self._row()
+        del self._queue(row)[1]["landed"]
+        with self.assertRaises(registry.RegistryError) as caught:
+            registry.validate_declaration(row)
+        self.assertIn("staffable_queue", str(caught.exception))
+
+    def test_queue_is_optional(self):
+        row = self._row()
+        del row["staffing_contract"]["staffable_queue"]
+        self.assertIs(registry.validate_declaration(row), row)
 
 
 class SweepClassesAndRoutes(unittest.TestCase):

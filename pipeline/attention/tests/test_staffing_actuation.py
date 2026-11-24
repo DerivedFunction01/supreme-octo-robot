@@ -180,11 +180,18 @@ class StaffingActuationTests(unittest.TestCase):
         state = defect_state(at(14))
         continuation.run_staffing_pass(state, settings(), at(14))
         self.assertEqual(len(staffing_sends(state)), 1)
-        # The 11:00Z specimen reads staffed: the row is
+        # The 11:00Z specimen reads staffed on the
+        # count bands; under the staffing-commission
+        # amendment the measure clears only when the
+        # queue's due work is staffed too, so the
+        # cleared state also flies the CI-gold family
+        # (the queue's staffable-now item). The row is
         # gone, so the ledger entry leaves with it and
-        # no further steer posts (the pass still reports
-        # the ledger clear as a change).
+        # no further steer posts (the pass still
+        # reports the ledger clear as a change).
         staffed = defect_state(at(11))
+        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+        families["cigold"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
         state["venue_snapshot"] = staffed["venue_snapshot"]
         state["capacity_snapshot"] = staffed["capacity_snapshot"]
         self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
@@ -300,6 +307,90 @@ class StaffingActuationTests(unittest.TestCase):
         state = defect_state(at(14))
         self.assertTrue(continuation.run_pass(state, settings(), at(14)))
         self.assertEqual(len(staffing_sends(state)), 1)
+
+
+class CommissionSteerTests(unittest.TestCase):
+    """The commission form (staffing-commission
+    amendment): where the serial row carries due
+    queue work, the steer's next act names it in
+    queue order, with the gate clause for each item
+    still gated on an unlanded marker; the clearing
+    stays later-measure-only."""
+
+    def test_serial_steer_carries_the_commission(self):
+        state = defect_state(at(14))
+        continuation.run_staffing_pass(state, settings(), at(14))
+        sends = staffing_sends(state)
+        self.assertEqual(len(sends), 1)
+        text = sends[0]["text"]
+        self.assertIn(
+            "Staffing commission — staff: "
+            "CI-gold dominance-instrumented trace pricing.",
+            text,
+        )
+        self.assertIn(
+            "Segment caption-channel reader pricing staffs on "
+            "Segment register close.",
+            text,
+        )
+        self.assertIn(
+            "Round 4 instrument build staffs on "
+            "Segment packet landing (composed tree settles).",
+            text,
+        )
+        # The commission replaces the generic next act.
+        self.assertNotIn("staff a second family", text)
+
+    def test_commission_clears_only_on_a_staffing_measure(self):
+        state = defect_state(at(14))
+        continuation.run_staffing_pass(state, settings(), at(14))
+        _deliver(state, settings(), at(14))
+        # A delivered steer — the closest thing to an
+        # acknowledgement the ledger ever sees — does
+        # not clear the row: at the next cadence the
+        # commission re-posts while the queue work
+        # still stands unstaffed.
+        _refresh_capacity(state, at(14, 31))
+        self.assertTrue(
+            continuation.run_staffing_pass(state, settings(), at(14, 31))
+        )
+        sends = staffing_sends(state)
+        self.assertEqual(len(sends), 2)
+        self.assertIn("Staffing commission", sends[1]["text"])
+        _deliver(state, settings(), at(14, 31), ref="chat:test:2")
+        # The measure showing the due family in
+        # flight, bands met, clears it: no third
+        # steer, and the ledger entry leaves.
+        staffed = defect_state(at(11))
+        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+        families["cigold"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
+        state["venue_snapshot"] = staffed["venue_snapshot"]
+        state["capacity_snapshot"] = staffed["capacity_snapshot"]
+        self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
+        self.assertEqual(len(staffing_sends(state)), 2)
+        self.assertEqual(state.get(continuation.STAFFING_LEDGER), {})
+
+    def test_no_queue_keeps_the_generic_next_act(self):
+        # A serial row with no queue behind it (the
+        # frontier programme shape) keeps the generic
+        # next act byte-identical.
+        row = {
+            "kind": "serial_staffing",
+            "topic": None,
+            "handle": "@xbrl",
+            "handler_label": "edgar — greenfield extractor",
+            "families": [{"name": "cocisep", "sessions": [CALM], "runs": 1}],
+            "idle_sessions": [{"name": SCARLET, "idle_minutes": 52}],
+            "conditions": ["fewer_than_min_families_in_flight"],
+        }
+        _summary, detail = continuation._serial_steer(row, None, False, None)
+        self.assertIn(
+            "Next act: staff a second family on a live session, or "
+            "verify family by family that no parallelizable work "
+            "stands.",
+            detail,
+        )
+        self.assertNotIn("Staffing commission", detail)
 
 
 if __name__ == "__main__":
