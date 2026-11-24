@@ -449,8 +449,7 @@ def _superseded_pointers(repo: Path) -> dict[str, str]:
 
 def resolve_session_record(repo: Path, session: str) -> dict | None:
     """Resolve a session name to the live lease record that
-    currently carries its lineage (adoption-liveness cure,
-    2026-11-24): the name's own record when it stands; else
+    currently carries its lineage (adoption-liveness cure): the name's own record when it stands; else
     the renewal chain — tombstone superseded_by pointers
     followed to the live generation; else the live record
     sharing the name's lineage (naming.lineage, renewal's own
