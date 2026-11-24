@@ -224,16 +224,50 @@ def _programme_armed(state: dict, row: dict) -> list:
     ]
 
 
+def _queue_due(queue: list, in_flight: set) -> list:
+    """The queue's due work, in queue order: a work
+    item whose gate has resolved — no gate, a landed
+    marker, or a gate key no longer in the queue
+    (landed work is pruned by amendment; markers
+    stay and flip) — and whose family is not in
+    flight. A gated item never reads due while its
+    gate stands unresolved."""
+    by_key = {entry.get("key"): entry for entry in queue}
+    due = []
+    for entry in queue:
+        if entry.get("marker") is True:
+            continue
+        when = entry.get("staffable_when")
+        if when is not None:
+            gate = by_key.get(when)
+            if gate is not None and not (
+                gate.get("marker") is True and gate.get("landed") is True
+            ):
+                continue
+        if entry.get("family") in in_flight:
+            continue
+        due.append(
+            {
+                "key": entry.get("key"),
+                "label": entry.get("label"),
+                "staffable_when": when,
+            }
+        )
+    return due
+
+
 def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> list:
     """The family-concurrency measure (owner
     enforcement ruling, 2026-11-19, carried as the
     registry's staffing contract): fewer families in
     flight than the contract's minimum, or all
     compute on one session while another live session
-    carries none, is a serial staffing defect while
-    open family work stands. Facts come from the
-    venue snapshot; the bands come from the registry
-    — no evaluator constants, no programme names."""
+    carries none, or prerequisite-due queue work
+    standing unstaffed, is a serial staffing defect
+    while open family work stands. Facts come from
+    the venue snapshot; the bands come from the
+    registry — no evaluator constants, no programme
+    names."""
     snapshot = state.get("venue_snapshot") or {}
     if not snapshot:
         return []
@@ -277,6 +311,9 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
             conditions.append(
                 "all_compute_on_one_session_while_another_live_session_carries_none"
             )
+        due = _queue_due(contract.get("staffable_queue") or [], set(families))
+        if due:
+            conditions.append("prerequisite_due_family_unstaffed")
         if not conditions:
             continue
         handle = (declaration.get("handles") or [slug])[0]
@@ -299,6 +336,9 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
                 f"Live sessions carrying no work: {idle_text} — while "
                 f"open family work stands, that idleness is priced here."
             )
+        if due:
+            names = ", ".join(entry["label"] for entry in due)
+            parts.append(f"Prerequisite-due queue work stands unstaffed: {names}.")
         parts.append(
             "The defect clears only on a later measure at or above the "
             "contract's bands — never on an acknowledgement."
@@ -329,6 +369,7 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
                     ],
                     "idle_sessions": idle_sessions,
                     "conditions": conditions,
+                    "queue_unstaffed": due,
                     "coordinator_caller": facts.get("coordinator_caller"),
                 },
             )

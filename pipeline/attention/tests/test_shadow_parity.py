@@ -360,7 +360,14 @@ class StaffingParity(unittest.TestCase):
         # Inside 10:00–12:25Z the records show several
         # families across both live sessions: neither
         # side raises a defect. The cron-side counts
-        # prove the specimen is non-vacuous.
+        # prove the specimen is non-vacuous. The app
+        # side stands no queue row in these windows
+        # either: the queue's staffable-now work was
+        # staffed and pruned by amendment, and its
+        # one remaining work item is gated on the
+        # unlanded packet marker, so parity holds on
+        # the whole serial row, not just the count
+        # conditions both sides measure.
         for now in (at19(11), at19(12), at19(12, 15)):
             defect, families, carrying = cron_serial(now)
             self.assertFalse(defect, f"cron side at {now}")
@@ -368,9 +375,8 @@ class StaffingParity(unittest.TestCase):
             self.assertGreaterEqual(len(carrying), 2, f"at {now}")
             view = staffing.build_staffing(
                 specimen_state(now), settings(), now)
-            self.assertEqual(
-                rows_of_kind(view, "serial_staffing"), [],
-                f"app side at {now}")
+            rows = rows_of_kind(view, "serial_staffing")
+            self.assertEqual(rows, [], f"app side at {now}")
 
     def test_defect_window_both_sides_agree(self):
         # Inside 13:30–15:22Z the records narrow to one
