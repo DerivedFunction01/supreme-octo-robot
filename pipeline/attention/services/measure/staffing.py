@@ -16,6 +16,7 @@ from attention.services.measure.staffing_rows import (
     _blocked_rows,
     _family_rows,
     _frontier_rows,
+    _lane_rows,
     _orphan_rows,
     _owner_waiting_rows,
     _phantom_rows,
@@ -252,6 +253,7 @@ def build_staffing(
         + _armed_rows(state, now)
         + _worktree_rows(state, now, wb_topics)
         + _record_rows(state, now, cadence_of)
+        + _lane_rows(state, now)
         + _orphan_rows(state, now)
         + _terminal_rows(state, now)
         + _unlanded_rows(state, now)

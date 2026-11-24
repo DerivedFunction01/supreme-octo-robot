@@ -23,6 +23,7 @@ from attention.services.measure import registry, venue  # noqa: F401
 from attention.services.reads import digest as digest_mod  # noqa: F401
 from attention.services.reads import model  # noqa: F401
 
+from .lanes import _lane_rows  # noqa: F401
 from .staffing_blocked import (  # noqa: F401
     _CITATION_RE,
     _CLAIM_RE,

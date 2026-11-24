@@ -43,6 +43,11 @@ KIND_LABELS = {
     "unlanded_build": "Build claimed complete — unlanded",
     "serial_staffing": "Serial staffing",
     "frontier_shortfall": "Frontier shortfall",
+    "lane_stale": "Lane record stale",
+    "lane_overrun": "Lane over estimate",
+    "lane_escalated": "Lane declaration escalated",
+    "lane_unposted": "Unposted work",
+    "lane_unwitnessed": "Lane claim unwitnessed",
 }
 WORKHORSE_TERMS = {
     "scheduler": ("scheduler",),
