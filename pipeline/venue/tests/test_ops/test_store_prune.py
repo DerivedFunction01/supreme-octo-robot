@@ -261,3 +261,101 @@ def test_tracked_file_in_a_terminal_job_dir_is_untouched(tmp_path):
     chosen = _plan_paths(root)
     assert "adapters/colab/jobs/tracked-job/wrap-payload.bin" not in chosen
     assert "adapters/colab/jobs/tracked-job/loose.bin" in chosen
+
+
+def _job_manifest(root: Path, job: str, manifest: dict, adapter: str = "colab") -> Path:
+    """A job's own manifest under adapters/<adapter>/jobs/;
+    the declaration the protected-staging class reads."""
+    path = root / "adapters" / adapter / "jobs" / job / "job.json"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest))
+    return path
+
+
+def test_declared_staging_for_a_job_with_no_terminal_run_survives(tmp_path):
+    # The pre-fire specimen: staging dropped for a gate
+    # not yet fired carries no terminal run, so the prune
+    # cannot tell it from dead staging by age. Declared
+    # staging survives past the 48h floor in all three
+    # declaration forms.
+    root = _sandbox(tmp_path)
+    # The "staging_dirs" field; the job has no run
+    # records at all (declared, not yet fired).
+    _job_manifest(root, "declared-job", {"name": "declared-job", "staging_dirs": ["var/declared-gates"]})
+    _write(root / "var" / "declared-gates" / "run1-tree.tar.gz", age_s=72 * 3600)
+    _write(root / "var" / "declared-gates" / "seed.bundle", age_s=72 * 3600)
+    # An "uploads" entry under var/<dir>/ — the form
+    # existing manifests already use; the job's only
+    # run is non-terminal.
+    _job_manifest(root, "upload-job", {"name": "upload-job", "uploads": ["var/shared-gates/upload-job-tree.tar.gz"]})
+    _job_record(root, "upload-job-20260101T000000Z", "upload-job", "running", age_s=72 * 3600)
+    _write(root / "var" / "shared-gates" / "upload-job-tree.tar.gz", age_s=72 * 3600)
+    # The job's own home var/<job-name>/, on a local
+    # adapter manifest, with a non-terminal latest run.
+    _job_manifest(root, "home-job", {"name": "home-job"}, adapter="local")
+    _job_record(root, "home-job-20260101T000000Z", "home-job", "starting", age_s=72 * 3600)
+    _write(root / "var" / "home-job" / "home-tree.tar.gz", age_s=72 * 3600)
+    _write(root / "var" / "home-job" / "home.bundle", age_s=72 * 3600)
+    chosen = _plan_paths(root)
+    assert "var/declared-gates/run1-tree.tar.gz" not in chosen
+    assert "var/declared-gates/seed.bundle" not in chosen
+    assert "var/shared-gates/upload-job-tree.tar.gz" not in chosen
+    assert "var/home-job/home-tree.tar.gz" not in chosen
+    assert "var/home-job/home.bundle" not in chosen
+
+
+def test_declared_staging_prunes_once_the_latest_run_is_terminal(tmp_path):
+    # The same declarations as the survival specimen,
+    # but the declaring job's latest run is terminal:
+    # the declaration lapses and every form prunes
+    # under the existing 48h floor.
+    root = _sandbox(tmp_path)
+    _job_manifest(root, "declared-job", {
+        "name": "declared-job",
+        "staging_dirs": ["var/declared-gates"],
+        "uploads": ["var/shared-gates/declared-tree.tar.gz"],
+    })
+    _job_record(root, "declared-job-20260101T000000Z", "declared-job", "complete", age_s=72 * 3600)
+    _write(root / "var" / "declared-gates" / "run1-tree.tar.gz", age_s=72 * 3600)
+    _write(root / "var" / "declared-gates" / "seed.bundle", age_s=72 * 3600)
+    _write(root / "var" / "shared-gates" / "declared-tree.tar.gz", age_s=72 * 3600)
+    _write(root / "var" / "declared-job" / "home-tree.tar.gz", age_s=72 * 3600)
+    chosen = _plan_paths(root)
+    assert "var/declared-gates/run1-tree.tar.gz" in chosen
+    assert "var/declared-gates/seed.bundle" in chosen
+    assert "var/shared-gates/declared-tree.tar.gz" in chosen
+    assert "var/declared-job/home-tree.tar.gz" in chosen
+
+
+def test_declared_staging_follows_the_latest_run_not_any_run(tmp_path):
+    root = _sandbox(tmp_path)
+    # An older terminal run superseded by a newer
+    # non-terminal one: the job is live again.
+    _job_manifest(root, "revived-job", {"name": "revived-job", "staging_dirs": ["var/revived-gates"]})
+    _job_record(root, "revived-job-20260101T000000Z", "revived-job", "complete", age_s=96 * 3600)
+    _job_record(root, "revived-job-20260102T000000Z", "revived-job", "running", age_s=72 * 3600)
+    _write(root / "var" / "revived-gates" / "revived-tree.tar.gz", age_s=72 * 3600)
+    # An older non-terminal run superseded by a newer
+    # terminal one: the declaration has lapsed.
+    _job_manifest(root, "finished-job", {"name": "finished-job", "staging_dirs": ["var/finished-gates"]})
+    _job_record(root, "finished-job-20260101T000000Z", "finished-job", "running", age_s=96 * 3600)
+    _job_record(root, "finished-job-20260102T000000Z", "finished-job", "failed", age_s=72 * 3600)
+    _write(root / "var" / "finished-gates" / "finished-tree.tar.gz", age_s=72 * 3600)
+    chosen = _plan_paths(root)
+    assert "var/revived-gates/revived-tree.tar.gz" not in chosen
+    assert "var/finished-gates/finished-tree.tar.gz" in chosen
+
+
+def test_undeclared_staging_keeps_the_existing_grace_rules(tmp_path):
+    # A declaration elsewhere in the store changes
+    # nothing for staging no live job declares: past
+    # the floor it prunes, inside the floor it is kept.
+    root = _sandbox(tmp_path)
+    _job_manifest(root, "unrelated-job", {"name": "unrelated-job", "staging_dirs": ["var/other-gates"]})
+    _write(root / "var" / "orphan-gates" / "old-tree.tar.gz", age_s=72 * 3600)
+    _write(root / "var" / "orphan-gates" / "old.bundle", age_s=72 * 3600)
+    _write(root / "var" / "orphan-gates" / "fresh-tree.tar.gz", age_s=3600)
+    chosen = _plan_paths(root)
+    assert "var/orphan-gates/old-tree.tar.gz" in chosen
+    assert "var/orphan-gates/old.bundle" in chosen
+    assert "var/orphan-gates/fresh-tree.tar.gz" not in chosen

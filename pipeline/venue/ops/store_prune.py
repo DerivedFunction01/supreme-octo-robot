@@ -51,14 +51,32 @@ in order:
      (shared input stores for in-flight lanes) are
      never entered.
 
+Protected staging: a var/ subdir a live job declares as
+its gate staging is never a candidate, whatever the
+staged files' age — staging dropped for a gate not yet
+fired carries no run record, so age alone cannot tell
+it from dead staging. A job declares a staging dir in
+its own manifest (adapters/*/jobs/<job>/job.json)
+three ways: the "staging_dirs" field (a "var/<dir>"
+path or a bare "<dir>" name), an "uploads" entry under
+var/<dir>/ (the form existing manifests already use),
+and its own home var/<job-name>/ (the job's directory
+name or its manifest "name"). A job is live while it
+has no run records at all (declared, not yet fired)
+or its latest run record is not terminal; once the
+latest run is terminal the declaration lapses and
+the dir prunes under the ordinary class rules.
+Undeclared staging is unchanged.
+
 Never touched: run and transfer RECORDS (results/runs,
 results/xfers — metadata and verdicts are the evidence the
 programmes cite), lease records, anything a non-terminal
-run or a fresh non-terminal transfer references, anything
-younger than the class floors, and anything outside the
-classes above. The prune stops as soon as the free-space
-target is met. --dry-run reports the plan without deleting.
-Every execution appends its report to var/prune-log.jsonl.
+run or a fresh non-terminal transfer references, declared
+staging of a live job, anything younger than the class
+floors, and anything outside the classes above. The prune
+stops as soon as the free-space target is met. --dry-run
+reports the plan without deleting. Every execution appends
+its report to var/prune-log.jsonl.
 """
 
 from __future__ import annotations
@@ -207,6 +225,87 @@ def _tracked_job_paths(jobs_root: Path) -> set:
     return {REPO / line for line in out.stdout.splitlines() if line}
 
 
+TERMINAL_STATES = frozenset({"complete", "failed", "orphaned"})
+
+
+def _staging_dir(raw, min_parts: int) -> "Path | None":
+    """One manifest staging reference -> the var/ subdir
+    it names. References are store-relative ("var/<dir>"
+    or a bare "<dir>"); the staging dir is the first
+    component under var/. Absolute paths, ".." parts,
+    and references too shallow for the caller's form
+    name nothing."""
+    if not isinstance(raw, str):
+        return None
+    text = raw.strip()
+    if not text or text.startswith("/"):
+        return None
+    parts = [part for part in text.split("/") if part not in ("", ".")]
+    if not parts or ".." in parts:
+        return None
+    if parts[0] == "var":
+        parts = parts[1:]
+    if len(parts) < min_parts:
+        return None
+    return VAR / parts[0]
+
+
+def _protected_staging_dirs(latest_by_job: dict) -> set:
+    """The var/ staging dirs declared by live jobs.
+
+    Declaration is read from the jobs' own manifests
+    under adapters/*/jobs/<job>/job.json — no registry.
+    A manifest's job keys are its directory name and its
+    "name" field (run records are stamped with either).
+    A job is live when no record is stamped with any of
+    its keys (declared staging, not yet fired) or when
+    the newest such record is not terminal; a job whose
+    latest run is terminal declares nothing. A live job
+    protects its home var/<job-name>/ for each key, the
+    dirs its "staging_dirs" field names, and the var/
+    subdir each of its "uploads" entries sits under."""
+    protected_staging: set = set()
+    adapters_root = REPO / "adapters"
+    if not adapters_root.exists():
+        return protected_staging
+    for manifest_path in sorted(adapters_root.glob("*/jobs/*/job.json")):
+        try:
+            manifest = json.loads(manifest_path.read_text())
+        except (OSError, json.JSONDecodeError):
+            manifest = {}
+        if not isinstance(manifest, dict):
+            manifest = {}
+        keys = {manifest_path.parent.name}
+        name = manifest.get("name")
+        if isinstance(name, str) and name:
+            keys.add(name)
+        records = [latest_by_job[key] for key in keys if key in latest_by_job]
+        if records:
+            _activity, latest_state = max(records, key=lambda item: item[0])
+            if latest_state in TERMINAL_STATES:
+                continue
+        for key in keys:
+            protected_staging.add(VAR / key)
+        declared = manifest.get("staging_dirs")
+        if isinstance(declared, str):
+            declared = [declared]
+        if isinstance(declared, list):
+            for raw in declared:
+                staging_dir = _staging_dir(raw, min_parts=1)
+                if staging_dir is not None:
+                    protected_staging.add(staging_dir)
+        staging_dir = _staging_dir(manifest.get("staging_dir"), min_parts=1)
+        if staging_dir is not None:
+            protected_staging.add(staging_dir)
+        uploads = manifest.get("uploads")
+        if isinstance(uploads, list):
+            for raw in uploads:
+                staging_dir = _staging_dir(raw, min_parts=2)
+                if staging_dir is not None:
+                    protected_staging.add(staging_dir)
+    return protected_staging
+
+
 def plan(target_free_gb: float) -> tuple[list, dict]:
     now = time.time()
     protected, xfers = _load_records()
@@ -263,6 +362,7 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
     terminal_cold = set()
     job_activity: dict = {}
     job_live: set = set()
+    latest_by_job: dict = {}
     all_record_stems = {p.stem for p in (RESULTS / "runs").glob("*.json")}
     for path in (RESULTS / "runs").glob("*.json"):
         try:
@@ -275,6 +375,8 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         job = rec.get("job")
         if isinstance(job, str) and job:
             job_activity[job] = max(job_activity.get(job, 0.0), activity)
+            if job not in latest_by_job or activity > latest_by_job[job][0]:
+                latest_by_job[job] = (activity, rec.get("state"))
             if rec.get("state") not in ("complete", "failed", "orphaned"):
                 job_live.add(job)
         if rec.get("state") not in ("complete", "failed", "orphaned"):
@@ -297,13 +399,18 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
             if now - archive.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(6, archive, "job payload archives past the 48h floor")
     if VAR.exists():
+        protected_staging = _protected_staging_dirs(latest_by_job)
         for staging in VAR.glob("*/*-tree*.tar.gz"):
             if staging.name in protected:
+                continue
+            if any(parent in protected_staging for parent in staging.parents):
                 continue
             if now - staging.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(7, staging, "launch-staging tree tarballs past the 48h floor")
         for staging_bundle in VAR.glob("*/*.bundle"):
             if staging_bundle.name in protected:
+                continue
+            if any(parent in protected_staging for parent in staging_bundle.parents):
                 continue
             if now - staging_bundle.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(7, staging_bundle, "staging-subdir snapshot bundles past the 48h floor")
