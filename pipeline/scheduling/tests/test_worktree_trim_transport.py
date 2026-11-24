@@ -312,6 +312,57 @@ class TestVenueTransportHolds(Fixture):
         rows = self.cap_manifest_rows()
         self.assertEqual([r[0] for r in rows], names[:2])
 
+    def test_cap_over_reports_transport_held_survivor(self):
+        # the other face of the census transfer: the
+        # selectable population cannot cover the excess —
+        # population 3 per side (main + the held pin +
+        # one orphan), branch cap 1. The orphan is
+        # archived and trimmed; each side ends over the
+        # bound, reported as BRANCH-CAP-OVER whose
+        # survivors name venue-transport — the OVER
+        # line's reasons are read from the same laid
+        # marks the selection consults, so a transfer
+        # that laid no mark would take the pin instead
+        # of reporting it as a blocked survivor (the
+        # 2026-11-24 escape's shape, from the other
+        # side). The pass ends partial.
+        self.add_origin()
+        pin = "feat/pin"
+        self.add_orphan(pin, NOW - 90000)
+        self.add_orphan("feat/o0", NOW - 80000)
+        _git(self.main, "push", "origin", "main", pin,
+             "feat/o0", env=self.env)
+        self.add_record("run-1", "running", pin, mtime=NOW - 600)
+        out = self.run_trim(
+            "--tier", "soft",
+            extra_env={"WT_TRIM_BRANCH_CAP_REPO_A": "1"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn("HELD repo=repo-a branch=feat/pin "
+                      "scope=local reasons=venue-transport",
+                      out.stdout)
+        self.assertIn("BRANCH-CAP repo=repo-a side=local "
+                      "live=3 cap=1 archived=1", out.stdout)
+        self.assertIn("BRANCH-CAP repo=repo-a side=origin "
+                      "live=3 cap=1 archived=1", out.stdout)
+        self.assertIn("BRANCH-CAP-OVER repo=repo-a side=local "
+                      "live=3 cap=1 over=1 "
+                      "survivors=principal,venue-transport",
+                      out.stdout)
+        self.assertIn("BRANCH-CAP-OVER repo=repo-a side=origin "
+                      "live=3 cap=1 over=1 "
+                      "survivors=principal,venue-transport",
+                      out.stdout)
+        self.assertNotIn("BRANCH-ARCHIVED repo=repo-a "
+                         "branch=feat/pin", out.stdout)
+        self.assertTrue(self.branch_exists(pin))
+        remote = self.remote_branches()
+        self.assertIn(pin, remote)
+        self.assertFalse(self.branch_exists("feat/o0"))
+        self.assertNotIn("feat/o0", remote)
+        self.assertEqual(self.queue(), [])
+        rows = self.cap_manifest_rows()
+        self.assertEqual([r[0] for r in rows], ["feat/o0"])
+
     def test_drain_refuses_transport_held_charge(self):
         # a standing cap charge naming the pin — written
         # before the run family's hold stood: the drain

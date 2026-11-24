@@ -775,9 +775,16 @@ run_worker() {
     # first, from the pass-start record scan: the
     # checkout and principal marks below overlay them,
     # so a branch that is also checked out or principal
-    # reports its governing reason.
+    # reports its governing reason. The keys expansion
+    # carries no :- default: with one, bash parses
+    # ${!transport_held[@]:-} as indirection over the
+    # map's values, the loop iterates nothing, and no
+    # mark is laid — silently (the 2026-11-24 escape:
+    # the sweep printed HELD from the map itself while
+    # the cap phase, reading only the laid marks,
+    # archived the held branch it ranked first).
     local tb
-    for tb in "${!transport_held[@]:-}"; do
+    for tb in "${!transport_held[@]}"; do
       [ -n "$tb" ] || continue
       [ "${tb%% *}" = "$slug" ] || continue
       tb="${tb#* }"
