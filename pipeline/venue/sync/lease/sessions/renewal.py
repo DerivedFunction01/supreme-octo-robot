@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from ..core import foundation, catalog, records, spend
@@ -212,12 +211,11 @@ def _renew_fresh_session(colab, repo: Path, cfg: dict, rec: dict, now_dt: dateti
     if not gate["allowed"]:
         _mod_gate.append_gate_journal(repo, {"kind": "shape-refused", "seam": "renewal", "shape": shape_id, "shape_class": gate["shape_class"], "agent_classes": gate["agent_classes"]})
         return None
-    # The renewal child derives from the lease's own name: the
-    # generated name with any earlier renewal suffixes stripped, so
-    # a lease's sessions read as one family for its whole window.
-    base = rec["session"]
-    while re.search(r"-r\d+$", base):
-        base = re.sub(r"-r\d+$", "", base)
+    # The renewal child derives from the lease's own name: its
+    # lineage (naming.lineage — the generated name with any
+    # earlier renewal suffixes stripped), so a lease's sessions
+    # read as one family for its whole window.
+    base = records.naming.lineage(rec["session"])
     new_session = f"{base}-r{int(now_dt.timestamp())}"
     try:
         r = colab(*(["new", "-s", new_session] + catalog._session_shape_args(shape)), timeout=600)

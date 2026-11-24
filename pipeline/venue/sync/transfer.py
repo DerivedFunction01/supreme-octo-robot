@@ -161,7 +161,7 @@ def _attempt(fn) -> tuple:
     return proc, PART_ATTEMPTS
 
 
-def _xfer_dir(digest: str) -> str:
+def _xfer_dir(digest: str, remote_name: str = "") -> str:
     """The per-transfer staging directory for one payload,
     derived from its whole-file SHA-256: .xfer-<digest[:12]>.
     Parts live under it, never flat beside the target — residue
@@ -170,8 +170,23 @@ def _xfer_dir(digest: str) -> str:
     .part-000 chunks beside a bundle were swallowed by a job's
     part-* reassembly glob and doubled it). The derivation is
     content-keyed so both directions and any re-run agree on
-    the directory, which keeps resume working."""
-    return f".xfer-{digest[:12]}"
+    the directory, which keeps resume working.
+
+    When the target carries a directory (a per-run target —
+    the runner's Step 5 form), the staging directory sits
+    inside that directory, not at the session root: a
+    root-level content-keyed directory is one slot per
+    payload for the whole session, and a packet family that
+    stages the identical payload for several runs (the
+    segfin base/packet/check jobs and their one tree tar)
+    shared it — the first run to finish deleted the whole
+    directory under its siblings' in-flight parts, and a
+    sibling's reassemble could complete out of parts another
+    transfer staged. Inside the target's own directory the
+    staging is as per-run as the target itself; a bare
+    target (the colab-xfer contract) keeps the root form."""
+    parent = os.path.dirname(remote_name)
+    return f"{parent}/.xfer-{digest[:12]}" if parent else f".xfer-{digest[:12]}"
 
 
 def _cleanup_parts(session: str, target: str, staging_dir: str) -> None:
@@ -278,14 +293,16 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
     (the B3-S3b tree-tar specimen). The token defaults to a
     per-process unique value; a caller that knows its run
     passes it (the runner passes the run id). The remote
-    staging dir stays content-addressed by the file's hash —
-    identical bytes share it safely, different bytes never
-    meet there. Local parts are scratch (resume is
+    staging dir is content-addressed by the file's hash
+    within the target's directory (_xfer_dir): identical
+    bytes headed for the same target share it safely, and
+    two runs' copies of one payload — different targets —
+    never meet there. Local parts are scratch (resume is
     remote-side) and are removed when the transfer closes.
     """
     local = Path(local)
     digest = sha256_file(local)
-    staging_dir = _xfer_dir(digest)
+    staging_dir = _xfer_dir(digest, remote_name)
     token = staging_token or f"{os.getpid()}-{time.time_ns()}"
     part_dir = REPO / "var" / "chunks" / token
     metas = []
@@ -406,7 +423,13 @@ def chunked_download(session: str, remote_name: str, dest: Path, progress=None) 
         "    while c := f.read(1024*1024):\n"
         "        whole.update(c)\n"
         "digest = whole.hexdigest()\n"
-        "DIR = '.xfer-' + digest[:12]\n"
+        # The split's staging follows the remote file's
+        # directory, the upload side's derivation (_xfer_dir):
+        # a per-run remote (a run's out dir) stages its parts
+        # inside that directory, never in the session-root
+        # slot every run moving the same payload would share.
+        "_parent = os.path.dirname(REMOTE)\n"
+        "DIR = (_parent + '/.xfer-' + digest[:12]) if _parent else ('.xfer-' + digest[:12])\n"
         "os.makedirs(os.path.join(BASE, DIR), exist_ok=True)\n"
         "parts = []\n"
         "with open(path, 'rb') as f:\n"
@@ -437,10 +460,26 @@ def chunked_download(session: str, remote_name: str, dest: Path, progress=None) 
                       "resumed_parts": resumed, "moved_parts": downloaded})
 
     emit()
+    staging_prefix = (info.get("dir") or "") + "/"
     local_parts = []
     for meta in parts:
         name, want_sha = meta["name"], meta["sha256"]
-        tmp = REPO / "var" / "chunks" / Path(name).name
+        # The local part file keeps the part's source-relative
+        # path (its remote path minus the split's staging
+        # directory), not the bare part basename: a flat slot
+        # per basename made two concurrent downloads of
+        # different files whose parts share a basename — every
+        # run's outputs carry the same names — stage onto the
+        # same local files, the shape the upload side's local
+        # staging was cured of by its per-transfer token
+        # (2026-11-21). Keyed by the source path, a re-run of
+        # the same download still finds its parts (resume),
+        # and another source's parts never share the file. A
+        # part name outside the staging directory (a split
+        # staged by an older form) falls back to the basename,
+        # the layout before this cure.
+        rel = name[len(staging_prefix):] if staging_prefix and name.startswith(staging_prefix) else Path(name).name
+        tmp = REPO / "var" / "chunks" / rel
         tmp.parent.mkdir(parents=True, exist_ok=True)
         if tmp.exists() and tmp.stat().st_size == meta["size"] and sha256_file(tmp) == want_sha:
             resumed += 1
@@ -478,7 +517,7 @@ def chunked_download(session: str, remote_name: str, dest: Path, progress=None) 
         # directory (and any legacy flat residue for this
         # target). A failed assembly keeps its remote parts —
         # they are the resume state for the next attempt.
-        _cleanup_parts(session, remote_name, info.get("dir") or _xfer_dir(info["sha256"]))
+        _cleanup_parts(session, remote_name, info.get("dir") or _xfer_dir(info["sha256"], remote_name))
     return {"ok": ok, "bytes": dest.stat().st_size,
             "sha256": h.hexdigest(), "remote_sha256": info["sha256"],
             "parts": len(parts), "resumed_parts": resumed,

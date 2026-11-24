@@ -430,6 +430,55 @@ def retire_superseded(repo: Path, old_session: str, new_session: str, now_dt: da
     return tomb_name
 
 
+def _superseded_pointers(repo: Path) -> dict[str, str]:
+    """{old_session: new_session} from the renewal tombstones on
+    disk: each <record file>.superseded-<ts> carries its session
+    and the superseded_by pointer retire_superseded stamped.
+    A tombstone that cannot yield a record contributes nothing
+    — a pointer is evidence, and unreadable evidence is no
+    evidence."""
+    out: dict[str, str] = {}
+    var = foundation.var_dir(repo)
+    if var.exists():
+        for path in sorted(var.glob("lease-*.json.superseded-*")):
+            tomb = _valid_record(foundation.load_json(path, None))
+            if tomb is not None and tomb.get("superseded_by"):
+                out[tomb["session"]] = tomb["superseded_by"]
+    return out
+
+
+def resolve_session_record(repo: Path, session: str) -> dict | None:
+    """Resolve a session name to the live lease record that
+    currently carries its lineage (adoption-liveness cure,
+    2026-11-24): the name's own record when it stands; else
+    the renewal chain — tombstone superseded_by pointers
+    followed to the live generation; else the live record
+    sharing the name's lineage (naming.lineage, renewal's own
+    derivation, for a swap whose tombstone is gone). Returns
+    {"record", "session", "via"} with via naming the route
+    (exact | superseded | lineage), or None when no live
+    record carries the lineage. A pin resolves through this:
+    it names a lineage, not a frozen instance, and another
+    lineage's record is never a resolution."""
+    rec = load_record(repo, session)
+    if rec is not None:
+        return {"record": rec, "session": session, "via": "exact"}
+    pointers = _superseded_pointers(repo)
+    name, seen = session, set()
+    while name in pointers and name not in seen:
+        seen.add(name)
+        name = pointers[name]
+        rec = load_record(repo, name)
+        if rec is not None:
+            return {"record": rec, "session": name, "via": "superseded"}
+    stem = naming.lineage(session)
+    kin = [r for r in all_records(repo) if r["session"] != session and naming.lineage(r["session"]) == stem]
+    if kin:
+        rec = max(kin, key=lambda r: (r.get("acquired_at") or "", r["session"]))
+        return {"record": rec, "session": rec["session"], "via": "lineage"}
+    return None
+
+
 def delete_record(repo: Path, session: str) -> None:
     """Remove a lease's record, wherever it lives — for the same
     reason save cleans up: no stale copy may resurrect a released

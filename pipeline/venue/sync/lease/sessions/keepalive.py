@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from ..core import foundation
-from . import sessions
+from . import sessions, health
 
 # The heartbeat read is deliberately short-bounded: the file
 # channel can stall indefinitely, so a stall degrades the age to
@@ -111,6 +111,46 @@ def kernel_pulse(colab, repo: Path, session: str) -> str:
         return "busy"
     except Exception:  # noqa: BLE001
         return "failed"
+
+
+# The bind probe's bounds: one exec, tight against the launch
+# channel's own timeouts (120 s remote / 300 s client at the
+# run-dir stage) — a channel that cannot answer an inert
+# assignment inside this window is the channel that killed
+# the renewed noble lease's launches at their mkdir exec.
+BIND_PROBE_REMOTE_TIMEOUT_S = 20
+BIND_PROBE_TIMEOUT_S = 30
+
+
+def bind_probe(colab, repo: Path, session: str) -> dict:
+    """Prove a session's kernel channel answers before a launch
+    binds to it (adoption-liveness cure, 2026-11-24): the
+    session list reads a renewed lease alive while its
+    endpoint is dead, and adoption on that evidence fed
+    launches into a channel that timed out at their first
+    exec. One bounded exec of the kernel pulse's inert body,
+    with the pulse's verdict vocabulary: ok (the channel
+    answered) and busy (the exec timed out locally — the
+    channel carried the request and the kernel is executing,
+    which is life) bind; failed (the channel itself refused
+    or errored) does not. The outcome is journaled as launch
+    health (stage "bind"), so the pool's demotion learns from
+    probes as it learns from launches. Never raises; returns
+    {"live", "result", "detail"}."""
+    probe = foundation.var_dir(repo) / "bind-probe.py"
+    probe.parent.mkdir(parents=True, exist_ok=True)
+    foundation.staged_write(probe, "__bind_probe__ = 'ok'\nprint('bind probe')\n".encode())
+    try:
+        r = colab("exec", "-s", session, "--timeout", str(BIND_PROBE_REMOTE_TIMEOUT_S), "-f", str(probe), timeout=BIND_PROBE_TIMEOUT_S)
+        result = "ok" if r.returncode == 0 else "failed"
+        detail = "" if r.returncode == 0 else (r.stderr or r.stdout or "").strip()[-200:]
+    except subprocess.TimeoutExpired:
+        result, detail = "busy", "probe exec timed out locally; kernel executing"
+    except Exception as exc:  # noqa: BLE001
+        result, detail = "failed", f"{type(exc).__name__}: {exc}"[:200]
+    live = result in ("ok", "busy")
+    health.append_launch_outcome(repo, session, "bind", live, f"{result}: {detail}" if detail else result)
+    return {"live": live, "result": result, "detail": detail}
 
 
 def _capture_session_host(repo: Path, rec: dict, origin: str, spool_on_first: bool) -> bool:

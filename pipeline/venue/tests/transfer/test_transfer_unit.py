@@ -92,7 +92,11 @@ class FakeColab:
         if "# transfer:split" in code:
             remote = json.loads(re.search(r'REMOTE = (".*?")', code).group(1))
             blob = self.remote[remote]
-            staging = f".xfer-{sha(blob)[:12]}"
+            # Mirror the snippet's staging derivation: inside
+            # the remote file's directory when it carries one,
+            # the session-root form for a bare name.
+            parent = remote.rsplit("/", 1)[0] if "/" in remote else ""
+            staging = f"{parent}/.xfer-{sha(blob)[:12]}" if parent else f".xfer-{sha(blob)[:12]}"
             parts = []
             ch = int(re.search(r"CH = (\d+)", code).group(1))
             for i in range(0, len(blob), ch):
@@ -139,6 +143,56 @@ def test_upload_into_a_run_directory_lands_whole(tmp_path, monkeypatch):
     r = xfer.chunked_upload("s", local, "runs/run-9/big.bin")
     assert r["ok"] and r["parts"] == 4
     assert fake.remote == {"runs/run-9/big.bin": CONTENT}
+
+
+def test_upload_into_a_run_directory_stages_its_parts_there(tmp_path, monkeypatch):
+    # The staging follows the target (the runner cure): a
+    # chunked upload into a per-run directory stages its parts
+    # inside that directory, under its .xfer-<digest> — never
+    # in the session-root staging slot every run moving the
+    # same payload would share. An exhausted part leaves the
+    # earlier parts as resume state; where they sit is the
+    # observable.
+    fake, local = harness(tmp_path, monkeypatch)
+    fake.fail_uploads["big.bin.part-002"] = xfer.PART_ATTEMPTS
+    r = xfer.chunked_upload("s", local, "runs/run-9/big.bin")
+    assert not r["ok"] and r["stage"] == "upload part 2"
+    staged = sorted(fake.remote)
+    assert len(staged) == 2 and all(k.startswith("runs/run-9/.xfer-") for k in staged), staged
+    assert not any(k.startswith(".xfer-") for k in fake.remote)
+
+
+def test_two_runs_chunking_the_same_payload_stage_apart(tmp_path, monkeypatch):
+    # The segfin packet shape: several runs on one session
+    # stage the identical payload (one tree tar) under the
+    # same basename for different targets. Their staging is
+    # disjoint by target directory, so the first run's
+    # completion cleanup cannot delete the second run's
+    # in-flight parts, the second run resumes from its own
+    # staged parts, and each run's assembled file is its own.
+    fake, local = harness(tmp_path, monkeypatch)
+    fake.fail_uploads["big.bin.part-002"] = xfer.PART_ATTEMPTS
+    r = xfer.chunked_upload("s", local, "runs/run-10/big.bin")
+    assert not r["ok"]
+    fake.fail_uploads.clear()
+    r9 = xfer.chunked_upload("s", local, "runs/run-9/big.bin")
+    assert r9["ok"] and fake.remote["runs/run-9/big.bin"] == CONTENT
+    staged10 = sorted(k for k in fake.remote if k.startswith("runs/run-10/"))
+    assert len(staged10) == 2 and all(".xfer-" in k for k in staged10), staged10
+    r10 = xfer.chunked_upload("s", local, "runs/run-10/big.bin")
+    assert r10["ok"] and r10["resumed_parts"] == 2
+    assert fake.remote["runs/run-10/big.bin"] == CONTENT
+    assert set(fake.remote) == {"runs/run-9/big.bin", "runs/run-10/big.bin"}
+
+
+def test_two_runs_chunking_the_same_basename_land_disjoint(tmp_path, monkeypatch):
+    fake, local = harness(tmp_path, monkeypatch)
+    other = tmp_path / "other.bin"
+    other_content = bytes(reversed(range(200)))
+    other.write_bytes(other_content)
+    assert xfer.chunked_upload("s", local, "runs/run-9/big.bin")["ok"]
+    assert xfer.chunked_upload("s", other, "runs/run-10/big.bin")["ok"]
+    assert fake.remote == {"runs/run-9/big.bin": CONTENT, "runs/run-10/big.bin": other_content}
 
 
 def test_upload_retries_a_dropped_part(tmp_path, monkeypatch):
@@ -251,6 +305,32 @@ def test_download_exhaustion_reports_stage_then_rerun_resumes(tmp_path, monkeypa
     assert r2["ok"] and r2["resumed_parts"] == 2 and r2["downloaded_parts"] == 2
     assert len(fake.download_calls) - calls_before == 2  # only the missing parts moved
     assert dest.read_bytes() == CONTENT
+
+
+def test_download_from_a_run_directory_stages_apart(tmp_path, monkeypatch):
+    # The receiving side mirrors the upload side: the remote
+    # split of a file inside a per-run directory stages its
+    # parts inside that directory, and the local parts stage
+    # under var/chunks at the source-relative path — never
+    # the flat per-basename slot two runs pulling same-named
+    # outputs would share. A part that never lands leaves
+    # both stagings as the observable resume state, and the
+    # re-run resumes from them.
+    fake, local = harness(tmp_path, monkeypatch)
+    fake.remote["run-out-9/gate.log"] = CONTENT
+    fake.fail_downloads["gate.log.dl-002"] = xfer.PART_ATTEMPTS
+    dest = tmp_path / "down" / "gate.log"
+    r = xfer.chunked_download("s", "run-out-9/gate.log", dest)
+    assert not r["ok"]
+    staged = sorted(k for k in fake.remote if k != "run-out-9/gate.log")
+    assert len(staged) == 4 and all(k.startswith("run-out-9/.xfer-") for k in staged), staged
+    local_parts = sorted(p.name for p in (tmp_path / "var" / "chunks" / "run-out-9").glob("*"))
+    assert local_parts == ["gate.log.dl-000", "gate.log.dl-001"]
+    assert not (tmp_path / "var" / "chunks" / "gate.log.dl-000").exists()
+    fake.fail_downloads.clear()
+    r2 = xfer.chunked_download("s", "run-out-9/gate.log", dest)
+    assert r2["ok"] and r2["resumed_parts"] == 2 and dest.read_bytes() == CONTENT
+    assert set(fake.remote) == {"run-out-9/gate.log"}
 
 
 # --- bin/colab-xfer: the verb over the library ------------------------------
