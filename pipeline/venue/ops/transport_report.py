@@ -23,11 +23,14 @@ inside it):
   launched run counts as bundle — the explicit "bundle"
   stamp, or no stamp at all (the pre-stamp era, when the
   snapshot bundle was the only transport that existed).
-- programme: the caller family — the caller string ahead
-  of any ":" sub-attribution, folded mechanically:
-  edgar* → edgar, steampower* → steam, workhorse →
-  workhorse, any other caller keeps its own name as its
-  row, and a record with no caller reads "unknown".
+- programme: the programme the caller registry declares
+  for the caller (config/callers.json's "programmes"
+  object, read through the lease core's callers module):
+  the caller string ahead of any ":" sub-attribution is
+  the registry key, so a lane suffix reports under its
+  base's programme. A caller with no declared programme
+  keeps its own name as its row, and a record with no
+  caller reads "unknown".
 
 The median claim→launch span is reported per programme
 and kind from the stamps that carry one (transport.
@@ -51,6 +54,7 @@ import os
 import statistics
 import sys
 import time
+import types
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -76,18 +80,36 @@ _foundation_spec = _ilu.spec_from_file_location(
 foundation = _ilu.module_from_spec(_foundation_spec)
 _foundation_spec.loader.exec_module(foundation)
 
+# The lease core's callers module carries the registry's
+# programme declarations; it imports its foundation as a
+# package sibling, so it is bound under a synthetic package
+# whose foundation is the instance above.
+_core_pkg = types.ModuleType("venue_lease_core")
+_core_pkg.__path__ = [str(REPO / "sync" / "lease" / "core")]
+_core_pkg.foundation = foundation
+sys.modules.setdefault("venue_lease_core", _core_pkg)
+sys.modules.setdefault("venue_lease_core.foundation", foundation)
+_callers_spec = _ilu.spec_from_file_location(
+    "venue_lease_core.callers",
+    REPO / "sync" / "lease" / "core" / "callers.py")
+callers = _ilu.module_from_spec(_callers_spec)
+sys.modules["venue_lease_core.callers"] = callers
+_callers_spec.loader.exec_module(callers)
 
-def programme(caller) -> str:
+
+def programme(caller, programmes=None) -> str:
+    """The report row for one record's caller: the registry's
+    declared programme for the caller's base (the string ahead
+    of any ":" sub-attribution), else the base itself; a record
+    with no caller reads "unknown". `programmes` is the
+    declaration map (callers.caller_programmes); None resolves
+    it from this store's registry."""
     if not caller or not isinstance(caller, str):
         return "unknown"
     head = caller.split(":")[0]
-    if head.startswith("edgar"):
-        return "edgar"
-    if head.startswith("steampower"):
-        return "steam"
-    if head == "workhorse":
-        return "workhorse"
-    return head
+    if programmes is None:
+        programmes = callers.caller_programmes(REPO)
+    return programmes.get(head) or head
 
 
 def _epoch(ts):
@@ -96,15 +118,21 @@ def _epoch(ts):
     return foundation.epoch(ts)
 
 
-def summarize(records, start_epoch: float, end_epoch: float) -> dict:
+def summarize(records, start_epoch: float, end_epoch: float,
+              programmes=None) -> dict:
     """The pure count: an iterable of record dicts and the
-    window [start_epoch, end_epoch) over started_at."""
-    programmes: dict[str, dict] = {}
+    window [start_epoch, end_epoch) over started_at.
+    `programmes` is the registry's declaration map
+    (callers.caller_programmes); None resolves it from this
+    store's registry, once, before counting."""
+    if programmes is None:
+        programmes = callers.caller_programmes(REPO)
+    programmes_out: dict[str, dict] = {}
     spans: dict[str, dict[str, list]] = {}
     seen = skipped_no_start = 0
 
     def row(name):
-        return programmes.setdefault(name, {
+        return programmes_out.setdefault(name, {
             "fired": 0, "launched": 0, "branch": 0,
             "bundle": 0, "never_launched": 0})
 
@@ -116,7 +144,7 @@ def summarize(records, start_epoch: float, end_epoch: float) -> dict:
             continue
         if not (start_epoch <= fired_at < end_epoch):
             continue
-        name = programme(rec.get("caller"))
+        name = programme(rec.get("caller"), programmes)
         r = row(name)
         r["fired"] += 1
         if not rec.get("launch_at"):
@@ -133,7 +161,7 @@ def summarize(records, start_epoch: float, end_epoch: float) -> dict:
 
     totals = {"fired": 0, "launched": 0, "branch": 0,
               "bundle": 0, "never_launched": 0}
-    for name, r in programmes.items():
+    for name, r in programmes_out.items():
         for key in totals:
             totals[key] += r[key]
         med = spans.get(name, {"branch": [], "bundle": []})
@@ -141,7 +169,7 @@ def summarize(records, start_epoch: float, end_epoch: float) -> dict:
             k: (round(statistics.median(v), 1) if v else None)
             for k, v in med.items()}
     return {
-        "programmes": dict(sorted(programmes.items())),
+        "programmes": dict(sorted(programmes_out.items())),
         "totals": totals,
         "records_seen": seen,
         "records_skipped_no_start": skipped_no_start,

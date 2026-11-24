@@ -83,6 +83,39 @@ def is_active_caller(repo: Path, raw) -> bool:
     return validated.partition(":")[0] in active_caller_registry(repo)
 
 
+def caller_programmes(repo: Path) -> dict:
+    """The registry's optional per-caller programme declarations:
+    the local registry's "programmes" object maps a registered
+    caller base to the programme its runs are reported under
+    (the transport adoption report's rows). The fold lives here
+    as data, never in a consumer's code. Declarations naming
+    unregistered callers are ignored, a programme value must
+    carry the caller-name shape, and a missing or malformed
+    object declares nothing."""
+    out = {}
+    raw = foundation.load_json(callers_path(repo), {})
+    declared = raw.get("programmes") if isinstance(raw, dict) else None
+    if isinstance(declared, dict):
+        registered = caller_registry(repo)
+        for name, programme in declared.items():
+            if (isinstance(name, str) and name in registered
+                    and isinstance(programme, str)
+                    and _CALLER_PART.fullmatch(programme)):
+                out[name] = programme
+    return out
+
+
+def programme_for(repo: Path, raw) -> str | None:
+    """The programme a caller claim's runs are reported under,
+    or None when the registry declares none for its base: the
+    claim is taken at its base (a lane suffix inherits its
+    base's declaration, as with the active marking), and an
+    absent or malformed claim declares nothing."""
+    if not isinstance(raw, str) or not raw:
+        return None
+    return caller_programmes(repo).get(raw.partition(":")[0])
+
+
 def resolve_caller(repo: Path, flag: str | None = None, env: str | None = None) -> str | None:
     """The seam's caller claim, resolved: the flag when one was
     presented, else the env value, validated. None when no claim
