@@ -123,6 +123,92 @@ class AncestryCase(unittest.TestCase):
             self.assertIs(records._is_landed(str(tmp), "deadbeef"), None)
 
 
+class ParseStampCase(unittest.TestCase):
+    def test_decoded_datetime_stamps_parse(self):
+        # The store's decoder restores a persisted
+        # stamp to a datetime on load; the parser
+        # takes that shape as readily as text.
+        aware = datetime(2026, 11, 22, 2, 35, tzinfo=UTC)
+        self.assertEqual(records._parse_stamp(aware), aware)
+        naive = datetime(2026, 11, 22, 2, 35)
+        self.assertEqual(records._parse_stamp(naive), naive.replace(tzinfo=UTC))
+
+    def test_unparseable_stamps_are_none(self):
+        self.assertIsNone(records._parse_stamp("not a stamp"))
+        self.assertIsNone(records._parse_stamp(None))
+        self.assertIsNone(records._parse_stamp(42))
+
+
+class FailedReadRecoveryCase(unittest.TestCase):
+    """The capacity freeze of 2026-11-24: a programme
+    whose workbench read fails keeps its prior claims
+    — the recovery loop re-parses each prior entry's
+    claimed_at, which the store's decoder has already
+    restored to a datetime. The collector must carry
+    those claims through, never die on their shape."""
+
+    def test_failed_read_carries_decoded_prior_claims(self):
+        import tempfile
+        from unittest import mock
+
+        from attention.infra import wb_client
+        from attention.settings import Settings
+
+        with tempfile.TemporaryDirectory() as td:
+            tmp = Path(td)
+            record_file = tmp / "lane.md"
+            record_file.write_text(
+                "progress-checkpoint: 2026-11-22T02:35:00Z — build "
+                "completed and pushed (abc1234).\n",
+                encoding="utf-8",
+            )
+            prior_at = datetime(2026, 11, 20, 9, 0, tzinfo=UTC)
+            state = {
+                "programmes": [
+                    {
+                        "slug": "lane-prog",
+                        "wb_projects": ["proj-x"],
+                        "record_locations": [str(record_file)],
+                    }
+                ],
+                "unlanded_snapshot": {
+                    "lane-prog": {
+                        "at": prior_at,
+                        "claims": [
+                            {
+                                "sha": "deadbee",
+                                "claimed_at": prior_at,
+                                "repo": None,
+                                "landed": None,
+                            }
+                        ],
+                    }
+                },
+            }
+            with mock.patch.object(
+                wb_client,
+                "fetch_todos",
+                side_effect=wb_client.WbUnavailable("wb down"),
+            ):
+                changed = records.collect_unlanded(state, Settings(), at(4, 0))
+            self.assertTrue(changed)
+            claims = {
+                c["sha"]: c for c in state["unlanded_snapshot"]["lane-prog"]["claims"]
+            }
+            self.assertEqual(set(claims), {"deadbee", "abc1234"})
+            self.assertEqual(claims["deadbee"]["claimed_at"], prior_at.isoformat())
+            # A second pass over the rewritten snapshot
+            # (its stamps now text again) finds nothing
+            # new: the change measure reads the claims,
+            # not the shape they arrived in.
+            with mock.patch.object(
+                wb_client,
+                "fetch_todos",
+                side_effect=wb_client.WbUnavailable("wb down"),
+            ):
+                self.assertFalse(records.collect_unlanded(state, Settings(), at(4, 5)))
+
+
 class UnlandedRowsCase(unittest.TestCase):
     def _state(self, claimed, landed=False):
         return {
