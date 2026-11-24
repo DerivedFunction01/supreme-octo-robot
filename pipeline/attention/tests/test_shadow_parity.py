@@ -358,16 +358,16 @@ class CronFamilyDerivation(unittest.TestCase):
 class StaffingParity(unittest.TestCase):
     def test_staffed_window_both_sides_agree(self):
         # Inside 10:00–12:25Z the records show several
-        # families across both live sessions: the cron
-        # side raises no defect, and the app side
-        # raises no count-condition row. The cron-side
-        # counts prove the specimen is non-vacuous.
-        # The app side additionally stands its queue
-        # row under the staffing-commission amendment
-        # (the staffable-now CI-gold item is not in
-        # the recorded flight) — a condition the cron
-        # side does not carry, so parity is asserted
-        # on the count conditions both sides measure.
+        # families across both live sessions: neither
+        # side raises a defect. The cron-side counts
+        # prove the specimen is non-vacuous. The app
+        # side stands no queue row in these windows
+        # either: the queue's staffable-now work was
+        # staffed and pruned by amendment, and its
+        # one remaining work item is gated on the
+        # unlanded packet marker, so parity holds on
+        # the whole serial row, not just the count
+        # conditions both sides measure.
         for now in (at19(11), at19(12), at19(12, 15)):
             defect, families, carrying = cron_serial(now)
             self.assertFalse(defect, f"cron side at {now}")
@@ -376,11 +376,7 @@ class StaffingParity(unittest.TestCase):
             view = staffing.build_staffing(
                 specimen_state(now), settings(), now)
             rows = rows_of_kind(view, "serial_staffing")
-            self.assertEqual(len(rows), 1, f"app side at {now}")
-            self.assertEqual(
-                rows[0]["conditions"],
-                ["prerequisite_due_family_unstaffed"],
-                f"app side at {now}")
+            self.assertEqual(rows, [], f"app side at {now}")
 
     def test_defect_window_both_sides_agree(self):
         # Inside 13:30–15:22Z the records narrow to one

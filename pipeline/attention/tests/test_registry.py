@@ -45,31 +45,21 @@ EXPECTED_EDGAR_CONTRACT = {
     "non_response_after_consecutive_runs": 2,
     "reminder_cadence_minutes": 30,
     # The staffable queue, from the staffing-
-    # commission amendment as commissioned: the
-    # CI-gold trace pricing staffable now, the
-    # caption-channel reader pricing gated on the
-    # segment register's close, the Round 4
+    # commission amendment as commissioned and
+    # amended since: the CI-gold trace pricing and
+    # the caption-channel reader pricing were
+    # staffed on the owner's direct order and left
+    # the queue as staffed work, so what remains is
+    # the two precondition markers and the Round 4
     # instrument build gated on the segment
     # packet's landing. Family keys are the venue
     # measure's workstream stems.
     "staffable_queue": [
         {
-            "key": "ci-gold-trace-pricing",
-            "label": "CI-gold dominance-instrumented trace pricing",
-            "family": "cigold",
-            "staffable_when": None,
-        },
-        {
             "key": "segment-register-close",
             "label": "Segment register close",
             "marker": True,
             "landed": False,
-        },
-        {
-            "key": "segment-caption-reader-pricing",
-            "label": "Segment caption-channel reader pricing",
-            "family": "segcaption",
-            "staffable_when": "segment-register-close",
         },
         {
             "key": "segment-packet-landing",
@@ -198,9 +188,7 @@ class StaffableQueue(unittest.TestCase):
         self.assertEqual(
             [entry["key"] for entry in queue],
             [
-                "ci-gold-trace-pricing",
                 "segment-register-close",
-                "segment-caption-reader-pricing",
                 "segment-packet-landing",
                 "round4-instrument-build",
             ],
@@ -235,7 +223,7 @@ class StaffableQueue(unittest.TestCase):
 
     def test_work_item_without_a_family_refuses(self):
         row = self._row()
-        del self._queue(row)[0]["family"]
+        del self._queue(row)[2]["family"]
         with self.assertRaises(registry.RegistryError) as caught:
             registry.validate_declaration(row)
         self.assertIn("staffable_queue", str(caught.exception))

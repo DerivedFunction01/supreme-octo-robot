@@ -104,22 +104,10 @@ EDGAR_STAFFING_CONTRACT = {
     # its trailing run-kind segments.
     "staffable_queue": [
         {
-            "key": "ci-gold-trace-pricing",
-            "label": "CI-gold dominance-instrumented trace pricing",
-            "family": "cigold",
-            "staffable_when": None,
-        },
-        {
             "key": "segment-register-close",
             "label": "Segment register close",
             "marker": True,
             "landed": False,
-        },
-        {
-            "key": "segment-caption-reader-pricing",
-            "label": "Segment caption-channel reader pricing",
-            "family": "segcaption",
-            "staffable_when": "segment-register-close",
         },
         {
             "key": "segment-packet-landing",

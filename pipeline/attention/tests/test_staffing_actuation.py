@@ -12,6 +12,7 @@ the Step 2 recorded window: 14:00Z reads a serial
 defect (one family on calm, scarlet idle).
 """
 
+import copy
 import sys
 import unittest
 from datetime import UTC, datetime, timedelta
@@ -181,17 +182,16 @@ class StaffingActuationTests(unittest.TestCase):
         continuation.run_staffing_pass(state, settings(), at(14))
         self.assertEqual(len(staffing_sends(state)), 1)
         # The 11:00Z specimen reads staffed on the
-        # count bands; under the staffing-commission
-        # amendment the measure clears only when the
-        # queue's due work is staffed too, so the
-        # cleared state also flies the CI-gold family
-        # (the queue's staffable-now item). The row is
-        # gone, so the ledger entry leaves with it and
-        # no further steer posts (the pass still
-        # reports the ledger clear as a change).
+        # count bands, and the queue stands nothing
+        # due there either — its staffable-now work
+        # was staffed and pruned by amendment, and
+        # the one remaining item is gated on the
+        # unlanded packet marker — so the measure
+        # clears: the row is gone, the ledger entry
+        # leaves with it, and no further steer posts
+        # (the pass still reports the ledger clear
+        # as a change).
         staffed = defect_state(at(11))
-        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
-        families["cigold"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
         state["venue_snapshot"] = staffed["venue_snapshot"]
         state["capacity_snapshot"] = staffed["capacity_snapshot"]
         self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
@@ -309,33 +309,88 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertEqual(len(staffing_sends(state)), 1)
 
 
+# A synthetic queue in the commission's form, for
+# the steer specimens: the seeded queue's only
+# remaining work is gated on an unlanded marker,
+# so the seed itself never reads due and cannot
+# raise a commission — the steer form is proven
+# against this fixture instead.
+SYNTHETIC_QUEUE = [
+    {
+        "key": "trace-pricing",
+        "label": "Trace pricing",
+        "family": "tracefam",
+        "staffable_when": None,
+    },
+    {
+        "key": "register-close",
+        "label": "Register close",
+        "marker": True,
+        "landed": False,
+    },
+    {
+        "key": "reader-pricing",
+        "label": "Reader pricing",
+        "family": "readerfam",
+        "staffable_when": "register-close",
+    },
+    {
+        "key": "packet-landing",
+        "label": "Packet landing",
+        "marker": True,
+        "landed": False,
+    },
+    {
+        "key": "round-build",
+        "label": "Round build",
+        "family": "roundfam",
+        "staffable_when": "packet-landing",
+    },
+]
+
+_REAL_CONTRACT_FOR = registry.staffing_contract_for
+
+
+def synthetic_queue_contract(slug):
+    """The registry contract with its staffable
+    queue swapped for the synthetic fixture."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract is not None:
+        contract["staffable_queue"] = copy.deepcopy(SYNTHETIC_QUEUE)
+    return contract
+
+
 class CommissionSteerTests(unittest.TestCase):
     """The commission form (staffing-commission
     amendment): where the serial row carries due
     queue work, the steer's next act names it in
     queue order, with the gate clause for each item
     still gated on an unlanded marker; the clearing
-    stays later-measure-only."""
+    stays later-measure-only. The queue behind the
+    row is the synthetic fixture above."""
 
     def test_serial_steer_carries_the_commission(self):
         state = defect_state(at(14))
-        continuation.run_staffing_pass(state, settings(), at(14))
+        with mock.patch.object(
+            registry, "staffing_contract_for", synthetic_queue_contract
+        ):
+            continuation.run_staffing_pass(state, settings(), at(14))
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 1)
         text = sends[0]["text"]
         self.assertIn(
             "Staffing commission — staff: "
-            "CI-gold dominance-instrumented trace pricing.",
+            "Trace pricing.",
             text,
         )
         self.assertIn(
-            "Segment caption-channel reader pricing staffs on "
-            "Segment register close.",
+            "Reader pricing staffs on "
+            "Register close.",
             text,
         )
         self.assertIn(
-            "Round 4 instrument build staffs on "
-            "Segment packet landing (composed tree settles).",
+            "Round build staffs on "
+            "Packet landing.",
             text,
         )
         # The commission replaces the generic next act.
@@ -343,30 +398,33 @@ class CommissionSteerTests(unittest.TestCase):
 
     def test_commission_clears_only_on_a_staffing_measure(self):
         state = defect_state(at(14))
-        continuation.run_staffing_pass(state, settings(), at(14))
-        _deliver(state, settings(), at(14))
-        # A delivered steer — the closest thing to an
-        # acknowledgement the ledger ever sees — does
-        # not clear the row: at the next cadence the
-        # commission re-posts while the queue work
-        # still stands unstaffed.
-        _refresh_capacity(state, at(14, 31))
-        self.assertTrue(
-            continuation.run_staffing_pass(state, settings(), at(14, 31))
-        )
-        sends = staffing_sends(state)
-        self.assertEqual(len(sends), 2)
-        self.assertIn("Staffing commission", sends[1]["text"])
-        _deliver(state, settings(), at(14, 31), ref="chat:test:2")
-        # The measure showing the due family in
-        # flight, bands met, clears it: no third
-        # steer, and the ledger entry leaves.
-        staffed = defect_state(at(11))
-        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
-        families["cigold"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
-        state["venue_snapshot"] = staffed["venue_snapshot"]
-        state["capacity_snapshot"] = staffed["capacity_snapshot"]
-        self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
+        with mock.patch.object(
+            registry, "staffing_contract_for", synthetic_queue_contract
+        ):
+            continuation.run_staffing_pass(state, settings(), at(14))
+            _deliver(state, settings(), at(14))
+            # A delivered steer — the closest thing to an
+            # acknowledgement the ledger ever sees — does
+            # not clear the row: at the next cadence the
+            # commission re-posts while the queue work
+            # still stands unstaffed.
+            _refresh_capacity(state, at(14, 31))
+            self.assertTrue(
+                continuation.run_staffing_pass(state, settings(), at(14, 31))
+            )
+            sends = staffing_sends(state)
+            self.assertEqual(len(sends), 2)
+            self.assertIn("Staffing commission", sends[1]["text"])
+            _deliver(state, settings(), at(14, 31), ref="chat:test:2")
+            # The measure showing the due family in
+            # flight, bands met, clears it: no third
+            # steer, and the ledger entry leaves.
+            staffed = defect_state(at(11))
+            families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+            families["tracefam"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
+            state["venue_snapshot"] = staffed["venue_snapshot"]
+            state["capacity_snapshot"] = staffed["capacity_snapshot"]
+            self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
         self.assertEqual(len(staffing_sends(state)), 2)
         self.assertEqual(state.get(continuation.STAFFING_LEDGER), {})
 
