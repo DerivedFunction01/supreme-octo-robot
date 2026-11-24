@@ -299,7 +299,8 @@ _RUN_ID_SAFE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 def read_run_state(repo: Path, rec: dict, target: dict | None = None) -> dict:
     """One tri-state read of a local run's container run dir
-    (~/runs/<run_id>, the dispatch's own layout):
+    (the remote account's runs/<run_id>, the dispatch's
+    own layout):
 
     - "exit": the exit file is present — exit_code, the
       output tail, and finished_at from the exit file's own
