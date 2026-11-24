@@ -56,6 +56,42 @@ const ds = createMockAttentionStore(clock);
   );
   eq(perHandlerSum, today.decision_count, "per-handler waiting sum agrees with the badge count");
   eq(glance.count, today.decision_count, "glance count agrees with the badge count");
+
+  // Programme lane blocks (lane-records plan, Step 2):
+  // the specimens ride the seed in the served shape.
+  const blocks = digest.content.programme_lanes;
+  const quarry = blocks.find((b) => b.slug === "quarry-index");
+  eq(quarry?.actual, 2, "full staffing: quarry actual counts both lanes");
+  eq(quarry?.expected, 2, "full staffing: quarry expected is the queue count");
+  eq(quarry?.queue_unstaffed.length, 0, "full staffing: nothing unstaffed — the row reads clear");
+  eq(
+    quarry?.lanes.some((l) => l.venue === "none" && !l.stale),
+    true,
+    "full staffing: the venue-none authoring lane is served and counted",
+  );
+  const cedar = blocks.find((b) => b.slug === "cedar-billing");
+  eq(cedar?.actual, 1, "one short: cedar actual counts only the fresh lane");
+  eq(cedar?.expected, 3, "one short: cedar expected is the queue count");
+  eq(
+    cedar?.queue_unstaffed.map((i) => i.key).join(","),
+    "ledger-reconcile,statements-export",
+    "one short: queue_unstaffed names the unstaffed items",
+  );
+  eq(
+    cedar?.lanes.find((l) => l.key === "ledger-reconcile")?.stale,
+    true,
+    "stale lane: served flagged stale, excluded from actual",
+  );
+  eq(
+    blocks.some((b) => b.slug === "northwind-cutover"),
+    false,
+    "no named queue: northwind carries no block and renders no row",
+  );
+  eq(
+    blocks.some((b) => b.slug === "kite-freight"),
+    false,
+    "no named queue: kite-freight carries no block and renders no row",
+  );
 }
 
 // ---------- the fulfilled loop: decide -> queued -> sent -> fulfilled ----------

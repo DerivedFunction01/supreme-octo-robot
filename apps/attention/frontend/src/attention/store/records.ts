@@ -5,6 +5,7 @@
 
 import type {
   DecideResult,
+  DigestProgrammeLanes,
   DigestSettings,
   FulfilledEntry,
   HandlerActionResult,
@@ -95,6 +96,9 @@ export interface DigestSeedState {
     reason: string | null;
     plans: { project: string; path: string; title: string; age_days: number | null }[];
   };
+  /** The programme lane blocks in the digest's served
+   * shape; programmes with no named queue carry none. */
+  programme_lanes: DigestProgrammeLanes[];
 }
 
 export interface OwnerActionRecord {

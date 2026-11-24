@@ -166,6 +166,10 @@ function digestContent(): DigestContentView {
         escalation_label: r.escalation === "main" ? "Escalated to Main" : null,
       })),
     },
+    // The programme lane blocks ride the seed in the
+    // digest's served shape; programmes with no named
+    // queue carry no block and render no row.
+    programme_lanes: seed.programme_lanes ?? [],
     topics: digestTopics(stalls),
     parked_plans: {
       available: seed.parked_plans.available,
