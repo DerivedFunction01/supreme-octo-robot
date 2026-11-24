@@ -250,11 +250,14 @@
 #      requirement — a live pass once printed live=12
 #      cap=10 never=12, the whole population exempt and
 #      the cap binding nothing. That ruling bans exempt
-#      SETS — name lists and state carve-outs; the two
-#      structural exclusions below are not a set: each is
-#      a property of the census itself, derived from the
-#      repo at census time, with no name literals and no
-#      registry.)
+#      SETS — name lists and state carve-outs carried in
+#      code; the structural exclusions below are not a
+#      set: each is a property of the census itself,
+#      derived from the repo at census time — or, for a
+#      declared principal, named in the untracked
+#      deployment config that already carries the target
+#      set and caps — with no name literals and no
+#      registry in the script.)
 #      - principal branches (2026-11-23 cure): the base
 #        branch — the ref containment is measured
 #        against, the main worktree's own checkout — and
@@ -263,6 +266,22 @@
 #        candidate, never cap-selectable, never seeded,
 #        and the drain refuses and drops any charge
 #        naming one (BRANCH-DRAIN-SKIP reason=principal).
+#        Declared principals (2026-11-24 cure) stand in
+#        the same set: a repo whose standing integration
+#        branch is neither the base nor the remote's
+#        default — steampowernj lands through dev while
+#        both derivations resolve to main — declares it
+#        in repos.conf's optional 4th field, and it is
+#        principal in every phase (sweep, cap census,
+#        seed, drain). The 2026-11-24 hourly pass
+#        cap-archived steampowernj's origin dev at
+#        00fb3e09 and deleted the ref: the cap ranked it
+#        as an ordinary lane branch because no derivation
+#        could see it. The declaration is deployment data
+#        in the same untracked config that names the
+#        target set and the caps; the script still
+#        carries no name literals, and an undeclared repo
+#        behaves exactly as before.
 #        The 2026-11-23 hourly pass cap-archived
 #        steampowernj's main — strictly contained in its
 #        base, dev — attempted its origin deletion
@@ -355,8 +374,12 @@
 # Configuration: the target set and its per-repo caps are
 # deployment data, not code — they live in the untracked
 # config file repos.conf in the state dir (one line per
-# repo: <slug> <soft-cap> <deep-cap>; WORKTREE_TRIM_CONFIG
-# names another file). The environment overrides win
+# repo: <slug> <soft-cap> <deep-cap> [principals];
+# WORKTREE_TRIM_CONFIG names another file). The optional
+# 4th field names the repo's declared principal branches
+# (comma-separated, no spaces) — the standing refs the
+# deployment protects beside the derived pair (header
+# point 7). The environment overrides win
 # (WORKTREE_TRIM_REPOS for the set, WT_TRIM_CAP_<SLUG> per
 # cap). With no config at all, only the repo hosting this
 # script is in scope, under the generic tier caps
@@ -455,6 +478,25 @@ cap_for() {
   if [ "$TIER" = "deep" ]; then echo 5; else echo 10; fi
 }
 
+principals_for() {
+  # Declared principal branches for a repo (2026-11-24
+  # cure): repos.conf's optional 4th field, a
+  # comma-separated list of standing branches the
+  # deployment names as principals beside the derived
+  # pair (the base branch and the remote's default) —
+  # e.g. an integration branch a programme lands through
+  # that is neither. The declaration is deployment data
+  # in the same untracked config that names the target
+  # set and the caps; the script carries no branch-name
+  # literals. Absent field, absent file: no output.
+  local slug="$1" cfg=""
+  if [ -f "$CONFIG_FILE" ]; then
+    cfg="$(awk -v s="$slug" '$1==s {print $4}' "$CONFIG_FILE" | head -1)"
+  fi
+  [ -n "$cfg" ] && printf '%s' "$cfg" | tr ',' ' '
+  return 0
+}
+
 branch_cap_for() {
   # Branch-population cap (header point 7): per-repo env
   # WT_TRIM_BRANCH_CAP_<SLUG> wins; then the global env
@@ -505,23 +547,40 @@ run_worker() {
 
   # Principal branches (2026-11-23 cure): the refs the
   # branch leg must never charge, derived from the repo
-  # itself at pass start — never a name list. The set is
-  # the base branch (the main worktree's own checkout,
-  # the ref containment is measured against) plus the
-  # remote's default branch (the origin/HEAD symref
-  # target, read locally where the clone recorded it,
-  # else from the remote itself). In a main-base repo the
-  # two coincide; in a dev-base repo they are the two
-  # standing refs — main is contained in dev by
-  # construction, so without this derivation the sweep
-  # and the cap treat the remote's default as ordinary
-  # landed material.
+  # itself at pass start — never a name list in the
+  # script. The set is the base branch (the main
+  # worktree's own checkout, the ref containment is
+  # measured against) plus the remote's default branch
+  # (the origin/HEAD symref target, read locally where
+  # the clone recorded it, else from the remote itself).
+  # In a main-base repo the two coincide; in a dev-base
+  # repo they are the two standing refs — main is
+  # contained in dev by construction, so without this
+  # derivation the sweep and the cap treat the remote's
+  # default as ordinary landed material. A third source
+  # joins below (2026-11-24): branches the deployment
+  # config declares for the repo, for the standing ref
+  # neither derivation can see.
   local origin_default=""
   origin_default="$($GIT -C "$main_dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"
   origin_default="${origin_default#origin/}"
   if [ -z "$origin_default" ] && $GIT -C "$main_dir" remote get-url origin >/dev/null 2>&1; then
     origin_default="$(timeout 60 $GIT -C "$main_dir" ls-remote --symref origin HEAD 2>/dev/null | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2; exit }')"
   fi
+  # Declared principals (2026-11-24 cure): the derived
+  # pair above cannot see a standing integration branch
+  # that is neither the base nor the remote's default —
+  # steampowernj lands through dev while both derivations
+  # resolve to main, and the 2026-11-24 hourly pass
+  # cap-archived origin dev at 00fb3e09 and deleted the
+  # ref. The deployment declares such branches in
+  # repos.conf's 4th field (principals_for); they join
+  # the principal set for every phase below.
+  local -a declared_principals=()
+  local dpb
+  for dpb in $(principals_for "$slug"); do
+    [ -n "$dpb" ] && declared_principals+=("$dpb")
+  done
 
   # --- branch-trim queue helpers -------------------------------
   queue_file() { echo "$STATE_DIR/remote-pending-$slug.txt"; }
@@ -570,11 +629,15 @@ run_worker() {
   # branch, in either scope — a local branch carrying the
   # default's name is the same standing ref the remote
   # protects, and the local census has no separate
-  # derivation for it. Derived membership only: no name
-  # literals, no registry.
+  # derivation for it — or a branch the deployment
+  # config declares for this repo (repos.conf field 4,
+  # the 2026-11-24 cure). No name literals in the script:
+  # the derived pair comes from the repo, the declared
+  # names live only in the untracked config.
   is_principal() {
     [ "$1" = "$base_branch" ] && return 0
     [ -n "$origin_default" ] && [ "$1" = "$origin_default" ] && return 0
+    is_in "$1" "${declared_principals[@]:-}" && return 0
     return 1
   }
 
@@ -798,6 +861,17 @@ run_worker() {
     if [ -n "$origin_default" ]; then
       l_blocked["$origin_default"]="principal"; o_blocked["$origin_default"]="principal"
     fi
+    # Declared principals (2026-11-24 cure) carry the
+    # same census block, under the same governing reason:
+    # the cap census reads only these laid marks, so a
+    # principal source that is_principal knows but the
+    # census does not lay is selectable here — the exact
+    # shape of the venue-transport escape above.
+    local dpb2
+    for dpb2 in "${declared_principals[@]:-}"; do
+      [ -n "$dpb2" ] || continue
+      l_blocked["$dpb2"]="principal"; o_blocked["$dpb2"]="principal"
+    done
     base_lsha="$($GIT -C "$main_dir" rev-parse --verify --quiet "refs/heads/$base_branch" 2>/dev/null)"
     while IFS=$'\t' read -r lb lsha lepoch; do
       [ -z "$lb" ] && continue
@@ -1311,10 +1385,11 @@ run_worker() {
       mh="$(sed -n 's/^head=//p' "$mf" | head -1)"
       case "$b" in ""|DETACHED) continue ;; esac
       # a principal branch is never charged (2026-11-23
-      # cure) — derived membership, not a name: the base
-      # branch or the remote's default (the seed acts on
-      # both scopes, so it tests the same union set as
-      # the sweep, the cap, and the drain)
+      # cure) — the principal union set (is_principal:
+      # the derived pair plus any deployment-declared
+      # principals; the seed acts on both scopes, so it
+      # tests the same set as the sweep, the cap, and
+      # the drain)
       is_principal "$b" && continue
       if [ -n "$mp" ] && is_in "$mp" "${census_paths[@]:-}"; then continue; fi
       if [ -n "$mh" ]; then
