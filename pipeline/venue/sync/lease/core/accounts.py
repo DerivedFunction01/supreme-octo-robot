@@ -1,10 +1,7 @@
 """Accounts and per-account budgets (venue rework).
 
-The venue's core historically knew exactly one account: the
-funnel's stored credential, with its caps in the flat lease.json
-keys (`daily_cu_budget`, `monthly_cu_budget`,
-`standing.daily_cu_cap`). The rework makes accounts addressable
-without changing what any existing config means:
+Caps are tied per (venue, account) — there are no flat,
+venue-level cap keys:
 
 - `accounts` block: {venue: [{"id", "label"?, "token_file"?}]}.
   The first entry is the venue's default account. Absent the
@@ -12,11 +9,11 @@ without changing what any existing config means:
   whose credential is the funnel's live token.
 - `budgets` block: {venue: {account: {"daily", "monthly",
   "standing_daily"}}} in the served caps key names. Resolution
-  for (venue, account), per key: the budgets entry, then — for
-  the home venue's primary account only — the legacy flat keys,
-  then None (no cap). A non-primary account, and any account of
-  another venue, never inherits the flat keys: they were
-  written for the one account of the one venue that existed.
+  for (venue, account), per key: the budgets entry, then None
+  (no cap). Every venue inherits this one generic budget shape:
+  an account whose caps are all None is unlimited, and a venue
+  kind can be budget-less by nature (below) — those are the
+  shape's two states, not separate mechanisms.
 
 A non-default account is brought in by naming it in `accounts`
 and placing its credential file at `token_file` (relative to
@@ -71,12 +68,10 @@ def default_account(cfg: dict, venue: str) -> str:
 
 def caps_for(cfg: dict, venue: str, account: str) -> dict:
     """The served caps for one (venue, account): the budgets
-    block's entry per key over — for the home venue's primary
-    account only — the legacy flat keys. The flat keys live
-    beside the home venue's funnel config and were written for
-    its one account; another venue's primary account never
-    inherits them (budgets are independent per venue, FU-2).
-    The shape is grants._served_caps' shape, unchanged:
+    block's entry, per key, or None (no cap) where the entry or
+    the key is absent. Caps exist only per (venue, account) —
+    no flat key is consulted for any venue or account. The
+    shape is grants._served_caps' shape, unchanged:
     {"daily", "monthly", "standing_daily"}, each a
     non-negative number or None (no cap)."""
     block = cfg.get("budgets")
@@ -85,20 +80,9 @@ def caps_for(cfg: dict, venue: str, account: str) -> dict:
         per_venue = block.get(venue)
         if isinstance(per_venue, dict) and isinstance(per_venue.get(account), dict):
             entry = per_venue[account]
-    standing = cfg.get("standing")
-    legacy = {
-        "daily": cfg.get("daily_cu_budget"),
-        "monthly": cfg.get("monthly_cu_budget"),
-        "standing_daily": standing.get("daily_cu_cap") if isinstance(standing, dict) else None,
-    }
     out = {}
     for key in ("daily", "monthly", "standing_daily"):
-        if entry is not None and key in entry:
-            out[key] = entry[key]
-        elif account == PRIMARY_ACCOUNT and venue == foundation.VENUE:
-            out[key] = legacy[key]
-        else:
-            out[key] = None
+        out[key] = entry[key] if entry is not None and key in entry else None
     return out
 
 

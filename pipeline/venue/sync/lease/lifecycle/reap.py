@@ -10,7 +10,7 @@ from ..core import foundation, records, spend
 from ..access import access, grants
 from ..sessions import sessions, keepalive, renewal, identity
 from ..state import listeners, orphans
-from . import lifecycle
+from . import lifecycle, local_venue
 
 # --- Cycle budget ---------------------------------------------------------------
 # Local why: the hook bounds a reap pass at 420 s and kills the
@@ -394,7 +394,10 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
         # the acquire output reported the capture fine.
         # Re-derive the host from the local binding every pass: a
         # fill is silent (the birth event already spooled), a real
-        # change spools as origin "reconcile".
+        # change spools as origin "reconcile". The binding is the
+        # home venue's; another venue's record has no host here.
+        if (rec.get("venue") or foundation.VENUE) != foundation.VENUE:
+            continue
         if keepalive._capture_session_host(repo, rec, "reconcile", spool_on_first=False):
             records.save_record(repo, rec)
     # Approval-gate scope, resolved after the host reconcile so
@@ -413,7 +416,12 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
     results = []
     kept_pairs = []
     for rec in recs:
-        state = sessions.state_in_snapshot(snapshot, rec["session"])
+        # Liveness is per-venue: the shared snapshot is the home
+        # venue's session list and classifies only its own
+        # records. Another venue's record reads unknown here —
+        # kept, never absent, never reaped by this pass — until
+        # that venue's own liveness source classifies it.
+        state = sessions.state_in_snapshot(snapshot, rec["session"]) if (rec.get("venue") or foundation.VENUE) == foundation.VENUE else "unknown"
         out, kept = _reap_lifecycle(colab, repo, cfg, rec, grant, now_dt, state, diag, scoped=rec["session"] in pending_sessions)
         entry = {"session": rec.get("session"), **out}
         results.append(entry)
@@ -440,6 +448,10 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
     # own failures and never raises, and this guard keeps even a
     # collector defect out of the reap's path.
     for rec in recs:
+        if (rec.get("venue") or foundation.VENUE) != foundation.VENUE:
+            # The census reads through the home venue's session
+            # tunnel; another venue's record is not its subject.
+            continue
         if rec["session"] in pending_sessions:
             # The listener census reads through the session's
             # tunnel — contact the gate reserves like any other.
@@ -448,6 +460,34 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
             continue
         try:
             listeners.maybe_collect(colab, repo, rec, now_dt)
+        except Exception:  # noqa: BLE001
+            pass
+    # Local-venue pulse: the local venue's pulse verdict is its
+    # SSH probe, and this pass is the one periodic writer that
+    # visits local records — stamp the verdict here, on a fresh
+    # load (the pulse discipline above), at the keepalive pulse
+    # cadence. The stamp is the venue's own liveness evidence
+    # for the checker; the pass still never classifies or reaps
+    # the record. A stamp failure leaves the record unstamped —
+    # the checker's pulse-stale reading stays the report.
+    for rec in recs:
+        if (rec.get("venue") or foundation.VENUE) != "local":
+            continue
+        if not budget.check(f"local-pulse:{rec['session']}"):
+            continue
+        try:
+            pulse_every = float(cfg.get("keepalive", {}).get("pulse_seconds", 600))
+            last_pulse = rec.get("last_pulse_at")
+            due = last_pulse is None or (now_dt - foundation.parse_dt(last_pulse)).total_seconds() >= pulse_every
+            if not due:
+                continue
+            probed = local_venue.probe_for_record(repo, rec, now_dt=now_dt)
+            if probed is None:
+                continue
+            fresh_rec = records.load_record(repo, rec["session"]) or rec
+            fresh_rec["last_pulse_at"] = now_dt.isoformat()
+            fresh_rec["last_pulse_result"] = "ok" if probed else "unreachable"
+            records.save_record(repo, fresh_rec)
         except Exception:  # noqa: BLE001
             pass
     top = results[0] if len(results) == 1 else None

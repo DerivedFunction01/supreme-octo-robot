@@ -1,0 +1,3 @@
+# Copy to authorized_keys and put the connecting agent's SSH public key
+# (one line, ssh-ed25519 AAAA... name) in it. This file is a public key:
+# safe to share, not a secret. The private key never leaves the agent VM.

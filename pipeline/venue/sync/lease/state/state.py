@@ -51,6 +51,33 @@ def status(colab, repo: Path, session: str | None = None, snapshot=_SNAPSHOT_UNS
     # passes one shared listing snapshot and every verdict
     # classifies from it — the reap pass's one-dial shape;
     # the standalone read dials per record as before.
+    # Liveness is per-venue: the home venue's session list
+    # classifies only its own records. A record of another
+    # venue is never read absent (or dead) by this list — its
+    # verdict is unknown until that venue's own liveness source
+    # exists, and the record serves as recorded-unverified.
+    if (rec.get("venue") or foundation.VENUE) != foundation.VENUE:
+        action = "recorded-unverified"
+        if (rec.get("venue") or foundation.VENUE) == "local":
+            # The local venue has its own liveness source: the
+            # SSH probe (dial-cached). A configured target turns
+            # the verdict real — active, or recorded-but-dead
+            # when the probe fails; no target keeps it
+            # unverified. (Lazy import: the lifecycle package
+            # imports this package's siblings.)
+            from ..lifecycle import local_venue
+
+            probed = local_venue.probe_for_record(repo, rec)
+            if probed is True:
+                action = "active"
+            elif probed is False:
+                action = "recorded-but-dead"
+        out = {"action": action, "record": served}
+        out["sync_claim"] = syncclaims.read_sync_claim(repo, rec["session"])
+        out["provisioning"] = provisioning.read_stamp(repo, rec["session"]) or None
+        out["runtime"] = identity.read_stamp(repo, rec["session"]) or None
+        out["channel"] = listeners.channel_verdict(repo, rec["session"])
+        return out
     verdict = sessions.session_state(colab, rec["session"]) if snapshot is _SNAPSHOT_UNSET else sessions.state_in_snapshot(snapshot, rec["session"])
     out = {"action": "active" if verdict == "alive" else "recorded-but-dead", "record": served}
     if verdict == "absent":
@@ -99,6 +126,7 @@ def specs(repo: Path, colab=None) -> list[dict]:
     for shape_id, entry in catalog.catalog_shapes(repo, colab).items():
         out.append({
             "id": shape_id,
+            "venue": foundation.VENUE,
             "label": entry.get("label") or shape_id,
             "gpu": entry.get("gpu"),
             "tpu": entry.get("tpu"),
@@ -109,6 +137,28 @@ def specs(repo: Path, colab=None) -> list[dict]:
             # bypass actor and can start any of them).
             "agent_startable": not gate["enabled"] or _mod_gate.shape_class(entry) in gate["agent_classes"],
         })
+    # Every other venue whose shapes the config declares serves
+    # its catalog in the same list, each entry carrying its own
+    # venue (the picker groups by it). The session gate is the
+    # home venue's policy and does not bind another venue's
+    # shapes: they serve as startable.
+    cfg = foundation.load_config(repo)
+    declared = cfg.get("venue_shapes")
+    if isinstance(declared, dict):
+        for venue in declared:
+            if venue == foundation.VENUE:
+                continue
+            for shape_id, entry in catalog.catalog_shapes(repo, venue=venue).items():
+                out.append({
+                    "id": shape_id,
+                    "venue": venue,
+                    "label": entry.get("label") or shape_id,
+                    "gpu": entry.get("gpu"),
+                    "tpu": entry.get("tpu"),
+                    "high_mem": bool(entry.get("high_mem", False)),
+                    "rate_cu_per_hour": entry.get("rate_cu_per_hour"),
+                    "agent_startable": True,
+                })
     return out
 
 
@@ -224,13 +274,11 @@ def set_budget_caps(repo: Path, daily=_UNSET, monthly=_UNSET, standing_daily=_UN
     and the write is atomic (tmp sibling + rename) in the file's own
     compact sorted style, so no reader sees a half-written config.
 
-    Addressing (venue rework): the default target — this venue's
-    primary account, with no budgets-block entry for it — writes
-    the legacy flat keys exactly as before accounts existed. An
-    addressed non-default account (or a target the budgets block
-    already carries) writes budgets[venue][account] in the served
-    key names, so each adapter's and each account's caps live
-    side by side in the one config."""
+    Addressing (venue rework): every write lands in
+    budgets[venue][account] in the served key names — caps are
+    tied per (venue, account) and there are no flat cap keys —
+    so each adapter's and each account's caps live side by side
+    in the one config."""
     path = repo / "config" / "lease.json"
     try:
         cfg = json.loads(path.read_text())
@@ -246,44 +294,27 @@ def set_budget_caps(repo: Path, daily=_UNSET, monthly=_UNSET, standing_daily=_UN
     venue = venue or foundation.VENUE
     account = account or _mod_accounts.default_account(cfg, venue)
     budgets = cfg.get("budgets")
-    addressed = account != _mod_accounts.PRIMARY_ACCOUNT or (
-        isinstance(budgets, dict)
-        and isinstance(budgets.get(venue), dict)
-        and isinstance(budgets[venue].get(account), dict))
-    if addressed and budgets is not None and not isinstance(budgets, dict):
+    if budgets is not None and not isinstance(budgets, dict):
         return {"action": "caps-invalid", "error": "config budgets section is not an object"}
-    standing = cfg.get("standing")
-    if not addressed and standing_daily is not _UNSET and standing is not None and not isinstance(standing, dict):
-        return {"action": "caps-invalid", "error": "config standing section is not an object"}
     previous = _mod_accounts.caps_for(cfg, venue, account)
 
     def clean(v):
         return int(v) if isinstance(v, float) and v.is_integer() else v
 
-    if addressed:
-        if not isinstance(budgets, dict):
-            budgets = cfg["budgets"] = {}
-        per_venue = budgets.get(venue)
-        if not isinstance(per_venue, dict):
-            per_venue = budgets[venue] = {}
-        entry = per_venue.get(account)
-        if not isinstance(entry, dict):
-            entry = per_venue[account] = {}
-        if daily is not _UNSET:
-            entry["daily"] = None if daily is None else clean(daily)
-        if monthly is not _UNSET:
-            entry["monthly"] = None if monthly is None else clean(monthly)
-        if standing_daily is not _UNSET:
-            entry["standing_daily"] = None if standing_daily is None else clean(standing_daily)
-    else:
-        if daily is not _UNSET:
-            cfg["daily_cu_budget"] = None if daily is None else clean(daily)
-        if monthly is not _UNSET:
-            cfg["monthly_cu_budget"] = None if monthly is None else clean(monthly)
-        if standing_daily is not _UNSET:
-            if not isinstance(standing, dict):
-                standing = cfg["standing"] = {}
-            standing["daily_cu_cap"] = None if standing_daily is None else clean(standing_daily)
+    if not isinstance(budgets, dict):
+        budgets = cfg["budgets"] = {}
+    per_venue = budgets.get(venue)
+    if not isinstance(per_venue, dict):
+        per_venue = budgets[venue] = {}
+    entry = per_venue.get(account)
+    if not isinstance(entry, dict):
+        entry = per_venue[account] = {}
+    if daily is not _UNSET:
+        entry["daily"] = None if daily is None else clean(daily)
+    if monthly is not _UNSET:
+        entry["monthly"] = None if monthly is None else clean(monthly)
+    if standing_daily is not _UNSET:
+        entry["standing_daily"] = None if standing_daily is None else clean(standing_daily)
     foundation.staged_write(path, json.dumps(cfg, sort_keys=True, separators=(",", ":")).encode())
     return {"action": "caps-updated", "venue": venue, "account": account, "caps": _mod_accounts.caps_for(cfg, venue, account), "previous": previous}
 

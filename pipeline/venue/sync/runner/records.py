@@ -203,7 +203,7 @@ def emit_terminal_event(rec: dict) -> bool:
         "seq": seq + 1,
         "ts": now(),
         "kind": "run-terminal",
-        "detail": {"run_id": rec["run_id"], "job": rec.get("job"), "caller": rec.get("caller"), "state": rec["state"], "session": rec.get("session")},
+        "detail": {"run_id": rec["run_id"], "job": rec.get("job"), "caller": rec.get("caller"), "state": rec["state"], "session": rec.get("session"), "venue": rec.get("venue")},
     }
     try:
         path.parent.mkdir(parents=True, exist_ok=True)

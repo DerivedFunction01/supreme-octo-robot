@@ -27,7 +27,7 @@ def test_extend_refused_budget_changes_nothing(repo, tmp_path, monkeypatch):
     # the operator has set: the extension's projection alone (hours x
     # the standard rate 0.08) clears the cap. (The fixed 200 h form
     # silently stopped refusing when the live cap rose past 16 CU.)
-    cap = lease.load_config(repo)["daily_cu_budget"]
+    cap = lease.accounts.caps_for(lease.load_config(repo), "colab", "primary")["daily"]
     hours = int(cap / 0.08) + 50
     out = lease.extend(make_extend_stub(["standard"]), repo, "standard", hours, now_dt=NOW)
     assert out["action"] == "refused-budget"

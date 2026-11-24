@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Thin CLI over sync/lease/ — the shared-session lease.
 
-Usage: colab-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap [--gate-pending-hosts CSV] [--gate-probe-hosts CSV]|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
+Usage: colab-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create] [--venue V]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap [--gate-pending-hosts CSV] [--gate-probe-hosts CSV]|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
 Prints one JSON result. `reap` is the reaper-hook duty (deadline +
 orphan reconciliation across all lease records); its gate flags
 carry the hook's approval-gate scope — the tunnel hosts with no
@@ -31,8 +31,9 @@ budget). `budget-caps` updates the budget caps in config/lease.json
 or `none` for no cap, and an omitted flag leaves its cap untouched.
 `--venue` / `--account` address one adapter's one account (venue
 rework): the default target — this venue's primary account —
-writes the legacy flat keys; an addressed account writes the
-config's budgets block. `accounts` is the read-only census of the
+every write lands in the config's budgets block for that
+(venue, account) — caps are tied per venue and account, and
+there are no flat cap keys. `accounts` is the read-only census of the
 venue's accounts: resolved caps, credential status, attributed
 spend.
 `admission` is the session shape
@@ -240,11 +241,18 @@ def main() -> int:
     if not args or args[0] not in ("status", "acquire", "extend", "adopt", "shorten", "claim-sync", "release-sync", "release", "release-session", "reap", "keepalive", "auto", "request", "unrequest", "grant", "extend-grant", "ungrant", "standing", "state", "budget-caps", "accounts", "admission", "plan"):
         print(__doc__.strip().split("\n")[2], file=sys.stderr)
         return 2
-    if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
-        print("colab-lease: STAGED — no colab login yet.", file=sys.stderr)
-        return 2
-    cr.mirror("restore")
     cmd = args[0]
+    # A local-venue acquire touches no Colab state: it needs
+    # neither the Colab login nor the transient mirror.
+    venue_arg = None
+    if "--venue" in args and args.index("--venue") + 1 < len(args):
+        venue_arg = args[args.index("--venue") + 1]
+    local_acquire = cmd == "acquire" and venue_arg == "local"
+    if not local_acquire:
+        if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
+            print("colab-lease: STAGED — no colab login yet.", file=sys.stderr)
+            return 2
+        cr.mirror("restore")
     if cmd == "status":
         session = args[1] if len(args) > 1 else None
         result = lease.status(cr.colab, REPO, session)
@@ -269,6 +277,10 @@ def main() -> int:
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
+        if local_acquire:
+            result = lease.acquire_local(REPO, shape, caller=caller, hours=hours)
+            print(json.dumps(result, indent=2, default=str))
+            return 0
         result = lease.acquire(cr.colab, REPO, shape, hours=hours, via=via, caller=caller, create=create)
         if result.get("host_changed") and result.get("record"):
             # Initiation-time approval, Step 2: this entry point just
@@ -384,7 +396,11 @@ def main() -> int:
         result = lease.release_sync_claim(REPO, positional[0], caller=caller)
     elif cmd == "release":
         session = args[1] if len(args) > 1 else None
-        result = lease.release(cr.colab, REPO, session=session)
+        rec = lease.load_record(REPO, session) if session else None
+        if rec and (rec.get("venue") or "colab") == "local":
+            result = lease.release_local(REPO, session)
+        else:
+            result = lease.release(cr.colab, REPO, session=session)
     elif cmd == "grant":
         hours, rest, err = parse_hours(args[1:])
         burst = None

@@ -457,7 +457,17 @@ def repo_config() -> dict:
     caps: dict = {}
     try:
         lease_cfg = json.loads((REPO / "config" / "lease.json").read_text())
-        caps = {k: lease_cfg.get(k) for k in ("daily_cu_budget", "monthly_cu_budget", "max_hours", "rate_cu_per_hour")}
+        # Caps are tied per (venue, account) in the budgets block
+        # (the core's accounts.caps_for is the source of truth);
+        # the served keys keep their names, the values are the
+        # home venue's primary account's resolved caps.
+        budgets = lease_cfg.get("budgets")
+        per_venue = budgets.get("colab") if isinstance(budgets, dict) else None
+        primary = per_venue.get("primary") if isinstance(per_venue, dict) else None
+        if not isinstance(primary, dict):
+            primary = {}
+        caps = {"daily_cu_budget": primary.get("daily"), "monthly_cu_budget": primary.get("monthly"),
+                "max_hours": lease_cfg.get("max_hours"), "rate_cu_per_hour": lease_cfg.get("rate_cu_per_hour")}
     except (OSError, json.JSONDecodeError):
         pass
     return caps

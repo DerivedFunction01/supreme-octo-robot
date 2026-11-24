@@ -1,0 +1,67 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: agent-tailscale
+    hostname: agent-ubuntu
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY:?set TS_AUTHKEY in .env}
+      - TS_HOSTNAME=agent-ubuntu
+      - TS_STATE_DIR=/var/lib/tailscale
+      # No --ssh here: Tailscale SSH terminates in the tailscale container,
+      # which has no workspace or tools. Plain SSH (below) terminates in the
+      # ubuntu service, which shares this network namespace.
+      - TS_EXTRA_ARGS=
+      - TS_USERSPACE=false
+    volumes:
+      - tailscale-state:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - sys_module
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  ubuntu:
+    build: .
+    container_name: agent-workspace
+    network_mode: service:tailscale
+    depends_on:
+      - tailscale
+    init: true
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./workspace:/workspace
+      - ./authorized_keys:/run/secrets/authorized_keys:ro
+      - ssh-host-keys:/etc/ssh/host-keys-store
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 22"]
+      interval: 15s
+      timeout: 3s
+      retries: 4
+    # Disk / temp containment: /tmp is a capped tmpfs (dies with the
+    # container, never touches the host disk); logs are capped above and
+    # in the tailscale service; the only host write outside Docker's own
+    # store is ./workspace. Set Docker Desktop's disk image limit for a
+    # hard cap on images + container writable layers.
+    tmpfs:
+      - /tmp:size=2G,mode=1777
+    # Legacy mem_limit/cpus keys are ignored by Compose v2 (verified
+    # live: the container saw all host CPUs/RAM). deploy.resources is
+    # the form Compose v2 applies.
+    deploy:
+      resources:
+        limits:
+          memory: ${COMPUTE_MEM:-8g}
+          cpus: "${COMPUTE_CPUS:-4}"
+          pids: 1024
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  tailscale-state:
+  ssh-host-keys:

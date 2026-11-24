@@ -1,0 +1,4 @@
+.env
+workspace/
+authorized_keys
+*.md

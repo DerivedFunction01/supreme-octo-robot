@@ -140,6 +140,37 @@ def test_binding_damaged_speaks_once_and_clears(tmp_path):
     assert fx.state()["open"] == {}
 
 
+def _local_fx(tmp_path, with_target=True):
+    """A local-venue record: no CLI binding exists for it by
+    nature — its binding is the configured SSH target in the
+    lease config under the fixture root."""
+    fx = Fixture(tmp_path)
+    fx.record(venue="local", host=None, shape="local")
+    fx.gate_state(contact_ok=True, blocked=False)
+    if with_target:
+        cfg_dir = fx.root / "config"
+        cfg_dir.mkdir(parents=True, exist_ok=True)
+        (cfg_dir / "lease.json").write_text(json.dumps({
+            "venue_targets": {"local": {"host": "127.0.0.1", "port": 2222, "user": "agent", "session": SESSION}},
+            "venue_shapes": {"local": [{"id": "local", "label": "Local machine"}]},
+        }))
+    return fx
+
+
+def test_local_record_binds_through_its_target(tmp_path):
+    fx = _local_fx(tmp_path)
+    r = fx.run(SESSION)
+    assert r.returncode == 0, r.stderr
+    assert fx.state()["open"] == {}
+
+
+def test_local_record_without_a_target_is_binding_missing(tmp_path):
+    fx = _local_fx(tmp_path, with_target=False)
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "binding-missing" in r.stdout
+    assert "no local target" in fx.state()["open"]["binding-missing"]["detail"]
+
+
 def test_host_divergence(tmp_path):
     fx = healthy(tmp_path)
     fx.bind(host="8080-m-hm-test-zzzz.prod.r.colab.dev")

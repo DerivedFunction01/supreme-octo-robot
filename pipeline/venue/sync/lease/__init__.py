@@ -35,7 +35,7 @@ from .sync import syncclaims, bridge
 from .access import gate, access, grants
 from .sessions import sessions, keepalive, renewal, health, identity, provisioning
 from .state import listeners, orphans, reconcile, state
-from .lifecycle import lifecycle, standing, reap, auto
+from .lifecycle import lifecycle, standing, reap, auto, local_venue
 from .core.foundation import var_dir, load_json, load_config, ACTOR_ENV_CLAIM, PANEL_ACTOR, GATE_DEFAULT_AGENT_CLASSES, GATE_DEFAULT_BYPASS_ACTORS, GATE_DEFAULT_INFRA_ACTOR, parse_dt, parse_balance, spend_journal_path, reaper_events_path, append_reaper_event, ABSENT_CONFIRM_S, absent_since, stamp_absent, clear_absent_stamp
 from .core.catalog import shape_id_for, CLI_CATALOG_TTL_S, SHAPE_TIMEOUT_S, parse_cli_shapes, _catalog_cache_path, _cli_shapes, _shape_entries, shape_rates_path, load_shape_rates, shape_rate, catalog_shapes, default_shape, standing_caller, standing_shape, _session_shape_args
 from .core.callers import CALLER_ENV, MACHINERY_CALLERS, _CALLER_PART, callers_path, caller_registry, active_caller_registry, is_active_caller, validate_caller, resolve_caller, caller_claim_error, caller_claims_path, append_caller_claim, load_caller_claims
@@ -50,6 +50,7 @@ from .access.grants import grant_ledger_path, append_grant_ledger, load_grant_le
 from .state.orphans import _jsonl_events, _orphan_contribution, _dt_or_none, orphan_evidence, derive_orphan, nameless_census_path, recorded_endpoints, nameless_census, load_nameless_census, clear_nameless, detect_nameless
 from .sessions.renewal import SESSION_CAP_HOURS, RENEWAL_MARGIN, KIT_UPLOAD_TIMEOUT_S, KIT_LAUNCH_TIMEOUT_S, HANDOVER_READ_TIMEOUT_S, RENEWAL_KIT_REMOTE, _shape_spec_for, install_renewal_kit, _swap_session, _adopt_handover, _renew_fresh_session, _attempt_renewal, _ensure_remote_dirs
 from .lifecycle.lifecycle import acquire, extend, extend_grant, adopt_orphan, shorten, _job_record, touch_job, finish_job, release, ungrant
+from .lifecycle.local_venue import acquire_local, release_local
 from .lifecycle.adoption import adopt_nameless
 from .sessions.health import launch_health_path, append_launch_outcome, launch_health
 from .sessions.identity import identity_stamp_path, probe_identity, ensure_identity, check_identity

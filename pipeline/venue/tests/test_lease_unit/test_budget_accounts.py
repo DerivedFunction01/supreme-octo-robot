@@ -1,13 +1,13 @@
 """Lease unit tests: per-account budgets (venue rework).
 
-Accounts generalize the flat caps model: a venue's accounts are
-named in config's `accounts` block, their caps in the `budgets`
-block, and resolution falls back — for the primary account
-only — to the legacy flat keys. These tests pin the resolution
-matrix, the addressed caps write, the per-account spend split,
-the per-account guard, and the served accounts portions, all
-against the scratch fixture repo (no subprocess, no live
-config).
+Accounts carry the caps model: a venue's accounts are named
+in config's `accounts` block and their caps live only in the
+`budgets` block, keyed per (venue, account) — the legacy flat
+cap keys are dropped, and an account with no budgets entry is
+uncapped. These tests pin the resolution matrix, the addressed
+caps write, the per-account spend split, the per-account
+guard, and the served accounts portions, all against the
+scratch fixture repo (no subprocess, no live config).
 """
 
 import json
@@ -31,15 +31,20 @@ def _with_accounts(repo, budgets=None):
         {"id": "backup", "label": "Backup", "token_file": "accounts/backup.token.json"},
     ]}
     if budgets is not None:
-        cfg["budgets"] = budgets
+        # Merge per (venue, account): naming one account's caps
+        # never wipes another account's entry.
+        merged = dict(cfg.get("budgets") or {})
+        for venue, accounts in budgets.items():
+            merged[venue] = {**(merged.get(venue) or {}), **accounts}
+        cfg["budgets"] = merged
     _write_config(repo, cfg)
     return cfg
 
 
 def test_caps_resolution_matrix(repo):
     cfg = _config(repo)
-    # Legacy only: the primary account resolves the flat keys
-    # (fixture caps: daily 15, monthly 150, standing 4).
+    # The primary account resolves its budgets entry (fixture
+    # caps: daily 15, monthly 150, standing 4).
     assert lease.accounts.caps_for(cfg, "colab", "primary") == {
         "daily": 15, "monthly": 150, "standing_daily": 4}
     # No accounts configured: one account, the primary.
@@ -47,30 +52,30 @@ def test_caps_resolution_matrix(repo):
     assert lease.accounts.default_account(cfg, "colab") == "primary"
 
     cfg = _with_accounts(repo, budgets={"colab": {"backup": {"daily": 40}}})
-    # A budgets entry overrides per key; unlisted keys of an
-    # addressed account stay uncapped — a non-primary account
-    # never inherits the flat keys.
+    # An account's entry is its whole caps set: unlisted keys
+    # stay uncapped — no account inherits another's caps.
     assert lease.accounts.caps_for(cfg, "colab", "backup") == {
         "daily": 40, "monthly": None, "standing_daily": None}
     # The primary account is untouched by another account's entry.
     assert lease.accounts.caps_for(cfg, "colab", "primary")["daily"] == 15
-    # A primary budgets entry overrides the flat keys per key.
+    # Replacing the primary entry replaces its whole set.
     cfg["budgets"]["colab"]["primary"] = {"monthly": 90}
     assert lease.accounts.caps_for(cfg, "colab", "primary") == {
-        "daily": 15, "monthly": 90, "standing_daily": 4}
+        "daily": None, "monthly": 90, "standing_daily": None}
     # The compat projection serves the primary account's caps.
     assert lease.grants._served_caps(cfg)["monthly"] == 90
 
 
-def test_set_budget_caps_default_target_writes_flat_keys(repo):
+def test_set_budget_caps_default_target_writes_budgets_block(repo):
     out = lease.set_budget_caps(repo, daily=20)
     assert out["action"] == "caps-updated"
     assert out["account"] == "primary"
     assert out["caps"]["daily"] == 20
     assert out["previous"]["daily"] == 15
     cfg = _config(repo)
-    assert cfg["daily_cu_budget"] == 20
-    assert "budgets" not in cfg
+    assert cfg["budgets"]["colab"]["primary"]["daily"] == 20
+    # The legacy flat keys are never written.
+    assert "daily_cu_budget" not in cfg
 
 
 def test_set_budget_caps_addressed_account_writes_budgets_block(repo):
@@ -81,9 +86,9 @@ def test_set_budget_caps_addressed_account_writes_budgets_block(repo):
     assert out["caps"] == {"daily": 40, "monthly": None, "standing_daily": None}
     assert out["previous"] == {"daily": None, "monthly": None, "standing_daily": None}
     cfg = _config(repo)
-    assert cfg["budgets"] == {"colab": {"backup": {"daily": 40, "monthly": None}}}
-    # The flat keys — the primary account's caps — are untouched.
-    assert cfg["daily_cu_budget"] == 15
+    assert cfg["budgets"]["colab"]["backup"] == {"daily": 40, "monthly": None}
+    # The primary account's entry is untouched.
+    assert cfg["budgets"]["colab"]["primary"]["daily"] == 15
     # A second addressed write preserves the first entry's keys.
     out2 = lease.set_budget_caps(repo, standing_daily=5, account="backup")
     assert out2["caps"] == {"daily": 40, "monthly": None, "standing_daily": 5}
@@ -117,7 +122,7 @@ def test_budget_check_prices_the_addressed_account(repo):
     colab = lambda *a, **k: cp("Current balance: 768.38 compute units")  # noqa: E731
     shape = {"rate_cu_per_hour": 0.08}
     # A 1h window at 0.08 CU/h projects 0.08: fine for the
-    # primary account (daily cap 15)...
+    # primary account (its budgets entry caps daily at 15)...
     out = lease.budget_check(colab, repo, cfg, shape, hours=1, now_dt=NOW)
     assert out["ok"] is True
     # ...and refused for the backup account, whose own daily

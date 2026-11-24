@@ -7,7 +7,7 @@ clears) a lease too short for the fire."""
 
 import json
 
-from unit_harness import NOW, _auto_stub, lease  # noqa: F401
+from unit_harness import NOW, _auto_stub, gate_permissive, lease, repo  # noqa: F401
 
 
 def _seed(repo, session, deadline, caller="panel", provisioning=None):

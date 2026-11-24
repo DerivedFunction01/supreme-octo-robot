@@ -1,0 +1,4 @@
+# Example only — the actual cron entry for a host is instance state
+# (untracked instance/crontab.txt on that host), never a tracked file.
+# Disk backstop for the workspace container, every 15 minutes:
+# */15 * * * *  ~/muse-compute/disk-guard.sh

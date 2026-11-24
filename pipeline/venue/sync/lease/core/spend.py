@@ -51,7 +51,7 @@ def _journal_segments(repo: Path) -> list[dict]:
             continue
         try:
             seg = json.loads(line)
-            out.append({"session": seg.get("session"), "caller": seg.get("caller"), "shape": seg.get("shape"), "account": seg.get("account"), "start": foundation.parse_dt(seg["start"]), "end": foundation.parse_dt(seg["end"]), "rate": seg.get("rate")})
+            out.append({"session": seg.get("session"), "caller": seg.get("caller"), "shape": seg.get("shape"), "venue": seg.get("venue"), "account": seg.get("account"), "start": foundation.parse_dt(seg["start"]), "end": foundation.parse_dt(seg["end"]), "rate": seg.get("rate")})
         except (json.JSONDecodeError, KeyError, ValueError):
             continue
     return out
@@ -121,7 +121,7 @@ def attributed_spend(repo: Path, now_dt: datetime | None = None) -> dict:
     return {"day_spent": round(totals["day"], 2), "month_spent": round(totals["month"], 2), "sessions": per_session, "callers": per_caller, "accounts": per_account}
 
 
-def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None = None, caps_override: dict | None = None, now_dt: datetime | None = None, standing_lease: bool = False, exclude_session: str | None = None, account: str | None = None) -> dict:
+def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None = None, caps_override: dict | None = None, now_dt: datetime | None = None, standing_lease: bool = False, exclude_session: str | None = None, account: str | None = None, venue: str | None = None) -> dict:
     """Project this lease's window cost against the daily/monthly
     budgets. Spend is attributed (see the accounting note above):
     day/month figures are this repo's own lease burn from the
@@ -153,7 +153,7 @@ def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None 
     primary account's).
 
     `standing_lease` marks the standing duty's lease: it
-    additionally answers to standing.daily_cu_cap, checked against
+    additionally answers to the standing_daily cap, checked against
     the standing caller's own day spend (reason "standing-budget");
     no other lease is ever refused by that sub-cap.
 
@@ -172,6 +172,13 @@ def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None 
     a window may not promise more than the account holds, and
     the month is the monthly window's own horizon. Returns
     {"ok": bool, ...}."""
+    venue = venue or foundation.VENUE
+    if _accounts.venue_budgetless(venue):
+        # A budget-less venue kind (a local machine venue) is
+        # unmetered: there is no balance to dial and nothing to
+        # price. The check answers ok without touching the
+        # venue's channel at all.
+        return {"ok": True, "budgetless": True, "venue": venue, "balance": None, "projected": None, "day_spent": 0.0, "month_spent": 0.0}
     try:
         usage_res = colab("usage", timeout=120)
     except Exception:  # noqa: BLE001
@@ -217,7 +224,7 @@ def budget_check(colab, repo: Path, cfg: dict, shape: dict, hours: float | None 
         if committed_extra:
             out["committed_projected"] = committed_extra
         return out
-    resolved_caps = _accounts.caps_for(cfg, foundation.VENUE, acct)
+    resolved_caps = _accounts.caps_for(cfg, venue, acct)
     daily_cap = cap("daily", resolved_caps["daily"])
     monthly_cap = cap("monthly", resolved_caps["monthly"])
     if daily_cap is not None and day_spent + committed > daily_cap:

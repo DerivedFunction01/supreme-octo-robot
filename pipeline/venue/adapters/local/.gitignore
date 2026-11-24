@@ -1,0 +1,5 @@
+# Instance state for a specific host (actual allocation, actual cron
+# entries, actual env values) is operator state for that machine,
+# seeded from template/ — never committed, same pattern as
+# pipeline/venue/config/*.json vs *.example.json.
+/instance/

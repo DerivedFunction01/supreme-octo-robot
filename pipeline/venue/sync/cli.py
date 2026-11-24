@@ -77,6 +77,21 @@ def colab_env() -> dict:
     return env
 
 
+def ssh_bin() -> str:
+    """The local venue's channel binary: the system ssh client.
+    The venue's target and identity resolve from the venue's
+    instance config at call time (step 6's adapter), never from
+    this funnel."""
+    return os.environ.get("LOCAL_VENUE_SSH_BIN") or shutil.which("ssh") or "ssh"
+
+
+def local_env() -> dict:
+    """The local venue's call environment: the caller's own
+    environment, unmodified — no egress-proxy suffixes (those
+    are the Colab venue's measured requirement, not a default)."""
+    return dict(os.environ)
+
+
 # --- Venue dispatch (S5, plan §7 V2) -------------------------------------------
 # The funnel is the adapter seam: the lease core receives this
 # module's callable by injection, and extraction puts a per-venue
@@ -109,6 +124,13 @@ VENUES = {
         "verbs": _COLAB_VERBS,
         "catalog": "cli-help",
         "auth": "oauth2-token-guard",
+    },
+    "local": {
+        "bin": "ssh_bin",
+        "env": "local_env",
+        "verbs": {"exec": "exec", "list": "list"},
+        "catalog": "config",
+        "auth": "ssh-key",
     },
 }
 

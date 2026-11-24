@@ -286,15 +286,25 @@ def live_jobs(repo: Path, rec: dict) -> list[dict]:
 
 def _pulse_pair_newer(disk: dict, rec: dict) -> bool:
     """True when the on-disk record's pulse stamp is fresher
-    than the saver's copy. An unparseable or absent stamp on
-    either side is never newer — the saver's copy wins any
-    doubt, so this test can only preserve, never invent."""
+    than the saver's copy. An absent saver stamp is older than
+    any disk stamp (the disk pair is preserved); an unparseable
+    stamp on either side is never newer — the saver's copy wins
+    that doubt, so this test can only preserve, never invent."""
+    disk_raw = disk.get("last_pulse_at")
+    if disk_raw is None:
+        return False
     try:
-        disk_at = foundation.parse_dt(disk.get("last_pulse_at"))
-        rec_at = foundation.parse_dt(rec.get("last_pulse_at"))
+        disk_at = foundation.parse_dt(disk_raw)
     except (TypeError, ValueError):
         return False
     if disk_at is None:
+        return False
+    rec_raw = rec.get("last_pulse_at")
+    if rec_raw is None:
+        return True
+    try:
+        rec_at = foundation.parse_dt(rec_raw)
+    except (TypeError, ValueError):
         return False
     return rec_at is None or disk_at > rec_at
 

@@ -97,6 +97,20 @@ def test_migration_stamps_once_and_quarantines(tmp_path):
     assert out2["lease_already"] == 1 and out2["runs_already"] == 1
 
 
+def test_migration_never_overwrites_an_existing_venue(tmp_path):
+    repo = _scratch(tmp_path)
+    var, runs = repo / "var", repo / "results" / "runs"
+    (var / "lease-local-1.json").write_text(json.dumps(
+        {"session": "local-1", "venue": "local", "deadline": "2026-11-13T22:00:00+00:00"}))
+    now = datetime(2026, 11, 13, 21, 0, tzinfo=timezone.utc)
+    out = venue_migrate.migrate_store(var, runs, now_dt=now)
+    # A record written under another venue keeps its stamp: the
+    # migration fills the unstamped legacy population only.
+    assert out["lease_stamped"] == 0
+    rec = json.loads((var / "lease-local-1.json").read_text())
+    assert rec["venue"] == "local"
+
+
 def test_funnel_dispatch_refuses_unregistered_venue():
     assert cli.venue_dispatch("colab")["catalog"] == "cli-help"
     try:
@@ -105,6 +119,12 @@ def test_funnel_dispatch_refuses_unregistered_venue():
         assert "unregistered venue" in str(exc)
     else:
         raise AssertionError("an unregistered venue must refuse, not fall back")
+
+
+def test_funnel_dispatch_registers_local():
+    entry = cli.venue_dispatch("local")
+    assert entry["catalog"] == "config"
+    assert entry["auth"] == "ssh-key"
 
 
 def test_event_split_is_record_derived():

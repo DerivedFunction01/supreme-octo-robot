@@ -289,7 +289,8 @@ def test_state_specs_and_shape(tmp_path):
     assert specs["cpu"]["rate_cu_per_hour"] == 0.08
     assert specs["t4"]["gpu"] == "T4"
     assert specs["t4"]["rate_cu_per_hour"] is None
-    assert set(specs["cpu"]) == {"id", "label", "gpu", "tpu", "high_mem", "rate_cu_per_hour", "agent_startable"}
+    assert set(specs["cpu"]) == {"id", "label", "gpu", "tpu", "high_mem", "rate_cu_per_hour", "agent_startable", "venue"}
+    assert specs["cpu"]["venue"] == "colab"  # every spec entry carries its own venue (multi-venue plan, step 2)
     assert specs["cpu-highram"]["label"] == "CPU High-RAM"
     assert specs["cpu"]["agent_startable"] is False  # an agent actor may not start plain CPU
     assert st["records"] == []

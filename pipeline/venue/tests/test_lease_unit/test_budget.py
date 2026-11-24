@@ -36,7 +36,7 @@ def test_budget_snapshot_serves_standing_day_spend(repo, tmp_path, monkeypatch):
     assert out["day_spent"] == 2.42
     # The served cap is the fixture config's standing sub-cap,
     # read back from the scratch repo rather than pinned.
-    assert out["caps"]["standing_daily"] == lease.load_config(repo)["standing"]["daily_cu_cap"]
+    assert out["caps"]["standing_daily"] == lease.accounts.caps_for(lease.load_config(repo), "colab", "primary")["standing_daily"]
 
     # A balance collapse (the expiration step) moves
     # nothing: spend is attributed, not balance-derived.
@@ -113,7 +113,7 @@ def test_release_journals_the_completed_segment(repo, tmp_path, monkeypatch):
 def _seed_caps_config(tmp_path, cfg=None):
     cfg_dir = tmp_path / "config"
     cfg_dir.mkdir(parents=True, exist_ok=True)
-    cfg = cfg or {"enabled": True, "daily_cu_budget": 10, "monthly_cu_budget": 100, "max_hours": 8, "standing": {"daily_cu_cap": 2.0, "profile": "lobby", "warm_on_renew": True}}
+    cfg = cfg or {"enabled": True, "budgets": {"colab": {"primary": {"daily": 10, "monthly": 100, "standing_daily": 2.0}}}, "max_hours": 8, "standing": {"profile": "lobby", "warm_on_renew": True}}
     (cfg_dir / "lease.json").write_text(json.dumps(cfg, sort_keys=True, separators=(",", ":")))
     return cfg
 
@@ -129,9 +129,8 @@ def test_set_budget_caps_updates_and_preserves(tmp_path):
     assert out["caps"] == {"daily": 25, "monthly": 250.5, "standing_daily": 3}
     assert out["previous"] == {"daily": 10, "monthly": 100, "standing_daily": 2.0}
     cfg = json.loads((tmp_path / "config" / "lease.json").read_text())
-    assert cfg["daily_cu_budget"] == 25
-    assert cfg["monthly_cu_budget"] == 250.5
-    assert cfg["standing"] == {"daily_cu_cap": 3, "profile": "lobby", "warm_on_renew": True}
+    assert cfg["budgets"]["colab"]["primary"] == {"daily": 25, "monthly": 250.5, "standing_daily": 3}
+    assert cfg["standing"] == {"profile": "lobby", "warm_on_renew": True}
     assert cfg["max_hours"] == 8
 
 
@@ -142,8 +141,8 @@ def test_set_budget_caps_null_clears_and_omission_keeps(tmp_path):
     out = lease.set_budget_caps(tmp_path, monthly=None)
     assert out["caps"] == {"daily": 10, "monthly": None, "standing_daily": 2.0}
     cfg = json.loads((tmp_path / "config" / "lease.json").read_text())
-    assert cfg["monthly_cu_budget"] is None
-    assert cfg["daily_cu_budget"] == 10
+    assert cfg["budgets"]["colab"]["primary"]["monthly"] is None
+    assert cfg["budgets"]["colab"]["primary"]["daily"] == 10
 
 
 def test_set_budget_caps_rejects_bad_values_without_writing(tmp_path):

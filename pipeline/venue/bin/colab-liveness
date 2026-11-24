@@ -107,6 +107,34 @@ def binding_host(session: str):
     return urlparse(url if "://" in url else f"https://{url}").hostname, True
 
 
+def local_target_present(rec) -> bool:
+    """A local-venue record's binding is its configured SSH
+    target, not the CLI session binding: present when a target
+    resolves for the record — its own target id, its shape's
+    `target` binding, or the venue's only target. The lease
+    config is a local file (derived from the var dir's parent,
+    the same root the record lives under), so the checker's
+    no-dial rule holds."""
+    cfg = _load(liveness_entry.var_dir(REPO).parent / "config" / "lease.json", {})
+    if not isinstance(cfg, dict):
+        return False
+    block = (cfg.get("venue_targets") or {}).get("local")
+    targets = {}
+    if isinstance(block, dict) and block.get("host") and block.get("user"):
+        targets = {"local": block}
+    elif isinstance(block, dict):
+        targets = {k: v for k, v in block.items() if isinstance(v, dict) and v.get("host") and v.get("user")}
+    if not targets:
+        return False
+    if rec.get("target") in targets:
+        return True
+    shapes = (cfg.get("venue_shapes") or {}).get("local") or []
+    for entry in shapes:
+        if isinstance(entry, dict) and entry.get("id") == rec.get("shape") and entry.get("target") in targets:
+            return True
+    return len(targets) == 1 or "local" in targets
+
+
 def find_record(session: str):
     for rec in liveness_entry.load_records(REPO):
         if rec.get("session") == session:
@@ -129,11 +157,20 @@ def work_facts(session: str) -> dict:
 def compute_findings(now, rec, state) -> dict:
     findings = {}
     session = rec["session"]
-    host, present = binding_host(session)
-    if not present:
-        findings["binding-missing"] = "session absent from the CLI binding"
-    elif host and rec.get("host") and host != rec["host"]:
-        findings["host-divergence"] = f"record host {rec['host']} != binding host {host}"
+    # Binding is per-venue: the CLI session binding binds home
+    # (Colab) sessions only. A local record binds through its
+    # configured SSH target; another venue's record is not this
+    # binding's subject at all.
+    venue = rec.get("venue") or "colab"
+    if venue == "colab":
+        host, present = binding_host(session)
+        if not present:
+            findings["binding-missing"] = "session absent from the CLI binding"
+        elif host and rec.get("host") and host != rec["host"]:
+            findings["host-divergence"] = f"record host {rec['host']} != binding host {host}"
+    elif venue == "local":
+        if not local_target_present(rec):
+            findings["binding-missing"] = "no local target configured for the record"
     deadline = _dt(rec.get("deadline"))
     if deadline is None:
         findings["deadline-missing"] = "record carries no deadline"
@@ -192,7 +229,7 @@ def main(argv) -> int:
     findings = compute_findings(now, rec, probe)
     episode = probe.get("_episode")
     binding_state = _load(liveness_entry.var_dir(REPO) / "binding-state.json", None)
-    if isinstance(binding_state, dict) and binding_state.get("state") == "damaged":
+    if isinstance(binding_state, dict) and binding_state.get("state") == "damaged" and (rec.get("venue") or "colab") == "colab":
         findings["binding-damaged"] = (
             f"CLI session-binding store damaged ({binding_state.get('detail') or 'unknown'}, "
             f"since {binding_state.get('at') or 'unknown'}) — session readings are "

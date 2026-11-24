@@ -31,7 +31,7 @@ def caller_repo(tmp_path, monkeypatch, callers=("alpha", "beta"), gate=None):
         },
     }))
     (cfg_dir / "lease.json").write_text(json.dumps({
-        "enabled": True, "daily_cu_budget": 15, "monthly_cu_budget": 150, "max_hours": 8,
+        "enabled": True, "budgets": {"colab": {"primary": {"daily": 15, "monthly": 150}}}, "max_hours": 8,
         "session_gate": gate if gate is not None else {"enabled": True, "bypass_actors": ["panel", "test"], "agent_classes": ["high_ram"], "infra_actor": "standing"},
     }, sort_keys=True, separators=(",", ":")))
     if callers is not None:

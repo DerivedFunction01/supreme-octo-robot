@@ -17,6 +17,11 @@
   },
   "budgets": {
     "colab": {
+      "primary": {
+        "daily": 10,
+        "monthly": 100,
+        "standing_daily": 4
+      },
       "backup": {
         "daily": null,
         "monthly": null,
@@ -24,7 +29,6 @@
       }
     }
   },
-  "daily_cu_budget": 10,
   "default_shape": "cpu-highram",
   "enabled": true,
   "extend_guard": {
@@ -47,7 +51,6 @@
     "stale_seconds": 600
   },
   "max_hours": 8,
-  "monthly_cu_budget": 100,
   "rate_cu_per_hour": {
     "high_mem": 0.26,
     "standard": 0.08
@@ -65,10 +68,44 @@
   },
   "standing": {
     "caller": "standing",
-    "daily_cu_cap": 4,
     "max_session_hours": 12,
     "shape": "cpu",
     "warm_on_renew": true
+  },
+  "venue_targets": {
+    "local": {
+      "machine-a": {
+        "host": "localhost",
+        "port": 2222,
+        "user": "agent",
+        "session": "local-a",
+        "start": ["/path/to/transport-forwarder", "<machine-address>", "22"]
+      },
+      "machine-b": {
+        "host": "localhost",
+        "port": 2223,
+        "user": "agent",
+        "session": "local-b"
+      }
+    }
+  },
+  "venue_shapes": {
+    "local": [
+      {
+        "id": "local-a",
+        "label": "Local machine A",
+        "target": "machine-a",
+        "cores": 8,
+        "memory_gb": 16
+      },
+      {
+        "id": "local-b",
+        "label": "Local machine B",
+        "target": "machine-b",
+        "cores": 8,
+        "memory_gb": 16
+      }
+    ]
   },
   "sync_claim": {
     "attach_window_minutes": 15,

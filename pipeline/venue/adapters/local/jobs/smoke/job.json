@@ -1,0 +1,6 @@
+{
+  "script": "run.sh",
+  "shape": "local",
+  "venue": "local",
+  "timeout_s": 300
+}

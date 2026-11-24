@@ -56,8 +56,11 @@ LEASE_EXCLUDES = ("lease-spend.json", "lease-request.json", "lease-handover.json
 
 def _stamp(path: Path, rec: dict, venue: str) -> bool:
     """Stamp one record in place (via the writer protocol).
-    Returns True when a write happened."""
-    if rec.get("venue") == venue:
+    Returns True when a write happened. A record that already
+    carries any venue stamp keeps it: the migration fills the
+    legacy unstamped population only and never overwrites a
+    venue a record was actually written under."""
+    if rec.get("venue"):
         return False
     rec["venue"] = venue
     foundation.staged_write(path, json.dumps(rec, indent=2).encode())

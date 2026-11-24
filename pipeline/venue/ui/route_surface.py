@@ -140,7 +140,16 @@ def register_routes(r, env) -> None:
         shape = data.get("shape")
         if not shape or not isinstance(shape, str):
             return reply(400, {"error": "shape is required"})
-        args = ["acquire", "--shape", shape, "--create"]
+        venue = data.get("venue")
+        if venue is not None and not isinstance(venue, str):
+            return reply(400, {"error": "venue must be a string"})
+        if venue and venue != "colab":
+            # Another venue's acquire: the lease CLI routes by
+            # venue (a local acquire registers against the local
+            # venue's container — no creation, no Colab login).
+            args = ["acquire", "--shape", shape, "--venue", venue]
+        else:
+            args = ["acquire", "--shape", shape, "--create"]
         hours = data.get("hours")
         if hours is not None:
             try:

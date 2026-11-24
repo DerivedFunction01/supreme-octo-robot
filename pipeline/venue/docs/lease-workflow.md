@@ -675,8 +675,8 @@ ships placeholders, not these values):
 
 | Cap | Value |
 | --- | ----- |
-| `daily_cu_budget` | 40 CU |
-| `monthly_cu_budget` | 300 CU |
+| `budgets.colab.primary.daily` | 40 CU |
+| `budgets.colab.primary.monthly` | 300 CU |
 
 - **Projection**: a window projects rate × hours at its shape's
   `rate_cu_per_hour`. A shape whose rate is null has an

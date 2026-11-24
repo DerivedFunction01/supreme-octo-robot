@@ -173,7 +173,7 @@ def test_budget_daily_check_clips_other_windows_to_today(tmp_path, monkeypatch):
     shape = {"id": "cpu-highram", "rate_cu_per_hour": 0.26}
     out = lease_mod.budget_check(fake, repo, cfg, shape, hours=8.0, now_dt=PNOW, exclude_session="candidate")
     assert out["ok"] is True
-    cfg["daily_cu_budget"] = 5.0
+    cfg["budgets"] = {"colab": {"primary": {"daily": 5.0, "monthly": 150}}}
     out = lease_mod.budget_check(fake, repo, cfg, shape, hours=8.0, now_dt=PNOW, exclude_session="candidate")
     assert out["ok"] is False and out["reason"] == "daily-budget"
     assert out["committed_projected"] == 2.04
@@ -268,7 +268,7 @@ def test_state_portions_and_composition(tmp_path, monkeypatch):
     # The fake's help output parses as no catalog, so the specs
     # portion's catalog_error rides the composed payload exactly as
     # it did before the split.
-    assert set(composed) == {"venue", "records", "grant", "specs", "budget", "envelope", "bridge", "catalog_error", "session_gate", "access", "extend_guard", "orphans", "torn_records", "listeners"}
+    assert set(composed) == {"venue", "records", "grant", "specs", "budget", "budgets", "envelope", "bridge", "catalog_error", "session_gate", "access", "extend_guard", "orphans", "torn_records", "listeners", "binding"}
     assert composed["orphans"] == orphans["orphans"]
     assert composed["listeners"] == listeners["listeners"]
     assert composed["catalog_error"] == specs["catalog_error"]

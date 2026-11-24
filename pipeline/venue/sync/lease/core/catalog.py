@@ -147,6 +147,34 @@ def shape_catalog(repo: Path, venue: str = "colab", colab=None):
     return source(repo, colab)
 
 
+def _config_shape_entries(repo: Path, venue: str) -> dict:
+    """Catalog entries for a venue whose shapes are declared in
+    config, not parsed from a CLI: config/lease.json's
+    `venue_shapes` block, {venue: [{"id", "label"?, "timeout"?,
+    ...}]}. A machine venue's shape set is what its instance
+    config declares (the local venue serves the one shape its
+    container is configured as) — no allocation literal lives in
+    tracked code. Extra declared fields (cores, memory) ride the
+    entry as served. Entries carry no GPU/TPU/high_mem fields:
+    those are Colab shape vocabulary."""
+    cfg = foundation.load_config(repo)
+    block = cfg.get("venue_shapes")
+    declared = block.get(venue) if isinstance(block, dict) else None
+    out: dict = {}
+    if isinstance(declared, list):
+        for item in declared:
+            if not isinstance(item, dict) or not isinstance(item.get("id"), str) or not item["id"]:
+                continue
+            entry = {"id": item["id"], "label": item.get("label") if isinstance(item.get("label"), str) else item["id"],
+                     "gpu": None, "tpu": None, "high_mem": False,
+                     "timeout": item["timeout"] if isinstance(item.get("timeout"), (int, float)) else SHAPE_TIMEOUT_S}
+            for key, value in item.items():
+                if key not in entry and isinstance(value, (str, int, float, bool)):
+                    entry[key] = value
+            out[item["id"]] = entry
+    return out
+
+
 def shape_rates_path(repo: Path) -> Path:
     return foundation.var_dir(repo) / "shape-rates.json"
 
@@ -172,13 +200,22 @@ def shape_rate(repo: Path, shape_id: str):
     return None
 
 
-def catalog_shapes(repo: Path, colab=None) -> dict:
-    """The full shape catalog: every CLI shape with its measured
-    rate joined (null = unconfirmed). Callers without a colab
-    callable get whatever the day-cache holds, plus the CPU
-    shapes, which always serve."""
-    shapes, _err = _cli_shapes(repo, colab)
-    entries = _shape_entries(shapes)
+def catalog_shapes(repo: Path, colab=None, venue: str = "colab") -> dict:
+    """The full shape catalog for one venue: every shape with its
+    measured rate joined (null = unconfirmed). The home venue's
+    catalog is the CLI space (callers without a colab callable get
+    whatever the day-cache holds, plus the CPU shapes, which
+    always serve); a config-declared venue (local) serves its
+    `venue_shapes` entries. A venue with neither a registered
+    CLI source nor a config declaration is an error, never a
+    silent fall back to the home catalog."""
+    if venue in _CATALOG_SOURCES:
+        shapes, _err = _cli_shapes(repo, colab)
+        entries = _shape_entries(shapes)
+    elif venue in (foundation.load_config(repo).get("venue_shapes") or {}):
+        entries = _config_shape_entries(repo, venue)
+    else:
+        raise ValueError(f"unregistered venue: {venue!r}")
     for sid, entry in entries.items():
         entry["rate_cu_per_hour"] = shape_rate(repo, sid)
     return entries

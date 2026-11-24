@@ -160,7 +160,7 @@ def test_extend_grant_inactive_when_expired(repo, tmp_path, monkeypatch):
 
 def test_write_grant_records_scope_snapshot(repo, tmp_path, monkeypatch):
     cfg = lease.load_config(repo)
-    cfg = {**cfg, "daily_cu_budget": 42, "monthly_cu_budget": 4242, "standing": {**cfg.get("standing", {}), "daily_cu_cap": 2.0}}
+    cfg = {**cfg, "budgets": {"colab": {"primary": {"daily": 42, "monthly": 4242, "standing_daily": 2.0}}}}
     monkeypatch.setattr(lease.foundation, "load_config", lambda repo: cfg)
     out = lease.write_grant(repo, 8, burst_shape="cpu-highram", now_dt=T0)
     grant = out["grant"]
@@ -176,12 +176,12 @@ def test_write_grant_records_scope_snapshot(repo, tmp_path, monkeypatch):
 
 
 def test_extend_grant_moves_window_only_scope_frozen(repo, tmp_path, monkeypatch):
-    cfg = {**lease.load_config(repo), "daily_cu_budget": 42}
+    cfg = {**lease.load_config(repo), "budgets": {"colab": {"primary": {"daily": 42}}}}
     monkeypatch.setattr(lease.foundation, "load_config", lambda repo: cfg)
     lease.write_grant(repo, 8, now_dt=T0)
     scope_before = lease.load_grant(repo)["scope"]
     # Config caps move after the grant: the recorded scope must not.
-    cfg2 = {**cfg, "daily_cu_budget": 7, "monthly_cu_budget": 70}
+    cfg2 = {**cfg, "budgets": {"colab": {"primary": {"daily": 7, "monthly": 70}}}}
     monkeypatch.setattr(lease.foundation, "load_config", lambda repo: cfg2)
     out = lease.extend_grant(make_stub(set()), repo, 2, now_dt=T0)
     assert out["action"] == "grant-extended"
@@ -224,7 +224,7 @@ def test_acquire_adopted_in_scope_gains_envelope_stamp(repo, tmp_path, monkeypat
 def test_budget_check_caps_override_replaces_live_caps(repo, tmp_path, monkeypatch):
     # Explicit caps: the base config's caps are panel settings
     # that move independently of this test.
-    cfg = {**lease.load_config(repo), "daily_cu_budget": 10, "monthly_cu_budget": 100}
+    cfg = {**lease.load_config(repo), "budgets": {"colab": {"primary": {"daily": 10, "monthly": 100}}}}
     shape = {"high_mem": True, "rate_cu_per_hour": 0.5}
     # 30 h x 0.5 = 15 projected: refused by the live daily cap...
     out = lease.budget_check(make_stub(set()), repo, cfg, shape, hours=30)
@@ -244,9 +244,9 @@ def _cfg_holder(monkeypatch, repo, **over):
 
 
 def test_acquire_in_scope_prices_against_snapshot_not_live(repo, tmp_path, monkeypatch):
-    holder = _cfg_holder(monkeypatch, repo, daily_cu_budget=42)
+    holder = _cfg_holder(monkeypatch, repo, budgets={"colab": {"primary": {"daily": 42}}})
     lease.write_grant(repo, 8, burst_shape="cpu-highram", now_dt=T0)  # snapshot daily = 42
-    holder["cfg"] = {**holder["cfg"], "daily_cu_budget": 1}  # live caps tighten
+    holder["cfg"] = {**holder["cfg"], "budgets": {"colab": {"primary": {"daily": 1}}}}  # live caps tighten
     out = lease.acquire(make_stub(set()), repo, "cpu-highram", now_dt=T0)
     # 8 h x 0.26 = 2.08 projected: the live cap (1) would refuse;
     # the envelope's snapshot (42) prices it instead.
@@ -254,9 +254,9 @@ def test_acquire_in_scope_prices_against_snapshot_not_live(repo, tmp_path, monke
 
 
 def test_acquire_in_scope_refused_by_smaller_snapshot(repo, tmp_path, monkeypatch):
-    holder = _cfg_holder(monkeypatch, repo, daily_cu_budget=1)
+    holder = _cfg_holder(monkeypatch, repo, budgets={"colab": {"primary": {"daily": 1}}})
     lease.write_grant(repo, 8, burst_shape="cpu-highram", now_dt=T0)  # snapshot daily = 1
-    holder["cfg"] = {**holder["cfg"], "daily_cu_budget": 1000}  # live caps loosen
+    holder["cfg"] = {**holder["cfg"], "budgets": {"colab": {"primary": {"daily": 1000}}}}  # live caps loosen
     out = lease.acquire(make_stub(set()), repo, "cpu-highram", now_dt=T0)
     assert out["action"] == "refused-budget"
     assert out["budget"]["reason"] == "daily-budget"

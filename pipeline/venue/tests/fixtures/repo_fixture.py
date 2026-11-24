@@ -43,12 +43,11 @@ FIXTURE_CALLERS = ["alpha", "beta"]
 def fixture_config():
     return {
         "enabled": True,
-        "daily_cu_budget": FIXTURE_DAILY_CAP,
-        "monthly_cu_budget": FIXTURE_MONTHLY_CAP,
+        "budgets": {"colab": {"primary": {"daily": FIXTURE_DAILY_CAP, "monthly": FIXTURE_MONTHLY_CAP, "standing_daily": FIXTURE_STANDING_CAP}}},
         "max_hours": 8,
         "rate_cu_per_hour": {"standard": 0.08, "high_mem": 0.26},
         "keepalive": {"enabled": True, "interval_seconds": 60, "pulse_seconds": 600, "stale_seconds": 600},
-        "standing": {"caller": "standing", "shape": "cpu", "daily_cu_cap": FIXTURE_STANDING_CAP, "max_session_hours": 12, "warm_on_renew": True},
+        "standing": {"caller": "standing", "shape": "cpu", "max_session_hours": 12, "warm_on_renew": True},
         # The gate enforces, with the suite's test actor claim
         # whitelisted as a bypass (the door the CLI harnesses use);
         # gate-specific tests pop the claim to run as a plain agent.
@@ -146,7 +145,7 @@ def fake_scratch_repo(tmp_path, monkeypatch, daily_cap=15):
     var_dir.mkdir(parents=True, exist_ok=True)
     (var_dir / "shape-rates.json").write_text(json.dumps({"cpu": 0.08, "cpu-highram": 0.26}))
     (cfg_dir / "lease.json").write_text(json.dumps({
-        "enabled": True, "daily_cu_budget": daily_cap, "monthly_cu_budget": 150, "max_hours": 8,
+        "enabled": True, "budgets": {"colab": {"primary": {"daily": daily_cap, "monthly": 150}}}, "max_hours": 8,
         "keepalive": {"enabled": True, "interval_seconds": 60, "pulse_seconds": 600, "stale_seconds": 600},
         # Permissive fixture state for the session shape gate: the
         # general suite predates it; the gate's own tests below run
@@ -169,9 +168,9 @@ def gate_repo(tmp_path, monkeypatch, gate=None):
     cfg_dir = tmp_path / "config"
     cfg_dir.mkdir(parents=True, exist_ok=True)
     (cfg_dir / "lease.json").write_text(json.dumps({
-        "enabled": True, "daily_cu_budget": 15, "monthly_cu_budget": 150, "max_hours": 8,
+        "enabled": True, "budgets": {"colab": {"primary": {"daily": 15, "monthly": 150, "standing_daily": 4}}}, "max_hours": 8,
         "keepalive": {"enabled": True, "interval_seconds": 60, "pulse_seconds": 600, "stale_seconds": 600},
-        "standing": {"caller": "standing", "shape": "cpu", "daily_cu_cap": 4, "max_session_hours": 12},
+        "standing": {"caller": "standing", "shape": "cpu", "max_session_hours": 12},
         "session_gate": gate if gate is not None else {"enabled": True, "bypass_actors": ["panel", "test"], "agent_classes": ["high_ram"], "infra_actor": "standing"},
     }, sort_keys=True, separators=(",", ":")))
     # Caller attribution: the fixture's own scratch registry (fictional
