@@ -6,7 +6,7 @@
 // serves its /api/* on the same origin, and no query
 // parameter names another base. (The ?api= override this
 // entry used to honour was removed as a HIGH security
-// finding, 2026-11-16: nothing in the shell, the embed
+// finding: nothing in the shell, the embed
 // harness, or the rigs set it, and a crafted link could
 // have pointed the adapter's lease/access POSTs — which
 // carry session identifiers — at an arbitrary base.)

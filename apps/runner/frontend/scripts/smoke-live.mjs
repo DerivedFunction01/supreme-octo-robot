@@ -1,7 +1,7 @@
 // Headless exercise of the live adapter over served
 // panel portions — the recordless-entry pin. The fixture
 // is a records portion in the specimen's exact form
-// (panel state, 2026-11-16 drive): three record-carrying
+// (panel state, specimen drive): three record-carrying
 // entries, two with runtime: null, plus one entry in the
 // backend's "no-lease" form — NO record key (a record
 // torn, mid-write, or deleted between the records

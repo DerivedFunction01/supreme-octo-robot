@@ -1,7 +1,7 @@
 """Board portion gate tests: the board's per-project
 portion contract, driven through the server package in a
 subprocess against two fixture projects (heavy-feed
-batching, 2026-11-01; re-expressed at S8 — the pinned
+batching; re-expressed at S8 — the pinned
 test drove the same assertions over real HTTP through
 run.py; the moved tree's serving process is S11's, so
 the portions are computed through the feeds module the

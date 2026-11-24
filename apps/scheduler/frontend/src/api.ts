@@ -16,7 +16,7 @@
 // CLIs), and nothing in the contracts graduates runNow /
 // setJobEnabled / ackPing to the live shell, so the live
 // adapter refuses them (outside_scope) while the mock —
-// under the owner's mock-first ruling (2026-11-13) that
+// under the owner's mock-first ruling that
 // every storyboarded control WORK against the mock store —
 // implements them end-to-end. saveConfig is the graduated
 // verb (the contract 09 amendment designs it for the app):
@@ -58,7 +58,7 @@ export interface SchedulerApi {
    *  control); the ack is ledgered (ping_acked). */
   ackPing(pingId: string, ackedBy: string): ActionResult;
   /** Save a knob-bearing entry's config (contract 09,
-   *  amendment 2026-11-13). The save presents the config
+   *  amendment). The save presents the config
    *  version the form loaded: a stale save is refused
    *  (no_match), a value outside its served range — or
    *  violating the block's declared constraints — is

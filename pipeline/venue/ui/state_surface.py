@@ -1,12 +1,12 @@
 """The panel's state-read surface: the bounds, the
 state-read cache's construction, and the stackdump
 watchdog's health probe and config — extracted from
-server.py along the state_reads seam (2026-11-16) as
+server.py along the state_reads seam as
 that file approached its size cap. server.py keeps the
 route surface and the runtime singletons; this module
 owns how a state read is bounded, built, and watched.
 
-The two bounds, kept apart (the 2026-11-15 wedge cure):
+The two bounds, kept apart (the wedge cure):
 a cold reader waits at most STATE_READ_TIMEOUT_S for a
 build to land, while the build itself runs under
 STATE_COMPUTE_TIMEOUT_S — a build slower than the

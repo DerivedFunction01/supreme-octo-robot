@@ -5,15 +5,15 @@ The watch samples processes; its argv/cwd signature cannot
 distinguish a scheduler-server child from a shell run — agent
 work routed through the server's ops channel executes ON this
 box, as the server's children, and flags as local execution.
-Three flags on 2026-11-21 (a full-gate cluster, two repo-leg
-runs) all proved ops-route executions on manual ledger
+Three flags (a full-gate cluster and two repo-leg runs)
+all proved ops-route executions on manual ledger
 verification, and their dispositions had to be recalibrated
 by hand. The scheduler ledger (state/scheduler.db, events
 kind 'op') is the discriminating record: an op's record
 carries its caller and its full command target.
 
 Locator, pinned (Edgar coordinator's Instance 14
-disposition, 2026-11-22): the discriminating store is
+disposition): the discriminating store is
 state/scheduler.db, table events — the state/ledger.db
 beside it is a 0-byte stub that answers nothing, and a
 check pointed there reads empty and misreads as
@@ -52,8 +52,8 @@ WINDOW_AFTER_S = 120
 # is loaded under a synthetic package rooted at the lib
 # dir: a flat standalone load gives its relative import
 # no parent and the watch dies at startup in the job's
-# own context (2026-11-22 — the package gate's context
-# masked it; the job runs this file as a bare script).
+# own context (the package gate's context masked it;
+# the job runs this file as a bare script).
 _HERE = os.path.dirname(os.path.abspath(__file__))
 _LIB_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(_HERE))),

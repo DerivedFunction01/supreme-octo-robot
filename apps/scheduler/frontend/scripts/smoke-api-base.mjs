@@ -1,5 +1,5 @@
 // Headless pin for the ?api= HIGH finding's cure
-// (2026-11-16, the runner entry's standard at b54ebb2
+// (the runner entry's standard at b54ebb2
 // applied to the scheduler entry): the published form's
 // live base is the serving origin, and no injection can
 // point the live adapter at another origin. Three legs:

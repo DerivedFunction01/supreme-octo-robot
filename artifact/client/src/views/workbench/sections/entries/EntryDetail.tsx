@@ -1,7 +1,7 @@
 // Drill-in for one entry (Subplan 06 Step 2 + 3): the
 // entry's page, which opens as a full page of the
 // client from this sheet's door frame (FU-1, owner
-// ruling 2026-11-16 — the embedded stage that rendered
+// ruling — the embedded stage that rendered
 // it here is retired), beside the recorded-state
 // summary, metadata, lifecycle actions, files, review
 // log and history. Every write
@@ -13,17 +13,17 @@
 // the byte route, and its review disposition retired with
 // the hosted route: an entry's questions live in its page
 // now, and answers are recorded by transcription in the
-// owning thread (SPEC §5.1). Since the 2026-11-10
+// owning thread (SPEC §5.1). Since the
 // unification this one drill-in serves every kind — the
 // retired sibling detail for kind `artifact` composed
 // the same cards over the same blocks, and its surfaces
 // (stage, metadata, lifecycle, files, review log,
 // history) all live here.
 //
-// Composition only (2026-11-05 follow-up split):
+// Composition only (follow-up split):
 // useEntryDetail + Disposition. (The annotation /
 // commenting machinery that used to compose here was
-// removed 2026-11-17 on the owner's ruling — he does
+// removed on the owner's ruling — he does
 // not use it; the backend records are untouched.)
 
 import { Button } from "@workhorse/kit/components/controls/Button";
@@ -205,7 +205,7 @@ export function EntryDetail({
                     // An unbroken path token wraps rather
                     // than squeezing the door's button —
                     // a button never truncates (owner
-                    // ruling 2026-11-17); the same cure
+                    // ruling); the same cure
                     // the recorded-state source_ref wears.
                     overflowWrap: "anywhere",
                   }}

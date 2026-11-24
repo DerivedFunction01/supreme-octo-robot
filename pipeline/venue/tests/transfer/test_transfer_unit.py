@@ -1,7 +1,7 @@
 """Chunked transfer unit tests against a fake colab CLI (no network).
 
 The fake keeps a dict as the VM's /content and dispatches exec calls
-on the transfer snippets' marker comments. Pins the 2026-10-31
+on the transfer snippets' marker comments. Pins the
 reliability contract: a part that fails is retried, a part already on
 the far side with a matching SHA-256 is not moved again (resume), a
 same-size corrupt part is detected by hash and re-moved, and a
@@ -235,7 +235,7 @@ def test_upload_resume_reuploads_a_corrupt_remote_part(tmp_path, monkeypatch):
 
 
 def test_completed_upload_leaves_no_part_residue_for_a_consumer_glob(tmp_path, monkeypatch):
-    """The strip-lane specimen (2026-11-11): xfer parts left
+    """The strip-lane specimen: xfer parts left
     flat beside a bundle were swallowed by the job's part-*
     reassembly glob and doubled it (118 MB -> 236 MB). After
     a completed transfer, the target's directory holds only
@@ -374,7 +374,7 @@ def test_upload_skips_the_probe_on_a_degraded_session(tmp_path, monkeypatch):
     fake, local = harness(tmp_path, monkeypatch)
     staging = xfer._xfer_dir(sha(CONTENT))
     # Perfect resume state sits on the VM — but the session's
-    # launch journal reads degraded (specimen 2026-11-11: the
+    # launch journal reads degraded (the specimen: the
     # verify leg is the failing leg on a bad channel), so the
     # probe is skipped and every part uploads anyway.
     for i in range(4):
@@ -534,7 +534,7 @@ def test_verify_phase_timeout_names_its_stage(tmp_path, monkeypatch):
     """The reassemble/verify exec rides the attempt discipline:
     a stall there exhausts attempts and reports the phase —
     never an uncaught timeout, never a stage-less failure
-    (2026-11-11 xfer verify stalls)."""
+    (the xfer verify stalls)."""
     fake, local = harness(tmp_path, monkeypatch)
     monkeypatch.setattr(xfer, "colab", _timeout_on("# transfer:reassemble", fake))
     r = xfer.chunked_upload("s", local, "big.bin")
@@ -562,7 +562,7 @@ def test_split_timeout_names_its_stage(tmp_path, monkeypatch):
 
 
 def test_upload_parts_are_staged_under_the_transfer_token(tmp_path, monkeypatch):
-    """The B3-S3b specimen (2026-11-21): local part files named
+    """The B3-S3b specimen: local part files named
     by remote_name alone were one flat slot per name, so two
     concurrent transfers of different files under one remote
     name overwrote each other's parts between split and

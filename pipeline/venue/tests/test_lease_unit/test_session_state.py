@@ -7,7 +7,7 @@ from unit_harness import cp, gate_permissive, lease, repo  # noqa: F401
 
 
 def test_session_state_auth_prompt_is_unknown_not_absent(tmp_path, monkeypatch):
-    """2026-11-01: with the credential dead, the CLI printed its
+    """With the credential dead, the CLI printed its
     interactive login prompt where a session list was expected. The
     prompt is not a list: the state is unknown, never absent — absent
     is the one reading that deletes records."""
@@ -16,7 +16,7 @@ def test_session_state_auth_prompt_is_unknown_not_absent(tmp_path, monkeypatch):
     assert lease.session_state(prompt, "standard") == "unknown"
 
 
-# --- session_state read resilience (2026-11-07 classification defect) ---
+# --- session_state read resilience (the classification defect) ---
 
 
 def test_session_state_retries_a_transient_failure(monkeypatch):

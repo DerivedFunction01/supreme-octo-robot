@@ -283,7 +283,7 @@ def test_state_orphans_portion_lists_unrecorded_live_sessions(repo):
 
 
 def test_state_orphans_portion_stamps_deadline_past(repo):
-    """E4 (ruled 2026-11-14): the portion serves the
+    """E4 (ruled): the portion serves the
     past-deadline determination with the census — an evidenced
     deadline at or before the served now is past; a future
     deadline and an absent one are not."""

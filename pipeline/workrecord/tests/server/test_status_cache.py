@@ -1,5 +1,5 @@
-"""The Code status serve's request-path caches
-(2026-11-22): repo_status_feed serves a per-checkout
+"""The Code status serve's request-path caches:
+repo_status_feed serves a per-checkout
 TTL cache in the repos feed's idiom — a second status
 call within the TTL does not recompute the git
 derivation, and the registry invalidation busts the

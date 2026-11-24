@@ -18,7 +18,7 @@ table, and both `source` stamp forms — is frozen by
 contract 14 (plan §4.14), the format's own contract
 under the same canonical owner. It rode here as this
 contract's shared substrate at S0; amendment 2
-(2026-11-13) promoted it, and this section is the
+promoted it, and this section is the
 pointer, so the format keeps one home. The writer-class
 consequences of the machine stamp form (lifecycle owned by the writer,
 drift counted per writer) remain this contract's,
@@ -30,7 +30,7 @@ itself. The registry store has exactly one mutation
 path — this writer path — so an entry's presence in the
 store IS its admission; there is no directory-drop path
 for a flag to guard, and no admission field exists on
-the entry (amendment 3, 2026-11-13: the pinned system's
+the entry (amendment 3: the pinned system's
 `migrated: true` stamp step is dropped from the target).
 Admission evidence — validation counts, proof outcome —
 is recorded as events in the dispatch/ledger store
@@ -45,11 +45,10 @@ in `jobs/RETIRED.md`.
   written through the writer path (see Admission above).
   The pinned system's exception does not carry: the
   workbench family stamped `migrated: true` at birth
-  under the owner's 2026-11-08 ruling, and the runner
+  under the owner's ruling, and the runner
   family's renders carried their admission record in
   `migration_note`; in the target the renders write
-  entries through the path, full stop (amendment 3,
-  2026-11-13).
+  entries through the path, full stop (amendment 3).
 - **Lifecycle owned by the writer:** a `wb-progress-*` entry
   is deleted in the same writer call that disarms its todo
   (contract 03); a `colab-liveness-*` entry is deleted in the

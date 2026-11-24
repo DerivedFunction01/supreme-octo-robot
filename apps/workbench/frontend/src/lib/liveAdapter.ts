@@ -16,10 +16,10 @@
 // the serving shell's POST routes first (the same lib
 // writers `wb` calls), and the projected state moves only
 // on the server's acceptance — so a mutation survives a
-// reload and shows in `wb` (D-4, cured 2026-11-15). The
+// reload and shows in `wb` (D-4, cured). The
 // writes are therefore async at the seam. Goal ping/posts
 // and annotation creates/replies joined the cured set
-// under W-C5 (2026-11-15): POST /api/goals/{slug}/… and
+// under W-C5: POST /api/goals/{slug}/… and
 // the messages route. Two verbs stay local by ruling
 // (the W-C5 dispositions, named at their methods): app
 // settings are local-only, and annotation resolved-ness

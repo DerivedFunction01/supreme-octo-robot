@@ -3,14 +3,14 @@
 The S0 done-evidence (plan §5, step S0): every §2 preserve
 item traces to a contract clause. **Result: 36 items — 36
 traced.** At S0 the count was 29 traced, 2 partially
-traced, 5 with no clause; the 2026-11-13 amendment
+traced, 5 with no clause; the amendment
 (owner's word) closed the seven: §4.12/§4.13 and contracts
 12/13 carry the five unclaused items, and named clauses in
 contracts 04 and 09 resolve the two partials. The gaps are
 kept below as finding history, with their dispositions;
 they were not papered over anywhere in `contracts/`.
 
-## Findings — items that had no clause (all closed by the 2026-11-13 amendment)
+## Findings — items that had no clause (all closed by the amendment)
 
 **F1 — Five items trace to no §4 contract clause.** §4's
 eleven entries have no venue-records entry and no engine
@@ -33,7 +33,7 @@ S0 flags this; it does not amend beyond its commission
 (the §4.4 file-registry amendment is the commissioned one,
 closed below).
 
-**Disposition (2026-11-13 amendment, owner's word):**
+**Disposition (amendment, owner's word):**
 done as recommended. Plan §4.12 (venue records and
 placement) + contract 12 carry RUN1, RUN2, RUN4, RUN5 —
 the three evidence schemas are adopted as contract 12's
@@ -50,7 +50,7 @@ only its authentication posture is ruled, §10.1) and the
 **`/api/v1` view shapes**. §1 names an ops service as
 platform content; no §4 entry freezes either surface.
 
-**Disposition (2026-11-13 amendment):** the `/ops`
+**Disposition (amendment):** the `/ops`
 payload semantics are frozen in contract 04's ops-service
 clause (the platform contract; its authentication is
 §10.1's ruling), and the `/api/v1` view shapes in contract
@@ -66,7 +66,7 @@ survival services as pipeline/platform content, but no
 contract and no §6 sub-step carries the keeper contract
 itself.
 
-**Disposition (2026-11-13 amendment):** the
+**Disposition (amendment):** the
 watchdog/keeper contract is frozen in contract 04's
 survival clause (its wake half stays in contract 05), and
 its build homes in plan §6's platform services (step S9;
@@ -100,7 +100,7 @@ Ids are assigned here for citation; the item text is plan
 |---|---|---|
 | SCH1 | Job ids, strict YAML subset + semantics, owner values, both source stamps | 14 — the registry entry format's own contract (§4.14, amendment 2); at S0 carried as 02's shared substrate; field table amended by amendment 3 (the migration field family dropped) |
 | SCH2 | Catalog v1, adoption, setup coverage, drift, classification boundary, admission | 07 (+ 02 machine-writer half; its born-admitted exception retired by amendment 3) |
-| SCH3 | Engine firing semantics | 13 (F1, closed by the 2026-11-13 amendment; the firing clause amended by amendment 3 — status `active` + presence in the registry store through the one writer path) |
+| SCH3 | Engine firing semantics | 13 (F1, closed by the amendment; the firing clause amended by amendment 3 — status `active` + presence in the registry store through the one writer path) |
 | SCH4 | Ledger format (canonical JSON, kind vocabulary, SQLite schema, JSONL + SHA-256, empty-store import) | 05 (audit-ledger clause; the kind vocabulary spans the F1/F2 producers) |
 | SCH5 | Outbox ping shape, ids, states, coalescing, wake window, ack, void | 05 |
 | SCH6 | HTTP routes/payloads; ops errors + staged writes; `GIT_SSH_COMMAND` pair rule | 05 (`/pings`) + 01 + 05 (`/tools`) + 04 (`/health`, `/ops`) + 09 (`/api/v1`) (F2, closed by the amendment) |
@@ -117,7 +117,7 @@ the rule rides contract 04's ops-service clause.
 
 | Id | Item | Clause |
 |---|---|---|
-| RUN1 | Lease record shape + naming + atomic write + evidence projection | 12 (F1, closed by the 2026-11-13 amendment) |
+| RUN1 | Lease record shape + naming + atomic write + evidence projection | 12 (F1, closed by the amendment) |
 | RUN2 | Run record shape, terminal states, one `run-terminal` event | 12 (F1, closed by the amendment) |
 | RUN3 | Caller attribution semantics in full | 01 |
 | RUN4 | Placement + spend attribution | 12 (F1, closed by the amendment) |
@@ -149,7 +149,7 @@ the rule rides contract 04's ops-service clause.
 |---|---|---|
 | VOC1 | Ruled entry vocabulary + token status table — one contract in two files, move together | 06 |
 
-## Amendment 2 (2026-11-13, owner's ruling)
+## Amendment 2 (owner's ruling)
 
 Contract 02's substrate note recorded a gap of standing,
 not of trace: SCH1 traced through 02, but §4 assigned
@@ -169,7 +169,7 @@ amendment to plan §4.4 under contract 04 (seed/example
 pattern; its check becomes a platform survival loop). The
 plan's §12 ledger line is updated to match.
 
-## Amendment 3 (2026-11-13, owner's ruling)
+## Amendment 3 (owner's ruling)
 
 The migration field family — `migrated`, `migrated_at`,
 `migration_note`, `proof_pending` — does not exist in
@@ -205,7 +205,7 @@ count stays 36 of 36: SCH3 traces to contract 13's
 amended firing clause, SCH1 to contract 14's amended
 field table.
 
-## Amendment 4 (2026-11-13, owner's ruling)
+## Amendment 4 (owner's ruling)
 
 Contract 15 (unified state writer, plan §4.15) carries
 no §2 preserve item of its own and changes none: SCH6's

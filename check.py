@@ -46,7 +46,7 @@ leg covers, so the whole tracked tree is scanned exactly
 once; it enters the summary as the repo-portability row,
 and a --legs filter that does not name rootportability
 suppresses it. Beside them, three more repo-scoped rows
-run by default (the 2026-11-21 default-on reversal):
+run by default (the default-on reversal):
 repo-writeruniqueness (the writer-uniqueness component
 over every tracked Python source in the tree),
 repo-importisolation (the import-isolation component run
@@ -59,8 +59,8 @@ repoimportisolation, or reposcanners suppresses that row.
 Opt-out from any of them exists only as a recorded
 exception in the gate package's repo leg declaration.
 
-Parallelism (owner ruling 2026-11-13: tests always run
-parallel): a multi-package run executes the independent
+Parallelism (tests always run parallel): a
+multi-package run executes the independent
 package gates concurrently — one child process per
 package, outputs replayed in selection order — with the
 pool sized by the gate's worker derivation

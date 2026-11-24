@@ -6,7 +6,7 @@ from pathlib import Path
 
 from unit_harness import NOW, _acquire_stub, cp, gate_permissive, lease, make_renewal_stub, repo, seed_record, seed_window_record  # noqa: F401
 
-# --- Initiation-time approval (plan 2026-11-03): host on the record ---
+# --- Initiation-time approval (plan): host on the record ---
 
 HOST_A = "8080-x-a.us-east1.prod.r.colab.dev"
 HOST_B = "8080-y-b.asia-east1.prod.r.colab.dev"
@@ -145,7 +145,7 @@ def test_acquire_never_adopts_a_foreign_session(repo, tmp_path, monkeypatch):
 
 
 def test_reap_reconciles_a_missing_host_silently(repo, tmp_path, monkeypatch):
-    """Regression (2026-11-04): a concurrent writer holding a
+    """Regression: a concurrent writer holding a
     pre-capture copy of the record restored a hostless record after
     the adopt-foreign capture saved — the acquire output was fine
     and nothing re-asserted the host, so the approval gate never

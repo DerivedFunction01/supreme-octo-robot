@@ -31,7 +31,7 @@ STALE_STARTING_S = 7200
 
 def _daemon_orphan(rec: dict) -> bool:
     """A daemonized launch whose driver is decidable as dead
-    before its launch began (2026-11-23): the record carries
+    before its launch began: the record carries
     its daemon child's pid as the driver stamp, the launch
     never began (no launch_at — the stamp the launch exec's
     own save writes), and the pid is provably dead. A claiming
@@ -65,7 +65,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
     rule, that no caller may act on a list it could not read. A
     torn record is skipped, never fatal: one damaged file must
     not block the reconcile of every other run (it blocked every
-    runner entry in the 2026-11-08 flap). The sweep runs on the
+    runner entry in the write-denial flap). The sweep runs on the
     reconcile cadences (--poll, --sweep), never on the launch
     path. Returns (findings, live_list_readable)."""
     findings = []
@@ -87,7 +87,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             lease.foundation.clear_absent_stamp(REPO, rec["session"])
         if rec.get("state") in ("running", "polling", "starting") and rec.get("session") and rec.get("session") not in live_names:
             # Orphaning needs the absence confirmed across
-            # observations (2026-11-13): the live list comes back
+            # observations: the live list comes back
             # partial under load, so a name missing from one list
             # is as often the list's flicker as the session's
             # death — one sweep's reading orphaned healthy,
@@ -140,7 +140,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             # two-hour wait — a dead daemon launches nothing,
             # and every hour the record reads as pre-launch it
             # holds its caller's claim evidence as in-flight
-            # work (2026-11-23: six daemonized fires whose
+            # work (six daemonized fires whose
             # daemons died silently sat in "starting" until
             # their callers gave up on them). The resume is
             # the re-drive: it attaches or takes over under
@@ -150,7 +150,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
         elif rec.get("state") == "starting" and (rec.get("session") in live_names or not rec.get("session")):
             # Stale-"starting": the launcher died before its
             # launch landed (the upload-phase deaths on a wedged
-            # session — 2026-11-11: six records sat in "starting"
+            # session — six records sat in "starting"
             # for hours, reading as in-flight work and holding
             # their callers' claim evidence). Freshness is the
             # freshest of the record's stamps and its file mtime
@@ -187,8 +187,8 @@ def orphan_sweep() -> tuple[list[dict], bool]:
 # The standing collector. A detached run collects only when
 # someone polls it, and a consumer that waits on the record
 # file instead wedges silently — the record reads "polling"
-# forever over a finished run (formation-laneb-scoped,
-# 2026-11-13: its gate completed session-side in a minute and
+# forever over a finished run (formation-laneb-scoped:
+# its gate completed session-side in a minute and
 # the record sat uncollected for 36+ minutes until an
 # unrelated boot reconcile noticed). The lease reap cycle is
 # the runner's standing heartbeat, so this pass rides it (and

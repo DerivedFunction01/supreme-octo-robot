@@ -31,7 +31,7 @@ _paths_spec = _ilu.spec_from_file_location(
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
-DEFAULT_BPS = 2_418_283  # P0 baseline, 2026-10-29
+DEFAULT_BPS = 2_418_283  # P0 baseline
 RATE_RPS = 8.0
 
 # class -> (generator, driver class or None, network requests or None, return mode)

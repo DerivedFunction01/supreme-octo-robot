@@ -1,11 +1,11 @@
 // The entry-action state (split from MockupDetail.tsx,
-// 2026-11-05 follow-up): the entry-action mutation every
+// follow-up): the entry-action mutation every
 // write rides (a refusal is surfaced with the server's own
 // reason) and the lifecycle form state the Lifecycle card
 // renders. The review cluster that used to live here —
 // the Disposition card, the approve confirm sheet, the
-// review verbs — retired with the hosted byte route
-// (2026-11-10): the kit page carries the answer contract
+// review verbs — retired with the hosted byte route:
+// the kit page carries the answer contract
 // now, and answers are recorded by transcription in the
 // owning thread (SPEC §5.1). Recorded review history is
 // untouched; it renders in the History and Review log

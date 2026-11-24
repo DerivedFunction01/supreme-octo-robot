@@ -1,11 +1,11 @@
 # Contracts — the S0 freeze
 
 The fourteen entries of plan §4 — the eleven consolidations,
-the two carrying entries (§4.12, §4.13) added by the
-2026-11-13 amendment, and the registry entry format
-(§4.14) added by amendment 2 the same day — plus the
+the two carrying entries (§4.12, §4.13) added by
+amendment, and the registry entry format
+(§4.14) added by amendment 2 — plus the
 unified state writer (§4.15, contract 15) added by
-amendment 4 the same day — frozen as
+amendment 4 — frozen as
 documents + schemas + fixtures (plan step S0 and its
 amendments). Every lane after
 S0 consumes these; a shape that disagrees with its contract

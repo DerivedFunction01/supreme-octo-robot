@@ -126,8 +126,8 @@ export type ActivityView = {
 // ----------------------------------------------------------------
 // Contract 09 — the job view and job detail.
 
-// The served classification (contract 09, amendment
-// 2026-11-13; schema: contracts/schemas/job-view.schema.json).
+// The served classification (contract 09, amendment;
+// schema: contracts/schemas/job-view.schema.json).
 // Every job is the operator's own or a built-in; built-ins
 // are either family built-ins (they live under an app or
 // pipeline service — family + the "Open in" target are

@@ -1,4 +1,4 @@
-"""The writer seam's service route (the 2026-11-22 cure).
+"""The writer seam's service route (the cure).
 
 The defect class: the seam executed the platform writer
 in the caller's own process, so the write-denial flap —

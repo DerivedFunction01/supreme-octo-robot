@@ -125,7 +125,7 @@ DEFAULTS = {
     # absolute, like messages_db.
     "shapes_store_file": "shapes.db",
     # The assembled feeds document's freshness bound
-    # (server/assemble, the lazy restore, 2026-11-16):
+    # (server/assemble, the lazy restore):
     # the document serves from its TTL store for this
     # long after the assembly that produced it; the
     # first read past the bound serves the stale
@@ -181,7 +181,7 @@ DEFAULTS = {
     # warm). Writes invalidate the cache immediately.
     "repos_ttl_s": 30,
     # Feeds document detail scope (detail-scope
-    # ruling, 2026-11-16): census repos under these
+    # ruling): census repos under these
     # roots earn no repo document in the feeds
     # document — the roots name the gate's scratch
     # trees (pristine per-gate clones, reset and
@@ -195,7 +195,7 @@ DEFAULTS = {
     # scratch trees, which the per-gate clones
     # populate, and the tmp-named scratch roots the
     # wider harness populates the same way (the
-    # ruling as extended, 2026-11-16). Individual
+    # ruling as extended). Individual
     # scratch-shaped trees are not named — the list
     # names roots, not trees.
     "repos_detail_scratch_roots": ["tmp-gate",
@@ -214,7 +214,7 @@ DEFAULTS = {
     # home rows) compute on a pool of this many workers;
     # 1 would restore the sequential derivations.
     "feed_pool_workers": 8,
-    # Prime guard (poisoned-prime cure, 2026-11-16):
+    # Prime guard (poisoned-prime cure):
     # the largest persisted feeds document the prime
     # will parse at startup. The prime's parse
     # transient runs ~6x the file's size, so an
@@ -235,7 +235,7 @@ DEFAULTS = {
     # replaces the file).
     "feeds_document_prime_max_bytes": 256 * 1024 * 1024,
     # Per-repo eager-payload budget (document-weight
-    # cure, 2026-11-16): the most peek + dataset bytes
+    # cure): the most peek + dataset bytes
     # one repo's document carries eagerly. The per-file
     # caps (a 200 KB peek, a 1 MB dataset page) have no
     # aggregate, so a corpus-shaped repo — thousands of

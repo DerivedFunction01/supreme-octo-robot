@@ -1,8 +1,8 @@
 """Unit tests for the session-provisioning payload
 (snippets/lease/session_provision.py), with a scripted subprocess.
 
-Pins the lock-tolerance contract (specimen: ember r1794417373,
-2026-11-11 — the first post-landing provisioning attempt died
+Pins the lock-tolerance contract (specimen: ember r1794417373
+— the first post-landing provisioning attempt died
 at install rc 100 on a dpkg frontend lock held by a concurrent
 apt-get, missing set unchanged): the apt calls wait on the
 lock, a lock failure retries a bounded number of times, and a

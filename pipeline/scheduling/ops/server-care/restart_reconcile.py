@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Restart reconciliation: orphaned runs become a pushed event.
 
-Commissioned 2026-11-12 (owner-escalated): VM restarts
+Owner-escalated commission: VM restarts
 silently orphan in-flight work — a detached
 Colab run survives session-side, but the lane that would collect
 it died with the old VM, its run record sits at a non-terminal

@@ -1,5 +1,5 @@
-"""Caller attribution unit tests (plan: .plans/2026-11-04-caller-
-attribution.md, Step 1): the registry, the claim resolver, and the
+"""Caller attribution unit tests (plan: the caller-
+attribution plan, Step 1): the registry, the claim resolver, and the
 claims journal, against a scratch repo whose config carries its own
 fictional registry — the machine's local registry never leaks in."""
 

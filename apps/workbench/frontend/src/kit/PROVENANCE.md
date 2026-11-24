@@ -7,7 +7,7 @@ it checked-in and never regenerate it.
 - **Source:** `${WS}/spec-driven-starter/workhorse-kit/themes/`
   (Workhorse Kit v1, extracted from workbench-viewer at pin
   `b0b9cc5`, plan step S2), plus `assets/fonts/` from the same home.
-- **Vendored:** 2026-11-13, byte-identical copies (SHA-256 verified
+- **Vendored:** byte-identical copies (SHA-256 verified
   at vendor time):
   - `themes/index.css` — `d3fafa66ad9cc40de4e5c896e8d1b0db59fed71ca1dc94542d00cfd49f9fb2ce`
   - `themes/fonts.css` — `4e0b27f09ed0974ebf25831ac9dd9c54606fd7e09befe1d60d60b3592f416db7`
@@ -15,7 +15,7 @@ it checked-in and never regenerate it.
   - `themes/teal.css` — `31b303d2f54575f548cc06c6ff9b5a85e8625454d7291db39adfa3645bd6f94a`
   - `assets/fonts/*.woff2` — Inter variable; IBM Plex Mono 400/500/600
     (paths preserved: `fonts.css` references `../assets/fonts/`).
-- **Re-vendored 2026-11-13 (kit pass part 2):** `themes/index.css`,
+- **Re-vendored (kit pass part 2):** `themes/index.css`,
   `themes/olive.css`, and `themes/teal.css` regenerated in the
   kit's home and re-vendored byte-identical (hashes above) —
   `index.css` no longer imports a `katex.css` (gap K2, closed in

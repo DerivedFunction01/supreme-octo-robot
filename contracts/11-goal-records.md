@@ -15,7 +15,7 @@ goal registry.
 
 The Muse goal registry was a shell with no effect and the
 owner removed it outright; stall prevention that lived
-under it died with it (the 2026-11-12 measurement: 15
+under it died with it (the measurement: 15
 registry-listed goals, 11 with no workspace on disk; two
 goal-owned watches ceased to exist when the goals were
 deleted). The consolidation therefore decouples goals from
@@ -66,7 +66,7 @@ writer):
 
 | Field | Rule |
 |---|---|
-| `id` | required; the todo's name — a GitHub-like slug matching `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–100 chars, unique across the project (the owner's 2026-11-14 naming ruling). Explicit at creation or derived from the title (slugified, suffixed `-2`, `-3`, … on collision). The todo's file is `<id>.md`. Pre-ruling records carry the retired generator's `t-[0-9A-HJKMNP-TV-Z]+` form until the rename pass migrates them; the parser accepts that form as a legacy id |
+| `id` | required; the todo's name — a GitHub-like slug matching `^[a-z0-9]+(-[a-z0-9]+)*$`, 1–100 chars, unique across the project (the owner's naming ruling). Explicit at creation or derived from the title (slugified, suffixed `-2`, `-3`, … on collision). The todo's file is `<id>.md`. Pre-ruling records carry the retired generator's `t-[0-9A-HJKMNP-TV-Z]+` form until the rename pass migrates them; the parser accepts that form as a legacy id |
 | `legacy_id` | written only by the rename pass: the record's pre-ruling `t-<token>` id, kept as data (the audit/reversibility join for anything that referenced it), never a lookup path |
 | `title` | required |
 | `status` | required; `todo\|doing\|blocked\|done` |
@@ -122,7 +122,7 @@ WR1, WR2, WR3, WR4 — and §4.11's own terms (the contract
 block as a record field, the workspace as projection,
 record-armed schedules, the decoupling).
 
-## Landing note — the goal-record store (2026-11-13)
+## Landing note — the goal-record store
 
 The store this contract names is built. `lib/goals` in
 the work-record service is the goal record's one home:
@@ -149,7 +149,7 @@ entry's classification and self-removal text. The
 binding migration of live goal state into the store
 remains the cutover step's act, per plan.
 
-## Amendment — blocked-state citation and verification (2026-11-13)
+## Amendment — blocked-state citation and verification
 
 Raised by the Goals-section storyboard: the goal contract
 requires a blocked claim to carry a cited basis and a

@@ -5,7 +5,7 @@ running on this machine's local CPUs.
 The venue rule: while the high-RAM compute fleet is live,
 NO checks or code run locally — the fleet is paid capacity
 and local runs are both slower and a discipline leak (owner
-ruling, 2026-11-10, tightening the 2026-11-09 watcher). The
+ruling, tightening the original watcher). The
 watcher samples running processes each cycle (argv, cwd,
 pid/ppid via /proc — reads only) and works in two modes:
 
@@ -25,9 +25,9 @@ pid/ppid via /proc — reads only) and works in two modes:
   (pipeline/attention/cli.py post status / post item)
   never flags either: it is the prescribed status-posting
   surface every lane drives — supervision machinery, not
-  a check or code execution (2026-11-15: the watch
-  flagged a lane's status posts as local execution; the
-  exemption is keyed on the resolved script identity
+  a check or code execution (the watch flagged a lane's
+  status posts as local execution; the exemption is keyed
+  on the resolved script identity
   plus the transport verb pair, so the CLI's other verbs
   classify normally). Managed infrastructure never flags:
   automation surfaces matched by resolved script identity
@@ -356,8 +356,8 @@ def classify_strict(argv, cwd, workspace, service_patterns=()):
     # colab-runner cwd — the runner's own seeding mechanic)
     # carries no repo segment in its raw argv, so the
     # pattern colab-runner/sync/ only matches the resolved
-    # path (2026-11-10: the pattern added for the absolute
-    # shape missed the relative one and it fired again).
+    # path (a pattern for the absolute shape alone misses
+    # the relative one and fires on it).
     haystacks = [joined]
     for token in _surface_scripts(argv):
         path = token
@@ -451,8 +451,9 @@ def _is_infra_path(path):
     other repos' ops and health surfaces as machinery —
     workbench-viewer/ops/doctor.sh, colab-runner/ops/
     mirror_transient.py, workbench-viewer/server/
-    healthcheck.py all flagged as task scripts before this
-    cross-repo case landed (2026-11-10)."""
+    healthcheck.py are standing specimens of surfaces that
+    would otherwise flag as task scripts; the cross-repo
+    case is covered."""
     if not os.path.isfile(path):
         return False
     rel = os.path.relpath(path, WORKSPACE)

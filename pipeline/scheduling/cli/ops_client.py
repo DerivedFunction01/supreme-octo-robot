@@ -9,9 +9,8 @@ request was sent but its response was lost (a timeout, a
 reset, a truncated body — the outcome is UNKNOWN and the
 op may have performed; verify before repeating). The
 earlier form collapsed both into "nothing was performed",
-which was unsound for the second face and was attested
-three times in one night (2026-11-21/22) by callers who
-repeated work that had in fact run. The client never
+which was unsound for the second face: callers repeated
+work that had in fact run. The client never
 falls back to a direct write in either face.
 
 Authentication (§10.1; contract 04): /ops rides the /tools
@@ -68,8 +67,8 @@ def store_ops_token(caller, token, env=None):
     the token home) through the platform writer's staged
     protocol — a denied or torn write leaves the standing
     token byte-identical, where the direct truncate-write
-    this replaced destroyed it (the 2026-11-21 mint failure
-    the writer census named). The delivery half of a mint:
+    this replaced destroyed it (the mint failure the writer
+    census named). The delivery half of a mint:
     the token prints once at mint and is saved here by its
     receiver."""
     path = token_file_path(caller, env)

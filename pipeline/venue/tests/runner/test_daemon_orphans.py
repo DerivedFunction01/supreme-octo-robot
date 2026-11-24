@@ -1,12 +1,12 @@
 """Daemon-orphaned launches: the sweep's decidable cure for
-daemonized fires whose daemon died silently (2026-11-23).
+daemonized fires whose daemon died silently.
 
 A daemonized record carries its daemon child's pid as the
 driver stamp. When that pid is provably dead and the launch
 never began, the record is decidable as lost NOW — not after
 the stale-starting branch's two-hour time proxy — and the
-sweep closes it launch-lost. The negative half is the same
-day's opposite specimen: a daemon queued behind the session
+sweep closes it launch-lost. The negative half is the
+opposite specimen: a daemon queued behind the session
 launch lock sits in "starting" with its pid alive, healthy
 at any age, and neither the new branch nor the time proxy
 may touch it. These pins drive sweep.py against a stub

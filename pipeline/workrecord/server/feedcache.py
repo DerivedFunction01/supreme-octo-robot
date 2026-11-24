@@ -1,5 +1,5 @@
 """Keyed stale-while-revalidate feed cache
-(cache-refresh plan, 2026-11-05).
+(cache-refresh plan).
 
 The feeds.py idiom (home/repos TTL caches), generalized
 from wall-clock to content: each entry is stored under a

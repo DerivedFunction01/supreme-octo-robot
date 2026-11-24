@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Bridge probe: the in-VM half of a standing-as-bridge probe
-(2026-11-01). Runs detached inside the standing lease session and
+"""Bridge probe: the in-VM half of a standing-as-bridge probe.
+Runs detached inside the standing lease session and
 tests the bridge topology end to end:
 
   this side plants command files in a queue directory (file

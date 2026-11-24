@@ -27,11 +27,18 @@ its targeting layout, and its legs in order. Leg kinds:
                  invariant (b), static half)
 - dateuniqueness — the date-uniqueness component
                  (gate.dateuniqueness): one shared date
-                 helper per intent per cluster (owner
-                 ruling 2026-11-16) — no divergent
-                 parse / normalize / format / epoch /
-                 now copy outside the homed modules
-                 named in gate/date_families.json
+                 helper per intent per cluster — no
+                 divergent parse / normalize / format /
+                 epoch / now copy outside the homed
+                 modules named in gate/date_families.json
+- livingdates  — the living-dates component
+                 (gate.livingdates): living documents
+                 and code comments carry no dates.
+                 Repo-scoped: its population is the whole
+                 tracked tree, so it is declared once in
+                 the gate package's declaration and the
+                 dispatch scans from the repo root, never
+                 a package root
 - command      — a package's own leg, as argv data with
                  {python} / {root} substitution
 - unittest     — a unittest suite (discover form); under
@@ -67,7 +74,7 @@ its targeting layout, and its legs in order. Leg kinds:
                  package, so run_package skips it (recorded
                  as skipped). The per-package linecap kind
                  survives only as the component's CLI form;
-                 no package declares it since 2026-11-21.
+                 no package declares it.
 - repowriteruniqueness — the writer-uniqueness component
                  in its repo form (gate.writeruniqueness):
                  repo-scoped like the census. The gate
@@ -78,8 +85,7 @@ its targeting layout, and its legs in order. Leg kinds:
                  default, never declared per package, so
                  run_package skips it (recorded as skipped).
                  The per-package writeruniqueness kind is
-                 retired (declared by platform and venue
-                 until 2026-11-21).
+                 retired.
 - repoimportisolation — the import-isolation component
                  in its repo form (gate.importisolation):
                  the invariant is per-package by nature, so
@@ -91,8 +97,7 @@ its targeting layout, and its legs in order. Leg kinds:
                  recorded exceptions (repo-relative paths);
                  run_package skips the config declaration
                  (recorded as skipped). The per-package
-                 importisolation kind is retired (declared
-                 by attention until 2026-11-21).
+                 importisolation kind is retired.
 - reposcanners — the scanner-runner leg in its repo form
                  (gate.staticlegs.scanners): a pipeline
                  package carrying a scanners.py module at
@@ -107,8 +112,8 @@ Execution runs every declared leg, in declared order,
 and each leg verdicts independently: a red leg never
 leaves later legs unverdicted. (The fail-fast form this
 replaced — the retired check files' own semantics —
-aborted the package at its first red leg; the
-2026-11-15 composed re-gate showed the cost:
+aborted the package at its first red leg; a composed
+re-gate showed the cost:
 attention's ruff-format failure left its ruff-lint and
 suite legs unrun, and the platform suite verdicted
 only through the formation's leg-1D diagnostic patch.)
@@ -117,8 +122,8 @@ verdicts. An explicit leg filter is diagnostic in
 selection only — it narrows which legs run, never how
 they verdict.
 
-Parallelism (owner ruling 2026-11-13: tests always run
-parallel — parallelism is what catches flaky tests):
+Parallelism (tests always run parallel — parallelism
+is what catches flaky tests):
 package gates compose concurrently at the root check,
 and a unittest suite with enough modules shards across
 worker processes. The worker count is derived, never a
@@ -140,10 +145,10 @@ from pathlib import Path
 
 from . import foldercensus, isolation, linecap, pathdiscipline
 from . import importisolation, portability, staticlegs
-from . import dateuniqueness, writeruniqueness
+from . import dateuniqueness, livingdates, writeruniqueness
 
 TEST_LEG_KINDS = ("unittest", "isolation-unittest")
-SCANNER_LEG_KINDS = ("portability", "scanners")
+SCANNER_LEG_KINDS = ("portability", "scanners", "livingdates")
 INTERPRETER_LEG_KINDS = (
     "command", "unittest", "isolation-unittest",
     "ruff-format", "ruff-lint", "scanners")
@@ -557,6 +562,11 @@ def run_leg(pkg: Package, leg: dict, *, repo_root: Path,
             exceptions=leg.get("exceptions", []))
         for line in dateuniqueness.render(
                 rows, failures, scanned):
+            print(line)
+        code = 1 if failures else 0
+    elif kind == "livingdates":
+        rows, failures, scanned = livingdates.scan(repo_root)
+        for line in livingdates.render(rows, failures, scanned):
             print(line)
         code = 1 if failures else 0
     elif kind == "command":

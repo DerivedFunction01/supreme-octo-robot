@@ -6,7 +6,7 @@
 // queue is never filtered (contract 09's asymmetry).
 //
 // The EXPIRES group carries the storyboard presets plus a
-// Custom option (owner commission, 2026-11-15): the record
+// Custom option (owner commission): the record
 // itself holds only an absolute expires_at — the backend's
 // presence write accepts any instant — so a custom duration
 // or end date resolves to an instant and rides the exact

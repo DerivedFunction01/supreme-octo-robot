@@ -1,5 +1,5 @@
 // One entry's page as a full page of the one client
-// (FU-1, owner ruling 2026-11-16 ~17:16 EST: the
+// (FU-1, owner ruling: the
 // workbench preview loads as a full page — a top bar
 // with a go-back control and an info icon; the info
 // icon opens a popup drawer on mobile and the desktop
@@ -207,8 +207,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
       >
         {/* The back control never shrinks: at phone
             width the title (next) flexes and truncates
-            before the Back label does (critic WB5-2,
-            2026-11-17). */}
+            before the Back label does (critic WB5-2). */}
         <Button variant="ghost" className="shrink-0" onClick={goBack}>
           ← Back
         </Button>

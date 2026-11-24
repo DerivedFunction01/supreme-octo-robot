@@ -242,7 +242,7 @@ export class MockSchedulerAdapter implements SchedulerApi {
       // at the moment the run completes — a config save
       // lands in the same record, so the next run speaks
       // the new tiers. 62 = the mock's served free figure
-      // (62 GiB, the 2026-11-11 storage cleanup record).
+      // (62 GiB, the storage cleanup record).
       const freeGb = 62;
       const low = rt.config.values["home_low_free_gb"]!;
       const crit = rt.config.values["home_critical_free_gb"]!;
@@ -434,7 +434,7 @@ export class MockSchedulerAdapter implements SchedulerApi {
   }
   // ---------------------------------------------------------
   // Entry config — the one writer path (contract 09,
-  // amendment 2026-11-13). The writer lives in
+  // amendment). The writer lives in
   // ./mock-config; the adapter lends it the store, the
   // ledger, and the emit.
 

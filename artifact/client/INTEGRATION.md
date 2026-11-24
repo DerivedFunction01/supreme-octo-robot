@@ -1,7 +1,7 @@
 # One client — integration contracts
 
 The composition contract for the workhorse superapp's single
-integrated frontend (owner ruling 2026-11-16 ~10:05 EST;
+integrated frontend (owner ruling;
 audit Addendum 3). **One app: one client, one bundle
 (shipped in split form, §1), one router, the four apps
 as views on the unified kit.** No
@@ -11,7 +11,7 @@ rebuild any part of it.
 
 References of record: the seed plan §2/§2b, the kit sheet,
 and the five storyboards (41 frames) — the design pack in
-trash (expiry 2026-12-13); the kit's home at repo-root
+trash; the kit's home at repo-root
 `kit/` (its README is the consumption rule); the four
 restored originals under `client/pages/<app>/` (behaviour
 and screens of record, §8); the restoration lanes'
@@ -29,7 +29,7 @@ scheduler `pages/scheduler/RESTORE-NOTES.md`; attention
   every view (the mount seam's dynamic imports inlined);
   a split build fails the guard, because the platform's
   CVM publish stage accepts exactly one JS bundle (the
-  per-view split retired 2026-11-22). Each view's
+  per-view split retired). Each view's
   shell-facing half (nav, active key, search declaration,
   crumb — the H1/title source) lives in
   `views/<app>/meta.ts` and is imported statically, so
@@ -114,7 +114,7 @@ Subroute grammars (each lane's inventory of record):
   The digest's topic disclosures are mount-on-demand:
   a closed topic renders no lane DOM (the
   ReposTrackingPanel form), so closed-state geometry
-  carries no hidden boxes (critic N-2, 2026-11-16).
+  carries no hidden boxes (critic N-2).
 - **Runner** — `/` Leases · `/leases/<id>` · `/new` ·
   `/access` · `/budget` · `/events` · `/orphans`.
 
@@ -124,7 +124,7 @@ the originals did. Build hrefs with the full hash
 its restored href builders produce its own `#/…` forms —
 prefix them with `/workbench` at the seam.
 
-Titling (the shell's contract; critic M-5, 2026-11-16):
+Titling (the shell's contract; critic M-5):
 the shell renders exactly one `<h1>` per route, inside
 the route's one `<main>`, and `document.title` follows
 the same name as `<Section> · <App>` (the Launcher's
@@ -142,7 +142,7 @@ own one H1 as the route's H1. A view renders no
 visible title repeating the shell H1's section name:
 display titles in a view name the item in view (a
 repo's name, an entry's title), never the section
-(critic M-5 cure, 2026-11-16).
+(critic M-5 cure).
 
 Phone presentation (critic M-3): every phone route
 presents as a pushed screen from the first render — the
@@ -253,7 +253,7 @@ the embed era are the defect this build cures).
   duration of the build (the kit read as if a package
   root sat above it); that made the build depend on
   machine-local state and fail from a bare tree
-  (venue gate runs 1–4, 2026-11-16), and it is
+  (venue gate runs 1–4), and it is
   removed: nothing creates a repo-root `node_modules`,
   and a clean checkout verifies end to end with
   `bun run verify:client` (§10).
@@ -287,11 +287,11 @@ attributes, and no per-app appearance state exists.
 The kit's contrast gate (its `tools/verify-contrast`)
 holds every content voice, the muted voice included,
 to the 4.5:1 bar on every palette × mode surface
-pairing (critic B-2, 2026-11-16); each palette's muted
+pairing (critic B-2); each palette's muted
 token sits on its own muted→secondary scale. The gate
 also proves status text on its own tints — Chip,
 StatusChip, Badge, Lane, and the color-mix badges
-(critic N-1, 2026-11-16): the badge mix constants (a
+(critic N-1): the badge mix constants (a
 16% tint background; the foreground as a 43% hue step
 toward the content colour, in `LogRow`'s KindBadge
 and `AppShell`'s CountBadge) are mirrored as data in
@@ -311,7 +311,7 @@ host colour scheme: `index.css` binds the wrapper's
 primary content tokens and keys `color-scheme` on
 `[data-mode]`, so a runtime Light/Dark switch
 re-themes the whole surface — chrome included — with
-no reload (critic confirmation F-1, 2026-11-17). A
+no reload (critic confirmation F-1). A
 kit control's focus indicator must contrast with the
 control's own filled state, not only with the page:
 where a checked fill is the accent itself, the
@@ -365,7 +365,7 @@ below):
   groups — a failed glance read can never become a
   postable "No expiry"; the shell hook retries the
   glance until it lands and refuses presence posts
-  while never-loaded (critic M-6 cure, 2026-11-16).
+  while never-loaded (critic M-6 cure).
 
 **Binding (landed):** read via the merged registry's
 `getGlance` — `useServedPresence`
@@ -457,8 +457,7 @@ instead of editing App.tsx in parallel.
   MessageThreads, Editor) are not in the table; their
   keep-or-remove disposition is the owner's, per the
   audit's C-4 — do not silently keep or silently drop.
-- **Runner:** mutations stay (owner ruling 2026-11-15
-  20:11 EST) — the views call the runner actions,
+- **Runner:** mutations stay (owner ruling) — the views call the runner actions,
   including the writes, per the restoration mapping.
 - **Attention:** the shell renders no chrome inside the
   app (the old shell's pushed presence/digest values
@@ -482,7 +481,7 @@ runs. The frozen install is not ceremony: bun's
 so any build run on an existing install silently
 ships the kit copy from install time — a build used
 for measurement or staging always installs fresh
-first (the critic re-run's N-4, 2026-11-16):
+first (the critic re-run's N-4):
 
 ```
 bun run verify:client
@@ -494,7 +493,7 @@ The bun version is pinned in `artifact/package.json`
 version; a lockfile written by a different bun is
 what failed the venue gate's frozen install.
 
-Skeleton-stage results (2026-11-16): typecheck clean;
+Skeleton-stage results: typecheck clean;
 build stages `dist/index.html` + one JS bundle
 (247,665 B) + one CSS (186,648 B) whose contents assert
 the kit landed: `[data-palette=olive|teal]`,
@@ -549,8 +548,7 @@ frames as written:
    outside AppShell — on phone they are single-column
    full-width, without the PhoneShell wrapper.
 7. **The entry preview is a full page, and the one
-   iframe survives inside it (FU-1, owner ruling
-   2026-11-16 ~17:16 EST).** The original viewer's
+   iframe survives inside it (FU-1, owner ruling).** The original viewer's
    embedded stage — the entry's page rendered in a box
    inside the drill-in — is replaced by a full-page
    route (`#/workbench/p/<slug>/preview/<entryId>`,

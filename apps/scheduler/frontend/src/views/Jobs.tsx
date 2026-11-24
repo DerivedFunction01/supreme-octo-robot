@@ -1,5 +1,5 @@
 // The Jobs list, grouped (approved mockup frames 1–3 +
-// the owner's taxonomy refinement, 2026-11-13; contract 09
+// the owner's taxonomy refinement; contract 09
 // amendment). The split is the SERVED classification, never
 // derived here: operator jobs are full rows in the "Yours"
 // group exactly as before; built-ins are compact single-

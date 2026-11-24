@@ -17,7 +17,7 @@ from .foundation import REPO, RUNS, VENUE, now, staged_write
 
 
 def _prepare(rec: dict) -> None:
-    # Shape uniformity (2026-11-12): last_evidence_at exists
+    # Shape uniformity: last_evidence_at exists
     # on every record from its first save — initialized to
     # the record's birth, so a never-collected record's
     # evidence age reads as its whole life (the orphan
@@ -46,7 +46,7 @@ def save_record(rec: dict) -> None:
 # timestamp, so two launches of the same job inside one second
 # mint the same id — and with unconditional saves, the second
 # run silently absorbed the first's record and results dir
-# (2026-11-14 specimen: parallel shards of one job launched in
+# (specimen: parallel shards of one job launched in
 # the same second; one record survived, the other shard's
 # outputs were lost, no error at either launch). The first
 # save therefore CLAIMS the id: an exclusive-create write that
@@ -55,7 +55,7 @@ def save_record(rec: dict) -> None:
 # claim is the first save — no placeholder window — and the
 # common case keeps the unsuffixed id byte-identical.
 #
-# The claim itself is atomic (2026-11-21 cure, Chair VIII
+# The claim itself is atomic (Chair VIII
 # commission): the original exclusive-create wrote the bytes
 # directly into the claimed file, so a write denied mid-write
 # by the host's flap — or a process killed mid-write — left

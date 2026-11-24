@@ -34,7 +34,7 @@ def test_acquire_dynamic_profiles_pass_their_cli_flags(repo, tmp_path, monkeypat
 
 
 def test_acquire_honors_an_explicit_window_over_max_hours(repo, tmp_path, monkeypatch):
-    """Regression (2026-11-01): acquire silently clamped every
+    """Regression: acquire silently clamped every
     explicit hours value to the config max_hours, so an ordered 24 h
     endurance window came up as 8 h, unflagged for renewal, and the
     budget priced the clamped window. An explicit window is honored
@@ -70,7 +70,7 @@ def test_acquire_max_hours_cap_still_clamps_its_caller(repo, tmp_path, monkeypat
 
 
 def test_acquire_never_destroys_record_on_unreadable_sessions(repo, tmp_path, monkeypatch):
-    """The 2026-11-01 record loss, pinned: a live lease whose session
+    """The record loss, pinned: a live lease whose session
     list comes back as the auth prompt (or any unreadable output) must
     survive acquire untouched — no stop, no delete, no recreate."""
     rec = seed_record(repo)
@@ -84,7 +84,7 @@ def test_acquire_never_destroys_record_on_unreadable_sessions(repo, tmp_path, mo
 
 
 def test_acquire_never_clears_record_on_unconfirmed_absence(repo, tmp_path, monkeypatch):
-    """The 2026-11-13 record losses, pinned: a candidate whose
+    """The record losses, pinned: a candidate whose
     only fault is an absent reading with its deadline ahead is
     skipped, never stopped or deleted — the absence must first
     sustain past the confirmation window (the reap's discipline,
@@ -172,7 +172,7 @@ def test_default_shape_absent_without_the_config_key(tmp_path):
     """Executable code resolves the default shape only from
     config/lease.json's default_shape; a config without the key
     resolves to None and callers fail loudly rather than
-    substituting a shape (hardcode strip, 2026-11-03)."""
+    substituting a shape (the hardcode strip)."""
     cfg_dir = tmp_path / "config"
     cfg_dir.mkdir(parents=True)
     (cfg_dir / "lease.json").write_text(json.dumps({"enabled": True}))

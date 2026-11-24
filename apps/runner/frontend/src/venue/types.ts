@@ -90,7 +90,7 @@ export interface RunRecord {
 /**
  * schemas/session-evidence.schema.json — CLOSED shape
  * (additionalProperties: false). At the pin it carried no
- * venue field; the S5 amendment (2026-11-13, plan §7 V1)
+ * venue field; the S5 amendment (plan §7 V1)
  * added venue as a required property — the projection
  * stamps it at write time and the §10.3 migration stamps
  * the legacy stock — so seed evidence carries it natively
@@ -136,7 +136,7 @@ export interface VenueEvent {
 
 /**
  * The served event projection (LogRow entry shape, kit
- * timeline-component study 2026-11-13): the record's one
+ * timeline-component study): the record's one
  * message string split adapter-side into the fields the
  * kit's LogRow renders — date token, time, headline, meta —
  * plus the drawer detail (full message verbatim, the
@@ -347,7 +347,7 @@ export interface OrphanView {
   deadlineStalePossible: boolean;
   conflicts: OrphanConflictView[];
   handoverPending: boolean;
-  /** E4 (ruled 2026-11-14): the evidenced deadline and the
+  /** E4 (as ruled): the evidenced deadline and the
    *  served past-deadline determination (the pipeline census's
    *  derived_deadline / deadline_past) — the frontend renders
    *  them, it never derives them. deadlineLabel is the deadline

@@ -68,7 +68,7 @@ def main() -> int:
         # written only into a test home, recognised by the dummy
         # token every harness plants beside it. Under a real home
         # the write is skipped — a fake create must never touch
-        # the real binding file (2026-11-05 pollution incident).
+        # the real binding file (the pollution incident).
         try:
             token_text = (binding_path.parent / "token.json").read_text()
         except OSError:
@@ -130,7 +130,7 @@ def main() -> int:
             # opens with its update-check preamble, whose
             # first line starts with "[colab]" — a consumer
             # slicing from the first "[" reads the preamble,
-            # not the payload (2026-11-11 live specimen).
+            # not the payload (the live specimen).
             sys.stdout.write("\n[colab] A new version of Colab CLI is available: 0.8.0 (current: 0.7.5)\n[colab] Run 'colab update' to update.\n\n")
         sys.stdout.write(r.stdout)
         sys.stderr.write(r.stderr)
