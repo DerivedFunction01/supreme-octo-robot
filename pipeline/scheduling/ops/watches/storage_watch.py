@@ -47,7 +47,11 @@ STORAGE_WATCH_TMP_PATH, STORAGE_WATCH_STORES (pathsep-separated,
 replaces the derived store list), STORAGE_WATCH_DU_TIMEOUT_SECS,
 STORAGE_WATCH_HOME_LOW_GB / STORAGE_WATCH_HOME_CRIT_GB (the home
 tiers in GB, set by the engine from the entry's config block at
-fire time; absent or unparseable → the compiled constants).
+fire time; absent or unparseable → the compiled constants),
+STORAGE_WATCH_FREE_BYTES (the free-space reading in bytes,
+reported for every filesystem this run; absent or unparseable
+→ the real disk_usage reading — the fixture form of the one
+input the tiers are compared against).
 Paths derive from this script's own location; nothing is
 hardcoded to this machine.
 
@@ -100,6 +104,7 @@ TMP_CRIT = 32 * MB
 
 HOME_LOW_ENV = "STORAGE_WATCH_HOME_LOW_GB"
 HOME_CRIT_ENV = "STORAGE_WATCH_HOME_CRIT_GB"
+FREE_BYTES_ENV = "STORAGE_WATCH_FREE_BYTES"
 TRASH_DIR_ENV = "STORAGE_WATCH_TRASH_DIR"
 
 LEVEL_NAMES = {1: "LOW", 2: "CRITICAL"}
@@ -122,6 +127,23 @@ def home_tier_bytes(env_name: str, default: int) -> int:
     if gb <= 0:
         return default
     return int(gb * GB)
+
+
+def free_bytes(path: str) -> int:
+    """One filesystem's free space: the environment's byte
+    figure when the fixture variable is present and
+    parseable, else the real disk_usage reading — an absent
+    variable changes nothing, and a failed real reading
+    raises exactly as disk_usage does."""
+    raw = os.environ.get(FREE_BYTES_ENV)
+    if raw is not None and raw.strip() != "":
+        try:
+            nbytes = int(raw)
+        except ValueError:
+            nbytes = -1
+        if nbytes >= 0:
+            return nbytes
+    return shutil.disk_usage(path).free
 
 
 def gb_label(nbytes: int) -> str:
@@ -351,7 +373,7 @@ def main() -> int:
     frees: dict[str, int] = {}
     for name, path, low, crit, _low_label, _crit_label in filesystems:
         try:
-            frees[name] = shutil.disk_usage(path).free
+            frees[name] = free_bytes(path)
         except OSError as exc:
             print(f"storage-watch: cannot read free space for {name} ({path}): {exc}")
             return 3
