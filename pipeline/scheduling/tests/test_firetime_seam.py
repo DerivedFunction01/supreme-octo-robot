@@ -295,9 +295,13 @@ class EngineFireTests(unittest.TestCase):
                     os.path.join(root, "storage_watch.py"))
         shutil.copy(os.path.join(PKG_ROOT, "ops", "paths.py"),
                     os.path.join(root, "paths.py"))
-        free_gb = shutil.disk_usage(root).free // GB
-        self.assertGreater(free_gb, 10)
-        self.assertLess(free_gb, 400)
+        # The fired watch's free-space reading enters as a
+        # fixture through its env seam (STORAGE_WATCH_FREE_BYTES),
+        # never from the host's disk: 450 GB is the regime a live
+        # reading cannot calibrate against (the knob ceiling is
+        # 500), and the tiers below straddle the fixture on both
+        # sides — starting tiers below it, saved tiers above it.
+        free_gb = 450
         low0, crit0 = free_gb - 5, free_gb - 10
         block = (
             "config:\n"
@@ -336,6 +340,8 @@ class EngineFireTests(unittest.TestCase):
             "STORAGE_WATCH_HOME_PATH": root,
             "STORAGE_WATCH_TMP_PATH": root,
             "STORAGE_WATCH_STORES": "",
+            "STORAGE_WATCH_FREE_BYTES": str(free_gb * GB),
+            "STORAGE_WATCH_TRASH_DIR": os.path.join(root, "trash"),
         }
         with mock.patch.dict(os.environ, env, clear=False):
             engine = Engine(values, now_fn=clock, inline=True)
