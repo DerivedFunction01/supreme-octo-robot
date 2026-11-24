@@ -17,6 +17,7 @@ from attention.services.measure.staffing_rows import (
     _family_rows,
     _frontier_rows,
     _lane_rows,
+    lane_blocks,
     _orphan_rows,
     _overdue_rows,
     _owner_waiting_rows,

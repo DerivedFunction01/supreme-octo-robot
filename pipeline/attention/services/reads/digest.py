@@ -437,6 +437,33 @@ def _wb_facts_from_snapshot(state: dict, now: datetime):
     return parked, snapshot.get("parked_counts") or {}, modified, topics
 
 
+def _programme_entries(state: dict) -> list:
+    """The digest's programme entries: the declared
+    rows, each carrying its lane block where the
+    programme's registry contract names a staffable
+    queue (the staffing measure's serve assembly,
+    staffing.lane_blocks) — a programme with no
+    queue named carries no lane_block key at all, so
+    the block's absence reads as honest absence."""
+    blocks = staffing.lane_blocks(state)
+    entries = []
+    for p in programmes.declarations(state):
+        entry = {
+            "slug": p["slug"],
+            "label": p["label"],
+            "rule_text": p.get("rule_text", ""),
+            "staffing_band": p.get("staffing_band"),
+            "cadence_minutes": p.get("cadence_minutes"),
+            "escalation_hours": p.get("escalation_hours"),
+            "handles": p.get("handles", []),
+        }
+        block = blocks.get(p["slug"])
+        if block is not None:
+            entry["lane_block"] = block
+        entries.append(entry)
+    return entries
+
+
 def build_digest(
     state: dict, settings: Settings, now: datetime, facts: dict | None = None
 ) -> dict:
@@ -472,18 +499,7 @@ def build_digest(
         "include": model.digest_include(state),
         "sections": _sections(state, now, facts),
         "expired": _expired_notes(state, now, facts),
-        "programmes": [
-            {
-                "slug": p["slug"],
-                "label": p["label"],
-                "rule_text": p.get("rule_text", ""),
-                "staffing_band": p.get("staffing_band"),
-                "cadence_minutes": p.get("cadence_minutes"),
-                "escalation_hours": p.get("escalation_hours"),
-                "handles": p.get("handles", []),
-            }
-            for p in programmes.declarations(state)
-        ],
+        "programmes": _programme_entries(state),
         "stalls": stalls,
         "staffing": staffing.build_staffing(
             state,

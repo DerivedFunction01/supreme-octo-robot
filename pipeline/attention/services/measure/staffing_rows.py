@@ -46,6 +46,7 @@ from .staffing_plans import _overdue_rows  # noqa: F401
 from .staffing_venue import (  # noqa: F401
     _family_rows,
     _frontier_rows,
+    lane_blocks,
     _orphan_rows,
     _programme_armed,
     _terminal_rows,
