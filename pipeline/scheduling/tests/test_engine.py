@@ -53,6 +53,26 @@ class EngineTests(EngineCase):
         self.assertEqual(len(catchups), 1)
         self.assertGreaterEqual(catchups[0]["collapsed"], 5)
 
+    def test_run_started_record_precedes_completion(self):
+        # The fired record: a run stands in the ledger from
+        # its start, carrying its budget, paired with its
+        # completion on (job_id, due) — the surface the
+        # restart-reconcile sweep marks interrupted when a
+        # serve dies mid-run.
+        script, marker = self.marker_script("a")
+        write_entry(self.tmp, "job-a", scripted_yaml("job-a", script))
+        engine = self.engine()
+        self.clock.advance(minutes=6)
+        engine.tick()
+        pair = [r for r in engine.ledger.read_all()
+                if r.get("job_id") == "job-a"
+                and r["kind"] in ("run_started", "run")]
+        self.assertEqual([r["kind"] for r in pair],
+                         ["run_started", "run"])
+        started, completion = pair
+        self.assertEqual(started["timeout_secs"], 10)
+        self.assertEqual(started["due"], completion["due"])
+
     def test_ec4_restart_never_refires(self):
         script, marker = self.marker_script("a")
         write_entry(self.tmp, "job-a", scripted_yaml("job-a", script))

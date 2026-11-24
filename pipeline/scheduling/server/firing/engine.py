@@ -231,6 +231,19 @@ class Engine:
 
     def _execute(self, entry, due, collapsed):
         try:
+            # The fired record: a run stands in the ledger
+            # from the moment it starts, carrying its budget,
+            # so a serve that dies mid-run leaves a
+            # non-terminal record the restart-reconcile sweep
+            # can mark interrupted — instead of a fire that
+            # vanishes with the process, its only trace the
+            # consumed next_due. The completion "run" record
+            # below is the same fire's terminal event; the
+            # sweep pairs the two on (job_id, due).
+            self.ledger.record(
+                "run_started", job_id=entry.id, due=iso(due),
+                timeout_secs=entry.timeout_secs, collapsed=collapsed,
+            )
             result = executor.run_entry(entry, due, self.values["capture_cap_bytes"])
             self.ledger.record(
                 "run", job_id=entry.id, due=iso(due), status=result.status,
