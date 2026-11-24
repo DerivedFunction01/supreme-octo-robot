@@ -13,13 +13,13 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now, transfer
-from .launch import build_seed_ctx, drive_branch_window, orphan_notes, session_launch_lock, stamp_transport_span, transport_error, transport_setup, upload_one
+from .foundation import JOBS, REPO, RUNS, TOKEN, colab, git_identity, lease, mirror, now
+from .launch import build_launch_stamp, build_seed_ctx, drive_branch_window, ensure_run_dir, orphan_notes, rewrite_upload_args, run_upload_dir, stamp_transport_span, transport_error, transport_setup, upload_one, upload_seed_files
 from .pull import finalize_run, manifest_shape_error, normalize_manifest_outputs, pull_outputs
 from .warnings import name_warnings
 from .reader import _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .records import claim_first_save, load_run_record, mark_terminal, save_record, stamp_collector
-from .claims import adopt, attach_verdict, spawn_daemon, stamp_takeover
+from .claims import adopt, attach_verdict, option_like_refusal, spawn_daemon, stamp_takeover
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
@@ -123,6 +123,12 @@ def main() -> int:
         print("usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]", file=sys.stderr)
         return 2
     job_name = positional[0]
+    # Option-like names refuse at parse, before any record
+    # is written (claims.option_like_refusal, 2026-11-23).
+    refusal = option_like_refusal(job_name, resume)
+    if refusal is not None:
+        print(f"colab-run: {refusal}", file=sys.stderr)
+        return 2
     if daemonize_flag and not os.environ.get("COLAB_RUN_DAEMON_CHILD"):
         # --daemonize: the fire must survive its firing context.
         # A fire ridden through a bounded context — the
@@ -256,6 +262,16 @@ def main() -> int:
                     rec.update(resumed=True, resumed_at=now())
                 else:
                     rec.update(state="starting", resumed=True, resumed_at=now())
+                # The driver stamp follows the execution: a
+                # daemonized run's record names its daemon
+                # child as driver, and this resume is the driver
+                # now — the sweep's daemon-orphan test reads the
+                # stamp as the driver's identity, and the dead
+                # daemon's pid must not condemn a run a live
+                # resume is driving (claims.stamp_takeover does
+                # the same for the claim path).
+                if rec.get("daemon_child_pid") is not None:
+                    rec["daemon_child_pid"] = os.getpid()
     preclaimed = False
     if rec is None and daemon_id:
         # A daemonized child adopts its parent's pre-claim
@@ -326,6 +342,11 @@ def main() -> int:
         save_record(rec)
         print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
         return 2
+    if pin_session is None and use_lease and rec is not None:
+        # A resume keeps its recorded lineage: the record's pin
+        # (else its launch session) is this fire's pin when the
+        # caller names none; acquire resolves it through renewal.
+        pin_session = rec.get("session_pin") or rec.get("session")
     session = run_id  # the lease-disabled fallback's per-run session
     if use_lease:
         if pin_session:
@@ -337,6 +358,8 @@ def main() -> int:
         window_floor_s = min(int(job.get("timeout", 18000)), 3600)
         got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session, min_window_s=window_floor_s)
         if got["action"] in ("refused-budget", "create-failed", "shape-refused", "shape-mismatch", "caller-start-refused", "unknown-shape", "pin-unavailable"):
+            if got.get("probe"):
+                rec["bind_probe"] = got["probe"]
             rec.update(state="failed", error=json.dumps(got)[:300])
             save_record(rec)
             # E1: if live sessions sit unrecorded at this shape,
@@ -348,6 +371,9 @@ def main() -> int:
             print(json.dumps({"run_id": run_id, "state": "failed", "lease": got}, indent=2))
             return 1
         rec["lease_action"] = got["action"]
+        for key in ("bind_probe", "pin_resolved"):
+            if got.get(key):
+                rec[key] = got[key]
         if got.get("health_degraded"):
             # Adopted anyway (every candidate was degraded):
             # the record says the launch channel has been
@@ -383,16 +409,20 @@ def main() -> int:
                 save_record(rec)
                 return 1
         script = REPO / job["script"]
-        # The remote script slot is scoped to this run: the bare
-        # basename is one shared slot per session, and two jobs
+        # The remote script lands in the run's own upload
+        # directory (launch.run_upload_dir, Step 5): the bare
+        # basename was one shared slot per session, and two jobs
         # whose scripts share a basename (every lane's run.py)
         # overwrote each other between upload and launch — a run
         # then executed a foreign payload with its own args
         # (2026-11-08 remainder lanes: an eraattr payload ran
-        # under a rem20d launch). The payload never names its own
-        # slot (the runner invokes it), so scoping is safe;
-        # manifest uploads keep their contract names by contrast.
-        remote_script = f"{run_id}-{script.name}"
+        # under a rem20d launch; the run-id-prefixed name that
+        # cured it is subsumed by the directory). The payload
+        # never names its own slot (the runner invokes it), and
+        # the script's directory being the run's directory is
+        # what resolves a job script's imports of uploaded
+        # modules to its own run's copies.
+        remote_script = f"{run_upload_dir(run_id)}/{script.name}"
         # Launch-phase stamps (2026-11-12): the window from the
         # record's creation to the state=running save below is
         # minutes of CLI round trips on a loaded session
@@ -405,16 +435,25 @@ def main() -> int:
         # names its phase.
         rec["launch_phase"] = "uploading"
         save_record(rec)
-        # The upload→launch window is serialized per session
-        # (launch.session_launch_lock): manifest uploads share
-        # /content/<basename> slots, and a concurrent launch's
-        # same-named upload landing between this launch's
-        # upload and its job start is the mislanding class.
-        # Held until the confirmation chain below concludes;
-        # every failure return inside the window exits this
-        # process, and process death releases the flock.
-        launch_lock = session_launch_lock(session)
-        launch_lock.__enter__()
+        # The run's remote upload directory first (Step 5):
+        # every pre-launch upload below lands inside it, and
+        # an upload into a directory that does not exist fails
+        # on the far side. One exec, ahead of the uploads.
+        err = ensure_run_dir(session, run_id)
+        if err is not None:
+            rec.update(state="failed", error=err)
+            save_record(rec)
+            print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
+            return 1
+        # Uploads land in the run's own directory (Step 5),
+        # so a concurrent launch's uploads cannot meet them.
+        # Nothing in this launch window serializes against
+        # another launch on the session (owner ruling,
+        # 2026-11-23: no sync blocker on the venue job path):
+        # every piece of state below is the run's own — its
+        # upload directory, its clone, its seed dest, its out
+        # dir — and its execs ride the funnel independently,
+        # so concurrent launches proceed concurrently.
         err = upload_one(session, script, remote_script, run_id)
         if err is not None:
             rec.update(state="failed", error=f"runner script upload: {err}")
@@ -422,14 +461,16 @@ def main() -> int:
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
         rec["transport"]["bytes_moved"] = rec["transport"].get("bytes_moved", 0) + script.stat().st_size
-        # Manifest-declared extra uploads land at /content/<name>
-        # before launch: a shell_job payload names its script in
-        # args (--script /content/env_build.sh) and the registry it
-        # reads (/content/repos.json), and neither is the runner
-        # script itself. Until this loop existed nothing uploaded
-        # them, so env-build's shell_job refused in its first
-        # second (2026-11-05) — a declared upload missing locally
-        # fails the run here, never launches a job that cannot run.
+        # Manifest-declared extra uploads land in the run's
+        # directory before launch: a shell_job payload names its
+        # script in args (--script /content/env_build.sh, which
+        # the args rewrite below points at the run's copy) and
+        # the registry it reads (/content/repos.json), and
+        # neither is the runner script itself. Until this loop
+        # existed nothing uploaded them, so env-build's shell_job
+        # refused in its first second (2026-11-05) — a declared
+        # upload missing locally fails the run here, never
+        # launches a job that cannot run.
         for extra in job.get("uploads", []):
             src = REPO / extra
             if not src.is_file():
@@ -437,13 +478,26 @@ def main() -> int:
                 save_record(rec)
                 print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
                 return 1
-            err = upload_one(session, src, src.name, run_id)
+            err = upload_one(session, src, src.name, run_id, remote_dir=run_upload_dir(run_id))
             if err is not None:
                 rec.update(state="failed", error=f"manifest upload failed: {extra}: {err}")
                 save_record(rec)
                 print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
                 return 1
             rec["transport"]["bytes_moved"] = rec["transport"].get("bytes_moved", 0) + src.stat().st_size
+        if seed_ctx is not None:
+            # The seed's uploads: launch.upload_seed_files
+            # lands them in the run's directory, and the apply
+            # below writes the run's own seed dest under the
+            # same directory. A seed whose uploads did not
+            # land is a failed run, never a job launched
+            # against a missing tree.
+            err = upload_seed_files(session, seed_ctx, run_id)
+            if err is not None:
+                rec.update(state="failed", error=err)
+                save_record(rec)
+                print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
+                return 1
         if branch_ctx is not None:
             # Branch transport: drive the base clone to the declared
             # tip before any launch (launch.drive_branch_window).
@@ -455,26 +509,16 @@ def main() -> int:
                 return 1
         seeded = False
         if seed_ctx is not None:
-            # Move the bundle (chunked — it can exceed the
-            # single-file ceiling), its manifest, and the apply
-            # script, then seed the dest on the VM and verify the
-            # manifest's tree in the seed's own output before any
-            # launch: a seed that did not land is a failed run,
-            # never a job launched against a missing tree.
-            up = transfer.chunked_upload(session, seed_ctx["bundle_path"], seed_ctx["bundle_path"].name, staging_token=run_id)
-            if not up["ok"]:
-                rec.update(state="failed", error=f"bundle seed: chunked upload failed: {json.dumps(up)[:300]}")
-                save_record(rec)
-                print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
-                return 1
-            err = upload_one(session, Path(str(seed_ctx["bundle_path"]) + ".manifest.json"), seed_ctx["bundle_path"].name + ".manifest.json", run_id)
-            if err is None:
-                err = upload_one(session, REPO / "sync" / "apply_bundle_remote.py", "apply_bundle_remote.py", run_id)
-            if err is not None:
-                rec.update(state="failed", error=f"bundle seed: {err}")
-                save_record(rec)
-                print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
-                return 1
+            # Seed the run's own dest on the VM from the run's
+            # own bundle copy and verify the manifest's tree in
+            # the seed's own output before any launch. The dest
+            # stands under the run's upload directory
+            # (runs/<run_id>/<dest>), never the shared
+            # per-registry dest: two seeded launches used to
+            # write one dest, which is what held the seed apply
+            # inside the stripped launch lock. The record's
+            # bundle_seed stamp keeps naming the registry dest
+            # the run's copy serves.
             _ident = seed_ctx.get("git_identity")
             _ident_args = (
                 f",'--user-name',{_ident['name']!r},'--user-email',{_ident['email']!r}"
@@ -484,7 +528,7 @@ def main() -> int:
             seed_remote = REPO / "var" / f"seed-{run_id}.py"
             seed_remote.write_text(
                 "import subprocess\n"
-                f"r = subprocess.run(['python3','apply_bundle_remote.py','{seed_ctx['bundle_path'].name}','{seed_ctx['dest']}','--origin-url','{seed_ctx['clone_url']}'{_ident_args}], capture_output=True, text=True)\n"
+                f"r = subprocess.run(['python3','{run_upload_dir(run_id)}/apply_bundle_remote.py','{run_upload_dir(run_id)}/{seed_ctx['bundle_path'].name}','{run_upload_dir(run_id)}/{seed_ctx['dest']}','--origin-url','{seed_ctx['clone_url']}'{_ident_args}], capture_output=True, text=True)\n"
                 "print(r.stdout); print(r.stderr[-500:])\n"
             )
             try:
@@ -524,16 +568,16 @@ def main() -> int:
         save_record(rec)
         # Detached launch (default pending the kill-matrix verdict): a short
         # exec starts the job under nohup; the CLI is never the job's lifeline.
-        # The payload runs under a stamp wrapper: its exit code lands at
-        # <remote_out>.exit-code, so a payload that never writes a
-        # checkpoint still reports its outcome truthfully (2026-11-08:
-        # checkpoint-less gate jobs recorded failed on green runs).
-        job_args = "".join(f",'{a}'" for a in list(job.get("args", [])) + (["--skip-clone"] if seeded else []) + extra_args)
-        stamp = (
-            "import subprocess, sys\n"
-            f"rc = subprocess.run([sys.executable, '{remote_script}', '--out', '{remote_out}'{job_args}]).returncode\n"
-            f"open('{remote_out}.exit-code', 'w').write(str(rc))\n"
-        )
+        # The payload runs under a stamp wrapper (launch.build_launch_stamp):
+        # its exit code lands at <remote_out>.exit-code, so a payload that
+        # never writes a checkpoint still reports its outcome truthfully
+        # (2026-11-08: checkpoint-less gate jobs recorded failed on green
+        # runs), and the wrapper reaps the run's leaked processes at job
+        # end before the stamp lands. Manifest args naming an upload point
+        # at the run's own copy (launch.rewrite_upload_args, Step 5); the
+        # extra args after -- are the operator's own argv and pass verbatim.
+        job_args = "".join(f",'{a}'" for a in rewrite_upload_args(job.get("args", []), {Path(u).name for u in job.get("uploads", [])}, run_id) + (["--skip-clone"] if seeded else []) + extra_args)
+        stamp = build_launch_stamp(remote_script, remote_out, job_args, run_id)
         launch = (
             f"import subprocess; subprocess.Popen(['nohup','python3','-c',{stamp!r}],"
             f" stdout=open('{remote_out}.log','w'), stderr=subprocess.STDOUT, start_new_session=True)"
@@ -626,12 +670,6 @@ def main() -> int:
         # The claim→launch span (branch transport plan; launch.stamp_transport_span).
         stamp_transport_span(rec)
         save_record(rec)
-        # The launch attempt has concluded on every branch
-        # above (the one branch that returned already exited
-        # the process, releasing the flock with it): the
-        # upload→launch window closes and the next launcher on
-        # this session may enter it.
-        launch_lock.__exit__(None, None, None)
         if detach_flag:
             # E5: launch exactly as the foreground form, write
             # the record, return. usage_before is stamped now —

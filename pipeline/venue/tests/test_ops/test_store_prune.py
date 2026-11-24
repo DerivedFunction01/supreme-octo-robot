@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import subprocess
 import time
 from pathlib import Path
 
@@ -170,3 +171,80 @@ def test_staging_subdir_bundles_and_suffixed_tree_tarballs_past_48h(tmp_path):
     assert "var/steampower-gates/lease-some-session.json" not in chosen
     assert "var/steampower-gates/run-record.json" not in chosen
     assert "var/steampower-gates/staging-seed.bundle" not in chosen
+
+
+def _job_record(root: Path, run_id: str, job: str, state: str, age_s: int = 0) -> None:
+    """A run record the funnel stamped with its job; the
+    record's mtime carries its activity, aged as asked."""
+    _record(root, "runs", f"{run_id}.json", {"state": state, "job": job, "session": "s1"})
+    if age_s:
+        rec = root / "results" / "runs" / f"{run_id}.json"
+        old = time.time() - age_s
+        os.utime(rec, (old, old))
+
+
+def test_terminal_job_payload_files_past_the_floor(tmp_path):
+    root = _sandbox(tmp_path)
+    _job_record(root, "old-job-20260101T000000Z", "old-job", "complete", age_s=49 * 3600)
+    job = root / "adapters" / "colab" / "jobs" / "old-job"
+    _write(job / "payload.tar.gz", age_s=49 * 3600)      # archives ride along
+    _write(job / "data.bin", age_s=49 * 3600)            # loose payload files: the new class
+    _write(job / "job.json", age_s=49 * 3600)            # the manifest: never a candidate
+    _write(job / "verdicts.json", age_s=49 * 3600)       # output-shaped json: never a candidate
+    _write(job / "register.jsonl", age_s=49 * 3600)      # likewise jsonl
+    _write(job / "nested" / "inner.bin", age_s=49 * 3600)  # subdirectories are left alone
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/old-job/payload.tar.gz" in chosen
+    assert "adapters/colab/jobs/old-job/data.bin" in chosen
+    assert "adapters/colab/jobs/old-job/job.json" not in chosen
+    assert "adapters/colab/jobs/old-job/verdicts.json" not in chosen
+    assert "adapters/colab/jobs/old-job/register.jsonl" not in chosen
+    assert "adapters/colab/jobs/old-job/nested/inner.bin" not in chosen
+
+
+def test_job_with_any_live_record_is_untouched(tmp_path):
+    root = _sandbox(tmp_path)
+    _job_record(root, "mixed-job-20260101T000000Z", "mixed-job", "complete", age_s=72 * 3600)
+    _job_record(root, "mixed-job-20260102T000000Z", "mixed-job", "running", age_s=72 * 3600)
+    job = root / "adapters" / "colab" / "jobs" / "mixed-job"
+    _write(job / "data.bin", age_s=72 * 3600)
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/mixed-job/data.bin" not in chosen
+
+
+def test_named_excluded_payload_dir_untouched_other_payload_dirs_reclaim(tmp_path):
+    root = _sandbox(tmp_path)
+    _job_record(root, "seg-20260101T000000Z", "specimen-ci-segform-payload", "complete", age_s=72 * 3600)
+    excluded = root / "adapters" / "colab" / "jobs" / "specimen-ci-segform-payload"
+    _write(excluded / "store.bin", age_s=72 * 3600)      # a named shared input store: never entered
+    _job_record(root, "unclaimed-20260101T000000Z", "greenfield-ci-unclaimed-payload", "failed", age_s=72 * 3600)
+    ordinary = root / "adapters" / "colab" / "jobs" / "greenfield-ci-unclaimed-payload"
+    _write(ordinary / "store.bin", age_s=72 * 3600)      # a closed lane's payload store: ordinary
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/specimen-ci-segform-payload/store.bin" not in chosen
+    assert "adapters/colab/jobs/greenfield-ci-unclaimed-payload/store.bin" in chosen
+
+
+def test_job_with_no_records_and_terminal_job_inside_the_floor_are_untouched(tmp_path):
+    root = _sandbox(tmp_path)
+    ghost = root / "adapters" / "colab" / "jobs" / "ghost-job"
+    _write(ghost / "data.bin", age_s=72 * 3600)          # no run records: no evidence of terminality
+    _job_record(root, "fresh-job-20260101T000000Z", "fresh-job", "complete", age_s=3600)
+    fresh = root / "adapters" / "colab" / "jobs" / "fresh-job"
+    _write(fresh / "data.bin", age_s=72 * 3600)          # terminal, but its newest activity is inside 48h
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/ghost-job/data.bin" not in chosen
+    assert "adapters/colab/jobs/fresh-job/data.bin" not in chosen
+
+
+def test_tracked_file_in_a_terminal_job_dir_is_untouched(tmp_path):
+    root = _sandbox(tmp_path)
+    _job_record(root, "tracked-job-20260101T000000Z", "tracked-job", "orphaned", age_s=72 * 3600)
+    job = root / "adapters" / "colab" / "jobs" / "tracked-job"
+    _write(job / "wrap-payload.bin", age_s=72 * 3600)    # tracked below: a definition, not a payload
+    _write(job / "loose.bin", age_s=72 * 3600)           # untracked control: chosen
+    subprocess.run(["git", "-C", str(root), "init", "-q"], check=True)
+    subprocess.run(["git", "-C", str(root), "add", "adapters/colab/jobs/tracked-job/wrap-payload.bin"], check=True)
+    chosen = _plan_paths(root)
+    assert "adapters/colab/jobs/tracked-job/wrap-payload.bin" not in chosen
+    assert "adapters/colab/jobs/tracked-job/loose.bin" in chosen

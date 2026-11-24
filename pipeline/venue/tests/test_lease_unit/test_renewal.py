@@ -113,6 +113,45 @@ def test_failed_renewal_retries_next_cycle_deadline_untouched(repo, tmp_path, mo
     assert lease.load_record(repo)["session"].startswith("standard-r")
 
 
+def test_renewal_retires_the_superseded_generations_record(repo, tmp_path, monkeypatch):
+    """The swap retires the old generation's record in its
+    own act (2026-11-23): out of the live namespace, so no
+    reader can mistake it for the lease's current pin — the
+    specimen failure was a resume priced against a
+    superseded generation whose record still stood while
+    the server no longer held the session — and preserved
+    as a tombstone pointing at the new generation."""
+    seed_window_record(repo)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    alive, calls = {"standard"}, []
+    out = lease.reap(make_renewal_stub(alive, calls), repo, now_dt=NOW)
+    assert out["action"] == "renewed"
+    assert lease.load_record(repo, "standard") is None
+    assert all(r["session"] != "standard" for r in lease.all_records(repo))
+    tombs = list((Path(repo) / "var").glob("lease-standard.json.superseded-*"))
+    assert len(tombs) == 1
+    tomb = json.loads(tombs[0].read_text())
+    assert tomb["session"] == "standard"
+    assert tomb["retired"] is True
+    assert tomb["superseded_by"] == out["new_session"]
+    assert tomb["superseded_at"] == NOW.isoformat()
+    # The old record's facts ride the tombstone, not a stub.
+    assert tomb["deadline"] == "2026-10-30T06:00:00+00:00"
+
+
+def test_retire_superseded_stamps_the_pointer(repo):
+    seed_window_record(repo)
+    name = lease.retire_superseded(repo, "standard", "standard-r1", NOW)
+    assert name is not None and name.startswith("lease-standard.json.superseded-")
+    assert lease.load_record(repo, "standard") is None
+    tomb = json.loads((Path(repo) / "var" / name).read_text())
+    assert tomb["session"] == "standard"
+    assert tomb["superseded_by"] == "standard-r1"
+    # An unknown session retires nothing and writes nothing.
+    assert lease.retire_superseded(repo, "no-such-session", "standard-r2", NOW) is None
+    assert len(list((Path(repo) / "var").glob("*.superseded-*"))) == 1
+
+
 def test_renewal_spools_a_lease_renewed_event_for_the_outbox(repo, tmp_path, monkeypatch):
     """Renewals happen in reap(), outside the companion server — the
     outbox's only writer — so the core spools the event and the

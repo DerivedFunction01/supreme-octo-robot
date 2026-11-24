@@ -4,8 +4,6 @@ and the orphan notes an acquire refusal prints (E1, runner
 half) so a refusal names the state that may have caused it.
 """
 
-import contextlib
-import fcntl
 import hashlib
 import json
 import os
@@ -47,7 +45,94 @@ def _upload_timeout_s(size_bytes: int) -> int:
     return max(floor, min(UPLOAD_TIMEOUT_CAP_S, scaled))
 
 
-def upload_one(session: str, src: Path, dest_name: str, tag: str) -> str | None:
+def run_upload_dir(run_id: str) -> str:
+    """The run's remote upload directory, relative to the
+    session root: runs/<run_id> (branch transport plan,
+    Step 5). Every pre-launch upload of a run lands inside
+    it. The bare /content/<basename> slot it replaces was
+    one per session, so two launches to one session
+    overwrote each other's same-named uploads between
+    upload and launch — the mislanding class the per-session
+    launch lock serialized the whole upload→launch window
+    against. A directory keyed by the run id (claimed unique
+    at the record's first save; a resume re-enters its own
+    run's directory) makes the bytes a run launches on its
+    own by construction, and consumers resolve them from
+    it: the runner rewrites manifest args naming an upload
+    (rewrite_upload_args), shell_job resolves its --script
+    against it and exports it as $SHELL_JOB_UPLOADS, and
+    the runner script itself lands inside it, so a job
+    script's imports of uploaded modules resolve its own
+    run's copies. Like the per-run out dir, it is never
+    cleaned mid-session; it dies with the session."""
+    return f"runs/{run_id}"
+
+
+def ensure_run_dir(session: str, run_id: str) -> str | None:
+    """Create the run's remote upload directory before its
+    first upload: an upload into a directory that does not
+    exist fails on the far side (the kit-install precedent),
+    and the plain upload carries no far-side mkdir of its
+    own. One exec per launch, ahead of the upload sequence —
+    a failure is a launch failure at this named stage, never
+    a missing file discovered inside the job. The script
+    addresses the session root the transfer layer's way
+    (BASE: /content on a real VM, the working dir under the
+    fake CLI). Returns an error string, or None."""
+    rel = run_upload_dir(run_id)
+    script = REPO / "var" / f"run-dir-{run_id}.py"
+    script.parent.mkdir(parents=True, exist_ok=True)
+    script.write_text(
+        "import json, os\n"
+        "BASE = '/content' if os.getcwd() == '/content' else os.getcwd()\n"
+        f"os.makedirs(os.path.join(BASE, {rel!r}), exist_ok=True)\n"
+        "print(json.dumps({'ok': True}))\n"
+    )
+    try:
+        r = colab("exec", "-s", session, "--timeout", "120", "-f", str(script), timeout=300)
+    except subprocess.TimeoutExpired:
+        return f"run dir: creating {rel} timed out"
+    ok = False
+    try:
+        landed = json_object_from_output(r.stdout)
+        ok = isinstance(landed, dict) and bool(landed.get("ok"))
+    except ValueError:
+        ok = False
+    if r.returncode != 0 or not ok:
+        return f"run dir: creating {rel} failed (rc {r.returncode}): {(r.stderr or r.stdout).strip()[-300:]}"
+    return None
+
+
+def rewrite_upload_args(args, upload_names, run_id) -> list:
+    """Point manifest args that name an upload at the run's
+    own copy (Step 5): an arg that is exactly
+    /content/<name>, or a path under it, for a name among
+    upload_names (the manifest's upload basenames) becomes
+    /content/runs/<run_id>/<name>... Args naming anything
+    else — files other channels place, the job's own argv —
+    pass verbatim: only the runner's own uploads moved. The
+    extra args after -- are the operator's own argv and are
+    never rewritten (the caller passes only the manifest's
+    args here)."""
+    if not upload_names:
+        return list(args)
+    base = f"/content/{run_upload_dir(run_id)}"
+    out = []
+    for a in args:
+        rewritten = a
+        if isinstance(a, str):
+            for name in upload_names:
+                if a == f"/content/{name}":
+                    rewritten = f"{base}/{name}"
+                    break
+                if a.startswith(f"/content/{name}/"):
+                    rewritten = f"{base}/{name}" + a[len("/content/" + name):]
+                    break
+        out.append(rewritten)
+    return out
+
+
+def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: str | None = None) -> str | None:
     """One pre-launch upload, verified before the job starts.
     A failed or short transfer is an error HERE — never a
     missing file discovered inside the job later (2026-11-08:
@@ -56,8 +141,13 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str) -> str | None:
     Large files move chunked (hash-verified by the transfer);
     smaller files move plain and are verified by remote size
     AND SHA-256 through a probe exec in the session's working
-    directory, the reader's own model. Returns an error
-    string, or None on a verified landing."""
+    directory, the reader's own model. With remote_dir (the
+    run's upload directory, run_upload_dir) the file lands at
+    <remote_dir>/<dest_name> instead of the bare session-root
+    slot; the verify is identical, and errors and the launch
+    journal keep naming dest_name. Returns an error string,
+    or None on a verified landing."""
+    slot = f"{remote_dir}/{dest_name}" if remote_dir else dest_name
     # Every outcome is journaled as launch-channel health
     # (sync/lease/sessions/health.py): adoption ranks sessions by it.
     # Every call is timeout-guarded: colab() re-raises
@@ -67,20 +157,28 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str) -> str | None:
     # at this probe) — a timeout is an upload failure with an
     # error string, never a dead launcher.
     if src.stat().st_size > UPLOAD_CHUNK_THRESHOLD_BYTES:
-        up = transfer.chunked_upload(session, src, dest_name, staging_token=tag)
+        up = transfer.chunked_upload(session, src, slot, staging_token=tag)
         lease.append_launch_outcome(REPO, session, "upload", bool(up["ok"]), dest_name)
         if not up["ok"]:
             return f"chunked upload failed: {json.dumps(up)[:300]}"
         return None
     try:
-        r = colab("upload", "-s", session, str(src), f"/content/{dest_name}", timeout=_upload_timeout_s(src.stat().st_size))
+        r = colab("upload", "-s", session, str(src), f"/content/{slot}", timeout=_upload_timeout_s(src.stat().st_size))
     except subprocess.TimeoutExpired:
         lease.append_launch_outcome(REPO, session, "upload", False, f"{dest_name}: upload timed out")
         return f"upload timed out for {dest_name}"
     if r.returncode != 0:
         lease.append_launch_outcome(REPO, session, "upload", False, dest_name)
         return f"upload failed (rc {r.returncode}): {(r.stderr or r.stdout).strip()[-300:]}"
-    probe = REPO / "var" / f"upload-probe-{tag}.py"
+    # The probe file is named per slot, not per run alone:
+    # a run uploads several files under one tag, and an exec
+    # channel that stages a file by name and keeps the first
+    # copy it saw (the fake CLI's staging) would run the
+    # FIRST upload's probe for every later one — verifying
+    # the wrong file and failing the launch on a foreign
+    # size. One name per slot makes each probe's staged copy
+    # its own on any channel.
+    probe = REPO / "var" / f"upload-probe-{tag}-{slot.replace('/', '_')}.py"
     probe.parent.mkdir(parents=True, exist_ok=True)
     # The probe reports size and SHA-256. Size alone was the
     # verify until 2026-11-21: a foreign file of the same size
@@ -89,12 +187,12 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str) -> str | None:
     # either way — the B3-S3b mislandings (a wrap copy carrying
     # another lane's bytes, a runner-script copy likewise).
     # The hash makes a wrong-bytes landing a launch failure
-    # here; the per-session launch lock in main() closes the
-    # overwrite window itself.
+    # here; the per-run upload directory (Step 5) closes the
+    # overwrite window itself — no other launch writes here.
     expected_sha = hashlib.sha256(src.read_bytes()).hexdigest()
     probe.write_text(
         "import hashlib, json, os\n"
-        f"p = {dest_name!r}\n"
+        f"p = {slot!r}\n"
         "if os.path.exists(p):\n"
         "    h = hashlib.sha256()\n"
         "    with open(p, 'rb') as fh:\n"
@@ -200,7 +298,7 @@ def parse_transport(job) -> "dict | None":
 
 
 def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run_id: str) -> "tuple[str | None, dict]":
-    """Drive the session's base clone to the declared branch
+    """Drive the run's own base clone to the declared branch
     tip before launch (branch transport plan, Step 2): the
     snapshot build and the code-payload upload are skipped —
     the session fetches the branch from origin through the
@@ -214,15 +312,30 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
     before the fire. Returns (error, info): on success error
     is None and info carries the dest and the asserted head.
     The fetch moves on the session's own channel, which
-    reports no byte count, so no fetch size is claimed."""
-    err = upload_one(session, REPO / "sync" / "base_clone.sh", "base_clone.sh", run_id)
+    reports no byte count, so no fetch size is claimed.
+
+    The clone lands in the run's own dest —
+    /content/runs/<run_id>/<dest> — never the shared
+    per-registry dest (owner ruling, 2026-11-23: no sync
+    blocker on the venue job path). The base clone used to
+    be one checkout per registry dest per session, and two
+    launches' fetch/reset of it could not interleave; that
+    shared checkout was the last state the launch lock
+    serialized. A clone per run removes the state instead:
+    each drive clones (or re-pins) its own copy, at the
+    price of a fresh clone per run. The returned dest keeps
+    naming the registry dest the clone serves — the record
+    stamp's shape is unchanged; the run's copy lives under
+    its upload directory, where the run's consumers resolve
+    it the same way they resolve its uploads."""
+    err = upload_one(session, REPO / "sync" / "base_clone.sh", "base_clone.sh", run_id, remote_dir=run_upload_dir(run_id))
     if err is not None:
         return f"branch transport: base_clone.sh upload: {err}", {}
     driver = REPO / "var" / f"branch-{run_id}.py"
     driver.parent.mkdir(parents=True, exist_ok=True)
     driver.write_text(
         "import subprocess\n"
-        f"r = subprocess.run(['bash','base_clone.sh',{clone_url!r},{'/content/' + dest!r},{transport['branch']!r},{transport['sha']!r}], capture_output=True, text=True)\n"
+        f"r = subprocess.run(['bash',{run_upload_dir(run_id) + '/base_clone.sh'!r},{clone_url!r},{'/content/' + run_upload_dir(run_id) + '/' + dest!r},{transport['branch']!r},{transport['sha']!r}], capture_output=True, text=True)\n"
         "print(r.stdout); print(r.stderr[-500:])\n"
     )
     try:
@@ -315,6 +428,25 @@ def drive_branch_window(session, rec, transport, branch_ctx, run_id) -> "str | N
     return None
 
 
+def upload_seed_files(session, seed_ctx, run_id) -> "str | None":
+    """The seed's uploads: the bundle (chunked — it can
+    exceed the single-file ceiling), its manifest, and the
+    apply script land in the run's own directory. The apply
+    (in main) writes the run's own seed dest under the same
+    directory, so no seed state is shared with another run.
+    Returns an error string, or None."""
+    rd = run_upload_dir(run_id)
+    up = transfer.chunked_upload(session, seed_ctx["bundle_path"], f"{rd}/{seed_ctx['bundle_path'].name}", staging_token=run_id)
+    if not up["ok"]:
+        return f"bundle seed: chunked upload failed: {json.dumps(up)[:300]}"
+    err = upload_one(session, Path(str(seed_ctx["bundle_path"]) + ".manifest.json"), seed_ctx["bundle_path"].name + ".manifest.json", run_id, remote_dir=rd)
+    if err is None:
+        err = upload_one(session, REPO / "sync" / "apply_bundle_remote.py", "apply_bundle_remote.py", run_id, remote_dir=rd)
+    if err is not None:
+        return f"bundle seed: {err}"
+    return None
+
+
 def build_seed_ctx(extra_args, rec) -> "tuple[str | None, dict | None]":
     """Build the bundle seed for a --seed run (the bundle
     transport's local half): resolve the named repo and
@@ -374,42 +506,143 @@ def stamp_transport_span(rec) -> None:
         rec["transport"]["claim_to_launch_s"] = round(launched - claimed, 1)
 
 
-@contextlib.contextmanager
-def session_launch_lock(session: str):
-    """Serialize the upload→launch window per session.
+# --- The job-end process reap (2026-11-23) -----------------------------------
+# A job's payload can leave processes behind on the session:
+# a server an early leg starts for the job's own later legs
+# is still holding its port after the payload exits, and the
+# next run on the session inherits the collision (specimen:
+# steampower-criticjv-scenes-20261123T071153Z — the scenes
+# server survived its job's cleanup and the port-after leg
+# failed on the held port; a predecessor lane hit the same
+# zombie-port class). The launch stamp wrapper
+# (build_launch_stamp, below) therefore reaps at job end,
+# scoped to the run: a process is the run's when its working
+# directory or one of its open files sits under one of the
+# run's own directories — the Step 5 upload dir
+# (runs/<run_id>/) or the run's out dir — and nothing else
+# is ever signalled. Conservative by construction: an
+# inspection gap (cwd or fd table unreadable) is no
+# evidence, and the payload's own group members the dir
+# test cannot scope are left alive and named in the reap
+# stamp the wrapper writes into the job's output. The
+# selection is a pure function over a process-table
+# snapshot, kept as source (REAP_SELECT_SOURCE) because the
+# wrapper carries it verbatim onto the session; the unit
+# tests exec the same source, so the tested selection is
+# the shipped one.
 
-    Manifest uploads land at /content/<basename> — one shared
-    slot per session, kept because payloads name their uploads
-    by contract (/content/gate.sh, /content/repos.json). Two
-    launches uploading concurrently to one session therefore
-    overwrote each other's same-named uploads between upload
-    and launch, and a run executed a foreign payload (the
-    class cured for the runner-script slot alone in
-    2026-11-08; the B3-S3b re-price run hit it three times
-    through manifest slots in 2026-11-21). Holding this lock
-    from the first upload until the launch is confirmed makes
-    the window atomic per session: a second launcher waits,
-    then uploads over a job that has already started and read
-    its payload. Running jobs are never locked. The lock is
-    an flock on var/launch-<session>.lock — a launcher that
-    dies inside the window releases it with its process, so a
-    stranded lock cannot outlive its holder. Residual, named:
-    a file a running job RE-READS mid-run under a contract
-    name can still be overwritten by a later launch's
-    same-named upload; closing that face needs per-run remote
-    dirs, which breaks the args contract — out of scope here.
-    """
-    path = REPO / "var" / f"launch-{session}.lock"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd = os.open(path, os.O_CREAT | os.O_RDWR, 0o644)
-    try:
-        fcntl.flock(fd, fcntl.LOCK_EX)
-        yield
-    finally:
-        try:
-            fcntl.flock(fd, fcntl.LOCK_UN)
-        finally:
-            os.close(fd)
+REAP_GRACE_S = 3
+
+REAP_SELECT_SOURCE = '''def _reap_select(procs, scope_dirs, own_pid, group_pid):
+    """Choose the job-end reap's victims from a process-table
+    snapshot: a process is the run's when its working
+    directory or one of its open files sits under a scope
+    dir (the run's own directories); the payload's other
+    group members — the job's own processes the dir test
+    cannot scope — are reported as unscoped, to be left
+    alive and stamped by the caller. A process is signalled
+    only on a positive scope match, never on a guess."""
+    def _under(path):
+        if not path:
+            return False
+        if path.endswith(" (deleted)"):
+            path = path[: -len(" (deleted)")]
+        return any(path == d or path.startswith(d + "/") for d in scope_dirs)
+    reaped, left = [], []
+    for proc in procs:
+        pid = proc.get("pid")
+        if pid is None or pid == own_pid:
+            continue
+        scoped = _under(proc.get("cwd")) or any(_under(t) for t in (proc.get("fds") or []))
+        if scoped:
+            reaped.append(pid)
+        elif group_pid is not None and proc.get("pgid") == group_pid:
+            left.append(pid)
+    return sorted(reaped), sorted(left)
+'''
+
+
+def build_launch_stamp(remote_script: str, remote_out: str, job_args: str, run_id: str) -> str:
+    """The launch stamp wrapper's source: run the payload,
+    reap the run's leaked processes (above), then write the
+    exit-code stamp — in that order, so a terminal read of
+    the stamp implies the reap already ran. The wrapper is
+    the one code present at job end for every job form (the
+    payload script itself is the job, shell_job included),
+    which is why the reap lives here and not in a payload
+    harness. The reap is best-effort around the job's own
+    verdict: its failure never changes the exit code, and
+    its outcome is stamped in the job's output (reap.json in
+    the out dir, or the wrapper's sibling <remote_out>.reap.json
+    when the payload never made the dir)."""
+    return (
+        "import json, os, signal, subprocess, sys, time\n"
+        + REAP_SELECT_SOURCE
+        + "def _reap_driver():\n"
+        + f"    scope = [os.path.join(os.getcwd(), 'runs', {run_id!r}), os.path.join(os.getcwd(), {remote_out!r})]\n"
+        + "    procs = []\n"
+        + "    for name in os.listdir('/proc'):\n"
+        + "        if not name.isdigit():\n"
+        + "            continue\n"
+        + "        pid = int(name)\n"
+        + "        cwd = None\n"
+        + "        fds = None\n"
+        + "        pgid = None\n"
+        + "        try:\n"
+        + "            cwd = os.readlink('/proc/%d/cwd' % pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        try:\n"
+        + "            fds = []\n"
+        + "            for fd in os.listdir('/proc/%d/fd' % pid):\n"
+        + "                try:\n"
+        + "                    fds.append(os.readlink('/proc/%d/fd/%s' % (pid, fd)))\n"
+        + "                except OSError:\n"
+        + "                    pass\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        try:\n"
+        + "            pgid = os.getpgid(pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "        procs.append({'pid': pid, 'cwd': cwd, 'fds': fds, 'pgid': pgid})\n"
+        + "    try:\n"
+        + "        group = os.getpgrp()\n"
+        + "    except OSError:\n"
+        + "        group = None\n"
+        + "    reaped, left = _reap_select(procs, scope, os.getpid(), group)\n"
+        + "    for pid in reaped:\n"
+        + "        try:\n"
+        + "            os.kill(pid, signal.SIGTERM)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + f"    deadline = time.time() + {REAP_GRACE_S}\n"
+        + "    survivors = [p for p in reaped if os.path.exists('/proc/%d' % p)]\n"
+        + "    while survivors and time.time() < deadline:\n"
+        + "        time.sleep(0.2)\n"
+        + "        survivors = [p for p in reaped if os.path.exists('/proc/%d' % p)]\n"
+        + "    killed = []\n"
+        + "    for pid in survivors:\n"
+        + "        try:\n"
+        + "            os.kill(pid, signal.SIGKILL)\n"
+        + "            killed.append(pid)\n"
+        + "        except OSError:\n"
+        + "            pass\n"
+        + "    stamp = {'reaped': reaped, 'killed': killed, 'unscoped_left': left, 'at': time.time()}\n"
+        + "    try:\n"
+        + f"        out_dir = {remote_out!r}\n"
+        + "        target = os.path.join(out_dir, 'reap.json') if os.path.isdir(out_dir) else out_dir + '.reap.json'\n"
+        + "        with open(target, 'w') as fh:\n"
+        + "            json.dump(stamp, fh)\n"
+        + "    except OSError:\n"
+        + "        pass\n"
+        + f"rc = subprocess.run([sys.executable, {remote_script!r}, '--out', {remote_out!r}{job_args}]).returncode\n"
+        + "try:\n"
+        + "    _reap_driver()\n"
+        + "except Exception:\n"
+        + "    pass\n"
+        + f"open({remote_out + '.exit-code'!r}, 'w').write(str(rc))\n"
+    )
 
 
 def orphan_notes(shape_id: str, shape: dict) -> list[str]:

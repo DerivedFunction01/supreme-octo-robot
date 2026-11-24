@@ -89,7 +89,7 @@ UV_DIR="$(dirname "$UV")"
 
 # ---- Registry resolution ----
 if [ -z "$REGISTRY" ]; then
-  for cand in "${ENV_BUILD_REGISTRY:-}" "/content/repos.json" \
+  for cand in "${ENV_BUILD_REGISTRY:-}" "${SHELL_JOB_UPLOADS:-}/repos.json" "/content/repos.json" \
               "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/config/repos.json" \
               "config/repos.json"; do
     if [ -n "$cand" ] && [ -f "$cand" ]; then REGISTRY="$cand"; break; fi

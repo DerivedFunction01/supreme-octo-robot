@@ -1,6 +1,5 @@
 import json
 import os
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from ..core import foundation, catalog, records, spend
@@ -115,10 +114,14 @@ def _swap_session(colab, repo: Path, rec: dict, new_session: str, acquired_at: s
     rec["last_used_at"] = now_dt.isoformat()
     records.save_record(repo, rec)
     if old_session != new_session:
-        # The record's file is keyed by session: the old session's
-        # file still holds the pre-swap record under the old name
-        # and must not survive as a second, stale lease.
-        records.delete_record(repo, old_session)
+        # The record's file is keyed by session: the old
+        # generation's file still holds the pre-swap record
+        # under the old name. It leaves the live namespace in
+        # this same act, retired with its superseded-by
+        # pointer (records.retire_superseded) — never surviving
+        # as a second, stale lease a reader could mistake for
+        # the window's current pin.
+        records.retire_superseded(repo, old_session, new_session, now_dt)
     if keepalive._capture_session_host(repo, rec, "renewal", spool_on_first=True):
         records.save_record(repo, rec)
     keepalive.ensure_keepalive(colab, repo, new_session)
@@ -208,12 +211,11 @@ def _renew_fresh_session(colab, repo: Path, cfg: dict, rec: dict, now_dt: dateti
     if not gate["allowed"]:
         _mod_gate.append_gate_journal(repo, {"kind": "shape-refused", "seam": "renewal", "shape": shape_id, "shape_class": gate["shape_class"], "agent_classes": gate["agent_classes"]})
         return None
-    # The renewal child derives from the lease's own name: the
-    # generated name with any earlier renewal suffixes stripped, so
-    # a lease's sessions read as one family for its whole window.
-    base = rec["session"]
-    while re.search(r"-r\d+$", base):
-        base = re.sub(r"-r\d+$", "", base)
+    # The renewal child derives from the lease's own name: its
+    # lineage (naming.lineage — the generated name with any
+    # earlier renewal suffixes stripped), so a lease's sessions
+    # read as one family for its whole window.
+    base = records.naming.lineage(rec["session"])
     new_session = f"{base}-r{int(now_dt.timestamp())}"
     try:
         r = colab(*(["new", "-s", new_session] + catalog._session_shape_args(shape)), timeout=600)

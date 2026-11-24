@@ -27,16 +27,26 @@ in order:
      archives beside it (2026-11-18 precedent);
   7. launch-staging tree tarballs in named var/ subdirs
      (var/*/*-tree*.tar.gz — the plain and suffixed forms,
-     e.g. hc01-tree-<hash>.tar.gz) past the same 48 h
-     floor — formation staging a lane dropped in the
-     store's own namespace (the steampower-gates pattern);
-  8. snapshot bundles in the same staging subdirs
-     (var/*/*.bundle) past the same 48 h floor — class
-     2's rationale (every launch rebuilds its own from
-     the source repo, which holds the truth) applied to
-     the staging namespace; the top-level class's shorter
-     floor does not apply here, where formations stage
-     beside their tarballs.
+     e.g. hc01-tree-<hash>.tar.gz) and snapshot bundles in
+     the same staging subdirs (var/*/*.bundle), past the
+     same 48 h floor — formation staging a lane dropped
+     in the store's own namespace (the steampower-gates
+     pattern); class 2's rationale (every launch rebuilds
+     its own from the source repo, which holds the truth)
+     applies to the bundles, and the top-level class's
+     shorter floor does not apply here, where formations
+     stage beside their tarballs;
+  8. job payload files of terminal jobs: the top-level
+     files of adapters/colab/jobs/<job>/ when every run
+     record stamped with that job is terminal (complete,
+     failed, orphaned) and the job's newest record
+     activity is past the same 48 h floor. Never
+     candidates even there: job.json, any *.json or
+     *.jsonl file, files git tracks, and protected
+     names. A job with no run records, a job with any
+     live record, and the named excluded job dirs
+     (shared input stores for in-flight lanes) are
+     never entered.
 
 Never touched: run and transfer RECORDS (results/runs,
 results/xfers — metadata and verdicts are the evidence the
@@ -55,6 +65,7 @@ import importlib.util as _ilu
 import json
 import os
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -94,6 +105,22 @@ SCRATCH_AGE_FLOOR_S = 3600
 # the low-free window before their consumers re-read
 # them, invisibly, because the prune log named no paths.
 OUTPUT_GRACE_S = 24 * 3600
+
+# Job dirs the terminal-job payload class never enters:
+# shared input stores for in-flight lanes (the segment
+# finish lane and the PPE recall build read them as live
+# inputs). Named exactly; the set empties when those
+# lanes hand back.
+TERMINAL_JOB_EXCLUDED_DIRS = frozenset(
+    {
+        "specimen-ci-segform-payload",
+        "specimen-ci-ppeform-payload",
+        "specimen-ci-pperes-payload",
+        "specimen-ci-pperes2-payload",
+        "specimen-ci-ppesucc-payload",
+        "specimen-ci-ppev1-payload",
+    }
+)
 
 
 _foundation_spec = _ilu.spec_from_file_location(
@@ -143,6 +170,28 @@ def _part_base(name: str) -> str:
     """sp-x.bundle.part-000 -> sp-x.bundle (also .part-0)."""
     stem, dot, tail = name.rpartition(".part-")
     return stem if dot and tail.isdigit() else name
+
+
+def _tracked_job_paths(jobs_root: Path) -> set:
+    """Absolute paths under the jobs root that git tracks
+    — definitions (wrap scripts, manifests), never
+    payloads. An unreadable or non-git store tracks
+    nothing the prune can prove, so it yields the empty
+    set rather than guessing."""
+    try:
+        rel = jobs_root.relative_to(REPO)
+    except ValueError:
+        return set()
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(REPO), "ls-files", "--", str(rel)],
+            capture_output=True, text=True, timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    if out.returncode != 0:
+        return set()
+    return {REPO / line for line in out.stdout.splitlines() if line}
 
 
 def plan(target_free_gb: float) -> tuple[list, dict]:
@@ -199,17 +248,24 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
             if manifest.exists():
                 add(2, manifest, "snapshot bundles past the age floor")
     terminal_cold = set()
+    job_activity: dict = {}
+    job_live: set = set()
     all_record_stems = {p.stem for p in (RESULTS / "runs").glob("*.json")}
     for path in (RESULTS / "runs").glob("*.json"):
         try:
             rec = json.loads(path.read_text())
         except (OSError, json.JSONDecodeError):
             continue
-        if rec.get("state") not in ("complete", "failed", "orphaned"):
-            continue
         activity = path.stat().st_mtime
         for key in ("collector_at", "last_evidence_at", "finished_at"):
             activity = max(activity, _epoch(rec.get(key)))
+        job = rec.get("job")
+        if isinstance(job, str) and job:
+            job_activity[job] = max(job_activity.get(job, 0.0), activity)
+            if rec.get("state") not in ("complete", "failed", "orphaned"):
+                job_live.add(job)
+        if rec.get("state") not in ("complete", "failed", "orphaned"):
+            continue
         if now - activity > OUTPUT_GRACE_S:
             terminal_cold.add(path.stem)
     for entry in RESULTS.iterdir():
@@ -238,6 +294,26 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
                 continue
             if now - staging_bundle.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(7, staging_bundle, "staging-subdir snapshot bundles past the 48h floor")
+    if jobs_root.exists():
+        tracked = _tracked_job_paths(jobs_root)
+        already = {p for _o, p, _s, _c in candidates}
+        for job_dir in sorted(jobs_root.iterdir()):
+            if not job_dir.is_dir():
+                continue
+            if job_dir.name in TERMINAL_JOB_EXCLUDED_DIRS:
+                continue
+            if job_dir.name not in job_activity or job_dir.name in job_live:
+                continue
+            if now - job_activity[job_dir.name] <= ARCHIVE_AGE_FLOOR_S:
+                continue
+            for entry in sorted(job_dir.iterdir()):
+                if not entry.is_file():
+                    continue
+                if entry.name == "job.json" or entry.name.endswith((".json", ".jsonl")):
+                    continue
+                if entry.name in protected or entry in tracked or entry in already:
+                    continue
+                add(8, entry, "job payload files of terminal jobs")
 
     candidates.sort(key=lambda c: (c[0], -c[2]))
     free_now = shutil.disk_usage(REPO).free

@@ -283,6 +283,29 @@
 #        same pass held as unlanded and failed
 #        (BRANCH-LOCAL-FAIL reason=detach-failed). The
 #        cap never detaches a tree to take its branch.
+#      - venue-transport branches (2026-11-23 cure): a
+#        branch a venue run record names as its
+#        transport base (transport kind branch, this
+#        repo) while the run is non-terminal, or while
+#        the record's newest activity — its file mtime
+#        maxed with its last_evidence_at /
+#        terminal_event_at / finished_at stamps — is
+#        within 6 hours of the pass. The PPE packet
+#        family cycles on its base pin at ~30-minute
+#        intervals for the packet's whole flight; the
+#        hourly pass twice deleted edgar-sec's
+#        pperb-base-pin mid-flight and the lane had to
+#        restore it server-side both times before it
+#        could fire. The hold is derived from live run
+#        state at pass start — no name list, no
+#        registry — and lapses mechanically when the
+#        family's records age past the window. A held
+#        branch is not swept, is not cap-selectable in
+#        either scope, and the drain refuses and drops
+#        any standing charge naming one
+#        (BRANCH-DRAIN-SKIP reason=venue-transport);
+#        the sweep draws a HELD line naming it in each
+#        scope where it stands.
 #      Blocked branches still count in their side's live
 #      population. When the selectable population cannot
 #      cover the excess, the pass reports the remainder
@@ -313,8 +336,9 @@
 # WT_TRIM_CAP_<SLUG>, WT_TRIM_REPO_TIMEOUT_SECS,
 # WORKTREE_TRIM_PROC_ROOT (the live-process scan's /proc),
 # WORKTREE_TRIM_RUNS_DIR (venue run records for the
-# live-run hold; default: the venue package's results/runs
-# derived from this script's location in the mega repo),
+# live-run hold and the venue-transport branch hold;
+# default: the venue package's results/runs derived
+# from this script's location in the mega repo),
 # WORKTREE_TRIM_DRAIN_ACT (the drain act's seam: the
 # unlanded hold reason does not stand for that pass),
 # WT_TRIM_BRANCH_CAP_<SLUG> / WT_TRIM_BRANCH_CAP (the
@@ -356,6 +380,14 @@ TODAY="$(date -d "@$NOW" +%F)"
 EXPIRY_EPOCH=$((NOW + 3600))
 EXPIRY_ISO="$(date -u -d "@$EXPIRY_EPOCH" +%Y-%m-%dT%H:%M:%SZ)"
 REPO_TIMEOUT="${WT_TRIM_REPO_TIMEOUT_SECS:-1200}"
+# The venue-transport branch hold's recency window
+# (header point 7): a terminal run record holds its
+# transport branch while its newest activity is within
+# this window of the pass — a live packet family's
+# ~30-minute cycle keeps its pin perpetually inside it,
+# and a finished family's pin lapses 6 hours after its
+# last record.
+VENUE_TRANSPORT_HOLD_SECS=21600
 # Branch-deletion kill-switch: WT_TRIM_BRANCH_TRIM=off
 # stands the whole branch leg down (no local deletion, no
 # queue seeding, no queue draining); tree archiving is not
@@ -538,6 +570,15 @@ run_worker() {
     return 1
   }
 
+  # Venue-transport membership (2026-11-23 cure): the
+  # branch is named as the transport base of a live
+  # venue run for this repo — derived from the run
+  # records at pass start (the transport_held scan in
+  # the held-set facts below), never a name list.
+  is_transport_held() {
+    [ -n "${transport_held[$slug $1]:-}" ]
+  }
+
   # Set by trim_local_branch when it keeps a moved branch:
   # the ref's live tip, for the caller's survivor census.
   TLB_LIVE_SHA=""
@@ -619,6 +660,18 @@ run_worker() {
         # delete, and cap charges carry no containment
         # verdict the drain could re-verify.
         echo "BRANCH-DRAIN-SKIP repo=$slug branch=$b scope=origin reason=principal" >>"$RESULT_FILE"
+        continue
+      fi
+      if is_transport_held "$b"; then
+        # A live venue run's transport base is never
+        # charged (2026-11-23 cure): a standing charge
+        # naming one — written before the run family's
+        # hold stood, or by any older code — is refused
+        # and dropped, never discharged; selection
+        # re-derives a fresh charge in a later pass if
+        # the branch is still trim material once the
+        # hold lapses.
+        echo "BRANCH-DRAIN-SKIP repo=$slug branch=$b scope=origin reason=venue-transport" >>"$RESULT_FILE"
         continue
       fi
       out="$(timeout 60 $GIT -C "$main_dir" ls-remote --heads "$url" "refs/heads/$b" 2>/dev/null)"; rc=$?
@@ -710,6 +763,18 @@ run_worker() {
     # overlays the checkout mark (the base branch is
     # always checked out — in the main worktree — and its
     # governing reason is principal).
+    # Venue-transport blocks (2026-11-23 cure) are laid
+    # first, from the pass-start record scan: the
+    # checkout and principal marks below overlay them,
+    # so a branch that is also checked out or principal
+    # reports its governing reason.
+    local tb
+    for tb in "${!transport_held[@]:-}"; do
+      [ -n "$tb" ] || continue
+      [ "${tb%% *}" = "$slug" ] || continue
+      tb="${tb#* }"
+      l_blocked["$tb"]="venue-transport"; o_blocked["$tb"]="venue-transport"
+    done
     for cb in "${checked_out[@]:-}"; do
       [ -n "$cb" ] || continue
       l_blocked["$cb"]="checked-out"; o_blocked["$cb"]="checked-out"
@@ -728,6 +793,15 @@ run_worker() {
         # default's local namesake) stands as a survivor
         # in the cap census, blocked there as principal
         [ "$lb" = "$base_branch" ] && continue
+        kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
+      fi
+      if is_transport_held "$lb"; then
+        # a live venue run's transport base (2026-11-23
+        # cure): a packet is in flight on this branch —
+        # it stands as a survivor and the cap phase
+        # finds it blocked below
+        echo "HELD repo=$slug branch=$lb scope=local reasons=venue-transport" >>"$RESULT_FILE"
+        echo "act=held repo=$slug branch=$lb scope=local reasons=venue-transport epoch=$NOW" >>"$LEDGER_FILE"
         kept=$((kept+1)); l_surv+=("$lepoch|$lb|$lsha"); continue
       fi
       if [ -n "$base_lsha" ] && [ "$lsha" = "$base_lsha" ]; then
@@ -780,6 +854,15 @@ run_worker() {
             # construction — this skip is the only thing
             # between it and the queue.)
             [ "$oname" = "$base_branch" ] && continue
+            kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha"); continue
+          fi
+          if is_transport_held "$oname"; then
+            # a live venue run's transport base
+            # (2026-11-23 cure): it stands as a survivor
+            # and the cap phase finds it blocked below —
+            # never enqueued on a containment verdict
+            echo "HELD repo=$slug branch=$oname scope=origin reasons=venue-transport" >>"$RESULT_FILE"
+            echo "act=held repo=$slug branch=$oname scope=origin reasons=venue-transport epoch=$NOW" >>"$LEDGER_FILE"
             kept=$((kept+1)); o_surv+=("$oepoch|$oname|$osha"); continue
           fi
           if [ "$have_base" -eq 1 ] && [ -n "$base_osha" ] && [ "$osha" = "$base_osha" ]; then
@@ -1252,6 +1335,51 @@ run_worker() {
     for rf in "$RUNS_DIR"/*.json; do
       [ -f "$rf" ] || continue
       grep -Eq '"state": "(complete|failed|orphaned)"' "$rf" || live_record_files+=("$rf")
+    done
+  fi
+  # Venue-transport holds (2026-11-23 cure): the branch
+  # cap must not take a branch a live venue run names as
+  # its transport base — the hourly pass twice deleted
+  # edgar-sec's pperb-base-pin while the PPE packet was
+  # in flight on it. The held set derives from the same
+  # records the live-run hold reads, keyed "repo branch":
+  # a record holds its transport branch
+  # (transport = {kind: branch, repo, branch}) while the
+  # run is non-terminal, and for VENUE_TRANSPORT_HOLD_SECS
+  # after the record's newest activity — the max of the
+  # file's mtime and its last_evidence_at /
+  # terminal_event_at / finished_at stamps, the store
+  # prune's activity shape. Extraction is textual, like
+  # the state grep above (the record is flattened first,
+  # so the runner's pretty-printed form and a compact
+  # form read the same): a record that does not yield a
+  # complete transport triple — a malformed or truncated
+  # file — holds nothing and is skipped, never fatal.
+  # An absent records dir leaves the set empty.
+  declare -A transport_held=()
+  if [ -d "$RUNS_DIR" ]; then
+    local t_obj t_kind t_repo t_branch t_state t_act t_stamp t_ep
+    for rf in "$RUNS_DIR"/*.json; do
+      [ -f "$rf" ] || continue
+      grep -q '"transport"' "$rf" 2>/dev/null || continue
+      t_obj="$(tr -d '\n' <"$rf" 2>/dev/null | sed -n 's/.*"transport": *{\([^}]*\)}.*/\1/p' | head -1)"
+      [ -n "$t_obj" ] || continue
+      t_kind="$(printf '%s' "$t_obj" | sed -n 's/.*"kind": *"\([^"]*\)".*/\1/p')"
+      t_repo="$(printf '%s' "$t_obj" | sed -n 's/.*"repo": *"\([^"]*\)".*/\1/p')"
+      t_branch="$(printf '%s' "$t_obj" | sed -n 's/.*"branch": *"\([^"]*\)".*/\1/p')"
+      [ "$t_kind" = "branch" ] && [ -n "$t_repo" ] && [ -n "$t_branch" ] || continue
+      t_state="$(grep -o '"state": *"[^"]*"' "$rf" 2>/dev/null | head -1 | sed 's/.*"\([^"]*\)"$/\1/')"
+      t_act="$(stat -c %Y "$rf" 2>/dev/null || echo 0)"
+      for t_stamp in $(grep -o '"\(last_evidence_at\|terminal_event_at\|finished_at\)": *"[^"]*"' "$rf" 2>/dev/null | sed 's/.*"\([^"]*\)"$/\1/'); do
+        t_ep="$(date -u -d "$t_stamp" +%s 2>/dev/null || echo 0)"
+        [ "$t_ep" -gt "$t_act" ] && t_act="$t_ep"
+      done
+      case "$t_state" in
+        complete|failed|orphaned)
+          [ $((NOW - t_act)) -le "$VENUE_TRANSPORT_HOLD_SECS" ] && transport_held["$t_repo $t_branch"]=1
+          ;;
+        *) transport_held["$t_repo $t_branch"]=1 ;;
+      esac
     done
   fi
   # Explicit holds from the state dir's holds file.
