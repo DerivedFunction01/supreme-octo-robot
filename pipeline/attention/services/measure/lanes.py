@@ -351,10 +351,30 @@ def _seed_raw(entry: dict) -> dict:
         "record": (
             str(_resolve_record(entry["record"])) if entry.get("record") else None
         ),
+        "_blocks": [],
         "_checkpoints": [],
         "_source": "registry-seed",
     }
     return raw
+
+
+def _absorb(raws: dict, order: list, blocks, path, stamp) -> None:
+    """Merge one record file's lane blocks into the
+    raw lanes by key, in first-seen order: a block
+    for a seeded lane appends to the seed's raw (the
+    record block wins at merge time); the file's
+    stamp is the lane's latest file ping."""
+    for block in blocks:
+        key = block.get("lane")
+        if key not in raws:
+            raws[key] = {"_blocks": [], "_checkpoints": []}
+            order.append(key)
+        raws[key]["_blocks"].append(block)
+        if stamp is not None:
+            prior = raws[key].get("_file_stamp")
+            if prior is None or stamp > _stamp(prior):
+                raws[key]["_file_stamp"] = stamps.iso(stamp)
+        raws[key]["_record_path"] = str(path)
 
 
 def collect(state: dict, now: datetime) -> bool:
@@ -378,19 +398,6 @@ def collect(state: dict, now: datetime) -> bool:
         refused: list[dict] = []
         header_count = None
 
-        def absorb(blocks, path, stamp):
-            for block in blocks:
-                key = block.get("lane")
-                if key not in raws:
-                    raws[key] = {"_blocks": [], "_checkpoints": []}
-                    order.append(key)
-                raws[key]["_blocks"].append(block)
-                if stamp is not None:
-                    prior = raws[key].get("_file_stamp")
-                    if prior is None or stamp > _stamp(prior):
-                        raws[key]["_file_stamp"] = stamps.iso(stamp)
-                raws[key]["_record_path"] = str(path)
-
         for entry in seed_entries:
             raw = _seed_raw(entry)
             raws[raw["lane"]] = raw
@@ -410,7 +417,7 @@ def collect(state: dict, now: datetime) -> bool:
                 header_count = header
             for reason in file_refused:
                 refused.append({"file": str(path), "reason": reason})
-            absorb(blocks, path, stamp)
+            _absorb(raws, order, blocks, path, stamp)
             # A seeded lane whose own record file this
             # is still pings on the file's writes even
             # where the file carries no block yet: the
@@ -506,6 +513,16 @@ def _programme_row(state: dict, slug: str) -> dict | None:
     return registry.for_slug(slug)
 
 
+def _lane_row(topic, handle, label, kind, detail, **evidence) -> dict:
+    """A lane row: the shared staffing row, carrying
+    its evidence mapping under "extra" as the lane
+    rows' consumers read it, beside the flattened
+    fields every staffing row carries."""
+    row = _row(topic, handle, label, kind, detail, **evidence)
+    row["extra"] = evidence.get("extra") or {}
+    return row
+
+
 def _lane_rows(state: dict, now: datetime) -> list:
     """The lane-record rows, beside the shortfall
     row: a declared lane past its ping bound
@@ -536,7 +553,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
             key = lane["key"]
             name = lane.get("label") or key
             if lane["overrun"] and lane["stale"]:
-                row = _row(
+                row = _lane_row(
                     slug,
                     handle,
                     label,
@@ -558,7 +575,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
                 rows.append(row)
             elif lane["stale"]:
                 rows.append(
-                    _row(
+                    _lane_row(
                         slug,
                         handle,
                         label,
@@ -576,7 +593,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
                 )
             elif lane["overrun"]:
                 rows.append(
-                    _row(
+                    _lane_row(
                         slug,
                         handle,
                         label,
@@ -604,7 +621,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
         for family in sorted(families):
             if family not in covered_families:
                 rows.append(
-                    _row(
+                    _lane_row(
                         slug,
                         handle,
                         label,
@@ -625,7 +642,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
                 continue
             if tree_path not in covered_trees:
                 rows.append(
-                    _row(
+                    _lane_row(
                         slug,
                         handle,
                         label,
@@ -658,7 +675,7 @@ def _unwitnessed_row(slug, handle, label, lane, families, activity, now) -> list
     fresh = not lane["stale"]
     if tree_path and tree_dead and fresh:
         return [
-            _row(
+            _lane_row(
                 slug,
                 handle,
                 label,
@@ -680,7 +697,7 @@ def _unwitnessed_row(slug, handle, label, lane, families, activity, now) -> list
         and (tree_path is None or tree_dead)
     ):
         return [
-            _row(
+            _lane_row(
                 slug,
                 handle,
                 label,
