@@ -220,7 +220,28 @@
 #      equals the manifest row count) BEFORE any ref is
 #      deleted; on verification failure nothing is deleted
 #      on either side, the failure is recorded, and the
-#      pass is partial. Only then do the excess refs go:
+#      pass is partial. The write protocol is safe
+#      against concurrent passes over the same repo (an
+#      hourly pass and a deep pass): a pass first bundles
+#      its own excess alone — staged in a per-pass ref
+#      namespace, written to a per-pass staged file
+#      (branches.bundle.staged-<pid>) in the archive
+#      directory, and verified there; the union with the
+#      standing archive then happens under a
+#      per-archive-directory flock (.merge.lock): inside
+#      the lock the standing bundle and the staged bundle
+#      are fetched into the archive ref namespace, the
+#      union bundle is written to a fresh temp file,
+#      verified, and renamed over branches.bundle, and
+#      manifest.tsv is rewritten the same way (temp file,
+#      rename) — the standing archive is only ever
+#      replaced whole, by a verified union, and passes
+#      serialize only on that short merge, never on
+#      bundle creation. A staged file is removed once
+#      merged; on any failure it is left in place and
+#      named in the BRANCH-CAP-FAIL line — a source of
+#      record until merged — and the standing archive
+#      stands untouched. Only then do the excess refs go:
 #      local through trim_local_branch, origin through the
 #      queue and its drain. The disposition is uniform
 #      over the SELECTABLE population: candidates rank by
@@ -999,22 +1020,26 @@ run_worker() {
     # differ stages its origin tip under <branch>@origin so
     # both tips survive.
     declare -A new_side=()
-    local sha ep ref cur
+    # final archive ref -> this pass's staged "sha|epoch"
+    declare -A pass_row=()
+    local -a stage_refs=()
+    local sha ep ref cur heads_n=""
+    # This pass's staging lives in its own ref namespace
+    # and its own bundle file, both keyed by the worker's
+    # pid: concurrent passes over this repo share neither,
+    # so neither can stage over, bundle over, or clean up
+    # the other's in-flight archive work.
+    local stage_ns="refs/archive-cap-stage-$$"
+    local staged_bundle="$cap_dir/branches.bundle.staged-$$"
     mkdir -p "$cap_dir" 2>/dev/null || cap_fail="archive-unwritable"
-    if [ -z "$cap_fail" ] && [ -f "$bundle" ]; then
-      # union an earlier same-day pass's bundle in: its refs
-      # restage alongside this pass's, and the rewritten
-      # bundle below carries the union — never a clobber.
-      timeout 60 $GIT -C "$main_dir" fetch --quiet "$bundle" \
-        'refs/archive-cap/*:refs/archive-cap/*' >/dev/null 2>&1 \
-        || cap_fail="prior-bundle-unreadable"
-    fi
     if [ -z "$cap_fail" ]; then
       for e in "${cap_l_excess[@]:-}"; do
         [ -z "$e" ] && continue
         ep="${e%%|*}"; rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
         ref="refs/archive-cap/$nm"
-        $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+        $GIT -C "$main_dir" update-ref "$stage_ns/$nm" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+        stage_refs+=("$stage_ns/$nm")
+        pass_row["$ref"]="$sha|$ep"
         new_side["$ref"]="local"
       done
     fi
@@ -1023,13 +1048,16 @@ run_worker() {
         [ -z "$e" ] && continue
         ep="${e%%|*}"; rest="${e#*|}"; nm="${rest%%|*}"; sha="${rest#*|}"
         ref="refs/archive-cap/$nm"
-        cur="$($GIT -C "$main_dir" rev-parse --verify --quiet "$ref" 2>/dev/null)"
-        if [ -n "$cur" ] && [ "$cur" != "$sha" ] && [ "${new_side[$ref]:-}" = "local" ]; then
+        if [ -n "${pass_row[$ref]:-}" ] && [ "${pass_row[$ref]%%|*}" != "$sha" ] && [ "${new_side[$ref]:-}" = "local" ]; then
           ref="refs/archive-cap/$nm@origin"
-          $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          $GIT -C "$main_dir" update-ref "$stage_ns/$nm@origin" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          stage_refs+=("$stage_ns/$nm@origin")
+          pass_row["$ref"]="$sha|$ep"
           new_side["$ref"]="origin"
         else
-          $GIT -C "$main_dir" update-ref "$ref" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          $GIT -C "$main_dir" update-ref "$stage_ns/$nm" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+          stage_refs+=("$stage_ns/$nm")
+          pass_row["$ref"]="$sha|$ep"
           if [ "${new_side[$ref]:-}" = "local" ]; then
             new_side["$ref"]="local,origin"
           else
@@ -1038,10 +1066,77 @@ run_worker() {
         fi
       done
     fi
+    # This pass's bundle, staged alone and verified before
+    # it touches the standing archive. From here on the
+    # staged FILE is this pass's durable copy of its
+    # excess; the staging refs are scratch and are dropped
+    # whatever the outcome — the file, not the namespace,
+    # is what a failure leaves behind, named in the
+    # failure line.
+    if [ -z "$cap_fail" ]; then
+      rm -f "$staged_bundle"
+      if ! $GIT -C "$main_dir" bundle create "$staged_bundle" "${stage_refs[@]}" >/dev/null 2>&1; then
+        cap_fail="bundle-create-failed"
+      elif ! $GIT -C "$main_dir" bundle verify "$staged_bundle" >/dev/null 2>&1; then
+        cap_fail="bundle-verify-failed"
+      else
+        heads_n="$($GIT -C "$main_dir" bundle list-heads "$staged_bundle" 2>/dev/null | wc -l)"
+        [ "$heads_n" -ne "${#stage_refs[@]}" ] && cap_fail="bundle-verify-failed"
+      fi
+      for ref in "${stage_refs[@]:-}"; do
+        [ -n "$ref" ] && $GIT -C "$main_dir" update-ref -d "$ref" 2>/dev/null
+      done
+    fi
+    # --- merge into the standing archive, under the
+    # per-archive-directory flock: the standing bundle and
+    # this pass's staged bundle are fetched into the
+    # archive ref namespace, the union bundle is written
+    # to a fresh temp file, verified, and renamed over the
+    # standing bundle; the manifest is rewritten the same
+    # way (temp file, rename) inside the same lock. The
+    # standing archive is only ever replaced whole, by a
+    # verified union — and passes serialize only here,
+    # never on bundle creation above.
+    local cap_lock="$cap_dir/.merge.lock"
+    local merge_tmp="$cap_dir/.branches.bundle.merge-$$"
+    local manifest_tmp="$cap_dir/.manifest.tsv.merge-$$"
+    local cap_lock_fd=""
+    if [ -z "$cap_fail" ]; then
+      if ! : >>"$cap_lock" 2>/dev/null; then
+        cap_fail="archive-unwritable"
+      else
+        exec {cap_lock_fd}>"$cap_lock"
+        flock -x "$cap_lock_fd" 2>/dev/null || cap_fail="archive-lock-failed"
+      fi
+    fi
+    if [ -z "$cap_fail" ] && [ -f "$bundle" ]; then
+      # union an earlier same-day pass's bundle in: its
+      # refs restage alongside this pass's, and the
+      # rewritten bundle below carries the union — never
+      # a clobber. The read happens inside the lock, so
+      # the bundle read here is the one the rename below
+      # replaces: a concurrent pass's merge is either
+      # wholly before this read or wholly after it.
+      timeout 60 $GIT -C "$main_dir" fetch --quiet "$bundle" \
+        'refs/archive-cap/*:refs/archive-cap/*' >/dev/null 2>&1 \
+        || cap_fail="prior-bundle-unreadable"
+    fi
+    if [ -z "$cap_fail" ]; then
+      # this pass's staged refs join the namespace under
+      # their final archive names; on a name the standing
+      # bundle also carries, this pass's tip governs —
+      # the newest staging wins, as the pre-lock staging
+      # order had it.
+      timeout 60 $GIT -C "$main_dir" fetch --quiet "$staged_bundle" \
+        "$stage_ns/*:refs/archive-cap/*" >/dev/null 2>&1 \
+        || cap_fail="staged-bundle-unreadable"
+    fi
     # The bundle's rows: every staged archive ref (this
     # pass's excess unioned with any earlier same-day rows).
     # Sides for rows this pass did not touch are recovered
-    # from the standing manifest, keyed by branch+sha.
+    # from the standing manifest, keyed by branch+sha —
+    # read inside the lock, so the read is never torn by a
+    # concurrent pass's rewrite.
     local -a staged=()
     local sref ssha sep mb ms msha mside
     declare -A old_side=()
@@ -1058,34 +1153,43 @@ run_worker() {
       done < <($GIT -C "$main_dir" for-each-ref --format='%(refname)%09%(objectname)%09%(committerdate:unix)' refs/archive-cap 2>/dev/null)
       [ "${#staged[@]}" -eq 0 ] && cap_fail="archive-stage-failed"
     fi
-    local tmp_bundle="$cap_dir/.branches.bundle.tmp"
     if [ -z "$cap_fail" ]; then
       local -a ref_args=()
       for e in "${staged[@]:-}"; do
         [ -n "$e" ] && ref_args+=("${e%%|*}")
       done
-      rm -f "$tmp_bundle"
-      if ! $GIT -C "$main_dir" bundle create "$tmp_bundle" "${ref_args[@]}" >/dev/null 2>&1; then
+      rm -f "$merge_tmp"
+      if ! $GIT -C "$main_dir" bundle create "$merge_tmp" "${ref_args[@]}" >/dev/null 2>&1; then
         cap_fail="bundle-create-failed"
-      elif ! $GIT -C "$main_dir" bundle verify "$tmp_bundle" >/dev/null 2>&1; then
+      elif ! $GIT -C "$main_dir" bundle verify "$merge_tmp" >/dev/null 2>&1; then
         cap_fail="bundle-verify-failed"
       else
-        local heads_n
-        heads_n="$($GIT -C "$main_dir" bundle list-heads "$tmp_bundle" 2>/dev/null | wc -l)"
+        heads_n="$($GIT -C "$main_dir" bundle list-heads "$merge_tmp" 2>/dev/null | wc -l)"
         [ "$heads_n" -ne "${#staged[@]}" ] && cap_fail="bundle-verify-failed"
       fi
     fi
     if [ -n "$cap_fail" ]; then
-      rm -f "$tmp_bundle"
-      echo "BRANCH-CAP-FAIL repo=$slug reason=$cap_fail bundle=$bundle" >>"$RESULT_FILE"
+      rm -f "$merge_tmp" "$manifest_tmp"
+      if [ -n "$cap_lock_fd" ]; then
+        flock -u "$cap_lock_fd" 2>/dev/null
+        exec {cap_lock_fd}>&-
+      fi
+      # the staged file, when one stands, is left in place
+      # and named: it is this pass's only copy of its
+      # excess until a later pass merges it.
+      local fail_line="BRANCH-CAP-FAIL repo=$slug reason=$cap_fail bundle=$bundle"
+      [ -e "$staged_bundle" ] && fail_line="$fail_line staged=$staged_bundle"
+      echo "$fail_line" >>"$RESULT_FILE"
       echo "act=branch-cap-fail repo=$slug reason=$cap_fail epoch=$NOW" >>"$LEDGER_FILE"
       partial=3
       return 0
     fi
-    mv "$tmp_bundle" "$bundle"
+    mv "$merge_tmp" "$bundle"
     # Manifest: header carries the exact restore commands;
     # one row per bundle head (branch, tip sha, tip date
-    # ISO, sides trimmed).
+    # ISO, sides trimmed). Written to a temp file and
+    # renamed over, inside the lock, so the manifest on
+    # disk always stands whole beside the bundle it rows.
     {
       echo "# branch-cap archive repo=$slug epoch=$NOW"
       echo "# bundle=$bundle"
@@ -1106,7 +1210,8 @@ run_worker() {
         esac
         printf '%s\t%s\t%s\t%s\n' "$bname" "$ssha" "$(iso_of "$sep")" "$sside"
       done
-    } >"$manifest"
+    } >"$manifest_tmp"
+    mv "$manifest_tmp" "$manifest"
     for e in "${staged[@]:-}"; do
       [ -z "$e" ] && continue
       sref="${e%%|*}"
@@ -1118,6 +1223,11 @@ run_worker() {
       fi
       $GIT -C "$main_dir" update-ref -d "$sref" 2>/dev/null
     done
+    flock -u "$cap_lock_fd" 2>/dev/null
+    exec {cap_lock_fd}>&-
+    # merged: the staged file's copy now stands in the
+    # archive, so the per-pass file goes.
+    rm -f "$staged_bundle"
     # --- deletions, only now that the archive verifies ---
     # The selected excess is never a checked-out branch
     # (blocked at census, above), so no worktree is ever
