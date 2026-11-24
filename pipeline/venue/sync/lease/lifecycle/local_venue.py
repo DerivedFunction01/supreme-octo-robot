@@ -37,6 +37,7 @@ Adding a machine is its target entry (its own port and start
 command) plus its shape binding, never a code change.
 """
 
+import re
 import socket
 import subprocess
 import time
@@ -280,6 +281,81 @@ def acquire_local(repo: Path, shape_id: str, caller: str | None = None, hours: f
     }
     records.save_record(repo, rec)
     return {"action": "created", "record": rec}
+
+
+def run_target(repo: Path, rec: dict) -> dict | None:
+    """The SSH target a run record belongs to: the target the
+    record itself carries, else its shape's binding, else the
+    venue's only target."""
+    target_id = rec.get("target")
+    if isinstance(target_id, str) and target_id:
+        return venue_target(repo, target_id)
+    _shape, _tid, target = shape_target(repo, rec.get("shape") or "")
+    return target or venue_target(repo)
+
+
+_RUN_ID_SAFE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def read_run_state(repo: Path, rec: dict, target: dict | None = None) -> dict:
+    """One tri-state read of a local run's container run dir
+    (~/runs/<run_id>, the dispatch's own layout):
+
+    - "exit": the exit file is present — exit_code, the
+      output tail, and finished_at from the exit file's own
+      mtime (the run's completion time, not the reader's).
+    - "running": the run dir is present with no exit file yet.
+    - "absent": no run dir at all.
+    - "unknown": no target resolves, the run id is not
+      path-safe, or the read itself failed — a lost read is
+      never a verdict (the session_state rule).
+
+    A pure read: it never starts a transport."""
+    run_id = rec.get("run_id")
+    if not isinstance(run_id, str) or not _RUN_ID_SAFE.match(run_id):
+        return {"reading": "unknown"}
+    if target is None:
+        target = run_target(repo, rec)
+    if target is None:
+        return {"reading": "unknown"}
+    remote = (
+        f'd="$HOME/runs/{run_id}"; '
+        'if [ -f "$d/exit" ]; then echo KIND=exit; '
+        'echo "CODE=$(cat "$d/exit")"; '
+        'echo "MTIME=$(stat -c %Y "$d/exit" 2>/dev/null)"; '
+        "echo TAIL; tail -n 200 \"$d/output.log\" 2>/dev/null; "
+        'elif [ -d "$d" ]; then echo KIND=running; '
+        "else echo KIND=absent; fi"
+    )
+    try:
+        r = subprocess.run(ssh_args(repo, target) + [remote], capture_output=True, timeout=90)
+    except (OSError, subprocess.TimeoutExpired):
+        return {"reading": "unknown"}
+    if r.returncode != 0:
+        return {"reading": "unknown"}
+    lines = r.stdout.decode(errors="replace").splitlines()
+    if not lines:
+        return {"reading": "unknown"}
+    if lines[0] == "KIND=running":
+        return {"reading": "running"}
+    if lines[0] == "KIND=absent":
+        return {"reading": "absent"}
+    if lines[0] != "KIND=exit" or len(lines) < 3:
+        return {"reading": "unknown"}
+    try:
+        code = int(lines[1].split("=", 1)[1].strip())
+    except (IndexError, ValueError):
+        return {"reading": "unknown"}
+    finished = None
+    try:
+        mtime = int(lines[2].split("=", 1)[1].strip())
+        finished = datetime.fromtimestamp(mtime, timezone.utc).isoformat()
+    except (IndexError, ValueError):
+        pass
+    tail = ""
+    if len(lines) > 3 and lines[3] == "TAIL" and lines[4:]:
+        tail = "\n".join(lines[4:]) + "\n"
+    return {"reading": "exit", "exit_code": code, "finished_at": finished, "output_tail": tail}
 
 
 def release_local(repo: Path, session: str | None = None) -> dict:

@@ -36,7 +36,7 @@ from .foundation import REPO, RUNS, cli, colab, colab_bin, colab_env, TOKEN, lea
 from .records import TERMINAL_STATES, claim_first_save, emit_terminal_event, load_run_record, mark_terminal, outbox_path, save_record
 from .reader import LAUNCH_ABSENCE_GRACE_S, POLL_FAILURE_BOUND, _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .pull import SINGLE_FILE_CEILING_BYTES, finalize_run, pull_outputs
-from .sweep import STALE_RUNNING_S, STALE_STARTING_S, orphan_sweep
+from .sweep import STALE_RUNNING_S, STALE_STARTING_S, finalize_local_record, orphan_sweep
 from .replace import acquire_session
 from .launch import UPLOAD_CHUNK_THRESHOLD_BYTES, orphan_notes, upload_one
 from .verbs import close_out_lease, poll_run, wait_run
@@ -52,7 +52,7 @@ __all__ = [
     "_absence_grace_s", "_launch_age_s",
     "write_reader", "read_reader", "register_poll_failure",
     "SINGLE_FILE_CEILING_BYTES", "pull_outputs", "finalize_run",
-    "STALE_RUNNING_S", "STALE_STARTING_S", "orphan_sweep",
+    "STALE_RUNNING_S", "STALE_STARTING_S", "orphan_sweep", "finalize_local_record",
     "acquire_session",
     "UPLOAD_CHUNK_THRESHOLD_BYTES", "upload_one", "orphan_notes",
     "close_out_lease", "poll_run", "wait_run", "main",
