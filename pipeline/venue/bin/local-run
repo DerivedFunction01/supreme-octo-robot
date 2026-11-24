@@ -19,6 +19,13 @@ acquire_local): the container is the venue — nothing is
 created, priced, or kept alive; the record names the caller
 and the window. Caller attribution is the lease core's own
 registry, exactly as for a Colab run.
+
+Record truth is the container's (launch-path plan, Step 2):
+polls read the run dir through the lease core's tri-state
+reader, a finished run finalizes from its exit file (state
+from the code, completion time from the file's mtime), and
+even a terminal record face is re-derived when the exit
+file contradicts it — the record never outranks the run dir.
 """
 
 import importlib.util
@@ -83,29 +90,42 @@ def _launch(rec: dict, script: bytes, target: dict) -> str | None:
 
 
 def _poll(rec: dict, target: dict) -> dict:
-    """One poll of the run's remote state: {"state": "running"}
-    or the terminal fold — exit code read, output tail fetched,
-    record moved terminal through the runner's machinery."""
-    base = f"runs/{rec['run_id']}"
-    try:
-        r = _ssh(target, f"cat ~/{base}/exit 2>/dev/null", timeout=90)
-    except (OSError, subprocess.TimeoutExpired):
+    """One poll of the run's container state, through the
+    lease core's tri-state reader (local_venue.read_run_state):
+    an exit file finalizes the record through the runner's
+    shared local finalize — terminal state from the code,
+    completion time from the exit file's own mtime; no exit
+    file yet is "running"; an unreadable container is
+    "running" with the unreachable flag — a lost read is
+    never a verdict."""
+    reading = local_venue.read_run_state(REPO, rec, target=target)
+    if reading["reading"] == "exit":
+        state = finalize_local_record(rec, reading)
+        return {"state": state, "exit_code": reading["exit_code"]}
+    if reading["reading"] == "unknown":
         return {"state": "running", "venue_unreachable": True}
-    if r.returncode != 0:
-        return {"state": "running"}
-    try:
-        code = int(r.stdout.decode(errors="replace").strip())
-    except ValueError:
-        return {"state": "running"}
-    tail = ""
-    try:
-        r = _ssh(target, f"tail -n 200 ~/{base}/output.log", timeout=90)
-        tail = r.stdout.decode(errors="replace")
-    except (OSError, subprocess.TimeoutExpired):
-        pass
+    return {"state": "running"}
+
+
+def _rederive(rec: dict, target: dict) -> dict | None:
+    """The reader pass over a terminal record face: the
+    container's exit file outranks the record, so a face it
+    contradicts — an orphan flip over a finished run (the
+    decxc shape: face "orphaned", run dir holding exit 0),
+    a launch-time failure the detached run outlived — is
+    re-derived from the container through the shared
+    finalize. A face the exit file confirms, and any
+    non-exit reading, stands as written. Returns the
+    derived outcome, or None when the face stands."""
+    reading = local_venue.read_run_state(REPO, rec, target=target)
+    if reading["reading"] != "exit":
+        return None
+    code = reading["exit_code"]
     state = "complete" if code == 0 else "failed"
-    mark_terminal(rec, state, exit_code=code, output_tail=tail, finished_at=now())
-    return {"state": state, "exit_code": code}
+    if rec.get("state") == state and rec.get("exit_code") == code:
+        return None
+    finalize_local_record(rec, reading)
+    return {"state": state, "exit_code": code, "rederived": True}
 
 
 def _wait(rec: dict, target: dict, max_s: int, timeout_s: int) -> int:
@@ -143,6 +163,17 @@ def main() -> int:
         if rec.get("venue") != "local":
             return _fail(f"run {rec['run_id']} is not a local-venue run")
         if rec.get("state") in TERMINAL_STATES:
+            # A terminal face is accepted only after the
+            # reader pass: the container's exit file outranks
+            # the record (Step 2's poll half), so a face it
+            # contradicts is re-derived before it is served.
+            target = _record_target(rec)
+            if target is not None:
+                local_venue.ensure_transport(target)
+                derived = _rederive(rec, target)
+                if derived is not None:
+                    print(json.dumps({"run_id": rec["run_id"], **derived}, indent=2))
+                    return 0 if derived["state"] == "complete" else 1
             print(json.dumps({"run_id": rec["run_id"], "state": rec["state"]}, indent=2))
             return 0 if rec["state"] == "complete" else 1
         target = _record_target(rec)

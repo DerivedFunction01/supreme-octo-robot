@@ -78,6 +78,65 @@ def _launch_reading(rec: dict) -> str:
     return "absent"
 
 
+def finalize_local_record(rec: dict, reading: dict) -> str:
+    """Finalize one local-venue record from its container
+    reading (an "exit" reading): the terminal state derives
+    from the exit code, the completion time is the exit
+    file's own mtime (the reading's finished_at), and the
+    record lands through mark_terminal like every terminal
+    transition. The one finalize path for local records —
+    shared by the sweep's local branch and bin/local-run's
+    poll pass (launch-path plan, Step 2). Returns the
+    derived state."""
+    code = reading["exit_code"]
+    state = "complete" if code == 0 else "failed"
+    mark_terminal(rec, state, exit_code=code, output_tail=reading.get("output_tail", ""), finished_at=reading.get("finished_at") or now())
+    return state
+
+
+def _local_reconcile(rec: dict) -> dict | None:
+    """Reconcile one non-terminal local-venue record against
+    its container, never the Colab census: the local session
+    ("local-main") is not a Colab session and never appears
+    in the live list, so the census branch below orphaned
+    every finished local run by construction — records froze
+    at "running" and flipped to "orphaned" carrying neither
+    exit code nor completion time. The container reader is
+    the record's truth: an exit file finalizes it; a live
+    run dir freshens its evidence (last_evidence_at advances
+    on a real read, as session reads do); an absent run dir
+    orphans only past the record's own timeout_s — a local
+    record's orphan bound keys to its own budget, not the
+    Colab absence-confirm window. An unreadable container
+    reconciles nothing."""
+    try:
+        reading = lease.local_venue.read_run_state(REPO, rec)
+    except Exception:  # noqa: BLE001 — one record never blocks the sweep
+        return None
+    kind = reading.get("reading")
+    if kind == "exit":
+        state = finalize_local_record(rec, reading)
+        return {"run_id": rec["run_id"], "job": rec.get("job"), "action": f"finalized {state} from the container's exit file (exit {reading['exit_code']})"}
+    if kind == "running":
+        rec["last_evidence_at"] = now()
+        save_record(rec)
+        return None
+    if kind == "absent":
+        try:
+            started = datetime.fromisoformat(rec["started_at"]).timestamp()
+            bound = float(rec.get("timeout_s") or 18000)
+        except (KeyError, TypeError, ValueError):
+            return None
+        if datetime.now(timezone.utc).timestamp() - started > bound:
+            rec["state"] = "orphaned"
+            rec["orphan_noted_at"] = now()
+            save_record(rec)
+            if emit_terminal_event(rec):
+                save_record(rec)
+            return {"run_id": rec["run_id"], "job": rec.get("job"), "action": "marked orphaned; the container holds no run dir past the record's own timeout bound"}
+    return None
+
+
 def orphan_sweep() -> tuple[list[dict], bool]:
     """Reconcile non-terminal run records against live sessions.
 
@@ -85,8 +144,10 @@ def orphan_sweep() -> tuple[list[dict], bool]:
     parser (lease.live_sessions) — never substring on raw stdout:
     a name that textually collides with a live one must not read
     as alive, and a partial list must not read as a census. An
-    unreadable list (None) reconciles nothing — the session_state
-    rule, that no caller may act on a list it could not read. A
+    unreadable list (None) reconciles nothing Colab-side — the
+    session_state rule, that no caller may act on a list it
+    could not read; local-venue records reconcile against their
+    container first and never wait on the census. A
     torn record is skipped, never fatal: one damaged file must
     not block the reconcile of every other run (it blocked every
     runner entry in the write-denial flap). The sweep runs on the
@@ -96,14 +157,19 @@ def orphan_sweep() -> tuple[list[dict], bool]:
     if not RUNS.exists():
         return findings, True
     live = lease.live_sessions(colab, REPO)
-    if live is None:
-        return findings, False
-    live_names = {entry["session"] for entry in live}
+    live_names = {entry["session"] for entry in live} if live is not None else set()
     confirmed_absent: set[str] = set()
     for f in sorted(RUNS.glob("*.json")):
         try:
             rec = json.loads(f.read_text())
         except (OSError, json.JSONDecodeError):
+            continue
+        if rec.get("venue") == "local" and rec.get("state") not in TERMINAL_STATES:
+            finding = _local_reconcile(rec)
+            if finding:
+                findings.append(finding)
+            continue
+        if live is None:
             continue
         # A launched record reconciles against the session its
         # launch landed on (launch_session), not a later
@@ -232,7 +298,7 @@ def orphan_sweep() -> tuple[list[dict], bool]:
             if age > STALE_STARTING_S and not pid_alive(rec.get("daemon_child_pid")):
                 mark_terminal(rec, "failed", launch_lost=True, error=f"record still 'starting' {int(age // 60)} min after its freshest stamp: the launcher died before the launch landed; relaunch with --resume {rec['run_id']} to retry")
                 findings.append({"run_id": rec["run_id"], "job": rec["job"], "action": "marked failed (launch-lost): stale 'starting' record whose launcher died pre-launch; relaunch with --resume RUN_ID"})
-    return findings, True
+    return findings, live is not None
 
 
 # The standing collector. A detached run collects only when
