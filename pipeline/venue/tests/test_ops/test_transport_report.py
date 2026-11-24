@@ -3,8 +3,11 @@ plan, Step 4): a launched run counts by its transport
 stamp — branch only when the stamp names it, bundle
 otherwise, the unstamped pre-stamp era included; a fired
 run with no launch stamp is never-launched; programme is
-the caller family, folded mechanically, with a callerless
-record reading unknown."""
+the programme the caller registry declares for the
+caller's base (read from a fixtured scratch registry, the
+suite's form — the machine's local registry never leaks
+in), with an undeclared caller keeping its own row and a
+callerless record reading unknown."""
 
 from __future__ import annotations
 
@@ -30,6 +33,23 @@ def _load():
     return module
 
 
+def _programmes(tmp_path):
+    """The declaration map under test: a scratch repo whose
+    caller registry declares a shortened programme row for
+    each of its fictional callers, read back through the
+    lease core's own reader (the module the report binds)."""
+    m = _load()
+    cfg = tmp_path / "config"
+    cfg.mkdir(parents=True, exist_ok=True)
+    (cfg / "callers.json").write_text(json.dumps({
+        "callers": ["alpha-thread", "beta-thread", "gamma-thread"],
+        "programmes": {"alpha-thread": "alpha",
+                        "beta-thread": "beta",
+                        "gamma-thread": "gamma"},
+    }))
+    return m, m.callers.caller_programmes(tmp_path)
+
+
 def _rec(caller, started, launch=None, transport=None):
     rec = {"caller": caller, "started_at": started}
     if launch is not None:
@@ -39,47 +59,65 @@ def _rec(caller, started, launch=None, transport=None):
     return rec
 
 
-def test_counting_over_fixture_records():
-    m = _load()
+def test_programme_resolution(tmp_path):
+    m, programmes = _programmes(tmp_path)
+    assert programmes == {"alpha-thread": "alpha",
+                          "beta-thread": "beta",
+                          "gamma-thread": "gamma"}
+    # A lane suffix reports under its base's declaration.
+    assert m.programme("alpha-thread:lane-9", programmes) == "alpha"
+    assert m.programme("beta-thread", programmes) == "beta"
+    # An undeclared caller keeps its own name as its row.
+    assert m.programme("panel", programmes) == "panel"
+    assert m.programme("delta-thread:sub", programmes) == "delta-thread"
+    # A callerless or malformed caller reads unknown.
+    assert m.programme(None, programmes) == "unknown"
+    assert m.programme("", programmes) == "unknown"
+    assert m.programme(7, programmes) == "unknown"
+
+
+def test_counting_over_fixture_records(tmp_path):
+    m, programmes = _programmes(tmp_path)
     records = [
         # branch, stamped, with a span
-        _rec("workhorse", "2026-11-22T01:00:00+00:00",
+        _rec("beta-thread", "2026-11-22T01:00:00+00:00",
              "2026-11-22T01:02:00+00:00",
              {"kind": "branch", "claim_to_launch_s": 120.0}),
-        _rec("workhorse", "2026-11-22T02:00:00+00:00",
+        _rec("beta-thread", "2026-11-22T02:00:00+00:00",
              "2026-11-22T02:03:00+00:00",
              {"kind": "branch", "claim_to_launch_s": 180.0}),
         # bundle, explicitly stamped
-        _rec("steampower-emp", "2026-11-22T03:00:00+00:00",
+        _rec("alpha-thread", "2026-11-22T03:00:00+00:00",
              "2026-11-22T03:10:00+00:00",
              {"kind": "bundle", "claim_to_launch_s": 600.0}),
-        # launched, unstamped: the pre-stamp era counts bundle
-        _rec("edgar-specimen:specimen-lane",
+        # launched, unstamped: the pre-stamp era counts bundle;
+        # the lane suffix reports under its base's programme
+        _rec("gamma-thread:followup",
              "2026-11-22T04:00:00+00:00", "2026-11-22T04:20:00+00:00"),
         # fired, never launched
-        _rec("steampowernj", "2026-11-22T05:00:00+00:00"),
+        _rec("alpha-thread", "2026-11-22T05:00:00+00:00"),
         # no caller at all: unknown, and never launched
         _rec(None, "2026-11-22T06:00:00+00:00"),
-        # another caller keeps its own row
+        # an undeclared caller keeps its own row
         _rec("panel", "2026-11-22T07:00:00+00:00",
              "2026-11-22T07:01:00+00:00", {"kind": "bundle"}),
         # outside the window: not counted anywhere
-        _rec("workhorse", "2026-11-21T23:00:00+00:00",
+        _rec("beta-thread", "2026-11-21T23:00:00+00:00",
              "2026-11-21T23:02:00+00:00", {"kind": "branch"}),
         # no fire stamp: tallied as skipped, never counted
-        {"caller": "workhorse", "launch_at": "2026-11-22T08:00:00+00:00"},
+        {"caller": "beta-thread", "launch_at": "2026-11-22T08:00:00+00:00"},
     ]
-    out = m.summarize(records, START, END)
+    out = m.summarize(records, START, END, programmes)
     p = out["programmes"]
-    assert p["workhorse"] == {
+    assert p["beta"] == {
         "fired": 2, "launched": 2, "branch": 2, "bundle": 0,
         "never_launched": 0,
         "median_claim_to_launch_s": {"branch": 150.0, "bundle": None}}
-    assert p["steam"]["fired"] == 2
-    assert p["steam"]["bundle"] == 1
-    assert p["steam"]["never_launched"] == 1
-    assert p["steam"]["median_claim_to_launch_s"]["bundle"] == 600.0
-    assert p["edgar"]["launched"] == 1 and p["edgar"]["bundle"] == 1
+    assert p["alpha"]["fired"] == 2
+    assert p["alpha"]["bundle"] == 1
+    assert p["alpha"]["never_launched"] == 1
+    assert p["alpha"]["median_claim_to_launch_s"]["bundle"] == 600.0
+    assert p["gamma"]["launched"] == 1 and p["gamma"]["bundle"] == 1
     assert p["unknown"]["fired"] == 1 and p["unknown"]["never_launched"] == 1
     assert p["panel"]["bundle"] == 1
     assert out["totals"] == {"fired": 7, "launched": 5, "branch": 2,
@@ -89,13 +127,17 @@ def test_counting_over_fixture_records():
 
 
 def test_end_to_end_over_a_sandbox_store(tmp_path):
+    # The callers here are fictional and unregistered in any
+    # registry, so no declaration applies and each reports
+    # under its own name — the subprocess reads the store's
+    # own registry, which is not this test's fixture.
     runs = tmp_path / "runs"
     runs.mkdir()
     (runs / "a.json").write_text(json.dumps(_rec(
-        "edgar-specimen", "2026-11-22T01:00:00+00:00",
+        "north-thread", "2026-11-22T01:00:00+00:00",
         "2026-11-22T01:15:00+00:00", {"kind": "bundle"})))
     (runs / "b.json").write_text(json.dumps(_rec(
-        "edgar-specimen", "2026-11-22T02:00:00+00:00")))
+        "north-thread", "2026-11-22T02:00:00+00:00")))
     (runs / "torn.json").write_text("{not json")
     out = subprocess.run(
         [sys.executable, str(SCRIPT), "--day", "2026-11-22",
@@ -104,6 +146,6 @@ def test_end_to_end_over_a_sandbox_store(tmp_path):
     assert out.returncode == 0, out.stderr
     report = json.loads(out.stdout)
     assert report["window"]["kind"] == "day"
-    assert report["programmes"]["edgar"]["bundle"] == 1
-    assert report["programmes"]["edgar"]["never_launched"] == 1
+    assert report["programmes"]["north-thread"]["bundle"] == 1
+    assert report["programmes"]["north-thread"]["never_launched"] == 1
     assert report["records_unparseable"] == 1

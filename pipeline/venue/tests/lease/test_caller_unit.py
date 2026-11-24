@@ -122,6 +122,34 @@ def test_active_marking_ignores_unregistered_names_and_absence(tmp_path, monkeyp
     assert lease_mod.is_active_caller(repo, "alpha") is False
 
 
+def test_programme_declarations_read_the_registry(tmp_path, monkeypatch):
+    repo = caller_repo(tmp_path, monkeypatch, callers=("alpha", "beta"))
+    (repo / "config" / "callers.json").write_text(json.dumps({
+        "callers": ["alpha", "beta"],
+        "programmes": {"alpha": "core", "gamma": "other", "beta": "Bad Name"},
+    }))
+    # A declaration for an unregistered caller is ignored, and a
+    # value without the caller-name shape is not a programme.
+    assert lease_mod.caller_programmes(repo) == {"alpha": "core"}
+    assert lease_mod.programme_for(repo, "alpha") == "core"
+    # A lane suffix inherits its base's declaration.
+    assert lease_mod.programme_for(repo, "alpha:lane-1") == "core"
+    # Undeclared, unregistered, and absent claims declare nothing.
+    assert lease_mod.programme_for(repo, "beta") is None
+    assert lease_mod.programme_for(repo, "gamma") is None
+    assert lease_mod.programme_for(repo, None) is None
+    assert lease_mod.programme_for(repo, "") is None
+
+
+def test_programme_declarations_absent_declare_nothing(tmp_path, monkeypatch):
+    repo = caller_repo(tmp_path, monkeypatch, callers=("alpha", "beta"))
+    assert lease_mod.caller_programmes(repo) == {}
+    assert lease_mod.programme_for(repo, "alpha") is None
+    # A missing registry file declares nothing either.
+    (repo / "config" / "callers.json").unlink()
+    assert lease_mod.caller_programmes(repo) == {}
+
+
 def test_claims_journal_round_trip(tmp_path, monkeypatch):
     repo = caller_repo(tmp_path, monkeypatch)
     assert lease_mod.load_caller_claims(repo) == {}
