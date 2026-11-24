@@ -18,6 +18,7 @@ the counts are what's pinned.
 
 import hashlib
 import sys
+import tempfile
 import unittest
 import urllib.request
 from pathlib import Path
@@ -29,6 +30,7 @@ sys.path.insert(0, str(PLATFORM))
 import ops_client  # noqa: E402
 
 CALLER = "venue"
+TARGET = str(Path(tempfile.gettempdir()) / "target.json")
 CONTENT = b'{"a": 1}\n'
 WRITE_OK = {
     "ok": True,
@@ -104,14 +106,14 @@ class PerformRetryTest(RetryCase):
 class StagedWriteRetryTest(RetryCase):
     def test_lost_response_then_valid_succeeds(self):
         stub = self.script(ops_client.UNKNOWN, ops_client.UNKNOWN, WRITE_OK)
-        payload = ops_client.staged_write(CALLER, "/tmp/target.json", CONTENT)
+        payload = ops_client.staged_write(CALLER, TARGET, CONTENT)
         self.assertEqual(payload["bytes"], len(CONTENT))
         self.assertEqual(stub.calls, 3)
 
     def test_persistent_lost_raises_after_exactly_its_bound(self):
         stub = self.script(ops_client.UNKNOWN)
         with self.assertRaises(ops_client.WriterError) as ctx:
-            ops_client.staged_write(CALLER, "/tmp/target.json", CONTENT)
+            ops_client.staged_write(CALLER, TARGET, CONTENT)
         self.assertEqual(ctx.exception.name, "io_error")
         self.assertIn("response was lost", ctx.exception.detail)
         self.assertIn("verify before repeating", ctx.exception.detail)
@@ -121,13 +123,13 @@ class StagedWriteRetryTest(RetryCase):
         refusal = {"ok": False, "error": "unauthenticated", "detail": "nope"}
         stub = self.script(refusal)
         with self.assertRaises(ops_client.WriterError) as ctx:
-            ops_client.staged_write(CALLER, "/tmp/target.json", CONTENT)
+            ops_client.staged_write(CALLER, TARGET, CONTENT)
         self.assertEqual(ctx.exception.name, "unauthenticated")
         self.assertEqual(stub.calls, 1)
 
     def test_unreachable_then_valid_succeeds(self):
         stub = self.script(ops_client.UNREACHABLE, WRITE_OK)
-        payload = ops_client.staged_write(CALLER, "/tmp/target.json", CONTENT)
+        payload = ops_client.staged_write(CALLER, TARGET, CONTENT)
         self.assertEqual(payload["sha256"], WRITE_OK["sha256"])
         self.assertEqual(stub.calls, 2)
 
