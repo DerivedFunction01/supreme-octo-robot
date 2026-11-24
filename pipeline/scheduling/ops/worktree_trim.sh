@@ -1062,8 +1062,18 @@ run_worker() {
           pass_row["$ref"]="$sha|$ep"
           new_side["$ref"]="origin"
         else
-          $GIT -C "$main_dir" update-ref "$stage_ns/$nm" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
-          stage_refs+=("$stage_ns/$nm")
+          # A same-tip branch in excess on both sides
+          # stages ONE ref: the local loop already laid
+          # it, and a duplicate stage_refs entry makes
+          # the bundle's head count fall short of the
+          # staged count, failing the pass's own verify
+          # below (bundle-verify-failed on every
+          # both-sides excess). Only the side bookkeeping
+          # moves here.
+          if [ -z "${pass_row[$ref]:-}" ]; then
+            $GIT -C "$main_dir" update-ref "$stage_ns/$nm" "$sha" 2>/dev/null || { cap_fail="archive-stage-failed"; break; }
+            stage_refs+=("$stage_ns/$nm")
+          fi
           pass_row["$ref"]="$sha|$ep"
           if [ "${new_side[$ref]:-}" = "local" ]; then
             new_side["$ref"]="local,origin"
