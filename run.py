@@ -81,7 +81,14 @@ import importlib.util
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
+
+# Process start, for the serve boot record's startup
+# latency (server/bootrecord.py): this module is the
+# serve process's entry, so its load is the closest
+# in-process stamp to the process's own start.
+_PROCESS_MONOTONIC = time.monotonic()
 
 REPO_ROOT = Path(__file__).resolve().parent
 PIPELINE = REPO_ROOT / "pipeline"
@@ -212,6 +219,39 @@ def _load_venue_ui():
     return _load("venue_ui_server", ui / "server.py")
 
 
+def _open_boot_record(values):
+    """Open this serve's durable boot record
+    (server/bootrecord.py). Observability must never
+    down the serve it observes: any failure prints and
+    returns None, and the serve proceeds unrecorded."""
+    try:
+        from server import bootrecord
+        return bootrecord.open_boot(
+            bootrecord.record_path(values["home"]),
+            entry="run.py serve", repo_root=str(REPO_ROOT))
+    except Exception as exc:  # noqa: BLE001 — see docstring
+        print(f"run.py serve: boot record not opened: {exc!r}",
+              file=sys.stderr)
+        return None
+
+
+def _stamp_boot_ready(values, boot):
+    """Stamp the boot record health-ready: the listeners
+    are bound (a Listener's socket binds at construction,
+    in _assemble) and the serve loop is about to start."""
+    if boot is None:
+        return
+    try:
+        from server import bootrecord
+        bootrecord.stamp_ready(
+            bootrecord.record_path(values["home"]),
+            boot["instance"],
+            started_monotonic=_PROCESS_MONOTONIC)
+    except Exception as exc:  # noqa: BLE001 — see _open_boot_record
+        print(f"run.py serve: boot record ready stamp "
+              f"failed: {exc!r}", file=sys.stderr)
+
+
 def cmd_serve(argv):
     serving = _serving_core()
 
@@ -254,6 +294,7 @@ def cmd_serve(argv):
         print(f"run.py serve: {exc}", file=sys.stderr)
         return 2
     engine.start_stackdump()
+    boot = _open_boot_record(values)
     try:
         listeners, workers = _assemble(
             serving, engine, values, sources,
@@ -263,6 +304,7 @@ def cmd_serve(argv):
               f"attention {att_settings.host}:"
               f"{att_settings.port} — one process "
               f"(the coupled surfaces)", flush=True)
+        _stamp_boot_ready(values, boot)
         return serving.serve(listeners, workers=workers,
                              log=lambda line: print(line,
                                                     flush=True))
