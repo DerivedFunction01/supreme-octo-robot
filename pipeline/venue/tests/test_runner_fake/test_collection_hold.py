@@ -1,4 +1,4 @@
-"""Collection hold (2026-11-14 specimen): a run whose
+"""Collection hold (the specimen): a run whose
 payload completed and whose declared outputs sit probed-present
 remotely — one in its out dir, one at the session root — must
 not close while the transfer of those outputs is failing. The

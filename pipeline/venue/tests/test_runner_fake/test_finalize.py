@@ -40,8 +40,8 @@ def install_partial_job(env, name):
 
 def _truncating_download_wrapper(tmp_path):
     """A COLAB_BIN wrapper whose downloads report success and
-    deliver an empty file — the s4diag2 manufacture (2026-11-11:
-    a completed job's 1,762-byte heartbeat and 38-byte checkpoint
+    deliver an empty file — the s4diag2 manufacture (a
+    completed job's 1,762-byte heartbeat and 38-byte checkpoint
     were pulled as 0-byte entries and the run read complete)."""
     wrapper = tmp_path / "truncating_colab.py"
     wrapper.write_text(
@@ -59,12 +59,12 @@ def _truncating_download_wrapper(tmp_path):
 
 
 def test_a_download_that_delivers_empty_is_not_a_pull(tmp_path):
-    """Pull truthfulness (2026-11-11): when the channel delivers
+    """Pull truthfulness: when the channel delivers
     fewer bytes than the reader sizes the remote output at, the
     pull is refused — no entry is certified, the error names the
     mismatch, and the shortfall surfaces at finalize as missing
     or empty, never as a clean complete on 0-byte artifacts.
-    Collection hold (2026-11-14): the foreground loop now holds
+    Collection hold: the foreground loop now holds
     and retries the pull before closing; this manufacture's
     channel never recovers, so the hold is shrunk to seconds
     and the expiry close must name the failure as
@@ -92,9 +92,9 @@ def test_a_download_that_delivers_empty_is_not_a_pull(tmp_path):
 def test_finalize_holds_a_held_empty_pull_until_it_collects(tmp_path):
     """A record already holding a 0-byte pulled entry (landed
     before the size cross-check existed) whose remote output
-    has content: the 2026-11-11 belt named it in empty_outputs
-    at a terminal finalize. The 2026-11-14 collection hold
-    supersedes the close: while the pull keeps failing the run
+    has content: a belt naming it in empty_outputs at a
+    terminal finalize is not the end of it. The collection
+    hold governs the close: while the pull keeps failing the run
     does not close at all — the poll answers collecting with
     the output named in collection_pending — and once the
     channel recovers, the next poll collects the real bytes
@@ -144,7 +144,7 @@ def test_finalize_holds_a_held_empty_pull_until_it_collects(tmp_path):
 def install_stray_job(env, name):
     """A bare job whose payload writes one declared output to
     its out dir and the other to its cwd root — the
-    cwd-relative addressing slip behind the 2026-11-11
+    cwd-relative addressing slip behind the
     missing-outputs specimens."""
     root = Path(env["TEST_REPO_ROOT"])
     jobs_dir = root / "adapters" / "colab" / "jobs"
@@ -170,8 +170,7 @@ def install_stray_job(env, name):
 
 
 def test_finalize_names_an_output_that_sits_at_the_cwd_root(tmp_path):
-    """Misplaced naming + guarded collection (2026-11-11
-    naming; 2026-11-12 collection): a declared output the
+    """Misplaced naming + guarded collection: a declared output the
     payload wrote to its cwd root instead of its out dir is
     named in misplaced_outputs with its path and size — and,
     being FRESH (written during this run, judged against the
@@ -280,7 +279,7 @@ def install_sleepy_stray_job(env, name):
 
 
 def test_finalize_flags_a_root_output_contended_by_a_live_co_tenant(tmp_path):
-    """Cross-lane collision guard (defect routed 2026-11-12:
+    """Cross-lane collision guard (the routed defect:
     two lanes' drives on one session both wrote a generic
     drive-result name cwd-relative, and the first finalize
     collected the other lane's content — fresh, right-sized,
@@ -316,7 +315,7 @@ def test_finalize_flags_a_root_output_contended_by_a_live_co_tenant(tmp_path):
 
 
 def test_finalize_collects_despite_a_dead_co_tenant_with_no_finished_stamp(tmp_path):
-    """Refinement specimen (routed 2026-11-12 from Lane 10A's
+    """Refinement specimen (routed from Lane 10A's
     collision verification): the co-tenant record is the
     lane's own first attempt — failed and terminal, but with
     no finished_at stamped, so the guard priced its window
@@ -388,8 +387,7 @@ def install_sleepy_mapped_job(env, name):
 
 
 def test_launch_overlap_check_tolerates_mapped_manifest_outputs(tmp_path):
-    """Regression (defect routed 2026-11-12, hours after the
-    overlap check first ran live): a neighbour manifest
+    """Regression (the routed defect): a neighbour manifest
     declaring mapped outputs crashed a consumer's launch
     client-side (TypeError: unhashable type 'dict') — an
     advisory check must never break the launch it rides on.
@@ -431,6 +429,6 @@ def test_finalize_reports_declared_outputs_that_never_arrived(tmp_path):
     assert [e["path"] for e in rec["pulled"]] == ["present.txt"]
     # The collection hold must not fire here: absent.txt was
     # never written anywhere, so its failed pull is an absence,
-    # not a transfer shortfall (2026-11-14 partition).
+    # not a transfer shortfall (the partition).
     assert "collection_pending" not in rec and "collection_failed" not in rec, rec
     assert "collection_failed" not in out, out

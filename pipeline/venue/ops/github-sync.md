@@ -1,4 +1,4 @@
-# GitHub sync — git over SSH (both routes proven 2026-11-03)
+# GitHub sync — git over SSH (both routes proven)
 
 The primary sync between this repo and its private GitHub remote is real
 git over SSH: history, deletions, binaries, and executable modes all
@@ -6,7 +6,7 @@ travel with the push. The connector snapshot flow is the fallback only —
 it carries none of those (a snapshot restore needs `chmod +x` on the
 executables before anything runs).
 
-Route preference (standing rule, 2026-11-08): pushes and syncs run
+Route preference (standing rule): pushes and syncs run
 from this machine — directly when shell writes are healthy, or
 through the scheduler ops route (`bin/sched exec`, whose server
 process the write-denial flap cannot reach) while the flap is up.
@@ -68,7 +68,7 @@ with `</dev/null`, and pass `-n` to any `ssh` probe inside it.
   from the workspace after a clone: `config/callers.json` (the local
   caller registry), plus the runtime state under `var/` and
   `state/` when the clone is meant to operate, not just build.
-- History note: on 2026-11-03 the history was rewritten from inside a
+- History note: the history was rewritten from inside a
   Colab session (Route B's first push) to strip a local config file
   from all commits; the tip tree was unchanged. The pre-rewrite history
   is preserved in a full-history bundle archived outside the repo, and

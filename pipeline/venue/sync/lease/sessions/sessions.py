@@ -61,11 +61,11 @@ def _read_sessions_text(colab, diag: dict | None = None, attempts: int | None = 
     read is retried (bounded, with backoff): a single transient
     failure — a subprocess timeout under the account's parallel
     load is the observed class — otherwise poisons a whole guard
-    or reaper cycle with an unknown it did not earn (2026-11-07:
-    a healthy, pulsing session classified extend-unknown and
+    or reaper cycle with an unknown it did not earn (a
+    healthy, pulsing session classified extend-unknown and
     twice kept-unknown overnight). An attempt that dialed
     against a damaged binding store discards its output the
-    same way (2026-11-17: the CLI's empty-store view read as
+    same way (the CLI's empty-store view read as
     absence and served the whole fleet as dead). Only exhausted retries fail,
     and `diag`, when passed, records why: the attempt count and
     the last failure's shape, so a failure is never silent again.
@@ -91,8 +91,8 @@ def _read_sessions_text(colab, diag: dict | None = None, attempts: int | None = 
             last_error = "binding-damaged"
             continue
         if out and "Enter the authorization code" in out:
-            # The CLI's interactive login prompt is not a session list: on
-            # 2026-11-01 it read as "absent" here and a live lease's record
+            # The CLI's interactive login prompt is not a session list: it
+            # once read as "absent" here and a live lease's record
             # was deleted under it. The bin/colab-run guard now stops the
             # prompt from ever reaching callers; this is the same rule at
             # the seam, for any path that bypasses the wrapper.
@@ -111,7 +111,7 @@ def _read_sessions_text(colab, diag: dict | None = None, attempts: int | None = 
 def session_state(colab, session: str, diag: dict | None = None, attempts: int | None = None, timeout: int = 120) -> str:
     """Tri-state: "alive" (listed), "absent" (list obtained, name not in
     it), "unknown" (the CLI call failed or returned nothing). Unknown must
-    never be treated as dead: on 2026-10-29 the lease record vanished
+    never be treated as dead: a lease record once vanished
     while its session lived, and a hiccup-reads-as-death path is the
     standing suspect class. Callers reconcile only on "absent"."""
     text = _read_sessions_text(colab, diag, attempts, timeout)
@@ -122,7 +122,7 @@ def session_state(colab, session: str, diag: dict | None = None, attempts: int |
 
 def list_snapshot(colab, diag: dict | None = None, attempts: int | None = None, timeout: int = 120) -> str | None:
     """One listing fetched for a whole reap pass (the reap cycle
-    budget plan, 2026-11-14): every record's state verdict and
+    budget plan): every record's state verdict and
     the pass's unattributed detection derive from this single
     read instead of each record paying its own retried listing —
     the sum of those reads was the cycle's unbounded cost. None
@@ -157,7 +157,7 @@ def binding_damaged() -> bool:
     store is not evidence — the CLI's empty-store view is
     indistinguishable from "no sessions" at the text seam,
     and reading it as absence served every live lease as
-    recorded-but-dead (2026-11-16/17, twice in one night).
+    recorded-but-dead (twice in one night).
     A missing file is not damage (a store the CLI has not
     created yet is its own business, and the test fakes
     never create one), and a parseable map — even {} — is
@@ -432,7 +432,7 @@ def live_sessions(colab, repo: Path, text: str | None = None) -> list[dict] | No
 # server-side record loses the name (or the local binding that
 # carried it is pruned), and every lease channel is name-keyed,
 # so the runtime bills on, invisible and unadoptable
-# (2026-11-15: two rotated leases, one absent by name from the
+# (two rotated leases, one absent by name from the
 # listing, one wearing "?"). The server's assignment list is
 # endpoint-keyed truth. Both scripts below run under the CLI's
 # own interpreter, the UNASSIGN_FALLBACK_SCRIPT pattern; the

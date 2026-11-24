@@ -139,8 +139,8 @@ def prime_document_cache(store) -> bool:
     nothing (the first-ever run has nothing to prime
     from) and a corrupt one logs and primes nothing:
     the cold path stands either way. An OVERSIZED
-    one primes nothing too (the prime guard,
-    2026-11-16): the parse transient runs ~6x the
+    one primes nothing too (the prime guard):
+    the parse transient runs ~6x the
     payload's size, so a persisted document above
     the configured bound (config
     feeds_document_prime_max_bytes) would kill the

@@ -7,8 +7,8 @@ import type { RepoFile } from "../types";
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 
-/** "2026-10-25T11:30:00+00:00" -> "Oct 25, 2026". Display
- *  labels are projections of served stamps. */
+/** An ISO timestamp -> its "Oct 25"-style display label,
+ *  year included. Labels are projections of served stamps. */
 export function dateLabel(iso: string | null | undefined): string {
   if (!iso) return "No activity";
   const d = new Date(iso);

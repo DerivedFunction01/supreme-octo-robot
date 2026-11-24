@@ -4,9 +4,9 @@
 finding), and no file in the creep band growing past its
 committed count.
 
-Repo-scoped by default (enforcement plan 2026-11-21):
-the composed gate runs this once over the whole tracked
-tree — every tracked code file counts, and no package or
+Repo-scoped by default: the composed gate runs this
+once over the whole tracked tree — every tracked code
+file counts, and no package or
 folder declares or registers for coverage. The repo
 population is tracked files (git ls-files --cached) with
 a code extension; the find fallback applies the same

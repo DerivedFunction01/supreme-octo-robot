@@ -1,7 +1,7 @@
 # Harness connector — venue bootstrap and ferry relay
 
 The harness connector (owned by the scheduler repo; contract
-annex: the scheduler's 2026-11-08 harness-connector tool inventory)
+annex: the scheduler's harness-connector tool inventory)
 exposes the agent tier's privileged surface as tools on a
 service that binds loopback/tailnet only. This repo owns the
 venue side: preparing a Colab session to consume it (connector

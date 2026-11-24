@@ -14,7 +14,7 @@ nothing. The payloads also record the path they were
 handed, pinning that the runner's args rewrite delivered
 the per-run address. Those two leaves are deterministic
 by construction: no concurrency, no timing. The third
-leaf is the lock strip's (2026-11-23): two fires driven
+leaf is the lock strip's: two fires driven
 concurrently at one session, one launch window held open
 by a slowed upload, the other fire completing inside it —
 the overlap the stripped launch lock used to forbid, and
@@ -189,8 +189,8 @@ def test_shell_job_pair_resolves_sibling_uploads_per_run(tmp_path):
 
 
 def test_two_fires_overlap_on_one_session(tmp_path):
-    """The lock strip's live-form pin (owner ruling,
-    2026-11-23: no sync blocker on the venue job path): two
+    """The lock strip's live-form pin (owner ruling:
+    no sync blocker on the venue job path): two
     fires at ONE session proceed concurrently — neither
     launch waits for the other's launch window. The slow
     fire's manifest upload is held 30 s by the channel

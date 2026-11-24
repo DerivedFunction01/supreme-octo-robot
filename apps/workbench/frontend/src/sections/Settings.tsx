@@ -25,7 +25,7 @@ import {
 // (palette × mode × density) are NOT restated here — they
 // live in the superapp shell's unified Settings and arrive
 // as the shell-provided root attributes (consolidation
-// ruling, 2026-11-13).
+// ruling).
 
 const LANE_WIDTHS = [240, 264, 288, 320];
 

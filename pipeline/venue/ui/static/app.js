@@ -3,7 +3,7 @@
  * /api/state; the only client-side derivations are countdown
  * arithmetic on served timestamps and projected-cost arithmetic over
  * the served rate table. Layout and content follow the approved
- * mockup (ui/mockups/2026-11-01-lease-lifecycle-mockup.html).
+ * mockup (the approved lease-lifecycle mockup).
  *
  * Split by intent: this file keeps the core state and helpers,
  * the served-contract tables (the logs vocabulary and the

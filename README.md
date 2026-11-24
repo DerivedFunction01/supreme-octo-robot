@@ -4,7 +4,7 @@ One repo for the four workhorses — scheduler, workbench,
 runner (Colab lease core + panel), owner-attention — as a
 pipeline layer with four apps over it.
 
-**Governing document:** `docs/2026-11-12-consolidation-plan.md`
+**Governing document:** `docs/2026-11-12/consolidation-plan.md`
 (the big-bang consolidation plan: decisions, target
 structure §1, preserve list §2, overlay capture §3,
 contracts §4, execution steps §5, platform services §6,

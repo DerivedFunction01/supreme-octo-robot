@@ -73,7 +73,7 @@ export function progressEntryId(todo: FileTodo): string {
 }
 
 /** Render the scheduler-entry projection in the target form.
- *  Amendment 3 (2026-11-13): the `migrated` field family does
+ *  Amendment 3: the `migrated` field family does
  *  not exist in the target format — presence in the registry
  *  store through the writer path IS admission. The pinned
  *  fixture (fixtures/scheduler-entry-wb-progress.yaml) still
@@ -149,7 +149,7 @@ export function checkpointLine(at: Date, text: string): string {
 }
 
 /** A todo's name is its id: a GitHub-like slug (contract
- *  11 WR1, the 2026-11-14 naming ruling). */
+ *  11 WR1, the naming ruling). */
 export const TODO_ID_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 /** Slugify a title the backend writer's way: lowercase,

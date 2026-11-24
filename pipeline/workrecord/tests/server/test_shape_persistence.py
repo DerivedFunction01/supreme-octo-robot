@@ -1,6 +1,6 @@
 """The assembled shapes' database persistence
 (server/shapestore + the census half of the owner's
-persistence ruling, 2026-11-17): the store's own
+persistence ruling): the store's own
 contract, and the census's persist / prime round
 trip.
 

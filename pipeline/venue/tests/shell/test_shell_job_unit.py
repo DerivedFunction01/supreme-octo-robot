@@ -62,7 +62,7 @@ def test_per_run_env_from_out_name(tmp_path):
     # The runner's out dir is <job>-out-<run_id>: the payload
     # receives the run id, a per-run port base, and the work
     # root, so two runs sharing a session never share state
-    # (the fixed-state half of the 2026-11-21 twin execution).
+    # (the fixed-state half of the twin execution).
     import importlib.util
 
     spec = importlib.util.spec_from_file_location("shell_job_unit", SNIPPET)

@@ -13,7 +13,7 @@
 // The live base is the serving origin, full stop: no
 // query parameter names another base. (The ?api=
 // override this entry once read was removed as a HIGH
-// finding, 2026-11-16 — it had no legitimate uses in the
+// finding — it had no legitimate uses in the
 // tree, and a crafted link could have pointed the store,
 // writes included, at an arbitrary base. Defence in
 // depth rides the seam: transport.ts's sanitizeBaseUrl

@@ -108,7 +108,7 @@ export function cadenceKindWord(cadence: { type: string }): string {
 }
 
 // Display labels for the served classification (contract 09,
-// amendment 2026-11-13) — capitalization of the served enum
+// amendment) — capitalization of the served enum
 // keys, the capitalize() pattern applied to a fixed axis.
 export const FAMILY_LABELS: Record<JobFamily, string> = {
   venue: "Venue",

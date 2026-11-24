@@ -1,5 +1,5 @@
 """The todo rename driver: legacy ids → GitHub-like
-names (the owner's 2026-11-14 naming ruling).
+names (the owner's naming ruling).
 
 The one migration path from the retired generator's
 `t-<token>` ids to slug names. For one project (one

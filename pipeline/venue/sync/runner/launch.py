@@ -20,7 +20,7 @@ from .foundation import REPO, colab, json_object_from_output, lease, transfer
 UPLOAD_CHUNK_THRESHOLD_BYTES = 50 * 1024 * 1024
 
 # The plain upload's timeout, size-scaled (improvement
-# commissioned 2026-11-12 from a fleet datum: in a dead
+# commissioned from a fleet datum: in a dead
 # channel window, three launches each burned the flat 600 s
 # before failing — a dead channel should confess at the pace
 # the file's size prices, not at the largest payload's
@@ -135,8 +135,8 @@ def rewrite_upload_args(args, upload_names, run_id) -> list:
 def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: str | None = None) -> str | None:
     """One pre-launch upload, verified before the job starts.
     A failed or short transfer is an error HERE — never a
-    missing file discovered inside the job later (2026-11-08:
-    a ~100 MB snapshot bundle's plain upload failed with its
+    missing file discovered inside the job later (a
+    ~100 MB snapshot bundle's plain upload failed with its
     return code unchecked and the run proceeded without it).
     Large files move chunked (hash-verified by the transfer);
     smaller files move plain and are verified by remote size
@@ -153,7 +153,7 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     # Every call is timeout-guarded: colab() re-raises
     # TimeoutExpired by design, and an unguarded timeout here
     # killed the launcher by exception and stranded the run's
-    # record (2026-11-11: five consecutive consol launches died
+    # record (five consecutive consol launches died
     # at this probe) — a timeout is an upload failure with an
     # error string, never a dead launcher.
     if src.stat().st_size > UPLOAD_CHUNK_THRESHOLD_BYTES:
@@ -180,8 +180,8 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     # its own on any channel.
     probe = REPO / "var" / f"upload-probe-{tag}-{slot.replace('/', '_')}.py"
     probe.parent.mkdir(parents=True, exist_ok=True)
-    # The probe reports size and SHA-256. Size alone was the
-    # verify until 2026-11-21: a foreign file of the same size
+    # The probe reports size and SHA-256. Size alone was once the
+    # verify: a foreign file of the same size
     # in the shared /content/<basename> slot passed it, and an
     # overwrite landing between probe and launch was invisible
     # either way — the B3-S3b mislandings (a wrap copy carrying
@@ -207,7 +207,7 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     probe_timeout = int(os.environ.get("COLAB_RUN_PROBE_TIMEOUT_S", "300"))
     # The probe rides a bounded attempt discipline, like the
     # chunked transfer's parts: the exec channel stalls in
-    # episodes of minutes (2026-11-17: probe-fail rates of
+    # episodes of minutes (probe-fail rates of
     # 9/60 and 10/79 on two sessions in one evening, successes
     # interleaved seconds apart), and a one-shot probe converted
     # each episode into a dead launch — including a solo launch
@@ -254,7 +254,7 @@ _FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
 
 def transport_error(job) -> "str | None":
     """A loud-refusal verdict for the manifest's transport
-    declaration (branch transport plan, 2026-11-23): the
+    declaration (branch transport plan): the
     manifest declares the tree's form and the runner holds
     the preference — a committed, pushed tree names
     transport {kind: branch, repo, branch, sha}; an
@@ -316,7 +316,7 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
 
     The clone lands in the run's own dest —
     /content/runs/<run_id>/<dest> — never the shared
-    per-registry dest (owner ruling, 2026-11-23: no sync
+    per-registry dest (owner ruling: no sync
     blocker on the venue job path). The base clone used to
     be one checkout per registry dest per session, and two
     launches' fetch/reset of it could not interleave; that
@@ -360,7 +360,7 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
 
 def stamp_transport(rec, job) -> "dict | None":
     """Stamp the record's transport at claim (branch
-    transport plan, 2026-11-23): the manifest's declared
+    transport plan): the manifest's declared
     branch form, or the bundle path a job takes by naming
     no transport, with the byte count the runner moves for
     it accumulated as the launch window advances. Returns
@@ -506,7 +506,7 @@ def stamp_transport_span(rec) -> None:
         rec["transport"]["claim_to_launch_s"] = round(launched - claimed, 1)
 
 
-# --- The job-end process reap (2026-11-23) -----------------------------------
+# --- The job-end process reap ----------------------------------------------
 # A job's payload can leave processes behind on the session:
 # a server an early leg starts for the job's own later legs
 # is still holding its port after the payload exits, and the

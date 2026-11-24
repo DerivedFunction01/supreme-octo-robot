@@ -1,7 +1,7 @@
 """The snapshot bundle must clone: it carries a HEAD naming
 the snapshot commit, so a plain `git clone` materializes the
 snapshot tree — the fetch-the-commit apply route in the
-manifest is unchanged (2026-11-08: lanes found a bundle clone
+manifest is unchanged (lanes found a bundle clone
 checked out nothing, the bundle's only ref not being a HEAD
 symref)."""
 

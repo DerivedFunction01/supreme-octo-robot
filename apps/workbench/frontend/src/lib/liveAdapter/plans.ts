@@ -152,7 +152,7 @@ export async function replyAnnotation(h: LiveHost, id: string, body: string): Pr
 
 export function setAnnotationResolved(h: LiveHost, id: string, resolved: boolean): AnnotationThread {
   // W-C5 disposition (ruled derived-only in live
-  // mode, 2026-11-15): a thread's resolved-ness is
+  // mode): a thread's resolved-ness is
   // DERIVED at load from its messages' lifecycle
   // states (every row done or archived), and the
   // lifecycle offers no verb for it — done is the

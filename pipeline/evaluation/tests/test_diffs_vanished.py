@@ -1,6 +1,6 @@
 """Vanished references + commit-less repos (the
-Changes-panel failure the owner hit on example-project,
-2026-10-25): a zero-commit repo diffs against the empty
+Changes-panel failure the owner hit on example-project):
+a zero-commit repo diffs against the empty
 tree, a deleted worktree path returns a typed `gone`
 payload, and a plan anchor whose document or declared
 files vanished degrades to the un-narrowed diff /

@@ -1,7 +1,7 @@
 """sched exec argv handling (cli.ops_cmds.cmd_exec): the
 client's own flags live before the "--" separator; everything
 after it is the delivered argv and must pass verbatim.
-Regression for the 2026-11-13 defect: a whole-argv flag scan
+Regression for the whole-argv flag-scan defect: a flag scan
 stripped a discrete "--caller <value>" pair belonging to the
 inner command (runner fires lost their caller and the runner
 refused the manifest's unregistered fallback). Ported from

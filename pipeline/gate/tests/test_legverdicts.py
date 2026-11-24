@@ -5,7 +5,7 @@ is red.
 The runner's original composition was fail-fast within
 a package (the retired check files' semantics): the
 first red leg aborted the package, and every later leg
-went unverdicted. The 2026-11-15 composed re-gate
+went unverdicted. A composed re-gate
 showed the cost in the formation's own log — attention's
 ruff-format failure ended its package block, so its
 ruff-lint and suite legs never ran and the attention

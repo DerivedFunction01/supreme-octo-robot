@@ -2,24 +2,23 @@
 
 Standing owner rulings for this repo that outlive any one
 plan. The consolidation plan
-(`docs/2026-11-12-consolidation-plan.md`) records how the
+(`docs/2026-11-12/consolidation-plan.md`) records how the
 repo was formed; this file records what governs the app
-now. Recorded 2026-11-18.
+now.
 
-## 1. Frontend target — one integrated app (ruled 2026-11-16)
+## 1. Frontend target — one integrated app
 
 The mega repo is ONE app: a single integrated frontend
 shell on the unified kit. The four apps (scheduler,
 workbench, attention, runner) are views of the one
 client — never four separate frontends, never framed
 inside a shell, and never each implementing its own
-shell or kit. This supersedes any restore-four-frontends
-framing: the earlier frame-shell form (a card-picker
+shell or kit. The earlier frame-shell form (a card-picker
 shell framing the four apps behind an action relay) is
 ruled never-asked-for, and its presence in a tree is a
 divergence, not a variant.
 
-## 2. FU-1 — workbench preview is a full page (ruled 2026-11-16)
+## 2. FU-1 — workbench preview is a full page
 
 The workbench preview loads as a FULL PAGE, not a framed
 or inset view: a top bar carrying a go-back control and
@@ -33,7 +32,7 @@ failure. (Mechanism and fallback: the divergence audit,
 Addendum 8; approval of the built page and its deploy
 shape: Addendum 10.)
 
-## 3. Annotation inventory (ruled 2026-11-18)
+## 3. Annotation inventory
 
 Commenting remains ONLY in the Plans reader — its full
 Annotations-kit surface plus its foot AnchoredComment.

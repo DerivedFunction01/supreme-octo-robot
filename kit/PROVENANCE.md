@@ -16,9 +16,8 @@ edited directly.
 
 Vendoring snapshot:
 
-- Vendored: 2026-11-15; last re-sync: 2026-11-17.
 - Source tree: the starter's `workhorse-kit/` (68 files,
-  copied byte-for-byte; the 2026-11-17 re-sync carries
+  copied byte-for-byte; one re-sync carries
   the critic-confirmation cures F-2/F-3: a `notify` /
   `on-notify` solid-badge token pair in
   `tokens/tokens.json` (themes regenerated; the notify
@@ -31,7 +30,7 @@ Vendoring snapshot:
   themes (see `tools/gen-tokens.mjs`), whose inset
   on-accent ring keeps the checked track's focus ring
   from camouflaging against its own accent fill; the
-  same day's F9b re-sync adds the two residues F9 named
+  F9b re-sync adds the two residues F9 named
   outside its scope: the Button press-shade token
   (`tokens/tokens.json`, themes regenerated) — Button's
   color-mix state steps run toward the per-mode
@@ -45,13 +44,13 @@ Vendoring snapshot:
   `.wb-checkbox` rule in the generated themes (see
   `tools/gen-tokens.mjs`), whose inset white ring keeps
   the checked disc's accent focus ring from
-  camouflaging against its status-done fill; a third
-  same-day re-sync (F11) adds the `.wb-codeblock`
+  camouflaging against its status-done fill; the F11
+  re-sync adds the `.wb-codeblock`
   focus rule in `themes/highlight.css` — the spliced
   code block is a scrollable region, rendered
   focusable by its consumer, and its focus indication
-  is the kit's one ring (critic WB5-1); a fourth
-  same-day re-sync (F13) adds the `.wb-prose a` rule
+  is the kit's one ring (critic WB5-1); the F13
+  re-sync adds the `.wb-prose a` rule
   in the generated themes (see `tools/gen-tokens.mjs`,
   beside the prose task-list rules): prose anchors
   take the accent colour plus an underline with a
@@ -59,17 +58,17 @@ Vendoring snapshot:
   never distinguished by colour alone (axe
   link-in-text-block; the reader-chrome form of the
   class measured serious on every PlanReader page);
-  the 2026-11-16 re-sync adds the
+  another re-sync adds the
   LogRow payload clamp: `lib/log-payload.ts` +
   `tools/verify-log-payload.mjs`, and the LogRow change
-  itself; a second 2026-11-16 re-sync carries the
+  itself; a further re-sync carries the
   contrast gate's Part 3 (text-on-tint pairs) with the
   finding-N-1 cure: status text tokens moved along their
   own scales in `tokens/tokens.json` (themes
   regenerated), and the mix-badge text step 78% -> 43%
   in `components/LogRow.tsx` + `components/AppShell.tsx`,
   mirrored in `tools/verify-contrast.mjs`).
-  A fifth same-day re-sync (Part 6) carries the
+  A Part 6 re-sync carries the
   starter's focus / boundary / overlay gate classes
   with the field-border role: `tokens/tokens.json`
   gains the role (themes regenerated),
@@ -103,7 +102,7 @@ Vendoring snapshot:
   re-sync's source (the one later starter commit,
   56b11f7, touches scanners only); the manifest below
   remains the pin this repo verifies against.
-- Regrouping cure applied locally, 2026-11-21 (spec plan
+- Regrouping cure applied locally (spec plan
   `2026-11-21-band-grouping-cures`, Step 3): the starter's
   own folder-density cure, applied to this copy ahead of
   the next re-sync so both trees converge on the same
@@ -120,9 +119,9 @@ Vendoring snapshot:
   `tools/verify-contrast.mjs` now scans `components/`
   recursively (census entry names remain basenames), its
   output unchanged. `manifest.json` was regenerated for
-  the new tree. The dated re-sync narratives above keep
-  the paths of their day.
-- Contrast-gate decomposition carried locally, 2026-11-22
+  the new tree. The re-sync narratives above name the
+  paths as they stood when each re-sync landed.
+- Contrast-gate decomposition carried locally
   (line-cap cure `b81a473`): the 1,178-line
   `tools/verify-contrast.mjs` split along its part seams
   into `tools/contrast/core.mjs` (tokens, colour math,
@@ -133,6 +132,14 @@ Vendoring snapshot:
   The decomposition landed without its manifest carry;
   `manifest.json` is regenerated for the decomposed tree
   (74 files pinned).
+- Docs-in-place strip carried locally: the comments and
+  docs in this copy carry no date tags (the living-dates
+  rule — living documents and comments state the present;
+  the vendoring snapshot above keeps its attributions
+  without their dates). The strip is owed at the source
+  as well; until it lands there, the external drift leg
+  names the stripped files. `manifest.json` is
+  regenerated for the stripped tree (74 files pinned).
 
 ## Manifest
 
@@ -148,8 +155,9 @@ A re-sync is a deliberate act, never a side effect:
    directory, verbatim (excluding any `node_modules` or build
    output the starter tree may later grow).
 2. Regenerate `manifest.json` from the copied tree.
-3. Update the vendoring snapshot note above (date, and the
-   starter HEAD if the kit has been committed there by then).
+3. Update the vendoring snapshot note above (what the
+   re-sync carries, and the starter HEAD if the kit has
+   been committed there by then).
 4. Run the drift check (below) — it must pass before the
    re-sync is landed.
 

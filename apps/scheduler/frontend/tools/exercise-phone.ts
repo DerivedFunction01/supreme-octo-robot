@@ -111,9 +111,9 @@ export async function runPhonePhase(): Promise<void> {
     "phone: re-expanded group restores its rows",
     bodyText().includes("wb-progress-programme-b-t-01k8r0000000000000000000b2"),
   );
-  // chip-length construction (owner ruling, 2026-11-13): the row
+  // chip-length construction (owner ruling): the row
   // chip carries outcome + time only — a run's reason never rides
-  // it. Row structure (the owner's two-line ruling, 2026-11-13):
+  // it. Row structure (the owner's two-line ruling):
   // the name line carries the name + chevron only — the chip
   // never competes with the name for width — and the chip rides
   // the details line with the cadence. Rendered

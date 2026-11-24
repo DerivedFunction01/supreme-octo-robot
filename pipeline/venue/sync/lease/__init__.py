@@ -2,8 +2,8 @@
 """The Colab lease: a session held by a caller at a shape, treated as a VM.
 
 All session-lifecycle logic for the lease model lives here (plans:
-the 2026-10-29 colab-lease-model plan for the model, the
-2026-11-05 profile-retirement plan for the current shape of it).
+the colab-lease-model plan for the model, the
+profile-retirement plan for the current shape of it).
 The module is written against an injected `colab` callable with
 bin/colab-run's signature — `colab(*args, timeout=...) ->
 CompletedProcess` — so the fake CLI tests it with no network.

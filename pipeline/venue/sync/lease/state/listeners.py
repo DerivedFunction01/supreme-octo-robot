@@ -3,8 +3,8 @@ for leaked servers.
 
 A leaked listener — a gate's dev serve whose job ended,
 parented to init, cwd deleted — outlives every run record and
-holds its port against the session's next tenant (2026-11-12:
-two leaked next-servers on one session, one of which voided a
+holds its port against the session's next tenant (two
+leaked next-servers on one session, one of which voided a
 consumer's draw by answering its health check). Collection
 rides the reap pass, throttled per session: the probe snippet
 (snippets/lease/listener_census.py) execs in-session and its JSON is
@@ -37,7 +37,7 @@ PREDATE_SKEW_S = 120
 BOOT_COHORT_S = 300
 # A session whose census probe fails this many collections in
 # a row while its lease record reads live has a dead work
-# channel under a live-looking record (2026-11-12, velvet:
+# channel under a live-looking record (velvet:
 # listed and status-readable all evening, zero bytes ever
 # moved, 11 launches dead at upload). One failure is a busy
 # session's weather; two in a row, an interval apart, is the
@@ -67,7 +67,7 @@ def read_census(repo: Path, session: str) -> dict | None:
 def _parse_probe(stdout: str) -> dict | None:
     """The probe's JSON is the last stdout line that parses as
     an object carrying listeners — the CLI's own notice lines
-    ride the same stream (the preamble lesson, 2026-11-11)."""
+    ride the same stream (the preamble lesson)."""
     found = None
     for line in stdout.splitlines():
         line = line.strip()

@@ -162,8 +162,8 @@ def job_view(engine, entry, now, batch=None):
         "failure_streak": _failure_streak(runs),
         "expected_wake_per_day": expected_wake_per_day(entry),
         "report_when": entry.report["when"],
-        # The classification axis (contract 09, amendment
-        # 2026-11-13): served, never derived client-side.
+        # The classification axis (contract 09, as amended):
+        # served, never derived client-side.
         **classification_mod.classify(entry.id),
     }
 

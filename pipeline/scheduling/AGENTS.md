@@ -57,9 +57,9 @@ The full generic supervision text lives in `docs/supervision-rules.md`; read it 
   not know is quarantined at load (`unknown fields`) and
   does not run. A schema change therefore lands as: code
   committed → server restarted onto it → only then entries
-  using the new fields. (Learned 2026-11-08: the catalog
-  `source` stamps landed ahead of the restart and darkened
-  both specimen entries until the server was restarted.)
+  using the new fields. (If catalog `source` stamps land
+  ahead of the restart, both specimen entries darken until
+  the server is restarted.)
 - **Catalog adoption.** The tracked examples are a
   classified catalog (`examples/registry/catalog.yaml` +
   each entry's `catalog` block; vocabulary in
@@ -92,8 +92,8 @@ The full generic supervision text lives in `docs/supervision-rules.md`; read it 
   (supervision plan Step 6) and the harness renders no
   new ones — lingering entries are deleted at the
   coordinated cutover. There is no born-admitted class
-  (amendment 3, retiring the pinned system's 2026-11-08
-  exception): machine renders are admitted the same way
+  (amendment 3, retiring the pinned system's exception):
+  machine renders are admitted the same way
   every entry is — by being written through the writer
   path — and every other line follows the todo's current
   state on a re-sync. Rendered entries carry the

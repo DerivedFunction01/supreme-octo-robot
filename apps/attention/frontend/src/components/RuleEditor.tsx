@@ -225,7 +225,7 @@ export function RuleEditor({
       footer={footer}
     >
       {/* The kit Sheet's content region scrolls natively
-          (kit cure, 2026-11-15); the form rides it directly. */}
+          (kit cure); the form rides it directly. */}
       <div className="flex flex-col gap-4">
         <Field label="Rule id">
           {(fid) => (

@@ -1,4 +1,4 @@
-"""The serve split (owner ruling, 2026-11-15: process
+"""The serve split (owner ruling: process
 boundaries follow coupling): run.py's `serve` assembles
 exactly the two coupled surfaces (scheduling, attention)
 and never loads the split surfaces' mounts;

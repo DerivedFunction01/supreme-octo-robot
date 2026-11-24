@@ -4,7 +4,7 @@
 owns the registry the entries land in and the validator
 that enforces the format; every writer, reader, and the
 engine itself conforms to it. (Plan §4.14, added by
-amendment 2, 2026-11-13, owner's ruling. At S0 this
+amendment 2, owner's ruling. At S0 this
 format rode as contract 02's shared substrate; the
 substrate note there recorded that §4 assigned it no
 entry of its own, and this contract is the closure.)
@@ -70,7 +70,7 @@ from that schema:
 The pinned schema of record also carries a migration
 field family — `migrated`, `migrated_at`,
 `migration_note`, `proof_pending`. By amendment 3
-(2026-11-13, owner's ruling) those fields do NOT exist
+(owner's ruling) those fields do NOT exist
 in this format: an entry stands in the registry store
 only by being written through contract 02's writer
 path, so presence in the store is admission and no

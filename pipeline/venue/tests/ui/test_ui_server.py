@@ -401,7 +401,7 @@ def test_frontend_renders_envelope():
     assert "envelope" in js  # grant card renders the served envelope block
     assert "Envelope leases" in js
     assert "Envelope caps (at grant)" in js
-    assert "envelope-lease-released" in js  # in the logs vocabulary (closed, 2026-11-03)
+    assert "envelope-lease-released" in js  # in the logs vocabulary (closed)
 
 
 def test_budget_caps_endpoint_invokes_core_and_appends_event(ui):

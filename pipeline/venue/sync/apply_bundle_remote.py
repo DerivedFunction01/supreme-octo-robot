@@ -11,7 +11,7 @@ tree, so before the fast-forward the apply resets it to the snapshot's
 parent and cleans untracked non-ignored files: residue a previous
 gate's overlay work left at paths the snapshot tracks would otherwise
 make the ff-merge refuse ("would be overwritten") and the apply fail
-closed on a stale clone (2026-11-21, the Wingdings seam gate). Ignored
+closed on a stale clone (the Wingdings seam gate). Ignored
 files — the repo venv, caches — are the gate substrate and survive
 (no -x on the clean).
 """

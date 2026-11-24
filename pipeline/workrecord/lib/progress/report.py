@@ -14,7 +14,7 @@ at a stop status (bundles.TODO_STOP_STATUSES — done,
 the terminal status, or blocked, a declared pause) or
 in an archived bundle is finished or paused work, and
 its checkpoint age is its history, never a stall (the
-refresh-step-6-verdict-v2 zombie stall, 2026-11-16: a
+refresh-step-6-verdict-v2 zombie stall: a
 done todo pinged STALLED in two watch passes because
 its last checkpoint was its done flip).
 
@@ -30,7 +30,7 @@ This module is pure: same inputs → same report. Acting
 on a verdict (checkpointing, nudging, surfacing a
 blocker) is the driver's business. The schedule that
 runs the checks is the harness's own mechanism since
-the owner's 2026-10-31 auto-create commission:
+the owner's auto-create commission:
 lib/progress/schedule.py writes a scheduler-registry
 entry when a todo arms and deletes it when the todo
 disarms, and each entry runs `wb progress-check` at
@@ -38,7 +38,7 @@ the todo's cadence (the older scheduling-is-a-platform-
 concern doctrine survives only for the staleness
 check's `print-schedule`).
 
-Freshness (the stale-measure cure, 2026-11-15): a
+Freshness (the stale-measure cure): a
 served measure is a snapshot, and a consumer holding
 one must never mistake it for the records' current
 state — the Edgar Step 6 lane was steered three times
@@ -138,7 +138,7 @@ def todo_progress(todo: dict, *, now=None):
     printing "on track (None missed checks)" at any
     time, forever, while the todo's file showed a
     three-cadence gap (the refresh-repo-finalization
-    divergence, 2026-11-16)."""
+    divergence)."""
     cadence = todo.get("progress_check")
     if not cadence:
         return None

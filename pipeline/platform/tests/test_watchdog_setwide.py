@@ -1,5 +1,5 @@
 """The watchdog ladder's SET-survival proof (the boot
-re-render wiring cure, 2026-11-16): the ladder is
+re-render wiring cure): the ladder is
 driven end-to-end against a simulated systemd — a stub
 systemctl on PATH whose state is per-unit flag files —
 with the ops tree copied into a temp root and the unit
@@ -7,7 +7,7 @@ dir behind the installer's WORKHORSE_UNIT_DIR seam.
 The proof never touches a live unit, a live port, or
 live state: every write lands in the test's temp dirs.
 
-The incident these scenarios pin (2026-11-16, the
+The incident these scenarios pin (the
 05:05Z reboot): /etc was wiped; the only boot-reachable
 driver, the scheduler keeper hook, invokes the ladder
 bare (its own unit, workhorse), and the per-unit

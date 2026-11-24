@@ -84,7 +84,7 @@ def _new_send_id(state: dict) -> str:
 
 
 def _stamp_text(text: str, rule_id: str, wait_id: str | None, send_id: str) -> str:
-    """The delivery-side provenance stamp (2026-11-16): a
+    """The delivery-side provenance stamp: a
     delivered send arrives in a chat carrying only its
     text — the bridge record's meta (source, rule,
     template) never reaches the delivered message, and

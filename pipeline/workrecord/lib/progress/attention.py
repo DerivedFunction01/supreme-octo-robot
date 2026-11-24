@@ -1,8 +1,8 @@
 """Owner-attention armed rows for progress schedules.
 
-The staffing-absorption link (owner-attention plan
-2026-11-11, section Arming; commission from main
-2026-11-11 23:24 EST): the harness already arms a
+The staffing-absorption link (owner-attention plan,
+section Arming; commission from main): the harness
+already arms a
 todo's progress schedule at its `doing` transition —
 this module extends that same transition so the armed
 work item is also visible to owner-attention's

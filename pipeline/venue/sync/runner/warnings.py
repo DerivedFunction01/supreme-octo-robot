@@ -1,7 +1,7 @@
 """Output-name risk warnings at launch, extracted from
 main() along the function's own seam (it was a closure over
 the launch locals; main.py sits in the line-cap creep band
-and the 2026-11-21 launch-lock wiring needed the room —
+and the launch-lock wiring needed the room —
 the band doctrine is decompose, not route around).
 """
 
@@ -17,7 +17,7 @@ def name_warnings(rec: dict, session: str, run_id: str, outputs: list) -> list:
     # this session also declares is safe in the per-run
     # out dirs, but two payloads writing it cwd-relative
     # share the session root and interleave silently
-    # (defect routed 2026-11-12). Advisory only — it
+    # (defect routed). Advisory only — it
     # blocks nothing; finalize's contention guard is
     # the backstop. The computation is guarded at every
     # level: a warning that can raise is a gate.

@@ -1,5 +1,5 @@
-"""The unit render set's coverage (the survival build,
-2026-11-15): ops/units-spec.json is the render set of
+"""The unit render set's coverage (the survival build):
+ops/units-spec.json is the render set of
 record for install-units.sh, and it must cover every
 unit template the platform carries — a template with no
 spec entry is a unit nothing re-renders after a VM
@@ -11,7 +11,7 @@ the render at install time, on the ladder's cadence,
 instead of here.
 
 The set's shape (extended by the watchdog actuation
-cure, 2026-11-15): the three fleet services, and per
+cure): the three fleet services, and per
 fleet unit a watchdog driver pair — a oneshot ladder
 service (enable:false; its timer is the enablement)
 and the timer that starts it. A timer entry's unit key

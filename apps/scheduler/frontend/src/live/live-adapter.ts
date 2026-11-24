@@ -435,7 +435,7 @@ function readOnlyRefusal(verb: string, home: string): ActionResult {
   };
 }
 
-/** The live base rule (the ?api= cure, 2026-11-16 — the
+/** The live base rule (the ?api= cure — the
  *  runner entry's HIGH finding, cured there at b54ebb2 and
  *  here to the same standard): the live adapter answers
  *  from the serving origin, and an injected base is

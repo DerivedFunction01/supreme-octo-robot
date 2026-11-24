@@ -10,7 +10,7 @@ the server feeds are not part of this service — the
 Workbench app's read surface lands at S8.
 
 The harness's product spec of record is `SPEC.md`
-beside this README (ported 2026-11-18 from the
+beside this README (ported from the
 standalone workbench-viewer repo's approved SPEC).
 
 Layout, as landed:
