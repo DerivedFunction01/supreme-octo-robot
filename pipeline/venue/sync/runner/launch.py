@@ -324,6 +324,80 @@ def parse_transport(job) -> "dict | None":
     return {"kind": "branch", "repo": declared["repo"], "branch": declared["branch"], "sha": declared["sha"]}
 
 
+# The plant probe's budget: one bounded ssh greeting plus
+# local file/config reads — a pre-clone gate, never a second
+# launch, so its confession stays at seconds scale.
+PLANT_PROBE_TIMEOUT_S = 120
+
+
+def verify_git_plant(session: str, run_id: str) -> str | None:
+    """Verify the session's GitHub git plant before a branch
+    clone trusts it (plant cure, 2026-11-24). The plant —
+    the account key and the pinned known-hosts under
+    ~/.ssh, plus the global git config that rewrites
+    github.com HTTPS clone URLs to SSH through them — is a
+    standing precondition planted by the plant-github-key
+    job, and nothing in the rotation path re-fires that job:
+    a generation that never received the plant, or received
+    a split one (config and key present, the known-hosts
+    half absent), otherwise surfaces only inside the clone
+    as a bare "Host key verification failed" that names
+    neither the plant nor its cure. The probe checks the
+    plant on its own terms: both halves on disk, the global
+    config the clone actually reads (the insteadOf rewrite,
+    and a core.sshCommand naming the planted known-hosts
+    file with StrictHostKeyChecking held at yes), and the
+    plant script's own functional proof, the ssh greeting
+    to github.com over the planted key and hosts. Returns
+    None when the plant is healthy; else an error naming
+    the plant and the checks it failed."""
+    driver = REPO / "var" / f"plant-probe-{run_id}.py"
+    driver.parent.mkdir(parents=True, exist_ok=True)
+    driver.write_text(
+        "import json, os, subprocess\n"
+        "home = os.path.expanduser('~')\n"
+        "key = os.path.join(home, '.ssh', 'id_github')\n"
+        "hosts = os.path.join(home, '.ssh', 'known_hosts_github')\n"
+        "checks = {}\n"
+        "checks['key'] = os.path.isfile(key)\n"
+        "checks['hosts'] = os.path.isfile(hosts) and os.path.getsize(hosts) > 0\n"
+        "def cfg(name):\n"
+        "    r = subprocess.run(['git', 'config', '--global', '--get', name], capture_output=True, text=True)\n"
+        "    return r.stdout.strip()\n"
+        "checks['rewrite'] = 'git@github.com:' in cfg('url.git@github.com:.insteadOf')\n"
+        "ssh_cmd = cfg('core.sshCommand')\n"
+        "checks['ssh_command'] = 'known_hosts_github' in ssh_cmd and 'StrictHostKeyChecking=yes' in ssh_cmd\n"
+        "greeting = ''\n"
+        "if checks['key'] and checks['hosts']:\n"
+        "    try:\n"
+        "        r = subprocess.run(['ssh', '-i', key, '-o', 'UserKnownHostsFile=' + hosts, '-o', 'StrictHostKeyChecking=yes', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', '-T', 'git@github.com'], capture_output=True, text=True, timeout=60)\n"
+        "        greeting = (r.stdout + r.stderr).strip()\n"
+        "    except Exception as exc:\n"
+        "        greeting = f'probe error: {exc}'\n"
+        "checks['greeting'] = 'successfully authenticated' in greeting\n"
+        "failed = [name for name, ok in checks.items() if not ok]\n"
+        "print(json.dumps({'failed': failed, 'greeting': greeting[-200:]}))\n"
+    )
+    try:
+        r = colab("exec", "-s", session, "--timeout", str(PLANT_PROBE_TIMEOUT_S), "-f", str(driver), timeout=PLANT_PROBE_TIMEOUT_S + 60)
+        out = r.stdout or ""
+    except subprocess.TimeoutExpired:
+        return f"git plant probe on session {session} timed out"
+    try:
+        verdict = json_object_from_output(out)
+    except ValueError:
+        return f"git plant probe on session {session} returned no verdict: {out.strip()[-200:]}"
+    if not isinstance(verdict, dict) or not isinstance(verdict.get("failed"), list):
+        return f"git plant probe on session {session} returned a malformed verdict: {out.strip()[-200:]}"
+    if verdict["failed"]:
+        return (
+            f"git plant on session {session} failed its {', '.join(verdict['failed'])} check(s) — "
+            "the session carries no healthy GitHub plant (plant it with the plant-github-key job); "
+            f"greeting: {verdict.get('greeting') or 'not attempted'}"
+        )
+    return None
+
+
 def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run_id: str) -> "tuple[str | None, dict]":
     """Drive the run's own base clone to the declared branch
     tip before launch (branch transport plan, Step 2): the
@@ -354,7 +428,18 @@ def prepare_branch(session: str, transport: dict, clone_url: str, dest: str, run
     naming the registry dest the clone serves — the record
     stamp's shape is unchanged; the run's copy lives under
     its upload directory, where the run's consumers resolve
-    it the same way they resolve its uploads."""
+    it the same way they resolve its uploads.
+
+    Before the substrate is even uploaded, the session's
+    git plant is verified (verify_git_plant): the clone
+    reads the plant's config and credentials, so an
+    unhealthy plant is a refusal HERE naming the plant,
+    never a host-key failure buried in the clone's
+    output."""
+    plant_err = verify_git_plant(session, run_id)
+    if plant_err is not None:
+        lease.append_launch_outcome(REPO, session, "branch", False, "plant")
+        return f"branch transport: {plant_err}", {}
     err = upload_one(session, REPO / "sync" / "base_clone.sh", "base_clone.sh", run_id, remote_dir=run_upload_dir(run_id))
     if err is not None:
         return f"branch transport: base_clone.sh upload: {err}", {}

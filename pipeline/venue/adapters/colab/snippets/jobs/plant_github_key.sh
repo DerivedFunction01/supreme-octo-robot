@@ -15,6 +15,14 @@
 # the untracked kit (var/kit-github/probe_repo, uploaded into the
 # run's directory as probe_repo), never by tracked code; with no probe named,
 # the ssh greeting alone verifies the plant.
+#
+# The two halves have different homes (plant cure, 2026-11-24): the key is a
+# secret and rides the untracked kit, but the known-hosts half is GitHub's
+# published host keys — public, pinned, and tracked beside this script as
+# known_hosts_github, which the job uploads from there. A plant assembled
+# from the kit alone once lost exactly that half on rotated generations
+# (config and key present, hosts file absent, every branch clone dead on
+# host-key verification); the tracked artifact is the half's single source.
 set -uo pipefail
 OUT="${SHELL_JOB_OUT:-/content/plant-github-key-out}"
 case "$OUT" in /*) ;; *) OUT="/content/$OUT" ;; esac
