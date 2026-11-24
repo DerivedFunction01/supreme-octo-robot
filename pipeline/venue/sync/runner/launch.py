@@ -344,9 +344,11 @@ def verify_git_plant(session: str, run_id: str) -> str | None:
     as a bare "Host key verification failed" that names
     neither the plant nor its cure. The probe checks the
     plant on its own terms: both halves on disk, the global
-    config the clone actually reads (the insteadOf rewrite,
-    and a core.sshCommand naming the planted known-hosts
-    file with StrictHostKeyChecking held at yes), and the
+    config the clone actually reads (the insteadOf rewrite —
+    the entry keyed by the SSH base, holding the HTTPS base
+    as its value, exactly as the plant writes it — and a
+    core.sshCommand naming the planted known-hosts file
+    with StrictHostKeyChecking held at yes), and the
     plant script's own functional proof, the ssh greeting
     to github.com over the planted key and hosts. Returns
     None when the plant is healthy; else an error naming
@@ -364,7 +366,7 @@ def verify_git_plant(session: str, run_id: str) -> str | None:
         "def cfg(name):\n"
         "    r = subprocess.run(['git', 'config', '--global', '--get', name], capture_output=True, text=True)\n"
         "    return r.stdout.strip()\n"
-        "checks['rewrite'] = 'git@github.com:' in cfg('url.git@github.com:.insteadOf')\n"
+        "checks['rewrite'] = cfg('url.git@github.com:.insteadOf') == 'https://github.com/'\n"
         "ssh_cmd = cfg('core.sshCommand')\n"
         "checks['ssh_command'] = 'known_hosts_github' in ssh_cmd and 'StrictHostKeyChecking=yes' in ssh_cmd\n"
         "greeting = ''\n"

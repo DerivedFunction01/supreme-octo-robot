@@ -16,7 +16,13 @@ suite's idiom.
 The plant pins (plant cure): the drive verifies
 the session's git plant before the substrate upload — a
 plant that fails its checks is a refusal naming the plant,
-with no upload and no clone attempted; and the plant job's
+with no upload and no clone attempted; the probe's rewrite
+check asserts the plant's own contract — the insteadOf
+entry keyed by the SSH base, holding the HTTPS base as its
+value — executed here against planted, missing, wrong, and
+inverted config shapes; the plant script reads the config
+it writes back before it may report OK, so a plant the
+probe would refuse fails in its own run; and the plant job's
 own upload set pairs the kit's key with the tracked pinned
 known-hosts artifact beside the plant script, whose lines
 are GitHub's published host keys.
@@ -24,6 +30,8 @@ are GitHub's published host keys.
 
 import hashlib
 import json
+import os
+import shutil
 import subprocess
 import sys
 import types
@@ -344,3 +352,157 @@ def test_plant_script_plants_both_halves_to_the_sshcommand_paths():
     assert "UserKnownHostsFile=$HOME/.ssh/known_hosts_github" in script
     assert "StrictHostKeyChecking=yes" in script
     assert "accept-new" not in script and "StrictHostKeyChecking=no" not in script
+
+
+# --- the probe's rewrite contract, executed ---
+
+GREETING = "Hi redacted! You've successfully authenticated, but GitHub does not provide shell access."
+
+
+def _fake_ssh_bin(tmp_path):
+    """An ssh that answers with GitHub's greeting, as the
+    planted key's auth does; the probe reads the greeting
+    text, never a status."""
+    bin_dir = tmp_path / "fake-bin"
+    bin_dir.mkdir(exist_ok=True)
+    ssh = bin_dir / "ssh"
+    ssh.write_text(f"#!/bin/sh\necho \"{GREETING}\" >&2\nexit 1\n")
+    ssh.chmod(0o755)
+    return bin_dir
+
+
+def _probe_home(tmp_path, rewrite):
+    """A session home in the plant's own shapes: both halves
+    on disk, the planted sshCommand, and the insteadOf entry
+    in the state the case names — planted (the HTTPS base as
+    the value), missing, wrong (another value), or inverted
+    (the SSH base sitting in the value, the shape the
+    pre-cure check searched for)."""
+    home = tmp_path / "home"
+    ssh_dir = home / ".ssh"
+    ssh_dir.mkdir(parents=True)
+    (ssh_dir / "id_github").write_text("fake key\n")
+    (ssh_dir / "known_hosts_github").write_text(
+        "github.com ssh-ed25519 " + GITHUB_PUBLISHED["ssh-ed25519"] + "\n")
+    env = dict(os.environ, HOME=str(home))
+
+    def git_config(*args):
+        subprocess.run(["git", "config", "--global", *args], env=env, check=True, capture_output=True)
+
+    git_config("core.sshCommand",
+               f"ssh -i {home}/.ssh/id_github -o UserKnownHostsFile={home}/.ssh/known_hosts_github -o StrictHostKeyChecking=yes")
+    if rewrite == "planted":
+        git_config("url.git@github.com:.insteadOf", "https://github.com/")
+    elif rewrite == "wrong":
+        git_config("url.git@github.com:.insteadOf", "https://example.invalid/")
+    elif rewrite == "inverted":
+        git_config("url.git@github.com:.insteadOf", "git@github.com:")
+    elif rewrite != "missing":
+        raise AssertionError(rewrite)
+    return home
+
+
+def _generated_probe(tmp_path):
+    """The probe driver verify_git_plant generates, captured
+    through the scripted colab it is exec'd by."""
+    colab = ScriptedColab([("stdout", PLANT_OK)], Path(tmp_path))
+    launch, _foundation, _journal = load_launch(tmp_path, colab)
+    assert launch.verify_git_plant("sess", "probe-run") is None
+    return (tmp_path / "var" / "plant-probe-probe-run.py").read_text()
+
+
+def _execute_probe(tmp_path, driver_text, home):
+    driver = tmp_path / "probe-driver.py"
+    driver.write_text(driver_text)
+    env = dict(os.environ, HOME=str(home),
+               PATH=str(_fake_ssh_bin(tmp_path)) + os.pathsep + os.environ["PATH"])
+    r = subprocess.run([sys.executable, str(driver)], capture_output=True, text=True, env=env)
+    assert r.returncode == 0, r.stderr
+    return json.loads(r.stdout.strip().splitlines()[-1])
+
+
+def test_plant_probe_accepts_the_planted_rewrite(tmp_path):
+    verdict = _execute_probe(tmp_path, _generated_probe(tmp_path), _probe_home(tmp_path, "planted"))
+    assert verdict["failed"] == []
+
+
+def test_plant_probe_refuses_a_missing_rewrite(tmp_path):
+    verdict = _execute_probe(tmp_path, _generated_probe(tmp_path), _probe_home(tmp_path, "missing"))
+    assert verdict["failed"] == ["rewrite"]
+
+
+def test_plant_probe_refuses_a_wrong_rewrite_value(tmp_path):
+    verdict = _execute_probe(tmp_path, _generated_probe(tmp_path), _probe_home(tmp_path, "wrong"))
+    assert verdict["failed"] == ["rewrite"]
+
+
+def test_plant_probe_refuses_the_inverted_rewrite(tmp_path):
+    verdict = _execute_probe(tmp_path, _generated_probe(tmp_path), _probe_home(tmp_path, "inverted"))
+    assert verdict["failed"] == ["rewrite"]
+
+
+# --- the plant's read-back, executed ---
+
+
+def _run_plant(tmp_path, extra_bin=None):
+    """Run the plant script itself against a scratch home:
+    the kit's uploads staged, ssh answering with the
+    greeting, no probe repo named (the greeting alone
+    verifies, as the script's header states)."""
+    home = tmp_path / "plant-home"
+    home.mkdir(exist_ok=True)
+    up = tmp_path / "uploads"
+    up.mkdir(exist_ok=True)
+    (up / "id_ed25519").write_text("fake key\n")
+    (up / "known_hosts_github").write_text(PINNED_HOSTS.read_text())
+    dirs = ([extra_bin] if extra_bin else []) + [_fake_ssh_bin(tmp_path)]
+    env = dict(os.environ, HOME=str(home),
+               PATH=os.pathsep.join([str(d) for d in dirs] + [os.environ["PATH"]]),
+               SHELL_JOB_UPLOADS=str(up), SHELL_JOB_OUT=str(tmp_path / "plant-out"))
+    r = subprocess.run(["bash", str(PLANT_SCRIPT)], capture_output=True, text=True, env=env)
+    return r, home
+
+
+def _misreading_git_bin(tmp_path):
+    """A git that delegates everything to the real git except
+    the insteadOf read-back, which it answers with a wrong
+    value — the plant's writes land, its read-back disagrees."""
+    bin_dir = tmp_path / "git-shim-bin"
+    bin_dir.mkdir()
+    shim = bin_dir / "git"
+    shim.write_text(
+        "#!/usr/bin/env bash\n"
+        "get=0; rewrite=0\n"
+        "for a in \"$@\"; do\n"
+        "  [ \"$a\" = \"--get\" ] && get=1\n"
+        "  case \"$a\" in *insteadOf*) rewrite=1;; esac\n"
+        "done\n"
+        "if [ \"$get\" = 1 ] && [ \"$rewrite\" = 1 ]; then echo \"https://example.invalid/\"; exit 0; fi\n"
+        f"exec {shutil.which('git')} \"$@\"\n")
+    shim.chmod(0o755)
+    return bin_dir
+
+
+def test_plant_script_reads_back_the_config_it_writes():
+    script = PLANT_SCRIPT.read_text()
+    assert '--get url."git@github.com:".insteadOf' in script
+    assert "--get core.sshCommand" in script
+    assert "read-back" in script
+
+
+def test_plant_script_reports_ok_with_its_config_read_back(tmp_path):
+    r, home = _run_plant(tmp_path)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "PLANT OK" in r.stdout
+    env = dict(os.environ, HOME=str(home))
+    rewrite = subprocess.run(
+        ["git", "config", "--global", "--get", "url.git@github.com:.insteadOf"],
+        env=env, capture_output=True, text=True).stdout.strip()
+    assert rewrite == "https://github.com/"
+
+
+def test_plant_script_fails_when_the_config_reads_back_wrong(tmp_path):
+    r, _home = _run_plant(tmp_path, extra_bin=_misreading_git_bin(tmp_path))
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert "PLANT FAILED" in r.stdout and "read-back" in r.stdout
+    assert "PLANT OK" not in r.stdout

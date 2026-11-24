@@ -47,8 +47,20 @@ if [ -f "$UP/probe_repo" ]; then
 fi
 rm -f "$UP/id_ed25519" "$UP/known_hosts_github" "$UP/probe_repo"
 
+SSH_COMMAND="ssh -i $HOME/.ssh/id_github -o UserKnownHostsFile=$HOME/.ssh/known_hosts_github -o StrictHostKeyChecking=yes"
 git config --global url."git@github.com:".insteadOf "https://github.com/"
-git config --global core.sshCommand "ssh -i $HOME/.ssh/id_github -o UserKnownHostsFile=$HOME/.ssh/known_hosts_github -o StrictHostKeyChecking=yes"
+git config --global core.sshCommand "$SSH_COMMAND"
+
+# The plant reads its own config back before it may report OK:
+# the runner's plant probe asserts exactly these values (the
+# insteadOf entry keyed by the SSH base holding the HTTPS base,
+# and this sshCommand), so a plant whose writes did not land in
+# the config the clone reads fails here, in its own run, never
+# later as a probe refusal at a branch transport's fire time.
+READBACK_REWRITE="$(git config --global --get url."git@github.com:".insteadOf || true)"
+[ "$READBACK_REWRITE" = "https://github.com/" ] || fail "git config read-back: url.git@github.com:.insteadOf is '$READBACK_REWRITE', not the planted https://github.com/"
+READBACK_SSH_COMMAND="$(git config --global --get core.sshCommand || true)"
+[ "$READBACK_SSH_COMMAND" = "$SSH_COMMAND" ] || fail "git config read-back: core.sshCommand is '$READBACK_SSH_COMMAND', not the planted ssh command"
 
 GREETING="$(ssh -i "$HOME/.ssh/id_github" -o UserKnownHostsFile="$HOME/.ssh/known_hosts_github" -o StrictHostKeyChecking=yes -T git@github.com 2>&1 </dev/null || true)"
 echo "ssh greeting: $GREETING" >> "$LOG"
