@@ -113,7 +113,7 @@ EDGAR_STAFFING_CONTRACT = {
             "key": "segment-packet-landing",
             "label": "Segment packet landing (composed tree settles)",
             "marker": True,
-            "landed": False,
+            "landed": True,
         },
         {
             "key": "round4-instrument-build",
