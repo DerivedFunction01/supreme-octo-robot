@@ -2,7 +2,7 @@
 re-reads over empty or torn observations, and a named
 refusal on exhaustion.
 
-The 2026-11-24 deaths: daemon children died at the
+The deaths this cures: daemon children died at the
 manifest load with a raw JSONDecodeError — the file read
 empty (several gate manifests were later found standing
 at 0 bytes, their creating writes lost before the fire) —
