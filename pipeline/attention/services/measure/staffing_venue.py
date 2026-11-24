@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from attention.services.measure import registry, venue
+from attention.services.measure import lanes, registry, venue
 
 from .staffing_common import _as_dt, _row
 
@@ -312,6 +312,38 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
                 "all_compute_on_one_session_while_another_live_session_carries_none"
             )
         due = _queue_due(contract.get("staffable_queue") or [], set(families))
+        # The lane records are the measure's primary
+        # staffing source where the programme carries
+        # them: a due item an open, non-stale lane
+        # record covers — by queue item or by family —
+        # is staffed, and the counted actual reads
+        # against the queue-derived expected (the
+        # gate-resolved work items, in flight or not).
+        facts_lanes = lanes.record_facts(state, slug)
+        lane_extra = None
+        if facts_lanes is not None:
+            queue = contract.get("staffable_queue") or []
+            family_of = {
+                entry.get("key"): entry.get("family")
+                for entry in queue
+                if not entry.get("marker")
+            }
+            covered = set(facts_lanes["covered_queue_items"])
+            covered |= {
+                key
+                for key, family in family_of.items()
+                if family in facts_lanes["covered_families"]
+            }
+            due = [entry for entry in due if entry["key"] not in covered]
+            expected = len(_queue_due(queue, set()))
+            lane_extra = {
+                "declared": facts_lanes["declared"],
+                "expected": expected,
+                "actual": facts_lanes["actual"],
+                "lanes": facts_lanes["lanes"],
+            }
+            if facts_lanes["actual"] < expected:
+                conditions.append("lane_shortfall")
         if due:
             conditions.append("prerequisite_due_family_unstaffed")
         if not conditions:
@@ -339,6 +371,13 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
         if due:
             names = ", ".join(entry["label"] for entry in due)
             parts.append(f"Prerequisite-due queue work stands unstaffed: {names}.")
+        if lane_extra is not None:
+            parts.append(
+                f"Lane records: {lane_extra['actual']} open lane(s) "
+                f"counted against {lane_extra['expected']} staffable "
+                f"queue item(s) expected "
+                f"(declared {lane_extra['declared']})."
+            )
         parts.append(
             "The defect clears only on a later measure at or above the "
             "contract's bands — never on an acknowledgement."
@@ -371,6 +410,7 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
                     "conditions": conditions,
                     "queue_unstaffed": due,
                     "coordinator_caller": facts.get("coordinator_caller"),
+                    **({"lane_records": lane_extra} if lane_extra is not None else {}),
                 },
             )
         )

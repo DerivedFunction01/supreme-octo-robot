@@ -26,6 +26,13 @@ def normalize(value) -> str | None:
     return stamp.isoformat() if stamp is not None else None
 
 
+def iso(stamp: datetime | None) -> str | None:
+    """A held datetime in its served ISO text form,
+    or None where there is no stamp — the measure's
+    one format for a datetime it already holds."""
+    return stamp.isoformat() if stamp is not None else None
+
+
 def _latest(body: str | None) -> datetime | None:
     latest = None
     for match in records.CHECKPOINT.finditer(body or ""):

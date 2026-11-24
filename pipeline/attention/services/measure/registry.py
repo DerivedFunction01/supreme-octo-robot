@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import copy
 
+from attention.services.measure import lane_seed
+
 
 class RegistryError(ValueError):
     """A supervision declaration failed validation."""
@@ -255,6 +257,59 @@ def _validate_queue(slug: str, contract: dict, problems: list) -> None:
             )
 
 
+def _validate_lane_declarations(slug: str, row: dict, problems: list) -> None:
+    """The lane declaration, where a programme
+    declares one: a declared count and one entry per
+    lane. The venue field is always present — a
+    session name, or the declared value "none" for an
+    authoring-side lane; a lane record without one is
+    refused, here as in the record grammar."""
+    entries = row.get("lane_declarations")
+    count = row.get("lane_declared_count")
+    if entries is None and count is None:
+        return
+    prefix = f"{slug}.lane_declarations"
+    if count is not None and not (isinstance(count, int) and count >= 0):
+        problems.append(f"{slug}.lane_declared_count: a non-negative integer")
+    if not isinstance(entries, list):
+        problems.append(f"{prefix}: a list of lane declarations")
+        return
+    keys = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            problems.append(f"{prefix}: each entry is a mapping")
+            return
+        key = entry.get("key")
+        keys.append(key)
+        if not (isinstance(key, str) and key):
+            problems.append(f"{prefix}: each entry carries a key")
+            continue
+        if not (isinstance(entry.get("label"), str) and entry.get("label")):
+            problems.append(f"{prefix}.{key}: a lane carries a label")
+        if not (isinstance(entry.get("venue"), str) and entry.get("venue")):
+            problems.append(
+                f"{prefix}.{key}: a lane always declares its venue — "
+                "a session name, or none for an authoring-side lane"
+            )
+        minutes = entry.get("estimate_minutes")
+        if minutes is not None and not (_is_number(minutes) and minutes > 0):
+            problems.append(
+                f"{prefix}.{key}: estimate_minutes is null or a positive number"
+            )
+        if not (
+            isinstance(entry.get("termination_condition"), str)
+            and entry.get("termination_condition")
+        ):
+            problems.append(f"{prefix}.{key}: a lane carries its termination condition")
+        state = entry.get("state")
+        if state is not None and state not in LANE_RECORD_STATES:
+            problems.append(
+                f"{prefix}.{key}: state is one of {list(LANE_RECORD_STATES)}"
+            )
+    if len(set(keys)) != len(keys):
+        problems.append(f"{prefix}: duplicate lane keys")
+
+
 def validate_declaration(row) -> dict:
     """One declaration, checked whole: every required
     field present and well-formed, or a RegistryError
@@ -345,6 +400,7 @@ def validate_declaration(row) -> dict:
             problems.append(f"{slug}.drain_tail: duplicate item keys")
     if "staffing_contract" in row:
         _validate_contract(slug, row.get("staffing_contract"), problems)
+    _validate_lane_declarations(slug, row, problems)
     projects = row.get("wb_projects")
     if not isinstance(projects, list) or not all(
         isinstance(p, str) and p for p in projects
@@ -378,6 +434,19 @@ def _tail(*extra: dict) -> list:
 # programmes, the staffing contract above. Cadences
 # are the armed todos' cadence: conforming
 # progress-checkpoints every 15 minutes while doing.
+# The lane record's state vocabulary (lane-records
+# plan): a lane is declared, running, waiting in a
+# declared gap, at hand-back, or terminated — and
+# termination counts only on checkable evidence,
+# never by silence, expiry, or say-so.
+LANE_RECORD_STATES = (
+    "declared",
+    "running",
+    "gap-wait",
+    "hand-back",
+    "terminated",
+)
+
 _SEED = (
     {
         "slug": "edgar-greenfield",
@@ -400,6 +469,24 @@ _SEED = (
         "drain_tail": _tail(),
         "staffing_contract": copy.deepcopy(EDGAR_STAFFING_CONTRACT),
         "wb_projects": ["edgar-sec"],
+        # The lane declaration (lane-records plan):
+        # the coordinator's standing declaration,
+        # seeded in the registry form so it amends by
+        # commit with the contract, as the staffable
+        # queue does. Seeded from the coordinator's
+        # durable declaration record as it stood at
+        # seed time: expected count 20. A lane's
+        # record file is its own STATE file in the
+        # lane home the declaration's termination
+        # path names; a lane the declaration names
+        # no home for carries no record until its own
+        # block lands in a declared record file.
+        # Declared-at is the declaration's stated
+        # datetime where it gives one, else its
+        # stated date; an estimate the declaration
+        # leaves unstated stays None.
+        "lane_declared_count": 20,
+        "lane_declarations": lane_seed.edgar_lane_declarations(),
         "retired": False,
     },
     {
@@ -576,6 +663,20 @@ def staffing_contract_for(slug: str) -> dict | None:
     if row and row.get("staffing_contract"):
         return copy.deepcopy(row["staffing_contract"])
     return None
+
+
+def lane_declarations_for(slug: str) -> tuple:
+    """The programme's declared lane records, in the
+    registry-contract form: (declared count or None,
+    the lane entries). The declared count is the
+    coordinator's posted expected count; the entries
+    are the per-lane declarations. (None, []) where
+    the programme declares no lanes."""
+    row = for_slug(slug)
+    if not row:
+        return None, []
+    entries = row.get("lane_declarations") or []
+    return row.get("lane_declared_count"), copy.deepcopy(entries)
 
 
 def wb_projects_for(row: dict) -> list:
