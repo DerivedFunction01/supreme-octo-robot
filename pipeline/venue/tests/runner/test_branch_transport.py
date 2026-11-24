@@ -13,7 +13,7 @@ never a silent bundle substitution. Driven against a stub
 foundation whose colab is scripted, in the upload-probe
 suite's idiom.
 
-The plant pins (plant cure, 2026-11-24): the drive verifies
+The plant pins (plant cure): the drive verifies
 the session's git plant before the substrate upload — a
 plant that fails its checks is a refusal naming the plant,
 with no upload and no clone attempted; and the plant job's

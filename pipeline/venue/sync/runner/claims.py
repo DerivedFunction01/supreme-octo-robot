@@ -38,7 +38,7 @@ from .records import claim_first_save, load_run_record, save_record
 
 CLAIM_DEADLINE_S = 180
 
-# The manifest read (2026-11-24): a job manifest is written
+# The manifest read: a job manifest is written
 # by tooling outside the runner, through channels whose
 # landing a reader can race — a staged write's rename, a
 # shell write still flushing under the flap — so the file

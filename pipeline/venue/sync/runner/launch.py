@@ -332,9 +332,9 @@ PLANT_PROBE_TIMEOUT_S = 120
 
 def verify_git_plant(session: str, run_id: str) -> str | None:
     """Verify the session's GitHub git plant before a branch
-    clone trusts it (plant cure, 2026-11-24). The plant —
-    the account key and the pinned known-hosts under
-    ~/.ssh, plus the global git config that rewrites
+    clone trusts it (plant cure). The plant —
+    the account key and the pinned known-hosts in the
+    session's ssh directory, plus the global git config that rewrites
     github.com HTTPS clone URLs to SSH through them — is a
     standing precondition planted by the plant-github-key
     job, and nothing in the rotation path re-fires that job:

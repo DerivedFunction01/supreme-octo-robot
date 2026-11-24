@@ -324,7 +324,7 @@ class TestVenueTransportHolds(Fixture):
         # marks the selection consults, so a transfer
         # that laid no mark would take the pin instead
         # of reporting it as a blocked survivor (the
-        # 2026-11-24 escape's shape, from the other
+        # escape's shape, from the other
         # side). The pass ends partial.
         self.add_origin()
         pin = "feat/pin"

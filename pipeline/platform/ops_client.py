@@ -42,7 +42,7 @@ unsent request is retried by every perform — nothing was
 performed, so a repeat cannot double-perform — on a ladder
 spanning one serve restart cycle, because a launch's claim
 phase died outright on a single refused connect while the
-serve was mid-restart (the 2026-11-24 gate losses). A lost
+serve was mid-restart. A lost
 response is retried ONLY inside staged_write, whose op is
 a full replace of identical bytes with the result verified
 against them (length + SHA-256) before success is
