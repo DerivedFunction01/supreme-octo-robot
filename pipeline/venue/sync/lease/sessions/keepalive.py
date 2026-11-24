@@ -124,7 +124,7 @@ BIND_PROBE_TIMEOUT_S = 30
 
 def bind_probe(colab, repo: Path, session: str) -> dict:
     """Prove a session's kernel channel answers before a launch
-    binds to it (adoption-liveness cure, 2026-11-24): the
+    binds to it (adoption-liveness cure): the
     session list reads a renewed lease alive while its
     endpoint is dead, and adoption on that evidence fed
     launches into a channel that timed out at their first
