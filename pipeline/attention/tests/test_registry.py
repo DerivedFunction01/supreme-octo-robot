@@ -52,7 +52,10 @@ EXPECTED_EDGAR_CONTRACT = {
     # the queue as staffed work, so what remains is
     # the two precondition markers and the Round 4
     # instrument build gated on the segment
-    # packet's landing. Family keys are the venue
+    # packet's landing. The packet has since
+    # landed and its marker stands flipped landed
+    # by amendment, so the Round 4 build is
+    # staffable now. Family keys are the venue
     # measure's workstream stems.
     "staffable_queue": [
         {
@@ -65,7 +68,7 @@ EXPECTED_EDGAR_CONTRACT = {
             "key": "segment-packet-landing",
             "label": "Segment packet landing (composed tree settles)",
             "marker": True,
-            "landed": False,
+            "landed": True,
         },
         {
             "key": "round4-instrument-build",
@@ -196,7 +199,7 @@ class StaffableQueue(unittest.TestCase):
         markers = {e["key"]: e["landed"] for e in queue if e.get("marker")}
         self.assertEqual(
             markers,
-            {"segment-register-close": False, "segment-packet-landing": False},
+            {"segment-register-close": False, "segment-packet-landing": True},
         )
 
     def test_valid_queue_amendments_load(self):

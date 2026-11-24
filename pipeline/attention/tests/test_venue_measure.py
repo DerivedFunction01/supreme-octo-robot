@@ -118,25 +118,31 @@ def serial_rows(view):
 
 class SpecimenWindows(unittest.TestCase):
     def test_staffed_window_reads_staffed(self):
+        from unittest import mock
+
         # Inside 10:00–12:25Z the records show several
         # families across both live sessions: the count
         # bands read staffed and no serial row stands.
-        # The queue stands nothing here either: its
+        # The queue stands nothing here either, under
+        # the contract as it stood in the window: its
         # staffable-now work was staffed and pruned by
         # amendment, and the one remaining work item
-        # (the Round 4 build) is gated on the unlanded
-        # packet marker, so nothing reads due at these
-        # instants. The 13:30Z instant is not probed
-        # here — it is probed as defect below.
-        for now in (at(11), at(12), at(12, 15)):
-            view = staffing.build_staffing(specimen_state(now), settings(), now)
-            self.assertEqual(serial_rows(view), [], f"at {now}")
-            facts = venue.families_at(edgar_records(now), now, 30)
-            self.assertGreaterEqual(len(facts["families"]), 2, f"at {now}")
-            carrying = {
-                s for e in facts["families"].values() for s in e["sessions"]
-            }
-            self.assertGreaterEqual(len(carrying), 2, f"at {now}")
+        # (the Round 4 build) was gated on the packet
+        # marker, which stood unlanded at these
+        # instants — the flip came later, by
+        # amendment, when the packet landed. The
+        # 13:30Z instant is not probed here — it is
+        # probed as defect below.
+        with mock.patch.object(registry, "staffing_contract_for", packet_unlanded):
+            for now in (at(11), at(12), at(12, 15)):
+                view = staffing.build_staffing(specimen_state(now), settings(), now)
+                self.assertEqual(serial_rows(view), [], f"at {now}")
+                facts = venue.families_at(edgar_records(now), now, 30)
+                self.assertGreaterEqual(len(facts["families"]), 2, f"at {now}")
+                carrying = {
+                    s for e in facts["families"].values() for s in e["sessions"]
+                }
+                self.assertGreaterEqual(len(carrying), 2, f"at {now}")
 
     def test_serial_window_reads_as_defect(self):
         # Inside 13:30–15:22Z the records narrow to one
@@ -280,6 +286,22 @@ def packet_landed(slug):
     return contract
 
 
+def packet_unlanded(slug):
+    """The registry contract with the segment
+    packet marker unlanded: the contract as it
+    stood in the recorded specimen windows, before
+    the packet landing flipped the marker by
+    amendment. Historical windows are measured
+    under the contract as it stood in the window;
+    the live seed now carries the flip."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract:
+        for entry in contract.get("staffable_queue") or []:
+            if entry["key"] == "segment-packet-landing":
+                entry["landed"] = False
+    return contract
+
+
 class QueueMeasure(unittest.TestCase):
     """The queue condition (staffing-commission
     amendment): due items named on the serial row,
@@ -290,19 +312,22 @@ class QueueMeasure(unittest.TestCase):
         from unittest import mock
 
         now, state, live, idle = queue_state({"cocisep": [CALM]})
-        rows = staffing_rows._family_rows(state, now, live, idle)
+        # Under the contract as it stood before the
+        # packet landing — the marker unlanded — the
+        # queue's only work item (the Round 4 build)
+        # is gated, so nothing reads due: the row
+        # stands on the count conditions alone.
+        with mock.patch.object(registry, "staffing_contract_for", packet_unlanded):
+            rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
-        # The queue's only work item (the Round 4
-        # build) is gated on the unlanded packet
-        # marker, so nothing reads due: the row
-        # stands on the count conditions alone.
         self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
         self.assertEqual(row["queue_unstaffed"], [])
-        # With the packet marker landed the gated
-        # item reads due, named on the row.
-        with mock.patch.object(registry, "staffing_contract_for", packet_landed):
-            rows = staffing_rows._family_rows(state, now, live, idle)
+        # The live contract carries the flip: the
+        # packet marker stands landed by amendment,
+        # so the gated item reads due, named on the
+        # row.
+        rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
         self.assertIn("prerequisite_due_family_unstaffed", row["conditions"])

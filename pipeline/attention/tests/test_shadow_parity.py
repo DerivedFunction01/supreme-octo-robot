@@ -324,6 +324,25 @@ def rows_of_kind(view, kind):
     return [r for r in view.get("rows") or [] if r["kind"] == kind]
 
 
+_REAL_CONTRACT_FOR = registry.staffing_contract_for
+
+
+def packet_unlanded(slug):
+    """The registry contract with the segment
+    packet marker unlanded: the contract as it
+    stood in the recorded specimen window, before
+    the packet landing flipped the marker by
+    amendment. The window is measured under the
+    contract as it stood in the window; the live
+    seed now carries the flip."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract:
+        for entry in contract.get("staffable_queue") or []:
+            if entry["key"] == "segment-packet-landing":
+                entry["landed"] = False
+    return contract
+
+
 def sweep_sends(state):
     return [
         s for s in state.get("sends") or []
@@ -361,19 +380,26 @@ class StaffingParity(unittest.TestCase):
         # side raises a defect. The cron-side counts
         # prove the specimen is non-vacuous. The app
         # side stands no queue row in these windows
-        # either: the queue's staffable-now work was
-        # staffed and pruned by amendment, and its
-        # one remaining work item is gated on the
-        # unlanded packet marker, so parity holds on
-        # the whole serial row, not just the count
+        # either, measured under the contract as it
+        # stood in the window: the queue's
+        # staffable-now work was staffed and pruned
+        # by amendment, and its one remaining work
+        # item was gated on the packet marker, which
+        # stood unlanded at these instants — the
+        # flip came later, by amendment, when the
+        # packet landed — so parity holds on the
+        # whole serial row, not just the count
         # conditions both sides measure.
         for now in (at19(11), at19(12), at19(12, 15)):
             defect, families, carrying = cron_serial(now)
             self.assertFalse(defect, f"cron side at {now}")
             self.assertGreaterEqual(len(families), 2, f"at {now}")
             self.assertGreaterEqual(len(carrying), 2, f"at {now}")
-            view = staffing.build_staffing(
-                specimen_state(now), settings(), now)
+            with mock.patch.object(
+                registry, "staffing_contract_for", packet_unlanded
+            ):
+                view = staffing.build_staffing(
+                    specimen_state(now), settings(), now)
             rows = rows_of_kind(view, "serial_staffing")
             self.assertEqual(rows, [], f"app side at {now}")
 

@@ -146,6 +146,22 @@ def staffing_sends(state):
     ]
 
 
+def packet_unlanded(slug):
+    """The registry contract with the segment
+    packet marker unlanded: the contract as it
+    stood in the recorded specimen window, before
+    the packet landing flipped the marker by
+    amendment. The window is measured under the
+    contract as it stood in the window; the live
+    seed now carries the flip."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract:
+        for entry in contract.get("staffable_queue") or []:
+            if entry["key"] == "segment-packet-landing":
+                entry["landed"] = False
+    return contract
+
+
 class StaffingActuationTests(unittest.TestCase):
     def test_defect_posts_exactly_one_steer_per_tick(self):
         state = defect_state(at(14))
@@ -183,18 +199,25 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertEqual(len(staffing_sends(state)), 1)
         # The 11:00Z specimen reads staffed on the
         # count bands, and the queue stands nothing
-        # due there either — its staffable-now work
-        # was staffed and pruned by amendment, and
-        # the one remaining item is gated on the
-        # unlanded packet marker — so the measure
-        # clears: the row is gone, the ledger entry
-        # leaves with it, and no further steer posts
-        # (the pass still reports the ledger clear
-        # as a change).
+        # due there either, under the contract as it
+        # stood in the window — its staffable-now
+        # work was staffed and pruned by amendment,
+        # and the one remaining item was gated on
+        # the packet marker, which stood unlanded at
+        # that instant (the flip came later, by
+        # amendment, when the packet landed) — so
+        # the measure clears: the row is gone, the
+        # ledger entry leaves with it, and no
+        # further steer posts (the pass still
+        # reports the ledger clear as a change).
         staffed = defect_state(at(11))
         state["venue_snapshot"] = staffed["venue_snapshot"]
         state["capacity_snapshot"] = staffed["capacity_snapshot"]
-        self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
+        with mock.patch.object(
+            registry, "staffing_contract_for", packet_unlanded
+        ):
+            cleared = continuation.run_staffing_pass(state, settings(), at(11))
+        self.assertTrue(cleared)
         self.assertEqual(len(staffing_sends(state)), 1)
         self.assertEqual(state.get(continuation.STAFFING_LEDGER), {})
 
