@@ -49,8 +49,9 @@ import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from attention.paths import WORKSPACE_ROOT
 from attention.services import programmes
-from attention.services.measure import records, registry
+from attention.services.measure import records, registry, stamps
 from attention.services.measure.staffing_common import _row
 
 LANE_BLOCK_START = re.compile(r"<!--\s*lane-record\s*$")
@@ -74,8 +75,15 @@ def _stamp(value) -> datetime | None:
     return None
 
 
-def _iso(stamp: datetime | None) -> str | None:
-    return stamp.isoformat() if stamp else None
+def _resolve_record(record) -> Path:
+    """A declared record location as a path: an
+    absolute location stands as written; a
+    workspace-relative one (the seeded form)
+    resolves against the workspace anchor."""
+    path = Path(str(record)).expanduser()
+    if not path.is_absolute():
+        path = WORKSPACE_ROOT / path
+    return path
 
 
 def parse_record_text(text: str) -> tuple:
@@ -173,7 +181,7 @@ def _merge_blocks(blocks: list[dict]) -> dict:
             if value not in (None, ""):
                 merged[field] = value
     if declared_stamps:
-        merged["declared_at"] = _iso(min(declared_stamps))
+        merged["declared_at"] = stamps.iso(min(declared_stamps))
     merged["renewals"] = renewals
     checkpoints: list[datetime] = []
     for block in blocks:
@@ -199,8 +207,7 @@ def _evidence_verified(evidence: str, record_path, contract) -> bool:
     queue = {}
     if contract:
         queue = {
-            entry.get("key"): entry
-            for entry in contract.get("staffable_queue") or []
+            entry.get("key"): entry for entry in contract.get("staffable_queue") or []
         }
     for token in re.split(r"[\s,;]+", evidence):
         token = token.strip("'\"()[]<>`.")
@@ -238,9 +245,7 @@ def _evaluate_lane(raw: dict, now: datetime, bound: float, contract) -> dict:
         pings.append(file_stamp)
     last_ping = max(pings) if pings else None
     gap = (
-        int((now - last_ping).total_seconds() // 60)
-        if last_ping is not None
-        else None
+        int((now - last_ping).total_seconds() // 60) if last_ping is not None else None
     )
     stale = gap is None or gap > bound
     state = raw.get("state") or "declared"
@@ -248,11 +253,7 @@ def _evaluate_lane(raw: dict, now: datetime, bound: float, contract) -> dict:
     terminated = state == "terminated" and _evidence_verified(
         evidence or "", raw.get("_record_path"), contract
     )
-    overrun = (
-        not terminated
-        and estimate_end is not None
-        and now > estimate_end
-    )
+    overrun = not terminated and estimate_end is not None and now > estimate_end
     return {
         "key": raw.get("lane") or raw.get("key"),
         "label": raw.get("label"),
@@ -261,17 +262,17 @@ def _evaluate_lane(raw: dict, now: datetime, bound: float, contract) -> dict:
         "seat": raw.get("seat"),
         "venue": raw.get("venue"),
         "state": state,
-        "declared_at": _iso(declared_at),
-        "renewed_at": _iso(renewed_at),
+        "declared_at": stamps.iso(declared_at),
+        "renewed_at": stamps.iso(renewed_at),
         "estimate_minutes": estimate,
-        "estimate_end": _iso(estimate_end),
+        "estimate_end": stamps.iso(estimate_end),
         "elapsed_minutes": (
             int((now - declared_at).total_seconds() // 60)
             if declared_at is not None
             else None
         ),
         "renewals": raw.get("renewals") or 0,
-        "last_ping_at": _iso(last_ping),
+        "last_ping_at": stamps.iso(last_ping),
         "ping_gap_minutes": gap,
         "stale": stale,
         "overrun": overrun,
@@ -294,9 +295,7 @@ def _worktree_activity(path: Path) -> datetime | None:
         stamps.append(datetime.fromtimestamp(path.stat().st_mtime, tz=UTC))
         for child in path.iterdir():
             try:
-                stamps.append(
-                    datetime.fromtimestamp(child.stat().st_mtime, tz=UTC)
-                )
+                stamps.append(datetime.fromtimestamp(child.stat().st_mtime, tz=UTC))
             except OSError:
                 continue
     except OSError:
@@ -311,9 +310,7 @@ def _worktree_activity(path: Path) -> datetime | None:
             timeout=10,
         )
         if done.returncode == 0 and done.stdout.strip():
-            stamps.append(
-                datetime.fromtimestamp(int(done.stdout.strip()), tz=UTC)
-            )
+            stamps.append(datetime.fromtimestamp(int(done.stdout.strip()), tz=UTC))
     except Exception:
         pass
     return max(stamps) if stamps else None
@@ -351,7 +348,9 @@ def _seed_raw(entry: dict) -> dict:
         "termination_evidence": entry.get("termination_evidence"),
         "gap_waits_on": entry.get("gap_waits_on"),
         "worktree": entry.get("worktree"),
-        "record": entry.get("record"),
+        "record": (
+            str(_resolve_record(entry["record"])) if entry.get("record") else None
+        ),
         "_checkpoints": [],
         "_source": "registry-seed",
     }
@@ -389,7 +388,7 @@ def collect(state: dict, now: datetime) -> bool:
                 if stamp is not None:
                     prior = raws[key].get("_file_stamp")
                     if prior is None or stamp > _stamp(prior):
-                        raws[key]["_file_stamp"] = _iso(stamp)
+                        raws[key]["_file_stamp"] = stamps.iso(stamp)
                 raws[key]["_record_path"] = str(path)
 
         for entry in seed_entries:
@@ -400,9 +399,9 @@ def collect(state: dict, now: datetime) -> bool:
         seen = {str(p) for p in files}
         for entry in seed_entries:
             record = entry.get("record")
-            if record and str(record) not in seen:
-                path = Path(str(record)).expanduser()
-                if path.is_file():
+            if record:
+                path = _resolve_record(record)
+                if str(path) not in seen and path.is_file():
                     files.append(path)
                     seen.add(str(path))
         for path in files:
@@ -417,23 +416,23 @@ def collect(state: dict, now: datetime) -> bool:
             # where the file carries no block yet: the
             # STATE write is the ping act.
             for entry in seed_entries:
-                if entry.get("record") and str(
-                    Path(str(entry["record"])).expanduser()
-                ) == str(path):
+                if entry.get("record") and str(_resolve_record(entry["record"])) == str(
+                    path
+                ):
                     key = entry.get("key")
                     if key in raws and stamp is not None:
                         prior = raws[key].get("_file_stamp")
                         if prior is None or stamp > _stamp(prior):
-                            raws[key]["_file_stamp"] = _iso(stamp)
+                            raws[key]["_file_stamp"] = stamps.iso(stamp)
         lanes = []
         for key in order:
             raw = raws[key]
             blocks = raw.pop("_blocks", [])
             if blocks:
                 merged = _merge_blocks(blocks)
-                merged["_checkpoints"] = (
-                    merged.get("_checkpoints") or []
-                ) + (raw.get("_checkpoints") or [])
+                merged["_checkpoints"] = (merged.get("_checkpoints") or []) + (
+                    raw.get("_checkpoints") or []
+                )
                 for field in ("_file_stamp", "_record_path"):
                     if raw.get(field) is not None:
                         merged[field] = raw[field]
@@ -451,7 +450,7 @@ def collect(state: dict, now: datetime) -> bool:
             "trees"
         ) or []:
             path = Path(tree["path"])
-            trees[tree["path"]] = _iso(_worktree_activity(path))
+            trees[tree["path"]] = stamps.iso(_worktree_activity(path))
         snapshot[slug] = {
             "at": now,
             "declared": declared,
@@ -486,9 +485,7 @@ def record_facts(state: dict, slug: str) -> dict | None:
     if entry is None:
         return None
     lanes = entry.get("lanes") or []
-    counted = [
-        lane for lane in lanes if not lane["terminated"] and not lane["stale"]
-    ]
+    counted = [lane for lane in lanes if not lane["terminated"] and not lane["stale"]]
     return {
         "declared": entry.get("declared"),
         "actual": len(counted),
@@ -624,9 +621,7 @@ def _lane_rows(state: dict, now: datetime) -> list:
         }
         for tree_path, active_at in sorted(activity.items()):
             stamp = _stamp(active_at)
-            if stamp is None or (now - stamp) > timedelta(
-                minutes=WITNESS_DEAD_MINUTES
-            ):
+            if stamp is None or (now - stamp) > timedelta(minutes=WITNESS_DEAD_MINUTES):
                 continue
             if tree_path not in covered_trees:
                 rows.append(

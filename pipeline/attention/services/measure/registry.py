@@ -300,9 +300,7 @@ def _validate_lane_declarations(slug: str, row: dict, problems: list) -> None:
             isinstance(entry.get("termination_condition"), str)
             and entry.get("termination_condition")
         ):
-            problems.append(
-                f"{prefix}.{key}: a lane carries its termination condition"
-            )
+            problems.append(f"{prefix}.{key}: a lane carries its termination condition")
         state = entry.get("state")
         if state is not None and state not in LANE_RECORD_STATES:
             problems.append(

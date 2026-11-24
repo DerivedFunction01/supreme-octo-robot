@@ -9,8 +9,6 @@ declared record file, supersede its seed entry by
 key at collection time.
 """
 
-_GREENFIELD_CI = "/home/user/workspace/greenfield-ci"
-
 
 def edgar_lane_declarations() -> list[dict]:
     """The edgar coordinator's standing lane
@@ -23,12 +21,16 @@ def edgar_lane_declarations() -> list[dict]:
     where the declaration names one, and its
     termination condition. Venue is the session
     stem the declaration declares for every lane.
+    A record path is carried relative to the
+    workspace root — the greenfield-ci tree the
+    lane homes live in — and the collector
+    resolves it against the workspace anchor.
     """
     venue = "storm-mosaic-17"
     first = "2026-11-23T23:12:00-05:00"
     amended = "2026-11-24"
     register = (
-        "Register delivered at ~/workspace/greenfield-ci/"
+        "Register delivered at greenfield-ci/"
         "{home}/register-*.md with a BUILD-READY or NOT verdict"
     )
     rows = [
@@ -159,7 +161,7 @@ def edgar_lane_declarations() -> list[dict]:
             "venue": venue,
             "estimate_minutes": minutes,
             "declared_at": declared_at,
-            "record": f"{_GREENFIELD_CI}/{home}/STATE.md" if home else None,
+            "record": f"greenfield-ci/{home}/STATE.md" if home else None,
             "termination_condition": condition,
         }
         if seat:

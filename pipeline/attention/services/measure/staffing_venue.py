@@ -410,11 +410,7 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
                     "conditions": conditions,
                     "queue_unstaffed": due,
                     "coordinator_caller": facts.get("coordinator_caller"),
-                    **(
-                        {"lane_records": lane_extra}
-                        if lane_extra is not None
-                        else {}
-                    ),
+                    **({"lane_records": lane_extra} if lane_extra is not None else {}),
                 },
             )
         )

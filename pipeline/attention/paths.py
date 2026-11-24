@@ -16,6 +16,13 @@ from pathlib import Path
 PACKAGE_ROOT = Path(__file__).resolve().parent
 PIPELINE_ROOT = PACKAGE_ROOT.parent
 REPO_ROOT = PIPELINE_ROOT.parent
+
+# The workspace root the repo sits in: a sibling
+# tree a declaration names in workspace-relative
+# form (the lane seeds' record files, in the
+# greenfield-ci tree) resolves against this
+# anchor, never a literal root.
+WORKSPACE_ROOT = REPO_ROOT.parent
 ATTENTION_HOME = PIPELINE_ROOT / "registry"
 PLATFORM_SERVING = PIPELINE_ROOT / "platform" / "serving.py"
 
