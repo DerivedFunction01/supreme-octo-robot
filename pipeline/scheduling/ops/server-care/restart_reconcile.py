@@ -31,6 +31,24 @@ Each pass:
   non-terminal at the next boot, it reports again under the
   new boot.
 
+The second population is the scheduler's own fired jobs.
+The firing layer ledgers a run_started event at fire time,
+carrying the entry's timeout budget, and a run event at
+completion; a started fire with neither a completion nor a
+mark is a record in a non-terminal state — the shape a serve
+death mid-run leaves behind (the 2026-11-24 specimen: a
+fired daily job frozen at running across a VM replacement,
+unreconciled for hours). The same two legs judge it: its
+start predates a changed boot (restart leg), or it stands
+past its budget plus the staleness bound with no completion
+(budget leg). A judged fire is MARKED, not just reported:
+the sweep appends the fire's terminal event to the ledger —
+kind interrupted, the cause on the record — so the pair
+closes for every later pass and the mark, once written, can
+never be written twice. The sweep marks and surfaces only;
+the owed work is the owning thread's to re-drive or write
+off, never this job's.
+
 Delivery: one addressed ping per affected owning thread is
 planted in the scheduler outbox (body
 bodies/restart-reconcile.md; detail carries the restart facts
@@ -46,18 +64,20 @@ and the printed RECONCILE summary is the main chat's copy of
 every event regardless.
 
 Exit codes: 0 = pass complete (silent when nothing is new);
-3 = the boot-id source or the run-record store is unreadable,
-so the check cannot run — a distinct outcome the entry
-declares, loud rather than silently never firing.
+3 = the boot-id source, the run-record store, or the fired
+ledger is unreadable, so the check cannot run — a distinct
+outcome the entry declares, loud rather than silently never
+firing.
 
 Stdlib only; paths derived from this file's location, with env
 overrides (SCHEDULER_RECONCILE_RUNS_DIR,
-SCHEDULER_RECONCILE_STALE_SECS, SCHEDULER_VM_BOOT_ID_FILE)
-for tests and proof runs.
+SCHEDULER_RECONCILE_STALE_SECS, SCHEDULER_VM_BOOT_ID_FILE,
+SCHEDULER_RECONCILE_LEDGER_DB) for tests and proof runs.
 """
 import argparse
 import json
 import os
+import sqlite3
 import sys
 from datetime import datetime, timezone
 
@@ -103,6 +123,10 @@ OWNERS_PATH = os.environ.get(
         paths.BODIES_DIR, "restart-reconcile-owners.yaml")
 BODY_REF = "bodies/restart-reconcile.md"
 JOB_PREFIX = "restart-reconcile-"
+LEDGER_DB = os.environ.get(
+    "SCHEDULER_RECONCILE_LEDGER_DB") or os.path.join(
+        paths.STATE_DIR, "scheduler.db")
+FIRED_PREFIX = "fired:"
 NONTERMINAL = {"polling", "starting", "running", "launched"}
 DEFAULT_STALE_SECS = int(
     os.environ.get("SCHEDULER_RECONCILE_STALE_SECS") or 1800)
@@ -217,6 +241,66 @@ def scan_records(runs_dir):
     return records, unreadable
 
 
+def scan_fired(db_path):
+    """(open, closed) fired-job records from the scheduler's
+    own ledger. A fire is the (job_id, due) pair of a
+    run_started event; the pair closes when a run event (the
+    engine's completion record) or an interrupted event (a
+    prior sweep's mark) lands for it. Open records keep the
+    fire's start and its timeout budget. A missing ledger is
+    an empty population — the serve has never run here; a
+    present one that cannot be read raises OSError, and the
+    entry exits 3: the check does not run blind."""
+    if not os.path.exists(db_path):
+        return [], set()
+    try:
+        con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        try:
+            rows = con.execute(
+                "SELECT record FROM events WHERE kind IN"
+                " ('run_started', 'run', 'interrupted')"
+                " ORDER BY id").fetchall()
+        finally:
+            con.close()
+    except sqlite3.Error as exc:
+        raise OSError(f"fired ledger unreadable: {exc}") from exc
+    started, closed = {}, set()
+    for (raw,) in rows:
+        try:
+            rec = json.loads(raw)
+        except ValueError:
+            continue
+        if not isinstance(rec, dict):
+            continue
+        key = (rec.get("job_id"), rec.get("due"))
+        if None in key:
+            continue
+        if rec.get("kind") == "run_started":
+            started[key] = {
+                "job_id": rec["job_id"], "due": rec["due"],
+                "started": parse_ts(rec.get("ts")),
+                "timeout_secs": rec.get("timeout_secs"),
+            }
+        else:
+            closed.add(key)
+    return [rec for key, rec in started.items()
+            if key not in closed], closed
+
+
+def mark_interrupted(ledger, rec, cause, leg, boot_id):
+    """Append the fire's terminal event: kind interrupted,
+    the cause on the record. The ledger is append-only, so
+    the mark is a new event for the fire's (job_id, due)
+    pair — after it, scan_fired reads the pair closed, and
+    no later pass can mark it again."""
+    try:
+        ledger.record(
+            "interrupted", job_id=rec["job_id"], due=rec["due"],
+            cause=cause, leg=leg, boot_id=boot_id)
+    except sqlite3.Error as exc:
+        raise OSError(f"fired ledger unwritable: {exc}") from exc
+
+
 def load_state(path):
     try:
         with open(path, encoding="utf-8") as fh:
@@ -239,7 +323,8 @@ def save_state(path, state):
 def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
         owners_path=OWNERS_PATH, state_dir=STATE_DIR,
         boot_id=None, boot_time=None, now=None,
-        stale_secs=DEFAULT_STALE_SECS, outbox=None):
+        stale_secs=DEFAULT_STALE_SECS, outbox=None,
+        ledger_db=LEDGER_DB, ledger=None):
     """One reconciliation pass. Returns the output lines."""
     now = now or datetime.now(UTC)
     if boot_id is None:
@@ -248,12 +333,21 @@ def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
         boot_time = read_boot_time()
     records, unreadable = scan_records(runs_dir)
     by_id = {r["run_id"]: r for r in records}
+    fired, fired_closed = scan_fired(ledger_db)
     state = load_state(state_path)
     reported = state["reported"]
 
     # Closures: a reported run that reached a terminal state
     # (or whose record is gone) leaves the episode silently.
+    # A reported fire closes when its pair reaches a terminal
+    # event in the ledger — its completion, or a prior mark.
     for run_id in list(reported):
+        if run_id.startswith(FIRED_PREFIX):
+            entry = reported[run_id]
+            if (entry.get("job_id"), entry.get("due")) \
+                    in fired_closed:
+                del reported[run_id]
+            continue
         record = by_id.get(run_id)
         if record is None or record["state"] not in NONTERMINAL:
             del reported[run_id]
@@ -293,6 +387,55 @@ def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
             "key": key, "at": now.isoformat(),
             "caller": record["caller"]}
 
+    # The fired population, under the same two legs. A judged
+    # fire is marked first and unconditionally — the pair is
+    # open and judged, so its terminal event lands now, and
+    # scan_fired closes it for every later pass: marked
+    # exactly once, however the episodes fall. The episode
+    # dedup below it governs only the ping.
+    fired_ledger = ledger
+    for rec in fired:
+        started = rec["started"]
+        if started is None:
+            continue
+        leg = key = cause = None
+        if restarted and started < boot_time:
+            leg, key = "restart", boot_id
+            cause = (
+                f"boot {boot_id} at {boot_time.isoformat()}: "
+                "the serve owning this run died with the prior "
+                "boot; no completion record landed")
+        elif rec["timeout_secs"] is not None and \
+                (now - started).total_seconds() \
+                > rec["timeout_secs"] + stale_secs:
+            leg, key = "budget", "budget"
+            cause = (
+                f"past budget: fired {started.isoformat()} with "
+                f"timeout {rec['timeout_secs']}s and no "
+                "completion record")
+        if leg is None:
+            continue
+        if fired_ledger is None:
+            fired_ledger = Ledger(os.path.dirname(ledger_db))
+        mark_interrupted(fired_ledger, rec, cause, leg, boot_id)
+        rid = FIRED_PREFIX + rec["job_id"] + ":" + rec["due"]
+        prev = reported.get(rid, {}).get("key")
+        if prev is not None and (prev == key or prev == boot_id):
+            continue
+        item = {
+            "run_id": rid, "job": rec["job_id"],
+            "caller": rec["job_id"], "session": "",
+            "state": "interrupted", "leg": leg, "episode": key,
+            "evidence_age_min": int(
+                (now - started).total_seconds() // 60),
+            "due": rec["due"], "cause": cause,
+        }
+        fresh.append(item)
+        reported[rid] = {
+            "key": key, "at": now.isoformat(),
+            "caller": rec["job_id"], "job_id": rec["job_id"],
+            "due": rec["due"]}
+
     state["boot_id"] = boot_id
     save_state(state_path, state)
     if not fresh:
@@ -306,10 +449,13 @@ def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
 
     if outbox is None:
         outbox = Outbox(state_dir, Ledger(state_dir))
+    fired_new = sum(1 for i in fresh
+                    if i["run_id"].startswith(FIRED_PREFIX))
     lines = [
         f"RECONCILE boot={boot_id[:8]} "
         f"booted={boot_time.isoformat()} new={len(fresh)} "
         f"owners={sum(1 for c in groups if c)}"
+        + (f" fired={fired_new}" if fired_new else "")
         + (f" unreadable={unreadable}" if unreadable else "")]
     for chat, items in sorted(
             groups.items(), key=lambda kv: (kv[0] is None, kv[0] or "")):
@@ -331,6 +477,8 @@ def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
                 "caller": i["caller"], "session": i["session"],
                 "state": i["state"], "leg": i["leg"],
                 "evidence_age_min": i["evidence_age_min"],
+                **({"due": i["due"], "cause": i["cause"]}
+                   if "cause" in i else {}),
             } for i in items[:MAX_DETAIL_ITEMS]],
             "more": max(0, len(items) - MAX_DETAIL_ITEMS),
         }

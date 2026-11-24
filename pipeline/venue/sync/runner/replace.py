@@ -38,6 +38,29 @@ from datetime import datetime, timezone
 from .foundation import REPO, now
 
 
+def record_pin(rec) -> "str | None":
+    """The pin a resume (or any later verb re-entering the
+    launch path) derives from the run record when the caller
+    names none: the session the launch actually bound —
+    launch_session, stamped once when the launch landed — is
+    authoritative. The record's other session fields are not:
+    session_pin is an earlier invocation's request, which the
+    acquire may have resolved through renewal to a different
+    generation, and session is the record's current binding,
+    re-stamped by every acquire — a resume that acquired
+    elsewhere and died before its launch landed would hand
+    the next resume a binding the job never ran under. A
+    record with no launch_session (a run that never launched,
+    or a pre-cure record) falls back to the resolution that
+    predates this authority: session_pin, then session. A
+    fresh launch's record carries none of the three, so the
+    derivation contributes no pin and its unpinned acquire is
+    unchanged."""
+    if not rec:
+        return None
+    return rec.get("launch_session") or rec.get("session_pin") or rec.get("session")
+
+
 def _absence_proven(pin: str) -> tuple[bool, str]:
     """(proven, evidence) for a bound name, in the lease
     core's absence forms. colab / lease bind at call time:
@@ -68,10 +91,13 @@ def acquire_session(rec, shape_id, caller, pin_session, min_window_s, resume):
     got = lease.acquire(colab, REPO, shape_id, via="runner", caller=caller, prefer_session=pin_session, min_window_s=min_window_s)
     if got["action"] != "pin-unavailable" or not pin_session or rec is None or not resume:
         return got
-    if pin_session not in (rec.get("session_pin"), rec.get("session")):
+    if pin_session not in (rec.get("session_pin"), rec.get("session"), rec.get("launch_session")):
         # The pin is this invocation's instruction, not the
         # record's binding — its refusal is the caller's to
-        # act on, never silently re-placed.
+        # act on, never silently re-placed. A pin derived
+        # from the record (record_pin) names one of the
+        # record's own session fields, launch_session above
+        # all: the binding the launch actually landed on.
         return got
     proven, evidence = _absence_proven(pin_session)
     if not proven:

@@ -62,6 +62,53 @@ export interface DigestTopic {
   lanes: DigestTopicLane[];
 }
 
+/** One lane record as the digest serves it on a
+ * programme's lane block (the measure's evaluated lane
+ * shape, verbatim): the declaration's fields plus the
+ * lifecycle read — stale lanes are flagged here and are
+ * excluded from the block's served `actual`. */
+export interface DigestLaneRecord {
+  key: string;
+  label: string | null;
+  family: string | null;
+  queue_item: string | null;
+  seat: string | null;
+  venue: string | null;
+  state: string;
+  stale: boolean;
+  overrun: boolean;
+  terminated: boolean;
+  estimate_minutes: number | null;
+  estimate_end: string | null;
+  renewals: number;
+  last_ping_at: string | null;
+  ping_gap_minutes: number | null;
+  gap_waits_on: string | null;
+}
+
+export interface DigestQueueItem {
+  key: string;
+  label: string | null;
+  staffable_when: string | null;
+}
+
+/** A programme's lane block, served on the digest's
+ * programmes[] entries for every programme whose
+ * registry contract names a staffable queue — and
+ * absent entirely where no queue is named, so a
+ * programme with no block renders no row. `expected`
+ * is the queue-derived count and `actual` the counted
+ * open, non-stale lanes, both as served. */
+export interface DigestProgrammeLanes {
+  slug: string;
+  label: string;
+  declared: number | null;
+  expected: number;
+  actual: number;
+  lanes: DigestLaneRecord[];
+  queue_unstaffed: DigestQueueItem[];
+}
+
 export interface DigestParkedPlans {
   available: boolean;
   reason: string | null;
@@ -72,6 +119,7 @@ export interface DigestContentView {
   sections: DigestSection[];
   stalls: DigestStall[];
   staffing: DigestStaffing;
+  programme_lanes: DigestProgrammeLanes[];
   topics: DigestTopic[];
   parked_plans: DigestParkedPlans;
 }

@@ -18,6 +18,7 @@ lane; a lane in gap-wait with a live ping counts
 as actual.
 """
 
+import copy
 import os
 import sys
 import tempfile
@@ -28,8 +29,11 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
+from attention.infra import sample_data  # noqa: E402
 from attention.services.measure import lanes, registry  # noqa: E402
 from attention.services.measure import staffing_venue  # noqa: E402
+from attention.services.reads import digest as digest_mod  # noqa: E402
+from attention.settings import Settings  # noqa: E402
 
 NOW = datetime(2026, 11, 24, 12, 0, tzinfo=UTC)
 CALM = "calm-lake-11-r1"
@@ -482,6 +486,176 @@ class MeasureReconciliation(unittest.TestCase):
         self.assertNotIn("lane_shortfall", rows[0]["conditions"])
         self.assertEqual(lanes._lane_rows(state, NOW), [])
         self.assertIsNone(lanes.record_facts(state, "edgar-greenfield"))
+
+
+TWO_ITEM_QUEUE = [
+    {
+        "key": "fam-a-build",
+        "label": "Fam A build",
+        "family": "fama",
+        "staffable_when": None,
+    },
+    {
+        "key": "fam-b-build",
+        "label": "Fam B build",
+        "family": "famb",
+        "staffable_when": None,
+    },
+]
+
+
+def two_item_contract(slug):
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract is not None:
+        contract["staffable_queue"] = copy.deepcopy(TWO_ITEM_QUEUE)
+    return contract
+
+
+def stale_lane(key: str, family: str) -> dict:
+    lane = counted_lane(key, family)
+    lane["stale"] = True
+    return lane
+
+
+class LaneServeShape(unittest.TestCase):
+    """The serve-shape cure: one unconditional lane
+    block per programme whose contract names a
+    staffable queue — served at full staffing as at
+    a shortfall, absent where no queue is named —
+    while the serial_staffing row's firing and
+    clearing behaviour stands unchanged."""
+
+    def test_full_staffing_serves_the_block_the_row_clears(self):
+        state, live, idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        state["lane_snapshot"] = lane_snapshot_entry(
+            [counted_lane("fama-lane", "fama"), counted_lane("famb-lane", "famb")]
+        )
+        with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
+            blocks = staffing_venue.lane_blocks(state)
+            rows = staffing_venue._family_rows(state, NOW, live, idle)
+        # The defect row clears at full staffing; the
+        # block the standing row renders from stands.
+        self.assertEqual(rows, [])
+        block = blocks["edgar-greenfield"]
+        self.assertEqual(block["slug"], "edgar-greenfield")
+        self.assertEqual(block["label"], "edgar — greenfield extractor")
+        self.assertEqual(block["declared"], 20)
+        self.assertEqual(block["expected"], 2)
+        self.assertEqual(block["actual"], 2)
+        self.assertGreaterEqual(block["actual"], block["expected"])
+        self.assertEqual(block["queue_unstaffed"], [])
+        self.assertEqual(
+            [lane["key"] for lane in block["lanes"]], ["fama-lane", "famb-lane"]
+        )
+
+    def test_no_named_queue_serves_no_block(self):
+        state, _live, _idle = queue_state({"cocisep": [CALM]})
+        blocks = staffing_venue.lane_blocks(state)
+        # Only the edgar programme's contract names a
+        # queue; every other programme is absent.
+        self.assertEqual(sorted(blocks), ["edgar-greenfield"])
+
+        def no_queue_contract(slug):
+            contract = _REAL_CONTRACT_FOR(slug)
+            if contract is not None:
+                del contract["staffable_queue"]
+            return contract
+
+        with mock.patch.object(registry, "staffing_contract_for", no_queue_contract):
+            self.assertEqual(staffing_venue.lane_blocks(state), {})
+
+    def test_one_lane_short_block_names_the_unstaffed_item(self):
+        state, live, idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        state["lane_snapshot"] = lane_snapshot_entry(
+            [counted_lane("fama-lane", "fama")]
+        )
+        with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
+            blocks = staffing_venue.lane_blocks(state)
+            rows = staffing_venue._family_rows(state, NOW, live, idle)
+        block = blocks["edgar-greenfield"]
+        self.assertEqual(block["expected"], 2)
+        self.assertEqual(block["actual"], 1)
+        self.assertEqual(
+            [e["key"] for e in block["queue_unstaffed"]], ["fam-b-build"]
+        )
+        # The row fires exactly as before the cure,
+        # from the same assembly: its evidence and
+        # the block's fields are one payload.
+        self.assertEqual(len(rows), 1)
+        row = rows[0]
+        self.assertEqual(
+            row["conditions"],
+            ["lane_shortfall", "prerequisite_due_family_unstaffed"],
+        )
+        self.assertEqual(row["queue_unstaffed"], block["queue_unstaffed"])
+        self.assertEqual(row["lane_records"]["declared"], block["declared"])
+        self.assertEqual(row["lane_records"]["expected"], block["expected"])
+        self.assertEqual(row["lane_records"]["actual"], block["actual"])
+        self.assertEqual(row["lane_records"]["lanes"], block["lanes"])
+
+    def test_stale_lane_served_stale_and_excluded_from_actual(self):
+        state, _live, _idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        state["lane_snapshot"] = lane_snapshot_entry(
+            [stale_lane("fama-lane", "fama"), counted_lane("famb-lane", "famb")]
+        )
+        with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
+            blocks = staffing_venue.lane_blocks(state)
+        block = blocks["edgar-greenfield"]
+        by_key = {lane["key"]: lane for lane in block["lanes"]}
+        self.assertEqual(sorted(by_key), ["fama-lane", "famb-lane"])
+        self.assertTrue(by_key["fama-lane"]["stale"])
+        self.assertFalse(by_key["famb-lane"]["stale"])
+        # The stale lane is served, not counted: only
+        # the fresh lane reads into actual, and the
+        # stale lane's item stands unstaffed.
+        self.assertEqual(block["actual"], 1)
+        self.assertEqual(
+            [e["key"] for e in block["queue_unstaffed"]], ["fam-a-build"]
+        )
+
+    def test_digest_programmes_carry_the_block(self):
+        state = sample_data.sample_state(NOW)
+        state["programmes"] = registry.declarations()
+        state["digest_wb_snapshot"] = {
+            "at": NOW.isoformat(),
+            "parked": {
+                "available": True,
+                "reason": None,
+                "skipped_projects": [],
+                "plans": [],
+            },
+            "parked_counts": {},
+            "modified": {},
+            "wb_topics": {},
+        }
+        venue_state, _live, _idle = queue_state(
+            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+        )
+        state["venue_snapshot"] = venue_state["venue_snapshot"]
+        state["lane_snapshot"] = lane_snapshot_entry(
+            [counted_lane("fama-lane", "fama"), counted_lane("famb-lane", "famb")]
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            settings = Settings(run_records_dir=Path(tmp) / "records")
+            with mock.patch.object(
+                registry, "staffing_contract_for", two_item_contract
+            ):
+                payload = digest_mod.build_digest(state, settings, NOW)
+        entries = {p["slug"]: p for p in payload["programmes"]}
+        block = entries["edgar-greenfield"]["lane_block"]
+        self.assertEqual(block["actual"], 2)
+        self.assertEqual(block["expected"], 2)
+        self.assertEqual(block["queue_unstaffed"], [])
+        # A programme with no queue named carries no
+        # block key at all — honest absence.
+        self.assertNotIn("lane_block", entries["steampowernj"])
+        self.assertNotIn("lane_block", entries["supreme-octo-robot"])
 
 
 if __name__ == "__main__":
