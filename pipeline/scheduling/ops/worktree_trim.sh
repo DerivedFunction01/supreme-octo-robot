@@ -308,6 +308,14 @@
 # report is identical regardless of completion order. All
 # acts inside a repo are serial in its worker.
 #
+# A pass is a singleton (2026-11-24 cure): the parent holds
+# an flock on $STATE_DIR/trim-pass.lock from before the
+# clean until it exits, and a second parent finding it held
+# exits 0 silently — one census stands at a time, whatever
+# fired the overlap. Workers never take the lock (they are
+# the standing pass's own children), and dry runs never
+# take it (a read-only census, manually invoked).
+#
 # Paths derive from this script's location via ops/paths.sh.
 # Overrides (tests, fixtures): SCHEDULER_WORKSPACE (via
 # paths.sh), WORKTREE_ARCHIVE_ROOT, WORKTREE_TRIM_STATE_DIR,
@@ -1499,6 +1507,16 @@ fi
 # Parent: clean first, then one worker process per repo.
 # ------------------------------------------------------------------
 mkdir -p "$STATE_DIR"
+# Singleton (header note): the lock fd stays open for the
+# pass's whole life and closes with the process, so the
+# lock releases exactly when the pass ends; workers forked
+# below inherit the fd, so a killed parent's orphans keep
+# it held until they exit — containment bounded by the
+# worker timeout's kill-after grace.
+if [ "$DRY_RUN" -eq 0 ]; then
+  exec {PASS_LOCK_FD}>"$STATE_DIR/trim-pass.lock"
+  flock -n "$PASS_LOCK_FD" || exit 0
+fi
 if [ "$DRY_RUN" -eq 0 ]; then
   bash "$OPS_DIR/worktree_archive_clean.sh"
 else
@@ -1510,7 +1528,7 @@ declare -A wpids=()
 for slug in $REPOS; do
   dry_arg=""
   [ "$DRY_RUN" -eq 1 ] && dry_arg="--dry-run"
-  timeout "$REPO_TIMEOUT" bash "${BASH_SOURCE[0]}" --worker "$slug" --tier "$TIER" \
+  timeout -k 30 "$REPO_TIMEOUT" bash "${BASH_SOURCE[0]}" --worker "$slug" --tier "$TIER" \
     $dry_arg \
     --result-file "$tmpdir/$slug.out" --ledger-file "$tmpdir/$slug.ledger" &
   wpids["$slug"]=$!
