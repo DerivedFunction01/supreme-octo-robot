@@ -125,16 +125,16 @@ export function App() {
           <div
             className="w-[400px] max-w-[calc(100vw-32px)] p-[22px]"
             style={{
-              backgroundColor: "var(--wb-surface-2)",
+              backgroundColor: "var(--ui-surface-2)",
               borderRadius: 16,
               boxShadow: "0 18px 50px rgb(0 0 0 / 0.4)",
-              color: "var(--wb-content-primary)",
+              color: "var(--ui-content-primary)",
             }}
           >
             <div className="mb-1.5 text-lg font-bold">Discard changes?</div>
             <p
               className="mb-4 text-sm leading-[1.45] [overflow-wrap:anywhere]"
-              style={{ color: "var(--wb-content-secondary)" }}
+              style={{ color: "var(--ui-content-secondary)" }}
             >
               {guard.fileName} has unsaved edits. Closing now discards them — the saved file stays
               at sha {guard.sha}.

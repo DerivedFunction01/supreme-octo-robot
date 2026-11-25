@@ -21,17 +21,17 @@ export function TriageRow({ title, meta, leading, badges, onOpen, className }: T
   const [active, setActive] = useState(false);
   const style: CSSProperties = {
     backgroundColor: active
-      ? "var(--wb-surface-sunken)"
+      ? "var(--ui-surface-sunken)"
       : hover
-        ? "var(--wb-surface-1)"
-        : "var(--wb-surface-2)",
-    borderColor: hover || active ? "var(--wb-border-strong)" : "var(--wb-border-default)",
+        ? "var(--ui-surface-1)"
+        : "var(--ui-surface-2)",
+    borderColor: hover || active ? "var(--ui-border-strong)" : "var(--ui-border-default)",
     borderStyle: "solid",
     borderWidth: 1,
-    borderRadius: "var(--wb-radius-md)",
-    color: "var(--wb-content-primary)",
-    minHeight: "calc(var(--wb-row-height) + var(--wb-space-8))",
-    padding: "var(--wb-space-12) var(--wb-space-16)",
+    borderRadius: "var(--ui-radius-md)",
+    color: "var(--ui-content-primary)",
+    minHeight: "calc(var(--ui-row-height) + var(--ui-space-8))",
+    padding: "var(--ui-space-12) var(--ui-space-16)",
     textAlign: "left",
     width: "100%",
   };
@@ -47,7 +47,7 @@ export function TriageRow({ title, meta, leading, badges, onOpen, className }: T
       onMouseDown={() => setActive(true)}
       onMouseUp={() => setActive(false)}
       className={[
-        "flex cursor-pointer items-center gap-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)",
+        "flex cursor-pointer items-center gap-3 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)",
         className ?? "",
       ]
         .filter(Boolean)
@@ -68,14 +68,14 @@ export function TriageRow({ title, meta, leading, badges, onOpen, className }: T
           // grows instead of hiding the reason.
           <span
             className="block text-xs"
-            style={{ color: "var(--wb-content-secondary)", overflowWrap: "anywhere" }}
+            style={{ color: "var(--ui-content-secondary)", overflowWrap: "anywhere" }}
           >
             {meta}
           </span>
         ) : null}
       </span>
       {badges ? <span className="flex min-w-0 items-center gap-2">{badges}</span> : null}
-      <span aria-hidden="true" className="shrink-0" style={{ color: "var(--wb-content-secondary)" }}>
+      <span aria-hidden="true" className="shrink-0" style={{ color: "var(--ui-content-secondary)" }}>
         ›
       </span>
     </button>

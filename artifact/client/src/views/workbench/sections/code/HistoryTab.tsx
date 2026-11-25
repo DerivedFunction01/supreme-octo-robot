@@ -32,7 +32,7 @@ export function HistoryTab({ projectId }: { projectId: string }) {
   const records = [...payload.records].reverse();
   return (
     <div data-anchor="repos/history">
-      <p style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-sm)" }}>
+      <p style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-sm)" }}>
         {payload.dirty_since ? (
           <>
             Working tree dirty since {formatDateTime(payload.dirty_since)} (
@@ -53,9 +53,9 @@ export function HistoryTab({ projectId }: { projectId: string }) {
 
       <h3
         style={{
-          fontSize: "var(--wb-font-size-base)",
+          fontSize: "var(--ui-font-size-base)",
           fontWeight: 600,
-          margin: "var(--wb-space-24) 0 var(--wb-space-8)",
+          margin: "var(--ui-space-24) 0 var(--ui-space-8)",
         }}
       >
         HEAD timeline
@@ -67,16 +67,16 @@ export function HistoryTab({ projectId }: { projectId: string }) {
           style={{
             listStyle: "none",
             margin: 0,
-            padding: "0 0 0 var(--wb-space-16)",
-            borderLeft: "1px solid var(--wb-border-default)",
+            padding: "0 0 0 var(--ui-space-16)",
+            borderLeft: "1px solid var(--ui-border-default)",
           }}
         >
           {[...payload.timeline].reverse().map((point) => (
             <li
               key={`${point.ts}:${point.head}`}
-              style={{ padding: "var(--wb-space-4) 0 var(--wb-space-4) var(--wb-space-8)" }}
+              style={{ padding: "var(--ui-space-4) 0 var(--ui-space-4) var(--ui-space-8)" }}
             >
-              <span className="mono" style={{ fontSize: "var(--wb-font-size-sm)" }}>
+              <span className="mono" style={{ fontSize: "var(--ui-font-size-sm)" }}>
                 {formatShortHash(point.head)}
               </span>{" "}
               <span style={metaStyle}>
@@ -90,9 +90,9 @@ export function HistoryTab({ projectId }: { projectId: string }) {
 
       <h3
         style={{
-          fontSize: "var(--wb-font-size-base)",
+          fontSize: "var(--ui-font-size-base)",
           fontWeight: 600,
-          margin: "var(--wb-space-24) 0 var(--wb-space-8)",
+          margin: "var(--ui-space-24) 0 var(--ui-space-8)",
         }}
       >
         Change records — <span className="num">{records.length}</span>
@@ -107,7 +107,7 @@ export function HistoryTab({ projectId }: { projectId: string }) {
             listStyle: "none",
             margin: 0,
             padding: 0,
-            borderTop: "1px solid var(--wb-border-default)",
+            borderTop: "1px solid var(--ui-border-default)",
           }}
         >
           {records.map((record) => (
@@ -115,12 +115,12 @@ export function HistoryTab({ projectId }: { projectId: string }) {
               key={`${record.at}:${record.head}`}
               style={{
                 display: "flex",
-                gap: "var(--wb-space-12)",
+                gap: "var(--ui-space-12)",
                 flexWrap: "wrap",
                 alignItems: "baseline",
-                padding: "var(--wb-space-4) var(--wb-space-8)",
-                borderBottom: "1px solid var(--wb-border-default)",
-                fontSize: "var(--wb-font-size-sm)",
+                padding: "var(--ui-space-4) var(--ui-space-8)",
+                borderBottom: "1px solid var(--ui-border-default)",
+                fontSize: "var(--ui-font-size-sm)",
               }}
             >
               <span style={metaStyle}>{formatDateTime(record.at)}</span>

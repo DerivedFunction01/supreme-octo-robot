@@ -23,19 +23,19 @@ import { codePlaceholderRe, extractCode } from "./codefences";
 import { extractMath, mathPlaceholderRe, renderMath } from "./math";
 
 const proseStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-base)",
-  lineHeight: "var(--wb-line-height-lg)",
+  fontSize: "var(--ui-font-size-base)",
+  lineHeight: "var(--ui-line-height-lg)",
   maxWidth: "68ch",
 };
 
 const codeStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-12) var(--wb-space-16)",
-  fontFamily: "var(--wb-font-mono)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-12) var(--ui-space-16)",
+  fontFamily: "var(--ui-font-mono)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   overflowX: "auto",
   whiteSpace: "pre",
 };
@@ -44,10 +44,10 @@ const codeStyle: React.CSSProperties = {
  * the diagram figure) is keyboard-focusable with the
  * kit's focus ring — the axe scrollable-region-focusable
  * cure (critic WB5-1). The spliced
- * `.wb-codeblock` form carries the same treatment from
+ * `.ui-codeblock` form carries the same treatment from
  * the kit's highlight.css. */
 const scrollRegionFocusClass =
-  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
+  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)";
 
 /** Accessible names for task-list checkboxes. Marked's
  * checkbox renderer receives only the token's `checked`
@@ -169,9 +169,9 @@ export function MarkdownBlock({ text, sectionHeading }: { text: string; sectionH
         // text is the source.
         if (inner == null) continue;
         const fragment = DOMPurify.sanitize(
-          `<pre class="wb-codeblock" tabindex="0"><code>${inner}</code></pre>`,
+          `<pre class="ui-codeblock" tabindex="0"><code>${inner}</code></pre>`,
         );
-        if (!fragment.includes("wb-codeblock")) continue;
+        if (!fragment.includes("ui-codeblock")) continue;
         out = out.replace(codePlaceholderRe(i), () => fragment);
       }
       if (live) setHtml(out);
@@ -182,7 +182,7 @@ export function MarkdownBlock({ text, sectionHeading }: { text: string; sectionH
   }, [prepared]);
   return (
     // biome-ignore lint/security/noDangerouslySetInnerHtml: html is DOMPurify-sanitized immediately above — the one place plan HTML enters the DOM
-    <div className="wb-prose" style={proseStyle} dangerouslySetInnerHTML={{ __html: html }} />
+    <div className="ui-prose" style={proseStyle} dangerouslySetInnerHTML={{ __html: html }} />
   );
 }
 
@@ -210,15 +210,15 @@ function MermaidDiagram({
           securityLevel: "strict",
           theme: "base",
           themeVariables: {
-            background: styles.getPropertyValue("--wb-surface-sunken").trim(),
-            primaryColor: styles.getPropertyValue("--wb-surface-2").trim(),
-            primaryTextColor: styles.getPropertyValue("--wb-content-primary").trim(),
-            primaryBorderColor: styles.getPropertyValue("--wb-border-strong").trim(),
-            lineColor: styles.getPropertyValue("--wb-content-secondary").trim(),
-            fontFamily: styles.getPropertyValue("--wb-font-ui").trim(),
+            background: styles.getPropertyValue("--ui-surface-sunken").trim(),
+            primaryColor: styles.getPropertyValue("--ui-surface-2").trim(),
+            primaryTextColor: styles.getPropertyValue("--ui-content-primary").trim(),
+            primaryBorderColor: styles.getPropertyValue("--ui-border-strong").trim(),
+            lineColor: styles.getPropertyValue("--ui-content-secondary").trim(),
+            fontFamily: styles.getPropertyValue("--ui-font-ui").trim(),
           },
         });
-        const out = await mermaid.render(`wb-diagram-${rawId}`, source);
+        const out = await mermaid.render(`ui-diagram-${rawId}`, source);
         if (live)
           setSvg(DOMPurify.sanitize(out.svg, { USE_PROFILES: { svg: true, svgFilters: true } }));
       } catch {
@@ -236,7 +236,7 @@ function MermaidDiagram({
         <pre tabIndex={0} className={scrollRegionFocusClass} style={codeStyle}>
           {source}
         </pre>
-        <figcaption style={{ color: "var(--wb-content-muted)" }}>
+        <figcaption style={{ color: "var(--ui-content-muted)" }}>
           Diagram source — the diagram could not be drawn.
         </figcaption>
       </figure>
@@ -248,10 +248,10 @@ function MermaidDiagram({
       tabIndex={0}
       className={scrollRegionFocusClass}
       style={{
-        background: "var(--wb-surface-sunken)",
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        padding: "var(--wb-space-16)",
+        background: "var(--ui-surface-sunken)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        padding: "var(--ui-space-16)",
         margin: 0,
         overflowX: "auto",
       }}
@@ -260,7 +260,7 @@ function MermaidDiagram({
         // biome-ignore lint/security/noDangerouslySetInnerHtml: svg is DOMPurify-sanitized (svg profile) at render time above
         <div dangerouslySetInnerHTML={{ __html: svg }} />
       ) : (
-        <p style={{ color: "var(--wb-content-muted)" }}>Drawing diagram…</p>
+        <p style={{ color: "var(--ui-content-muted)" }}>Drawing diagram…</p>
       )}
     </figure>
   );
@@ -328,12 +328,12 @@ export function BlockView({
 }
 
 const subBlockLabel: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--wb-content-secondary)",
+  color: "var(--ui-content-secondary)",
 };
 
 export function StepBlock({ step }: { step: PlanStep }) {
@@ -341,15 +341,15 @@ export function StepBlock({ step }: { step: PlanStep }) {
     <article
       data-anchor={anchor.step(step.n)}
       style={{
-        background: "var(--wb-surface-2)",
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        padding: "var(--wb-card-padding)",
-        marginBottom: "var(--wb-space-12)",
+        background: "var(--ui-surface-2)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        padding: "var(--ui-card-padding)",
+        marginBottom: "var(--ui-space-12)",
       }}
     >
-      <h3 style={{ margin: "0 0 var(--wb-space-8)", fontSize: "var(--wb-font-size-base)" }}>
-        <span className="num" style={{ color: "var(--wb-content-secondary)" }}>
+      <h3 style={{ margin: "0 0 var(--ui-space-8)", fontSize: "var(--ui-font-size-base)" }}>
+        <span className="num" style={{ color: "var(--ui-content-secondary)" }}>
           {step.n}.
         </span>{" "}
         {step.title}
@@ -363,13 +363,13 @@ export function StepBlock({ step }: { step: PlanStep }) {
         ] as const
       ).map(([label, value]) =>
         value ? (
-          <div key={label} style={{ marginTop: "var(--wb-space-8)" }}>
+          <div key={label} style={{ marginTop: "var(--ui-space-8)" }}>
             <div style={subBlockLabel}>{label}</div>
             <div
               className="mono"
               style={{
-                fontSize: "var(--wb-font-size-sm)",
-                lineHeight: "var(--wb-line-height-sm)",
+                fontSize: "var(--ui-font-size-sm)",
+                lineHeight: "var(--ui-line-height-sm)",
                 whiteSpace: "pre-wrap",
               }}
             >

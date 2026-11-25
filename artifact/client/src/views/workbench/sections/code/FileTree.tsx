@@ -99,7 +99,7 @@ function baseName(path: string): string {
 
 function rowIndent(depth: number): React.CSSProperties {
   return {
-    paddingLeft: `calc(var(--wb-space-12) + ${depth} * var(--wb-space-16))`,
+    paddingLeft: `calc(var(--ui-space-12) + ${depth} * var(--ui-space-16))`,
   };
 }
 
@@ -157,26 +157,26 @@ function DirLevel({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "var(--wb-space-8)",
+                gap: "var(--ui-space-8)",
                 width: "100%",
                 minHeight: "32px",
                 textAlign: "left",
-                paddingTop: "var(--wb-space-4)",
-                paddingBottom: "var(--wb-space-4)",
-                paddingRight: "var(--wb-space-8)",
+                paddingTop: "var(--ui-space-4)",
+                paddingBottom: "var(--ui-space-4)",
+                paddingRight: "var(--ui-space-8)",
                 ...rowIndent(depth),
-                paddingLeft: `calc(var(--wb-space-12) + ${depth} * var(--wb-space-16) + 38px)`,
-                background: isSelected ? "var(--wb-surface-1)" : "transparent",
+                paddingLeft: `calc(var(--ui-space-12) + ${depth} * var(--ui-space-16) + 38px)`,
+                background: isSelected ? "var(--ui-surface-1)" : "transparent",
                 border: "none",
-                borderLeft: isSelected ? "2px solid var(--wb-accent)" : "2px solid transparent",
-                color: "var(--wb-content-primary)",
+                borderLeft: isSelected ? "2px solid var(--ui-accent)" : "2px solid transparent",
+                color: "var(--ui-content-primary)",
                 cursor: "pointer",
-                fontFamily: "var(--wb-font-ui)",
+                fontFamily: "var(--ui-font-ui)",
               }}
             >
               <span
                 className="mono"
-                style={{ fontSize: "var(--wb-font-size-sm)", overflowWrap: "anywhere" }}
+                style={{ fontSize: "var(--ui-font-size-sm)", overflowWrap: "anywhere" }}
               >
                 {baseName(entry.path)}
               </span>
@@ -194,9 +194,9 @@ function DirLevel({
             style={{
               ...metaStyle,
               whiteSpace: "normal",
-              paddingTop: "var(--wb-space-4)",
-              paddingBottom: "var(--wb-space-4)",
-              paddingRight: "var(--wb-space-8)",
+              paddingTop: "var(--ui-space-4)",
+              paddingBottom: "var(--ui-space-4)",
+              paddingRight: "var(--ui-space-8)",
               ...rowIndent(depth),
             }}
           >
@@ -251,11 +251,11 @@ function FolderItem({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-4)",
+          gap: "var(--ui-space-4)",
           minHeight: "32px",
-          paddingTop: "var(--wb-space-4)",
-          paddingBottom: "var(--wb-space-4)",
-          paddingRight: "var(--wb-space-8)",
+          paddingTop: "var(--ui-space-4)",
+          paddingBottom: "var(--ui-space-4)",
+          paddingRight: "var(--ui-space-8)",
           ...rowIndent(depth),
         }}
       >
@@ -271,7 +271,7 @@ function FolderItem({
         <span
           className="mono"
           style={{
-            fontSize: "var(--wb-font-size-sm)",
+            fontSize: "var(--ui-font-size-sm)",
             fontWeight: 600,
             overflowWrap: "anywhere",
           }}
@@ -290,9 +290,9 @@ function FolderItem({
                 minHeight: "32px",
                 display: "flex",
                 alignItems: "center",
-                paddingRight: "var(--wb-space-8)",
+                paddingRight: "var(--ui-space-8)",
                 ...rowIndent(depth + 1),
-                paddingLeft: `calc(var(--wb-space-12) + ${depth + 1} * var(--wb-space-16) + 38px)`,
+                paddingLeft: `calc(var(--ui-space-12) + ${depth + 1} * var(--ui-space-16) + 38px)`,
               }}
             >
               Loading…
@@ -302,14 +302,14 @@ function FolderItem({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "var(--wb-space-8)",
+                gap: "var(--ui-space-8)",
                 minHeight: "32px",
-                paddingRight: "var(--wb-space-8)",
+                paddingRight: "var(--ui-space-8)",
                 ...rowIndent(depth + 1),
-                paddingLeft: `calc(var(--wb-space-12) + ${depth + 1} * var(--wb-space-16) + 38px)`,
+                paddingLeft: `calc(var(--ui-space-12) + ${depth + 1} * var(--ui-space-16) + 38px)`,
               }}
             >
-              <span style={{ ...metaStyle, whiteSpace: "normal", color: "var(--wb-danger)" }}>
+              <span style={{ ...metaStyle, whiteSpace: "normal", color: "var(--ui-danger)" }}>
                 {error}
               </span>
               <Button variant="ghost" onClick={() => query.refetch()}>
@@ -362,11 +362,11 @@ export function FileTree({
 
   return (
     <div data-anchor="repos/file-tree">
-      <div style={{ padding: "var(--wb-space-8) var(--wb-space-12)" }}>
+      <div style={{ padding: "var(--ui-space-8) var(--ui-space-12)" }}>
         <Toggle checked={showAll} onChange={setShowAll} label="Show hidden & ignored" />
       </div>
       {rootQuery.isPending ? (
-        <p style={{ color: "var(--wb-content-muted)", padding: "0 var(--wb-space-12)" }}>
+        <p style={{ color: "var(--ui-content-muted)", padding: "0 var(--ui-space-12)" }}>
           Loading the file tree…
         </p>
       ) : rootError ? (
@@ -374,11 +374,11 @@ export function FileTree({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--wb-space-8)",
-            padding: "0 var(--wb-space-12) var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
+            padding: "0 var(--ui-space-12) var(--ui-space-8)",
           }}
         >
-          <span style={{ color: "var(--wb-danger)", fontSize: "var(--wb-font-size-sm)" }}>
+          <span style={{ color: "var(--ui-danger)", fontSize: "var(--ui-font-size-sm)" }}>
             {rootError}
           </span>
           <Button variant="ghost" onClick={() => rootQuery.refetch()}>
@@ -400,7 +400,7 @@ export function FileTree({
             />
           </ul>
           {!listingHasVisibleContent(rootListing, queryClient, projectId, showAll, checkout) ? (
-            <p style={{ color: "var(--wb-content-muted)", padding: "0 var(--wb-space-12)" }}>
+            <p style={{ color: "var(--ui-content-muted)", padding: "0 var(--ui-space-12)" }}>
               Nothing to show with hidden &amp; ignored files off.
             </p>
           ) : null}

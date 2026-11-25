@@ -34,7 +34,7 @@ export function PartStatus({
   const { refetchPart, now } = useRunner();
   if (part.loadedAt == null && !part.failed) {
     return (
-      <p className="text-xs" style={{ color: "var(--wb-content-muted)" }}>
+      <p className="text-xs" style={{ color: "var(--ui-content-muted)" }}>
         Loading…
       </p>
     );
@@ -43,7 +43,7 @@ export function PartStatus({
     return (
       <p
         className="flex items-center gap-2 text-xs"
-        style={{ color: "var(--wb-status-hard-gate-text)" }}
+        style={{ color: "var(--ui-status-hard-gate-text)" }}
       >
         Couldn't load.
         <Button variant="ghost" onClick={() => refetchPart(name)}>
@@ -54,7 +54,7 @@ export function PartStatus({
   }
   if (part.failed) {
     return (
-      <p className="text-xs" style={{ color: "var(--wb-status-stale-text)" }}>
+      <p className="text-xs" style={{ color: "var(--ui-status-stale-text)" }}>
         Update failed — last updated{" "}
         {fmtAgeAgo(new Date(part.loadedAt as number).toISOString(), now)}
       </p>
@@ -69,7 +69,7 @@ export function NoticeBar() {
   const { notice } = useRunner();
   if (!notice) return null;
   return (
-    <p role="status" className="text-sm" style={{ color: "var(--wb-content-primary)" }}>
+    <p role="status" className="text-sm" style={{ color: "var(--ui-content-primary)" }}>
       {notice}
     </p>
   );
@@ -270,8 +270,8 @@ export function ExtendPicker({
     <div
       className="mt-3"
       style={{
-        borderTop: "1px solid var(--wb-border-default)",
-        paddingTop: "var(--wb-space-12, 12px)",
+        borderTop: "1px solid var(--ui-border-default)",
+        paddingTop: "var(--ui-space-12, 12px)",
       }}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -315,8 +315,8 @@ export function ShortenPicker({
     <div
       className="mt-3"
       style={{
-        borderTop: "1px solid var(--wb-border-default)",
-        paddingTop: "var(--wb-space-12, 12px)",
+        borderTop: "1px solid var(--ui-border-default)",
+        paddingTop: "var(--ui-space-12, 12px)",
       }}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -337,7 +337,7 @@ export function ShortenPicker({
         />
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-2">
-        <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           or end at
         </span>
         <Input

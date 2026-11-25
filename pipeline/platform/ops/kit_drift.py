@@ -1,32 +1,25 @@
 #!/usr/bin/env python3
-"""Kit drift check: the vendored kit matches its pin, or the
-verdict names the files that moved.
+"""Kit drift check: the kit matches its pin, or the verdict
+names the files that moved.
 
-The workhorse kit's source of truth is the starter repo's
-workhorse-kit/ tree; this repo carries a vendored copy under
-kit/ so clean formations resolve @workhorse/kit in-repo
-(see kit/PROVENANCE.md for the sync discipline). This check
-is the discipline's teeth, in two legs:
+The workhorse kit's home and one source of truth is this
+repo's kit/ tree (see kit/PROVENANCE.md): the kit was forked
+from the starter's kit into this repo's own kit at the
+starter's kit consolidation, so there is no external tree
+to drift against. This check is the discipline's teeth:
 
-- internal: every vendored file's sha256 matches
-  kit/manifest.json. A file added, removed, or changed
-  against the manifest is drift — the vendored copy is
-  never edited directly, so any mismatch means an
-  unrecorded edit or a half-finished re-sync.
-- external (only when a starter checkout is named, by
-  --starter PATH or the WORKHORSE_KIT_STARTER env seam):
-  every vendored file also matches the starter's live
-  workhorse-kit/ tree, so a starter-side change that has
-  not been re-synced is caught the same way.
+- every kit file's sha256 matches kit/manifest.json. A file
+  added, removed, or changed against the manifest is
+  drift — the manifest is regenerated in the same change as
+  any kit edit, so any mismatch means an unrecorded edit or
+  a half-finished change.
 
 Verdicts name files only, never contents. Exit 0 iff no
 drift; 1 on drift; 2 on usage error (missing kit home,
-missing or unreadable manifest, a named starter checkout
-without a workhorse-kit/ tree). The governance files
-(manifest.json, PROVENANCE.md) are not vendored files and
-are excluded from both trees' file sets; node_modules and
-build output are excluded on the starter side, mirroring
-the vendoring exclusion.
+missing or unreadable manifest). The governance files
+(manifest.json, PROVENANCE.md) are not kit files and are
+excluded from the file set; node_modules and build output
+are excluded as well.
 
 The rebuild's step-5 publish pipeline calls this check; a
 drifted kit does not publish.
@@ -97,22 +90,15 @@ def main(argv=None):
         "--kit",
         type=Path,
         default=None,
-        help="vendored kit home (default: the repo's kit/)",
-    )
-    parser.add_argument(
-        "--starter",
-        type=Path,
-        default=None,
-        help="starter checkout to compare against "
-        "(default: the WORKHORSE_KIT_STARTER env seam, if set)",
+        help="kit home (default: the repo's kit/)",
     )
     args = parser.parse_args(argv)
 
     if args.kit is not None:
         kit_home = args.kit
     else:
-        # The vendored kit's home, from the platform
-        # paths spine: REPO_ROOT / kit.
+        # The kit's home, from the platform paths spine:
+        # REPO_ROOT / kit.
         kit_home = Path(_load_paths().REPO_ROOT) / "kit"
     if not kit_home.is_dir():
         print(f"kit drift: no kit home at {kit_home}", file=sys.stderr)
@@ -127,28 +113,12 @@ def main(argv=None):
 
     drift = diff_trees("internal", pinned, tree_hashes(kit_home))
 
-    starter = args.starter
-    if starter is None and os.environ.get("WORKHORSE_KIT_STARTER"):
-        starter = Path(os.environ["WORKHORSE_KIT_STARTER"])
-    if starter is not None:
-        starter_kit = starter / "workhorse-kit"
-        if not starter_kit.is_dir():
-            print(
-                f"kit drift: no workhorse-kit tree at {starter_kit}",
-                file=sys.stderr,
-            )
-            return 2
-        drift += diff_trees(
-            "external", tree_hashes(starter_kit), tree_hashes(kit_home)
-        )
-
     if drift:
         for line in drift:
             print(f"kit drift: {line}")
         print(f"kit drift: DRIFT ({len(drift)} file(s))")
         return 1
-    scope = "internal + external" if starter is not None else "internal"
-    print(f"kit drift: ok ({scope}, {len(pinned)} files pinned)")
+    print(f"kit drift: ok (internal, {len(pinned)} files pinned)")
     return 0
 
 

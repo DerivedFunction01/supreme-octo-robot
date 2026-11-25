@@ -58,7 +58,7 @@ import {
 
 type KindFilter = "all" | "scripted" | "agent";
 
-const SECONDARY = { color: "var(--wb-content-secondary)" } as const;
+const SECONDARY = { color: "var(--ui-content-secondary)" } as const;
 
 function Sub({ children, wrap }: { children: ReactNode; wrap?: boolean }) {
   return (
@@ -118,7 +118,7 @@ function DaySummary({ job }: { job: JobPayload }) {
         {a.overdue ? (
           <>
             {" · "}
-            <span style={{ color: "var(--wb-status-hard-gate-text)" }}>overdue</span>
+            <span style={{ color: "var(--ui-status-hard-gate-text)" }}>overdue</span>
           </>
         ) : null}
       </>
@@ -130,12 +130,12 @@ function DaySummary({ job }: { job: JobPayload }) {
 const TH_CLASS =
   "px-3 text-left text-xs font-semibold tracking-[0.06em] uppercase";
 const TH_STYLE = {
-  color: "var(--wb-content-secondary)",
-  borderBottom: "1px solid var(--wb-border-strong)",
+  color: "var(--ui-content-secondary)",
+  borderBottom: "1px solid var(--ui-border-strong)",
 } as const;
 const TD_STYLE = {
-  color: "var(--wb-content-primary)",
-  borderBottom: "1px solid var(--wb-border-default)",
+  color: "var(--ui-content-primary)",
+  borderBottom: "1px solid var(--ui-border-default)",
 } as const;
 
 export function Jobs({
@@ -232,7 +232,7 @@ export function Jobs({
                 }
               }}
               tabIndex={0}
-              className="cursor-pointer hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
+              className="cursor-pointer hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
             >
               <td className="px-3 py-2 align-top" style={TD_STYLE}>
                 <div className="flex min-w-0 flex-wrap items-center gap-2">

@@ -339,22 +339,22 @@ export function dayWord(iso: string, now: Date = new Date()): string {
  *  original's slot palette mapped, not its navy/paper
  *  colours carried). */
 export const SLOT_HUES: Record<number, string> = {
-  1: "var(--wb-okabe-bluish-green)",
-  2: "var(--wb-okabe-blue)",
-  3: "var(--wb-okabe-orange)",
-  4: "var(--wb-okabe-reddish-purple)",
-  5: "var(--wb-okabe-sky-blue)",
+  1: "var(--ui-okabe-bluish-green)",
+  2: "var(--ui-okabe-blue)",
+  3: "var(--ui-okabe-orange)",
+  4: "var(--ui-okabe-reddish-purple)",
+  5: "var(--ui-okabe-sky-blue)",
 };
 
 export function slotHue(slot: number | undefined): string {
-  return SLOT_HUES[slot ?? 1] ?? "var(--wb-content-muted)";
+  return SLOT_HUES[slot ?? 1] ?? "var(--ui-content-muted)";
 }
 
 /** Presence mode dot hues on kit status tokens. */
 export const PRESENCE_HUES: Record<PresenceMode, string> = {
-  active: "var(--wb-status-done)",
-  focus: "var(--wb-status-stale)",
-  away: "var(--wb-content-muted)",
+  active: "var(--ui-status-done)",
+  focus: "var(--ui-status-stale)",
+  away: "var(--ui-content-muted)",
 };
 
 /** "HH:MM" (24h, served window time) → "8:00 AM" form. */

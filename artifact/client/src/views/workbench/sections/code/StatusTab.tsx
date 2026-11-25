@@ -11,10 +11,10 @@ import { pickerHref } from "../../lib/routing";
 import { EmptyWell, metaStyle } from "../shared";
 
 const groupTitleStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-base)",
-  lineHeight: "var(--wb-line-height-base)",
+  fontSize: "var(--ui-font-size-base)",
+  lineHeight: "var(--ui-line-height-base)",
   fontWeight: 600,
-  margin: "var(--wb-space-24) 0 var(--wb-space-8)",
+  margin: "var(--ui-space-24) 0 var(--ui-space-8)",
 };
 
 function StatCounts({ entry }: { entry: RepoFileStat }) {
@@ -22,10 +22,10 @@ function StatCounts({ entry }: { entry: RepoFileStat }) {
   if (entry.insertions == null && entry.deletions == null) return null;
   return (
     <span className="num" style={{ ...metaStyle, marginLeft: "auto" }}>
-      <span style={{ color: "var(--wb-status-implemented-text)" }}>
+      <span style={{ color: "var(--ui-status-implemented-text)" }}>
         +{formatCount(entry.insertions ?? 0)}
       </span>{" "}
-      <span style={{ color: "var(--wb-status-hard-gate-text)" }}>
+      <span style={{ color: "var(--ui-status-hard-gate-text)" }}>
         −{formatCount(entry.deletions ?? 0)}
       </span>
     </span>
@@ -45,14 +45,14 @@ function FileGroup({
         {title} — <span className="num">{entries.length}</span>
       </h3>
       {entries.length === 0 ? (
-        <p style={{ color: "var(--wb-content-muted)", margin: 0 }}>None.</p>
+        <p style={{ color: "var(--ui-content-muted)", margin: 0 }}>None.</p>
       ) : (
         <ul
           style={{
             listStyle: "none",
             margin: 0,
             padding: 0,
-            borderTop: "1px solid var(--wb-border-default)",
+            borderTop: "1px solid var(--ui-border-default)",
           }}
         >
           {entries.map((entry) => (
@@ -61,15 +61,15 @@ function FileGroup({
               style={{
                 display: "flex",
                 alignItems: "baseline",
-                gap: "var(--wb-space-12)",
-                padding: "var(--wb-space-4) var(--wb-space-8)",
-                borderBottom: "1px solid var(--wb-border-default)",
+                gap: "var(--ui-space-12)",
+                padding: "var(--ui-space-4) var(--ui-space-8)",
+                borderBottom: "1px solid var(--ui-border-default)",
               }}
             >
               <span
                 className="mono"
                 style={{
-                  fontSize: "var(--wb-font-size-sm)",
+                  fontSize: "var(--ui-font-size-sm)",
                   overflowWrap: "anywhere",
                   minWidth: 0,
                 }}
@@ -104,7 +104,7 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
               listStyle: "none",
               margin: 0,
               padding: 0,
-              borderTop: "1px solid var(--wb-border-default)",
+              borderTop: "1px solid var(--ui-border-default)",
             }}
           >
             {status.commits.map((commit) => (
@@ -113,9 +113,9 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
                 style={{
                   display: "flex",
                   alignItems: "baseline",
-                  gap: "var(--wb-space-12)",
-                  padding: "var(--wb-space-4) var(--wb-space-8)",
-                  borderBottom: "1px solid var(--wb-border-default)",
+                  gap: "var(--ui-space-12)",
+                  padding: "var(--ui-space-4) var(--ui-space-8)",
+                  borderBottom: "1px solid var(--ui-border-default)",
                   flexWrap: "wrap",
                 }}
               >
@@ -124,7 +124,7 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
                 </span>
                 <span
                   style={{
-                    fontSize: "var(--wb-font-size-sm)",
+                    fontSize: "var(--ui-font-size-sm)",
                     minWidth: 0,
                     overflowWrap: "anywhere",
                     flex: 1,
@@ -156,7 +156,7 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
               listStyle: "none",
               margin: 0,
               padding: 0,
-              borderTop: "1px solid var(--wb-border-default)",
+              borderTop: "1px solid var(--ui-border-default)",
             }}
           >
             {status.branch_details.map((branch) => (
@@ -165,16 +165,16 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
                 style={{
                   display: "flex",
                   alignItems: "baseline",
-                  gap: "var(--wb-space-12)",
-                  padding: "var(--wb-space-4) var(--wb-space-8)",
-                  borderBottom: "1px solid var(--wb-border-default)",
+                  gap: "var(--ui-space-12)",
+                  padding: "var(--ui-space-4) var(--ui-space-8)",
+                  borderBottom: "1px solid var(--ui-border-default)",
                   flexWrap: "wrap",
                 }}
               >
                 <span
                   className="mono"
                   style={{
-                    fontSize: "var(--wb-font-size-sm)",
+                    fontSize: "var(--ui-font-size-sm)",
                     fontWeight: branch.name === status.branch ? 600 : 400,
                   }}
                 >
@@ -190,7 +190,7 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
                   </span>
                 ) : null}
                 {branch.unpushed_commits > 0 ? (
-                  <span style={{ ...metaStyle, color: "var(--wb-status-stale-text)" }}>
+                  <span style={{ ...metaStyle, color: "var(--ui-status-stale-text)" }}>
                     <span className="num">{formatCount(branch.unpushed_commits)}</span> unpushed
                   </span>
                 ) : null}
@@ -220,7 +220,7 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
               listStyle: "none",
               margin: 0,
               padding: 0,
-              borderTop: "1px solid var(--wb-border-default)",
+              borderTop: "1px solid var(--ui-border-default)",
             }}
           >
             {status.worktrees.map((worktree) => (
@@ -229,15 +229,15 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
                 style={{
                   display: "flex",
                   alignItems: "baseline",
-                  gap: "var(--wb-space-12)",
-                  padding: "var(--wb-space-4) var(--wb-space-8)",
-                  borderBottom: "1px solid var(--wb-border-default)",
+                  gap: "var(--ui-space-12)",
+                  padding: "var(--ui-space-4) var(--ui-space-8)",
+                  borderBottom: "1px solid var(--ui-border-default)",
                   flexWrap: "wrap",
                 }}
               >
                 <span
                   className="mono"
-                  style={{ fontSize: "var(--wb-font-size-sm)", overflowWrap: "anywhere" }}
+                  style={{ fontSize: "var(--ui-font-size-sm)", overflowWrap: "anywhere" }}
                 >
                   {worktree.path}
                 </span>
@@ -253,9 +253,9 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
         )}
       </section>
 
-      <p style={{ ...metaStyle, marginTop: "var(--wb-space-24)" }}>
+      <p style={{ ...metaStyle, marginTop: "var(--ui-space-24)" }}>
         Cross-links:{" "}
-        <a href={pickerHref()} style={{ color: "var(--wb-accent)" }}>
+        <a href={pickerHref()} style={{ color: "var(--ui-accent)" }}>
           all projects
         </a>{" "}
         · status captured {formatDate(status.captured_at)} {formatRelative(status.captured_at)}

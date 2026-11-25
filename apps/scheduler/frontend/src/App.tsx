@@ -95,26 +95,26 @@ export function App({
       <button
         type="button"
         onClick={() => navigate({ view: "jobs" })}
-        className="flex cursor-pointer items-center gap-[3px] border-0 bg-transparent text-sm font-semibold focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
-        style={{ color: "var(--wb-accent)" }}
+        className="flex cursor-pointer items-center gap-[3px] border-0 bg-transparent text-sm font-semibold focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
+        style={{ color: "var(--ui-accent)" }}
       >
         <ChevronLeft size={16} />
         Jobs
       </button>
       <span
         className="min-w-0 truncate text-[13.5px]"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
-        / <b style={{ color: "var(--wb-content-primary)" }}>{jobId}</b>
+        / <b style={{ color: "var(--ui-content-primary)" }}>{jobId}</b>
       </span>
     </>
   ) : (
     <span
       className="text-[13.5px]"
-      style={{ color: "var(--wb-content-secondary)" }}
+      style={{ color: "var(--ui-content-secondary)" }}
     >
       Scheduler /{" "}
-      <b style={{ color: "var(--wb-content-primary)", fontWeight: 650 }}>
+      <b style={{ color: "var(--ui-content-primary)", fontWeight: 650 }}>
         {VIEW_TITLES[route.view]}
       </b>
     </span>
@@ -129,7 +129,7 @@ export function App({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         style={{
-          backgroundColor: "var(--wb-surface-sunken)",
+          backgroundColor: "var(--ui-surface-sunken)",
           borderWidth: 0,
           minHeight: 32,
           fontSize: 13.5,
@@ -146,7 +146,7 @@ export function App({
         appIcon={<Clock size={19} aria-hidden />}
         appTileStyle={{
           background:
-            "linear-gradient(160deg, var(--wb-olive-400), var(--wb-olive-500))",
+            "linear-gradient(160deg, var(--ui-olive-400), var(--ui-olive-500))",
         }}
         navItems={[
           { key: "overview", label: "Overview" },

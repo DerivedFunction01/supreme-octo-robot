@@ -133,22 +133,22 @@ export function Jobs({
                     type="button"
                     aria-expanded={builtinsOpen}
                     onClick={() => setBuiltinsOpen((open) => !open)}
-                    className="flex min-h-[47px] w-full cursor-pointer flex-nowrap items-center gap-3 border-0 px-3.5 py-[11px] text-left focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
+                    className="flex min-h-[47px] w-full cursor-pointer flex-nowrap items-center gap-3 border-0 px-3.5 py-[11px] text-left focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
                     style={{
-                      backgroundColor: "var(--wb-surface-1)",
-                      borderTopColor: "var(--wb-border-default)",
+                      backgroundColor: "var(--ui-surface-1)",
+                      borderTopColor: "var(--ui-border-default)",
                     }}
                   >
                     <div className="min-w-0 flex-1">
                       <div
                         className="truncate text-[14.5px] font-medium"
-                        style={{ color: "var(--wb-content-primary)" }}
+                        style={{ color: "var(--ui-content-primary)" }}
                       >
                         Built-in services
                       </div>
                       <div
                         className="truncate text-[12.5px]"
-                        style={{ color: "var(--wb-content-secondary)" }}
+                        style={{ color: "var(--ui-content-secondary)" }}
                       >
                         Internal pipeline loops
                       </div>
@@ -163,13 +163,13 @@ export function Jobs({
                       <ChevronDown
                         size={15}
                         className="flex-none"
-                        style={{ color: "var(--wb-content-muted)" }}
+                        style={{ color: "var(--ui-content-muted)" }}
                       />
                     ) : (
                       <ChevronRight
                         size={15}
                         className="flex-none"
-                        style={{ color: "var(--wb-content-muted)" }}
+                        style={{ color: "var(--ui-content-muted)" }}
                       />
                     )}
                   </button>

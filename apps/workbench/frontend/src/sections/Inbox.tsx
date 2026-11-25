@@ -29,9 +29,9 @@ function KindChip({ kind }: { kind: InboxMessage["kind"] }) {
       className="inline-flex flex-[0_0_auto] items-center gap-1.5 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
       style={{
         backgroundColor: k.warn
-          ? "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)"
-          : "color-mix(in srgb, var(--wb-okabe-blue) 12%, transparent)",
-        color: k.warn ? "var(--wb-status-stale-text)" : "var(--wb-status-canonical-text)",
+          ? "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)"
+          : "color-mix(in srgb, var(--ui-okabe-blue) 12%, transparent)",
+        color: k.warn ? "var(--ui-status-stale-text)" : "var(--ui-status-canonical-text)",
       }}
     >
       {k.label}
@@ -47,12 +47,12 @@ function OutcomeChip({ disposition }: { disposition: NonNullable<InboxMessage["d
       style={{
         backgroundColor:
           disposition === "dismissed"
-            ? "var(--wb-surface-sunken)"
-            : "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
+            ? "var(--ui-surface-sunken)"
+            : "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
         color:
           disposition === "dismissed"
-            ? "var(--wb-content-secondary)"
-            : "var(--wb-status-implemented-text)",
+            ? "var(--ui-content-secondary)"
+            : "var(--ui-status-implemented-text)",
       }}
     >
       {label}
@@ -104,7 +104,7 @@ export function Inbox() {
               <div className="flex flex-nowrap items-center gap-2">
                 <span
                   className="min-w-0 flex-1 truncate text-[12.5px]"
-                  style={{ color: "var(--wb-content-secondary)" }}
+                  style={{ color: "var(--ui-content-secondary)" }}
                 >
                   {m.project} · {m.arrivedLabel}
                 </span>
@@ -114,8 +114,8 @@ export function Inbox() {
                     onClick={() => open(m)}
                     className="rounded-full px-2.5 py-[6px] text-xs font-semibold"
                     style={{
-                      backgroundColor: "color-mix(in srgb, var(--wb-okabe-blue) 12%, transparent)",
-                      color: "var(--wb-status-canonical-text)",
+                      backgroundColor: "color-mix(in srgb, var(--ui-okabe-blue) 12%, transparent)",
+                      color: "var(--ui-status-canonical-text)",
                     }}
                   >
                     Open
@@ -125,8 +125,8 @@ export function Inbox() {
                     onClick={() => void a.dismissMessage(m.id)}
                     className="rounded-full px-2.5 py-[6px] text-xs font-semibold"
                     style={{
-                      backgroundColor: "var(--wb-surface-sunken)",
-                      color: "var(--wb-content-secondary)",
+                      backgroundColor: "var(--ui-surface-sunken)",
+                      color: "var(--ui-content-secondary)",
                     }}
                   >
                     Dismiss
@@ -155,7 +155,7 @@ export function Inbox() {
               <div className="flex flex-nowrap items-center gap-2">
                 <span
                   className="min-w-0 flex-1 truncate text-[12.5px]"
-                  style={{ color: "var(--wb-content-secondary)" }}
+                  style={{ color: "var(--ui-content-secondary)" }}
                 >
                   {m.project} · {m.arrivedLabel}
                 </span>

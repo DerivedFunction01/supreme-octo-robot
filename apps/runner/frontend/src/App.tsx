@@ -131,7 +131,7 @@ export default function App() {
         appIcon={<Play size={19} aria-hidden />}
         appTileStyle={{
           background:
-            "linear-gradient(160deg, var(--wb-okabe-sky-blue), var(--wb-okabe-blue))",
+            "linear-gradient(160deg, var(--ui-okabe-sky-blue), var(--ui-okabe-blue))",
         }}
         navItems={[
           { key: "leases", label: "Leases", count: snap.leases.length },

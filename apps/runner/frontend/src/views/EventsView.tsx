@@ -125,8 +125,8 @@ export function EventsView({
                       aria-expanded={rawId === e.id}
                       onClick={() => setRawId(rawId === e.id ? null : e.id)}
                       style={{
-                        backgroundColor: "var(--wb-surface-sunken)",
-                        color: "var(--wb-content-secondary)",
+                        backgroundColor: "var(--ui-surface-sunken)",
+                        color: "var(--ui-content-secondary)",
                         cursor: "pointer",
                       }}
                     >
@@ -140,8 +140,8 @@ export function EventsView({
                         margin: "0 14px 12px",
                         padding: "10px 12px",
                         borderRadius: 8,
-                        backgroundColor: "var(--wb-surface-sunken)",
-                        color: "var(--wb-content-secondary)",
+                        backgroundColor: "var(--ui-surface-sunken)",
+                        color: "var(--ui-content-secondary)",
                         fontSize: 12,
                         lineHeight: 1.5,
                         overflowX: "auto",
@@ -180,7 +180,7 @@ export function EventsView({
               flex: "0 0 30px",
               color: "#fff",
               background:
-                "linear-gradient(135deg, var(--wb-okabe-sky-blue), var(--wb-okabe-blue))",
+                "linear-gradient(135deg, var(--ui-okabe-sky-blue), var(--ui-okabe-blue))",
             }}
           >
             <Zap size={16} />

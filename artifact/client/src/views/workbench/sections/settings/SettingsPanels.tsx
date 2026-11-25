@@ -11,35 +11,35 @@ import type { EffectiveSettingsPayload } from "../../lib/api-types";
 import { ErrorWell, SkeletonWell } from "../shared";
 
 const panelTitleStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--wb-content-secondary)",
-  marginTop: "var(--wb-space-32)",
+  color: "var(--ui-content-secondary)",
+  marginTop: "var(--ui-space-32)",
 };
 
 const rowStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "baseline",
   justifyContent: "space-between",
-  gap: "var(--wb-space-24)",
-  padding: "var(--wb-space-8) 0",
-  borderBottom: "1px solid var(--wb-border-default)",
+  gap: "var(--ui-space-24)",
+  padding: "var(--ui-space-8) 0",
+  borderBottom: "1px solid var(--ui-border-default)",
 };
 
 const labelStyle: React.CSSProperties = {
   fontWeight: 600,
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   whiteSpace: "nowrap",
 };
 
 const valueStyle: React.CSSProperties = {
-  color: "var(--wb-content-secondary)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  color: "var(--ui-content-secondary)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   textAlign: "right",
   overflowWrap: "anywhere",
 };

@@ -36,7 +36,7 @@ function SpecPicker({
 }) {
   if (!specs.length) {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-muted)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-muted)" }}>
         Loading specs…
       </p>
     );
@@ -116,9 +116,9 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
       <PartStatus name="specs" part={parts.specs} />
       <Card>
         {budget && budget.balance != null ? (
-          <p className="mb-3 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="mb-3 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             Balance{" "}
-            <b style={{ color: "var(--wb-content-primary)" }}>
+            <b style={{ color: "var(--ui-content-primary)" }}>
               {fmtNum(budget.balance)} CU
             </b>
           </p>
@@ -144,9 +144,9 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
               <DurationChips hours={normalHours} onPick={setNormalHours} />
               <CustomHoursInput ariaLabel="Custom lease hours" onHours={setNormalHours} />
             </div>
-            <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               Projected cost{" "}
-              <strong style={{ color: "var(--wb-content-primary)" }}>
+              <strong style={{ color: "var(--ui-content-primary)" }}>
                 {rate == null ? "Cost unconfirmed" : `${fmtNum(rate * normalHours)} CU`}
               </strong>
             </p>
@@ -157,9 +157,9 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
         ) : (
           <div className="mt-4 flex flex-col gap-3">
             {grantActive ? (
-              <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+              <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
                 Grant active until{" "}
-                <strong style={{ color: "var(--wb-content-primary)" }}>
+                <strong style={{ color: "var(--ui-content-primary)" }}>
                   {fmtTime(grant?.until)}
                 </strong>
                 . The lobby is held by the standing duty.

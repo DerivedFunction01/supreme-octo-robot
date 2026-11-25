@@ -14,20 +14,20 @@ export function Toggle({ checked, onChange, label, disabled = false, className }
   const [hover, setHover] = useState(false);
   const trackStyle: CSSProperties = checked
     ? {
-        backgroundColor: hover && !disabled ? "var(--wb-accent-hover)" : "var(--wb-accent)",
+        backgroundColor: hover && !disabled ? "var(--ui-accent-hover)" : "var(--ui-accent)",
         borderWidth: 0,
-        borderRadius: "var(--wb-radius-pill)",
-        transitionDuration: "var(--wb-motion-duration-pop)",
-        transitionTimingFunction: "var(--wb-motion-ease)",
+        borderRadius: "var(--ui-radius-pill)",
+        transitionDuration: "var(--ui-motion-duration-pop)",
+        transitionTimingFunction: "var(--ui-motion-ease)",
       }
     : {
-        backgroundColor: "var(--wb-surface-sunken)",
-        borderColor: hover && !disabled ? "var(--wb-accent)" : "var(--wb-field-border)",
+        backgroundColor: "var(--ui-surface-sunken)",
+        borderColor: hover && !disabled ? "var(--ui-accent)" : "var(--ui-field-border)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-pill)",
-        transitionDuration: "var(--wb-motion-duration-pop)",
-        transitionTimingFunction: "var(--wb-motion-ease)",
+        borderRadius: "var(--ui-radius-pill)",
+        transitionDuration: "var(--ui-motion-duration-pop)",
+        transitionTimingFunction: "var(--ui-motion-ease)",
       };
   return (
     <button
@@ -51,7 +51,7 @@ export function Toggle({ checked, onChange, label, disabled = false, className }
       // button as containing block keeps the span's
       // overflow inside the region that owns the row.
       className={[
-        "wb-toggle group relative inline-flex min-h-[38px] items-center gap-2 focus-visible:outline-none [@media(pointer:coarse)]:min-h-[44px]",
+        "ui-toggle group relative inline-flex min-h-[38px] items-center gap-2 focus-visible:outline-none [@media(pointer:coarse)]:min-h-[44px]",
         disabled ? "cursor-not-allowed opacity-55" : "cursor-pointer",
         className ?? "",
       ]
@@ -60,25 +60,25 @@ export function Toggle({ checked, onChange, label, disabled = false, className }
     >
       <span
         aria-hidden="true"
-        className="wb-toggle-track relative inline-block h-6 w-10 shrink-0 group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-1 group-focus-visible:outline-(--wb-focus-ring)"
+        className="ui-toggle-track relative inline-block h-6 w-10 shrink-0 group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-1 group-focus-visible:outline-(--ui-focus-ring)"
         style={trackStyle}
       >
         <span
           aria-hidden="true"
           className="absolute top-1/2 inline-block h-[18px] w-[18px] rounded-full"
           style={{
-            backgroundColor: checked ? "var(--wb-on-accent)" : "var(--wb-surface-2)",
+            backgroundColor: checked ? "var(--ui-on-accent)" : "var(--ui-surface-2)",
             left: checked ? 19 : 3,
             transform: "translateY(-50%)",
-            transitionDuration: "var(--wb-motion-duration-pop)",
-            transitionTimingFunction: "var(--wb-motion-ease)",
+            transitionDuration: "var(--ui-motion-duration-pop)",
+            transitionTimingFunction: "var(--ui-motion-ease)",
             transitionProperty: "left",
           }}
         />
       </span>
       <span
         className="min-w-0 text-sm [overflow-wrap:anywhere]"
-        style={{ color: disabled ? "var(--wb-content-secondary)" : "var(--wb-content-primary)" }}
+        style={{ color: disabled ? "var(--ui-content-secondary)" : "var(--ui-content-primary)" }}
       >
         {label}
       </span>

@@ -49,11 +49,11 @@ function folderAt(files: RepoFile[], trail: string[]): RepoFile[] {
 
 function FileGlyph({ file, size = 18 }: { file: RepoFile; size?: number }) {
   if (file.kind === "folder") {
-    return <Folder size={size} style={{ color: "var(--wb-okabe-orange)", opacity: file.classification === "pruned" ? 0.45 : 1 }} />;
+    return <Folder size={size} style={{ color: "var(--ui-okabe-orange)", opacity: file.classification === "pruned" ? 0.45 : 1 }} />;
   }
-  if (file.dataset) return <FileSpreadsheet size={size} style={{ color: "var(--wb-content-secondary)" }} />;
-  if (file.name.endsWith(".md")) return <FileText size={size} style={{ color: "var(--wb-content-secondary)" }} />;
-  return <File size={size} style={{ color: "var(--wb-content-secondary)" }} />;
+  if (file.dataset) return <FileSpreadsheet size={size} style={{ color: "var(--ui-content-secondary)" }} />;
+  if (file.name.endsWith(".md")) return <FileText size={size} style={{ color: "var(--ui-content-secondary)" }} />;
+  return <File size={size} style={{ color: "var(--ui-content-secondary)" }} />;
 }
 
 function ClassChip({ file }: { file: RepoFile }) {
@@ -63,7 +63,7 @@ function ClassChip({ file }: { file: RepoFile }) {
   return (
     <span
       className="ml-auto inline-flex shrink-0 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
-      style={{ backgroundColor: "var(--wb-surface-sunken)", color: "var(--wb-content-secondary)" }}
+      style={{ backgroundColor: "var(--ui-surface-sunken)", color: "var(--ui-content-secondary)" }}
     >
       {label}
     </span>
@@ -92,14 +92,14 @@ export function RevealDialog({
       <div
         className="w-[400px] max-w-[calc(100vw-32px)] p-[22px]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
+          backgroundColor: "var(--ui-surface-2)",
           borderRadius: 16,
           boxShadow: "0 18px 50px rgb(0 0 0 / 0.4)",
-          color: "var(--wb-content-primary)",
+          color: "var(--ui-content-primary)",
         }}
       >
         <div className="mb-1.5 text-lg font-bold [overflow-wrap:anywhere]">Reveal {fileName}?</div>
-        <p className="mb-4 text-sm leading-[1.45]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mb-4 text-sm leading-[1.45]" style={{ color: "var(--ui-content-secondary)" }}>
           The file is secret-shaped, so its content is withheld. Revealing shows it for this file
           only — it is never cached, and it is dropped when you leave the file.
         </p>
@@ -125,13 +125,13 @@ function DiffView({ file }: { file: RepoFile }) {
       <div
         className="overflow-x-auto p-4 font-mono text-xs leading-[1.9]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-lg)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-lg)",
           whiteSpace: "pre",
         }}
       >
-        <div style={{ color: "var(--wb-content-muted)" }}>
+        <div style={{ color: "var(--ui-content-muted)" }}>
           @@ −{Math.max(1, firstChange)},4 +{Math.max(1, firstChange)},5 @@
         </div>
         {shown.map((d, i) => (
@@ -140,9 +140,9 @@ function DiffView({ file }: { file: RepoFile }) {
             style={{
               backgroundColor:
                 d.kind === "add"
-                  ? "color-mix(in srgb, var(--wb-okabe-bluish-green) 16%, transparent)"
+                  ? "color-mix(in srgb, var(--ui-okabe-bluish-green) 16%, transparent)"
                   : d.kind === "del"
-                    ? "color-mix(in srgb, var(--wb-okabe-vermilion) 14%, transparent)"
+                    ? "color-mix(in srgb, var(--ui-okabe-vermilion) 14%, transparent)"
                     : undefined,
               borderRadius: 4,
               padding: "0 4px",
@@ -188,7 +188,7 @@ function FileFacts({ file }: { file: RepoFile }) {
           {file.classification === "withheld" ? (
             <span
               className="ml-auto inline-flex shrink-0 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
-              style={{ backgroundColor: "var(--wb-surface-sunken)", color: "var(--wb-content-secondary)" }}
+              style={{ backgroundColor: "var(--ui-surface-sunken)", color: "var(--ui-content-secondary)" }}
             >
               Withheld · secret-shaped
             </span>
@@ -196,11 +196,11 @@ function FileFacts({ file }: { file: RepoFile }) {
             <span
               className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
               style={{
-                backgroundColor: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-                color: "var(--wb-status-implemented-text)",
+                backgroundColor: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+                color: "var(--ui-status-implemented-text)",
               }}
             >
-              <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--wb-okabe-bluish-green)" }} />
+              <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--ui-okabe-bluish-green)" }} />
               Tracked
             </span>
           )}
@@ -245,7 +245,7 @@ export function PeekPane({
 
   if (!repo || !file || file.kind !== "file") {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         That file is not in the served tree.
       </p>
     );
@@ -282,9 +282,9 @@ export function PeekPane({
             <span
               className="rounded-full px-3 py-1 text-xs font-semibold"
               style={{
-                backgroundColor: "var(--wb-surface-2)",
-                border: "1px solid var(--wb-border-strong)",
-                color: "var(--wb-content-secondary)",
+                backgroundColor: "var(--ui-surface-2)",
+                border: "1px solid var(--ui-border-strong)",
+                color: "var(--ui-content-secondary)",
               }}
             >
               Edit unavailable · {file.dataset ? "binary dataset" : "not editable"}
@@ -298,10 +298,10 @@ export function PeekPane({
           <div
             className="p-5 text-sm leading-[1.6]"
             style={{
-              backgroundColor: "var(--wb-surface-2)",
-              border: "1px solid var(--wb-border-default)",
-              borderRadius: "var(--wb-radius-lg)",
-              color: "var(--wb-content-secondary)",
+              backgroundColor: "var(--ui-surface-2)",
+              border: "1px solid var(--ui-border-default)",
+              borderRadius: "var(--ui-radius-lg)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Content withheld — this file is secret-shaped. Its facts are served; its content is
@@ -321,9 +321,9 @@ export function PeekPane({
         <div
           className="overflow-x-auto p-4 font-mono text-xs leading-[1.7]"
           style={{
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-lg)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-lg)",
             whiteSpace: "pre",
           }}
         >
@@ -369,17 +369,17 @@ function PhoneShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex h-full w-full max-w-[430px] flex-col" style={{ backgroundColor: "var(--wb-surface-canvas)" }}>
+    <div className="mx-auto flex h-full w-full max-w-[430px] flex-col" style={{ backgroundColor: "var(--ui-surface-canvas)" }}>
       <div className="flex items-center justify-between px-[30px] pt-4 pb-0.5 text-[14.5px] font-semibold">
         <span>9:41</span>
         <span className="flex items-center gap-1.5" aria-hidden>
           <span className="flex items-end gap-[3px]">
             {[4, 6, 8.5, 11].map((h, i) => (
-              <span key={i} className="block w-[3px] rounded-[1px]" style={{ height: h, backgroundColor: "var(--wb-content-primary)", opacity: i === 3 ? 0.35 : 1 }} />
+              <span key={i} className="block w-[3px] rounded-[1px]" style={{ height: h, backgroundColor: "var(--ui-content-primary)", opacity: i === 3 ? 0.35 : 1 }} />
             ))}
           </span>
-          <span className="block h-[12px] w-[25px] rounded-[3.5px]" style={{ border: "1px solid var(--wb-content-muted)" }}>
-            <span className="m-[2px] block h-[7px] w-[13px] rounded-[1.8px]" style={{ backgroundColor: "var(--wb-content-primary)" }} />
+          <span className="block h-[12px] w-[25px] rounded-[3.5px]" style={{ border: "1px solid var(--ui-content-muted)" }}>
+            <span className="m-[2px] block h-[7px] w-[13px] rounded-[1.8px]" style={{ backgroundColor: "var(--ui-content-primary)" }} />
           </span>
         </span>
       </div>
@@ -387,12 +387,12 @@ function PhoneShell({
         type="button"
         onClick={onBack}
         className="flex min-h-[44px] items-center gap-1.5 px-[18px] pt-2.5 pb-1 text-left text-[16.5px] font-medium"
-        style={{ color: "var(--wb-accent)" }}
+        style={{ color: "var(--ui-accent)" }}
       >
         <ChevronLeft size={16} className="shrink-0" /> <span className="min-w-0 truncate">{backLabel}</span>
       </button>
       <div className="min-h-0 flex-1 overflow-y-auto px-[18px] pt-2.5 pb-3.5">{children}</div>
-      <div className="mx-auto mt-1.5 mb-2 h-[5px] w-[134px] rounded-[3px]" style={{ backgroundColor: "var(--wb-content-primary)", opacity: 0.85 }} />
+      <div className="mx-auto mt-1.5 mb-2 h-[5px] w-[134px] rounded-[3px]" style={{ backgroundColor: "var(--ui-content-primary)", opacity: 0.85 }} />
     </div>
   );
 }
@@ -436,7 +436,7 @@ export function PhoneExplorer({ repoSlug, trail }: { repoSlug: string; trail: st
           />
         </div>
       ) : (
-        <p className="mt-0 mb-3.5 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-0 mb-3.5 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--ui-content-secondary)" }}>
           {repo.name} / {trail.join(" / ")}
         </p>
       )}
@@ -453,7 +453,7 @@ export function PhoneExplorer({ repoSlug, trail }: { repoSlug: string; trail: st
                 <FileGlyph file={f} size={20} />
                 <Lab>{f.name}</Lab>
                 {f.classification === "pruned" ? <ClassChip file={f} /> : <span className="ml-auto" />}
-                <ChevronRight size={15} style={{ color: "var(--wb-content-muted)" }} />
+                <ChevronRight size={15} style={{ color: "var(--ui-content-muted)" }} />
               </Row>
             ))}
           </Group>
@@ -474,7 +474,7 @@ export function PhoneExplorer({ repoSlug, trail }: { repoSlug: string; trail: st
                 <FileGlyph file={f} />
                 <Lab>{f.name}</Lab>
                 <ClassChip file={f} />
-                <ChevronRight size={15} style={{ color: "var(--wb-content-muted)" }} />
+                <ChevronRight size={15} style={{ color: "var(--ui-content-muted)" }} />
               </Row>
             ))}
           </Group>
@@ -555,7 +555,7 @@ export function SplitView({
                   })
                 }
                 className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-[7px] text-left text-sm"
-                style={{ paddingLeft: 10 + depth * 14, color: "var(--wb-content-primary)" }}
+                style={{ paddingLeft: 10 + depth * 14, color: "var(--ui-content-primary)" }}
               >
                 {open ? <ChevronDown size={15} className="shrink-0" /> : <ChevronRight size={15} className="shrink-0" />}
                 <FileGlyph file={f} size={18} />
@@ -574,9 +574,9 @@ export function SplitView({
             className="flex w-full items-center gap-2 rounded-[9px] px-2.5 py-[7px] text-left text-sm"
             style={{
               paddingLeft: 10 + depth * 14 + 16,
-              backgroundColor: selected === p ? "var(--wb-highlight-selection-fill)" : undefined,
+              backgroundColor: selected === p ? "var(--ui-highlight-selection-fill)" : undefined,
               fontWeight: selected === p ? 600 : 400,
-              color: "var(--wb-content-primary)",
+              color: "var(--ui-content-primary)",
             }}
           >
             <FileGlyph file={f} size={16} />
@@ -590,18 +590,18 @@ export function SplitView({
     <div className="flex h-full flex-col">
       <div
         className="flex h-[52px] flex-[0_0_52px] items-center gap-3.5 px-[22px]"
-        style={{ backgroundColor: "var(--wb-surface-1)", borderBottom: "1px solid var(--wb-border-default)" }}
+        style={{ backgroundColor: "var(--ui-surface-1)", borderBottom: "1px solid var(--ui-border-default)" }}
       >
         <button
           type="button"
           onClick={() => navigate({ section: "code" })}
           className="shrink-0 text-sm font-semibold"
-          style={{ color: "var(--wb-accent)" }}
+          style={{ color: "var(--ui-accent)" }}
         >
           ‹ Code
         </button>
-        <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--wb-content-secondary)" }}>
-          / {repo.name} / <b style={{ color: "var(--wb-content-primary)" }}>Files</b>
+        <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--ui-content-secondary)" }}>
+          / {repo.name} / <b style={{ color: "var(--ui-content-primary)" }}>Files</b>
         </span>
         <span className="ml-auto">
           <SegmentedControl
@@ -621,16 +621,16 @@ export function SplitView({
       <div className="flex min-h-0 flex-1">
         <div
           className="flex w-[296px] flex-[0_0_296px] flex-col gap-0.5 overflow-y-auto px-3 py-4"
-          style={{ backgroundColor: "var(--wb-surface-2)", borderRight: "1px solid var(--wb-border-default)" }}
+          style={{ backgroundColor: "var(--ui-surface-2)", borderRight: "1px solid var(--ui-border-default)" }}
         >
           <div
             className="px-2.5 pt-0.5 pb-2 text-xs font-bold tracking-[0.07em] uppercase"
-            style={{ color: "var(--wb-content-muted)" }}
+            style={{ color: "var(--ui-content-muted)" }}
           >
             {repo.name}
           </div>
           {renderTree(repo.files, "", 0)}
-          <div className="mt-auto pt-2.5" style={{ borderTop: "1px solid var(--wb-border-default)" }}>
+          <div className="mt-auto pt-2.5" style={{ borderTop: "1px solid var(--ui-border-default)" }}>
             <div className="flex items-center justify-between px-2.5 py-[7px] text-sm">
               <span>Show hidden &amp; ignored</span>
               <Toggle checked={showHidden} onChange={setShowHidden} label="Show hidden and ignored" className={TOGGLE_LABEL_SR_ONLY} />
@@ -641,7 +641,7 @@ export function SplitView({
           {selected ? (
             <PeekPane key={selected} repoSlug={repoSlug} path={selected} />
           ) : (
-            <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               Select a file in the tree to peek at it.
             </p>
           )}

@@ -107,15 +107,15 @@ export function Entries() {
                     className="inline-flex flex-none rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
                     style={{
                       backgroundColor: pill.blue
-                        ? "color-mix(in srgb, var(--wb-okabe-blue) 12%, transparent)"
+                        ? "color-mix(in srgb, var(--ui-okabe-blue) 12%, transparent)"
                         : e.kind === "mockup"
-                          ? "color-mix(in srgb, var(--wb-okabe-reddish-purple) 14%, transparent)"
-                          : "var(--wb-surface-sunken)",
+                          ? "color-mix(in srgb, var(--ui-okabe-reddish-purple) 14%, transparent)"
+                          : "var(--ui-surface-sunken)",
                       color: pill.blue
-                        ? "var(--wb-status-canonical-text)"
+                        ? "var(--ui-status-canonical-text)"
                         : e.kind === "mockup"
-                          ? "var(--wb-status-unexplored-text)"
-                          : "var(--wb-content-secondary)",
+                          ? "var(--ui-status-unexplored-text)"
+                          : "var(--ui-content-secondary)",
                     }}
                   >
                     {pill.label}
@@ -126,7 +126,7 @@ export function Entries() {
                 <div className="flex flex-nowrap items-center gap-2">
                   <span
                     className="min-w-0 flex-1 truncate text-[12.5px]"
-                    style={{ color: "var(--wb-content-secondary)" }}
+                    style={{ color: "var(--ui-content-secondary)" }}
                   >
                     {e.registeredLabel} · v{e.version}
                   </span>
@@ -150,7 +150,7 @@ export function Entries() {
         })}
         {shown.length === 0 ? (
           <Row last>
-            <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               No entries match these filters.
             </span>
           </Row>

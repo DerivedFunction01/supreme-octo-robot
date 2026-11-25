@@ -9,7 +9,7 @@
    kit/PROVENANCE.md). themes/index.css is the kit's theme
    assembly: it imports fonts.css (the @font-face rules for the
    bundled woff2) and the olive/teal palettes (the [data-palette]
-   / [data-mode] scoped --wb-* variables every surface renders
+   / [data-mode] scoped --ui-* variables every surface renders
    with), then carries the :root scale block and the
    [data-density] tail. This app's own Tailwind import above
    stands first, the Workbench pattern; the vendored file's own
@@ -23,12 +23,12 @@ body {
 }
 
 body {
-  font-family: var(--wb-font-ui);
+  font-family: var(--ui-font-ui);
   background: #191b14;
 }
 
 .mono {
-  font-family: var(--wb-font-mono);
+  font-family: var(--ui-font-mono);
 }
 
 /* On pushed phone screens the kit PhoneShell's navbar carries
@@ -36,7 +36,7 @@ body {
    same title a second time beneath it. The shell's title
    stays; the view's is suppressed at the kit's one phone
    breakpoint — the Runner's .rn-largetitle and the
-   Workbench's .wb-largetitle rule, same seam. */
+   Workbench's .ui-largetitle rule, same seam. */
 @media (max-width: 480px) {
   .sc-largetitle {
     display: none;

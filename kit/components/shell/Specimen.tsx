@@ -75,7 +75,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
     <section className="mb-6">
       <h2
         className="mb-3 text-xs font-semibold tracking-[0.06em] uppercase"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {title}
       </h2>
@@ -108,7 +108,7 @@ export function KitSpecimen() {
   });
 
   return (
-    <div style={{ backgroundColor: "var(--wb-surface-canvas)", padding: "var(--wb-space-24)" }}>
+    <div style={{ backgroundColor: "var(--ui-surface-canvas)", padding: "var(--ui-space-24)" }}>
       <Section title="Chip — ruled statuses">
         {STATUSES.map((s) => (
           <Chip key={s} status={s} gate={s === "hard-gate" ? "the owner ruling" : undefined} />
@@ -351,9 +351,9 @@ export function KitSpecimen() {
           style={{
             width: 640,
             maxWidth: "100%",
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-panel-radius)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-panel-radius)",
             padding: "26px 30px",
           }}
         >
@@ -391,9 +391,9 @@ export function KitSpecimen() {
           style={{
             width: 640,
             maxWidth: "100%",
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-panel-radius)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-panel-radius)",
             padding: "26px 30px",
           }}
         >
@@ -419,11 +419,11 @@ export function KitSpecimen() {
           style={{
             width: 640,
             maxWidth: "100%",
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-panel-radius)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-panel-radius)",
             padding: "26px 30px",
-            color: "var(--wb-content-primary)",
+            color: "var(--ui-content-primary)",
           }}
         >
           <p style={{ fontSize: 15.5, lineHeight: 1.62, margin: "0 0 14px" }}>

@@ -31,10 +31,10 @@ export function AnchoredComment({
   return (
     <div
       style={{
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        padding: "var(--wb-space-12)",
-        marginTop: "var(--wb-space-8)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        padding: "var(--ui-space-12)",
+        marginTop: "var(--ui-space-8)",
       }}
     >
       <MessageComposer

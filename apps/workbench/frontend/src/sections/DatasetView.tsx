@@ -16,8 +16,8 @@ import { Group, GroupLabel, Lab, Row, Sub, Val } from "../components/ui";
 const PAGE_SIZE = 10;
 
 const inputStyle: React.CSSProperties = {
-  backgroundColor: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
+  backgroundColor: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
   borderRadius: 9,
   padding: "6px 10px",
   fontSize: 13.5,
@@ -89,7 +89,7 @@ export function DatasetView({
 
   if (!table) {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         No dataset is served for this file.
       </p>
     );
@@ -121,9 +121,9 @@ export function DatasetView({
       // whole; the box scrolls horizontally to reach them.
       className="overflow-x-auto"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-lg)",
+        backgroundColor: "var(--ui-surface-2)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-lg)",
       }}
     >
       <div style={{ minWidth: Math.max(560, t.columns.length * 220) }}>
@@ -141,7 +141,7 @@ export function DatasetView({
     <div>
       {tables.length > 1 ? (
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-[13px] font-semibold" style={{ color: "var(--wb-content-secondary)" }}>
+          <span className="text-[13px] font-semibold" style={{ color: "var(--ui-content-secondary)" }}>
             Table
           </span>
           <select
@@ -214,7 +214,7 @@ export function DatasetView({
 
       {gridFor(table, pageRows, `${file.name} rows`)}
 
-      <div className="mt-2.5 flex items-center gap-3 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="mt-2.5 flex items-center gap-3 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
         <span>
           {shown.length} row{shown.length === 1 ? "" : "s"} · page {Math.min(page + 1, pageCount)} of {pageCount}
         </span>
@@ -252,9 +252,9 @@ export function DatasetView({
       <div
         className="p-3.5"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-lg)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-lg)",
         }}
       >
         <Sub>
@@ -275,7 +275,7 @@ export function DatasetView({
             {sqlBusy ? "Running…" : "Run query"}
           </Button>
           {sqlResult?.ok ? (
-            <span className="text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
               Answered by the {sqlResult.source === "engine" ? "dataset engine" : "served snapshot"}
             </span>
           ) : null}
@@ -284,7 +284,7 @@ export function DatasetView({
           sqlResult.ok ? (
             <div className="mt-3">{gridFor(sqlResult.table, sqlResult.table.rows, "SQL result")}</div>
           ) : (
-            <p role="alert" className="mt-3 mb-0 text-sm" style={{ color: "var(--wb-danger)" }}>
+            <p role="alert" className="mt-3 mb-0 text-sm" style={{ color: "var(--ui-danger)" }}>
               {sqlResult.reason}
             </p>
           )

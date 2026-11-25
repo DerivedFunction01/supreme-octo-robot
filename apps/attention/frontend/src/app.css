@@ -1,6 +1,6 @@
 /* Attention app presentation CSS: layout and the iOS
    form-language group metrics from the storyboard, driven
-   entirely by Workhorse Kit token variables (--wb-*). The
+   entirely by Workhorse Kit token variables (--ui-*). The
    shell (sidebar, top bar, phone form) is the kit's
    AppShell, consumed from the kit; the kit primitives carry
    their own styling too. This file carries only the
@@ -15,11 +15,11 @@ body {
   padding: 0;
 }
 body {
-  font-family: var(--wb-font-ui);
+  font-family: var(--ui-font-ui);
   background: #191b14; /* the preview sheet, behind the app */
 }
 .mono {
-  font-family: var(--wb-font-mono);
+  font-family: var(--ui-font-mono);
   font-size: 0.92em;
 }
 
@@ -27,8 +27,8 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--wb-surface-canvas);
-  color: var(--wb-content-primary);
+  background: var(--ui-surface-canvas);
+  color: var(--ui-content-primary);
 }
 
 /* ---- preview harness strip (furniture, not app UI) ---- */
@@ -112,14 +112,14 @@ body {
 /* The crumb and back row rendered inside the kit TopBar. */
 .crumb {
   font-size: 13.5px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .crumb b {
-  color: var(--wb-content-primary);
+  color: var(--ui-content-primary);
   font-weight: 650;
 }
 .crumb-back {
@@ -128,7 +128,7 @@ body {
   gap: 2px;
   border: 0;
   background: transparent;
-  color: var(--wb-accent);
+  color: var(--ui-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -150,7 +150,7 @@ body {
   margin: 0 0 4px;
 }
 .subtitle {
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   font-size: 14px;
   margin: 0 0 20px;
 }
@@ -161,21 +161,21 @@ body {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   margin: 20px 0 8px 2px;
 }
 .glabel:first-child {
   margin-top: 0;
 }
-/* The card class is .wb-group, never .group: kit primitives
+/* The card class is .ui-group, never .group: kit primitives
    (the Toggle's <button>, the Chip, the Tooltip) carry
    Tailwind's bare `group` marker class, and a `.group` rule
    here dressed every one of them as a card — the pill that
    cut through the Digest Include switches (2026-11-15). */
-.wb-group {
-  background: var(--wb-surface-2);
-  border: 1px solid var(--wb-border-default);
-  border-radius: var(--wb-radius-lg);
+.ui-group {
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border-default);
+  border-radius: var(--ui-radius-lg);
   overflow: hidden;
 }
 .row {
@@ -205,8 +205,8 @@ body {
 .row-actions {
   min-width: auto;
 }
-.wb-group > .row + .row {
-  border-top: 1px solid var(--wb-border-default);
+.ui-group > .row + .row {
+  border-top: 1px solid var(--ui-border-default);
 }
 .row-button {
   border: 0;
@@ -225,7 +225,7 @@ body {
 }
 .row .sub {
   font-size: 12.5px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   overflow-wrap: anywhere;
 }
 /* The two-line row form's sub: truncates on one line
@@ -240,7 +240,7 @@ body {
 }
 .row .val {
   font-size: 14px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -278,8 +278,8 @@ body {
   gap: 34px;
   padding: 38px 44px;
   align-items: flex-start;
-  background: var(--wb-surface-canvas);
-  color: var(--wb-content-primary);
+  background: var(--ui-surface-canvas);
+  color: var(--ui-content-primary);
   min-height: 100%;
 }
 .glance-left {
@@ -293,7 +293,7 @@ body {
 }
 .glance-date {
   font-size: 21px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   margin-top: 8px;
 }
 .glance-count {
@@ -304,7 +304,7 @@ body {
 }
 .glance-sub {
   font-size: 17px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   margin-top: 4px;
   overflow-wrap: anywhere;
 }
@@ -317,17 +317,17 @@ body {
    carried here because the extracted kit has no night token
    scope yet (kit gap, see lane report). */
 .night-ladder {
-  --wb-surface-canvas: #101208;
-  --wb-surface-1: #171912;
-  --wb-surface-2: #21241b;
-  --wb-surface-3: #262a1e;
-  --wb-surface-sunken: #12140c;
-  --wb-content-primary: #eceeda;
-  --wb-content-secondary: #a9ad97;
-  --wb-content-muted: #82856f;
-  --wb-border-default: #3a3e2e;
-  --wb-border-strong: #4c5138;
-  --wb-accent-soft: #2a2e21;
+  --ui-surface-canvas: #101208;
+  --ui-surface-1: #171912;
+  --ui-surface-2: #21241b;
+  --ui-surface-3: #262a1e;
+  --ui-surface-sunken: #12140c;
+  --ui-content-primary: #eceeda;
+  --ui-content-secondary: #a9ad97;
+  --ui-content-muted: #82856f;
+  --ui-border-default: #3a3e2e;
+  --ui-border-strong: #4c5138;
+  --ui-accent-soft: #2a2e21;
   background: #101208;
   min-height: 100%;
   display: flex;

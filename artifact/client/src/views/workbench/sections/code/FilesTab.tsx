@@ -47,9 +47,9 @@ export function FilesTab({ projectId }: { projectId: string }) {
   const tree = (
     <div
       style={{
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        background: "var(--wb-surface-2)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        background: "var(--ui-surface-2)",
       }}
     >
       <FileTree projectId={projectId} selected={selected} onSelect={setSelected} />
@@ -60,9 +60,9 @@ export function FilesTab({ projectId }: { projectId: string }) {
     selected != null ? (
       <div
         style={{
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
-          background: "var(--wb-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
+          background: "var(--ui-surface-2)",
           minWidth: 0,
         }}
       >
@@ -76,11 +76,11 @@ export function FilesTab({ projectId }: { projectId: string }) {
     ) : (
       <div
         style={{
-          border: "1px dashed var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
-          background: "var(--wb-surface-sunken)",
-          padding: "var(--wb-panel-padding)",
-          color: "var(--wb-content-secondary)",
+          border: "1px dashed var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
+          background: "var(--ui-surface-sunken)",
+          padding: "var(--ui-panel-padding)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         Select a file in the tree.
@@ -94,7 +94,7 @@ export function FilesTab({ projectId }: { projectId: string }) {
           tree
         ) : (
           <>
-            <div style={{ marginBottom: "var(--wb-space-12)" }}>
+            <div style={{ marginBottom: "var(--ui-space-12)" }}>
               <Button variant="ghost" onClick={() => setSelected(null)}>
                 ← Back to files
               </Button>
@@ -107,7 +107,7 @@ export function FilesTab({ projectId }: { projectId: string }) {
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(260px, 1fr) 2fr",
-            gap: "var(--wb-space-16)",
+            gap: "var(--ui-space-16)",
             alignItems: "start",
           }}
         >

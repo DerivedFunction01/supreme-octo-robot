@@ -7,9 +7,9 @@ import { kindLabel, ruledStatusLabel } from "../../lib/labels";
 import type { DerivedStaleness, FullEntry } from "./types";
 
 export const labelStyle: React.CSSProperties = {
-  color: "var(--wb-content-secondary)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  color: "var(--ui-content-secondary)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   textTransform: "uppercase",
   letterSpacing: "0.06em",
 };
@@ -20,10 +20,10 @@ export function MetaRow({ label, children }: { label: string; children: React.Re
       style={{
         display: "grid",
         gridTemplateColumns: "128px 1fr",
-        gap: "var(--wb-space-12)",
-        padding: "var(--wb-space-4) 0",
-        borderBottom: "1px solid var(--wb-border-default)",
-        fontSize: "var(--wb-font-size-sm)",
+        gap: "var(--ui-space-12)",
+        padding: "var(--ui-space-4) 0",
+        borderBottom: "1px solid var(--ui-border-default)",
+        fontSize: "var(--ui-font-size-sm)",
       }}
     >
       <span style={labelStyle}>{label}</span>

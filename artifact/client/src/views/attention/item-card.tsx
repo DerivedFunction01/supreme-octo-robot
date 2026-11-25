@@ -117,7 +117,7 @@ export function ItemCard({ item, band }: { item: AttentionItem; band: string }) 
               href={item.source_url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "var(--wb-accent)" }}
+              style={{ color: "var(--ui-accent)" }}
             >
               {item.title}
             </a>
@@ -134,7 +134,7 @@ export function ItemCard({ item, band }: { item: AttentionItem; band: string }) 
         )}
       </div>
 
-      <div className="mt-1.5 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="mt-1.5 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
         <div className="flex flex-wrap items-center gap-1.5">
           <SlotDot slot={item.handler.color_slot} />
           <Button
@@ -190,14 +190,14 @@ export function ItemCard({ item, band }: { item: AttentionItem; band: string }) 
       </div>
 
       {hint ? (
-        <p className="mt-2 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-2 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
           {hint.rule_hint}
         </p>
       ) : null}
 
       {expand === "snooze" ? (
         <div className="mt-3">
-          <p className="text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
             Snooze until — or until there is new activity on it.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">

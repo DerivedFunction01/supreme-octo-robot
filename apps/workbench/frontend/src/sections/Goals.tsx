@@ -162,7 +162,7 @@ function GoalListRow({
     if (post?.owner_waiting) {
       subs.push(
         <Sub key="w">
-          <span style={{ color: "var(--wb-status-hard-gate-text)" }}>{ownerLine(post)}</span>
+          <span style={{ color: "var(--ui-status-hard-gate-text)" }}>{ownerLine(post)}</span>
         </Sub>,
       );
     }
@@ -177,7 +177,7 @@ function GoalListRow({
     if (post?.owner_waiting) {
       subs.push(
         <Sub key="w">
-          <span style={{ color: "var(--wb-status-hard-gate-text)" }}>{ownerLine(post)}</span>
+          <span style={{ color: "var(--ui-status-hard-gate-text)" }}>{ownerLine(post)}</span>
         </Sub>,
       );
     }
@@ -329,7 +329,7 @@ function todoSub(todo: FileTodo, derivation: ProgressDerivation | null): React.R
         {derivation?.verdict === "stalled" ? (
           <>
             {" · "}
-            <span style={{ color: "var(--wb-status-hard-gate-text)", fontWeight: 650 }}>
+            <span style={{ color: "var(--ui-status-hard-gate-text)", fontWeight: 650 }}>
               Stalled
             </span>
           </>
@@ -348,15 +348,15 @@ function verdictPill(derivation: ProgressDerivation) {
       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[2.5px] text-xs font-semibold whitespace-nowrap"
       style={{
         backgroundColor: stalled
-          ? "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)"
-          : "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-        color: stalled ? "var(--wb-status-hard-gate-text)" : "var(--wb-status-done-text)",
+          ? "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)"
+          : "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+        color: stalled ? "var(--ui-status-hard-gate-text)" : "var(--ui-status-done-text)",
       }}
     >
       <span
         className="block h-[7px] w-[7px] rounded-full"
         style={{
-          backgroundColor: stalled ? "var(--wb-okabe-vermilion)" : "var(--wb-okabe-bluish-green)",
+          backgroundColor: stalled ? "var(--ui-okabe-vermilion)" : "var(--ui-okabe-bluish-green)",
         }}
       />
       {stalled ? `Stalled · ${derivation.missedChecks} missed intervals` : "On track"}
@@ -470,7 +470,7 @@ function GoalDetailDesktop({ goal }: { goal: GoalRecord }) {
         <>
           <p
             className="mt-7 mb-5 text-sm [overflow-wrap:anywhere]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {workSummary}
           </p>
@@ -618,7 +618,7 @@ function GoalDetailPhone({ goal }: { goal: GoalRecord }) {
       <LargeTitle>{goal.title}</LargeTitle>
       <p
         className="m-0 mb-1 text-sm [overflow-wrap:anywhere]"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {goal.project}
         {post ? ` · ${statusLabel(a, post)} · posted ${relTime(post.postedAt)}` : " · No post yet"}
@@ -626,7 +626,7 @@ function GoalDetailPhone({ goal }: { goal: GoalRecord }) {
       {post?.owner_waiting ? (
         <p
           className="m-0 mb-3.5 text-sm [overflow-wrap:anywhere]"
-          style={{ color: "var(--wb-status-hard-gate-text)" }}
+          style={{ color: "var(--ui-status-hard-gate-text)" }}
         >
           {ownerLine(post)}
         </p>
@@ -636,10 +636,10 @@ function GoalDetailPhone({ goal }: { goal: GoalRecord }) {
         <div
           className="mb-1 p-[11px_14px] text-[13.5px] leading-[1.5]"
           style={{
-            backgroundColor: "color-mix(in srgb, var(--wb-okabe-orange) 14%, transparent)",
-            border: "1px solid var(--wb-okabe-orange)",
-            borderRadius: "var(--wb-radius-lg)",
-            color: "var(--wb-content-primary)",
+            backgroundColor: "color-mix(in srgb, var(--ui-okabe-orange) 14%, transparent)",
+            border: "1px solid var(--ui-okabe-orange)",
+            borderRadius: "var(--ui-radius-lg)",
+            color: "var(--ui-content-primary)",
           }}
         >
           <b>Blocked basis</b>

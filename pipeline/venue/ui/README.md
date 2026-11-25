@@ -58,7 +58,7 @@ Then open <http://127.0.0.1:8793>. Or run the server directly:
   dispatch), `theme.js` (theme and the bootstrap), `orphans.js`
   (orphan cards). The theme
   (`theme.css`) mirrors the workbench viewer's design tokens
-  (`--wb-*`: olive palette, surfaces, accent, radius, font stacks) so
+  (`--ui-*`: olive palette, surfaces, accent, radius, font stacks) so
   the page reads as a sibling of the workbench.
 
 ## Supervision and watchdog

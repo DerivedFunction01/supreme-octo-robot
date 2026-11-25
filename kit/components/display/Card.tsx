@@ -18,13 +18,13 @@ export function Card({ title, actions, anchor, className, children }: CardProps)
       data-anchor={anchor}
       className={className}
       style={{
-        backgroundColor: "var(--wb-card-bg)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-card-bg)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-card-radius)",
-        padding: "var(--wb-card-padding)",
-        color: "var(--wb-content-primary)",
+        borderRadius: "var(--ui-card-radius)",
+        padding: "var(--ui-card-padding)",
+        color: "var(--ui-content-primary)",
       }}
     >
       {title ? (

@@ -10,7 +10,7 @@
 /* App-level content chrome only — the shell (sidebar, top bar,
    phone frame) is the kit's AppShell, consumed from the kit.
    Every color, radius, and type value below is a Workhorse
-   Kit v1 token (--wb-*), never a local literal palette. */
+   Kit v1 token (--ui-*), never a local literal palette. */
 
 html,
 body {
@@ -20,8 +20,8 @@ body {
 
 body {
   font-family: Inter, -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
-  background: var(--wb-surface-canvas);
-  color: var(--wb-content-primary);
+  background: var(--ui-surface-canvas);
+  color: var(--ui-content-primary);
 }
 
 .mono {
@@ -36,25 +36,25 @@ body {
   gap: 14px;
   flex-wrap: wrap;
   padding: 8px 16px;
-  background: var(--wb-surface-1);
-  border-bottom: 1px solid var(--wb-border-default);
+  background: var(--ui-surface-1);
+  border-bottom: 1px solid var(--ui-border-default);
   font-size: 13px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
 }
 .rn-harness b {
-  color: var(--wb-content-primary);
+  color: var(--ui-content-primary);
 }
 
 .rn-crumb {
   font-size: 13.5px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
 }
 .rn-crumb b {
-  color: var(--wb-content-primary);
+  color: var(--ui-content-primary);
   font-weight: 650;
 }
 .rn-back {
-  color: var(--wb-accent);
+  color: var(--ui-accent);
   font-size: 14px;
   font-weight: 600;
   display: flex;
@@ -81,7 +81,7 @@ body {
   margin: 0 0 4px;
 }
 .rn-subtitle {
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   font-size: 14px;
   margin: 0 0 20px;
 }
@@ -92,20 +92,20 @@ body {
   font-weight: 700;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   margin: 20px 0 8px 2px;
 }
 .rn-glabel:first-child {
   margin-top: 0;
 }
 .rn-group {
-  background: var(--wb-surface-2);
-  border: 1px solid var(--wb-border-default);
+  background: var(--ui-surface-2);
+  border: 1px solid var(--ui-border-default);
   border-radius: 12px;
   overflow: hidden;
 }
 .rn-group > * + * {
-  border-top: 1px solid var(--wb-border-default);
+  border-top: 1px solid var(--ui-border-default);
 }
 .rn-row {
   display: flex;
@@ -125,37 +125,37 @@ body {
   color: inherit;
 }
 .rn-row-btn:hover {
-  background: var(--wb-surface-1);
+  background: var(--ui-surface-1);
 }
 .rn-lab {
   font-size: 14.5px;
   font-weight: 550;
-  color: var(--wb-content-primary);
+  color: var(--ui-content-primary);
 }
 .rn-sub {
   font-size: 12.5px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
 }
 .rn-val {
   margin-left: auto;
   font-size: 14px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   white-space: nowrap;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .rn-chev {
-  color: var(--wb-content-muted);
+  color: var(--ui-content-muted);
   flex: 0 0 auto;
   margin-left: auto;
 }
 .rn-action .rn-lab {
-  color: var(--wb-accent);
+  color: var(--ui-accent);
   font-weight: 650;
 }
 .rn-action.danger .rn-lab {
-  color: color-mix(in srgb, var(--wb-okabe-vermilion) 82%, var(--wb-content-primary));
+  color: color-mix(in srgb, var(--ui-okabe-vermilion) 82%, var(--ui-content-primary));
 }
 .rn-ml-auto {
   margin-left: auto;
@@ -252,7 +252,7 @@ body {
   font-size: 12.5px;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
-  color: var(--wb-content-primary);
+  color: var(--ui-content-primary);
 }
 /* A past-deadline headline outgrows one phone line (name +
    time + chip + three actions, every element after the name
@@ -324,16 +324,16 @@ button.rn-pick {
   padding: 12px 14px;
   font-size: 14px;
   margin-bottom: 18px;
-  border: 1px solid var(--wb-okabe-orange);
-  background: color-mix(in srgb, var(--wb-okabe-orange) 16%, var(--wb-surface-2));
-  color: var(--wb-content-primary);
+  border: 1px solid var(--ui-okabe-orange);
+  background: color-mix(in srgb, var(--ui-okabe-orange) 16%, var(--ui-surface-2));
+  color: var(--ui-content-primary);
 }
 .rn-notice b {
   font-weight: 700;
 }
 .rn-notice-fail {
-  border-color: var(--wb-okabe-vermilion);
-  background: color-mix(in srgb, var(--wb-okabe-vermilion) 12%, var(--wb-surface-2));
+  border-color: var(--ui-okabe-vermilion);
+  background: color-mix(in srgb, var(--ui-okabe-vermilion) 12%, var(--ui-surface-2));
 }
 
 /* --- dialog over scrim --- */
@@ -347,9 +347,9 @@ button.rn-pick {
   z-index: 50;
 }
 .rn-dialog {
-  background: var(--wb-surface-2);
+  background: var(--ui-surface-2);
   border-radius: 12px;
-  border: 1px solid var(--wb-border-default);
+  border: 1px solid var(--ui-border-default);
   width: 420px;
   max-width: calc(100vw - 48px);
   padding: 20px;
@@ -362,7 +362,7 @@ button.rn-pick {
 }
 .rn-dialog-body {
   font-size: 14px;
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
   margin-bottom: 18px;
 }
 .rn-dialog-actions {
@@ -385,7 +385,7 @@ button.rn-pick {
   flex: 0 0 170px;
 }
 .rn-capfield-hint {
-  color: var(--wb-content-muted);
+  color: var(--ui-content-muted);
 }
 .rn-capfield-in {
   width: 160px;

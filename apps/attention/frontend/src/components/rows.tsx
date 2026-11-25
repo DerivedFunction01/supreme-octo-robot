@@ -160,7 +160,7 @@ export function AwaitingRow({ item }: { item: AwaitingView }) {
       <RowText label={item.title} sub={item.decided_label} />
       <span style={{ marginLeft: "auto", minWidth: 0 }} className="flex items-center gap-2">
         {item.decision.send_id ? (
-          <span className="mono text-xs" style={{ color: "var(--wb-content-muted)" }}>
+          <span className="mono text-xs" style={{ color: "var(--ui-content-muted)" }}>
             {item.decision.send_id}
           </span>
         ) : null}

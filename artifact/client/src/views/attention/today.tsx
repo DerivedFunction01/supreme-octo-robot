@@ -102,10 +102,10 @@ export function TodayView({ onBadges }: Pick<ViewProps, "onBadges">) {
           style={{
             backgroundColor:
               bt && bt.items.length
-                ? "color-mix(in srgb, var(--wb-okabe-orange) 16%, var(--wb-surface-2))"
-                : "color-mix(in srgb, var(--wb-okabe-sky-blue) 14%, var(--wb-surface-2))",
-            borderRadius: "var(--wb-radius-md)",
-            color: "var(--wb-content-primary)",
+                ? "color-mix(in srgb, var(--ui-okabe-orange) 16%, var(--ui-surface-2))"
+                : "color-mix(in srgb, var(--ui-okabe-sky-blue) 14%, var(--ui-surface-2))",
+            borderRadius: "var(--ui-radius-md)",
+            color: "var(--ui-content-primary)",
           }}
         >
           <span>
@@ -163,7 +163,7 @@ export function TodayView({ onBadges }: Pick<ViewProps, "onBadges">) {
         <Card className="mb-2" title="Glance">
           <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1">
             <span className="text-[34px] font-bold">{clock(gl.clock.now)}</span>
-            <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               Next digest {gl.clock.next_window_at ? day(gl.clock.next_window_at) : "—"}
             </span>
             <span className="text-sm">
@@ -174,7 +174,7 @@ export function TodayView({ onBadges }: Pick<ViewProps, "onBadges">) {
             </span>
           </div>
           {gl.next_due ? (
-            <p className="mt-1.5 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <p className="mt-1.5 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               Next due — {gl.next_due.title} · {gl.next_due.handler_label} · {gl.next_due.due_label}
             </p>
           ) : null}
@@ -213,7 +213,7 @@ export function TodayView({ onBadges }: Pick<ViewProps, "onBadges">) {
                 <details>
                   <summary
                     className="mb-2 cursor-pointer text-sm"
-                    style={{ color: "var(--wb-content-secondary)" }}
+                    style={{ color: "var(--ui-content-secondary)" }}
                   >
                     {band.items.length} item{band.items.length === 1 ? "" : "s"} — tap to open
                   </summary>
@@ -289,11 +289,11 @@ function AwayGlance({ gl, td }: { gl: GlancePayload; td: TodayPayload | null }) 
           <span className="text-[15px]">
             <b>{heldOwner}</b> of yours · <b>{heldTotal}</b> in all held for your return
           </span>
-          <span className="text-[15px]" style={{ color: "var(--wb-content-secondary)" }}>
+          <span className="text-[15px]" style={{ color: "var(--ui-content-secondary)" }}>
             Next digest {gl.clock.next_window_at ? day(gl.clock.next_window_at) : "—"}
           </span>
           {gl.down_sources.length ? (
-            <span className="text-[15px]" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="text-[15px]" style={{ color: "var(--ui-content-secondary)" }}>
               Source down: {gl.down_sources.join(", ")} — its items may be missing from this
               picture.
             </span>

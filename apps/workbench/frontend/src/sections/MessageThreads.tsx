@@ -31,8 +31,8 @@ const STATE_LABEL: Record<MessageThread["state"], string> = {
 };
 
 const inputStyle: React.CSSProperties = {
-  backgroundColor: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
+  backgroundColor: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
   borderRadius: 9,
   padding: "6px 10px",
   fontSize: 13.5,
@@ -47,7 +47,7 @@ function ThreadView({ thread }: { thread: MessageThread }) {
   return (
     <div className="mt-3">
       {thread.anchorText ? (
-        <p className="mb-3 text-[13px] [overflow-wrap:anywhere]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mb-3 text-[13px] [overflow-wrap:anywhere]" style={{ color: "var(--ui-content-secondary)" }}>
           Anchored to: "{thread.anchorText}"
         </p>
       ) : null}
@@ -57,19 +57,19 @@ function ThreadView({ thread }: { thread: MessageThread }) {
             key={m.id}
             className="p-[10px_14px]"
             style={{
-              backgroundColor: "var(--wb-surface-2)",
-              border: "1px solid var(--wb-border-default)",
-              borderRadius: "var(--wb-radius-md)",
+              backgroundColor: "var(--ui-surface-2)",
+              border: "1px solid var(--ui-border-default)",
+              borderRadius: "var(--ui-radius-md)",
             }}
           >
-            <div className="mb-1 flex items-center gap-2 text-xs" style={{ color: "var(--wb-content-secondary)" }}>
+            <div className="mb-1 flex items-center gap-2 text-xs" style={{ color: "var(--ui-content-secondary)" }}>
               <span className="font-bold">{m.author}</span>
               <span>{m.when}</span>
               {m.author === "owner" && thread.state !== "archived" ? (
                 <button
                   type="button"
                   className="ml-auto font-semibold"
-                  style={{ color: "var(--wb-accent)" }}
+                  style={{ color: "var(--ui-accent)" }}
                   onClick={() => {
                     setEditingId(m.id);
                     setEditBody(m.body);
@@ -204,8 +204,8 @@ export function MessageThreads() {
             <span
               className="ml-auto inline-flex shrink-0 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
               style={{
-                backgroundColor: "var(--wb-surface-sunken)",
-                color: "var(--wb-content-secondary)",
+                backgroundColor: "var(--ui-surface-sunken)",
+                color: "var(--ui-content-secondary)",
               }}
             >
               {STATE_LABEL[t.state]}

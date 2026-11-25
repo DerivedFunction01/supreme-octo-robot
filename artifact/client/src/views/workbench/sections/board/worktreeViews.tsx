@@ -27,10 +27,10 @@ const pillBase: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   height: "24px",
-  padding: "0 var(--wb-space-8)",
-  borderRadius: "var(--wb-radius-pill)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  padding: "0 var(--ui-space-8)",
+  borderRadius: "var(--ui-radius-pill)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 500,
   whiteSpace: "nowrap",
 };
@@ -46,8 +46,8 @@ export function ProvenanceMark({ source }: { source: string }) {
       <span
         style={{
           ...pillBase,
-          background: "color-mix(in srgb, var(--wb-accent) 16%, transparent)",
-          color: "var(--wb-content-primary)",
+          background: "color-mix(in srgb, var(--ui-accent) 16%, transparent)",
+          color: "var(--ui-content-primary)",
         }}
       >
         ◆ {activeSourceLabel(source)}
@@ -58,8 +58,8 @@ export function ProvenanceMark({ source }: { source: string }) {
     <span
       style={{
         ...pillBase,
-        border: "1px solid var(--wb-border-strong)",
-        color: "var(--wb-content-secondary)",
+        border: "1px solid var(--ui-border-strong)",
+        color: "var(--ui-content-secondary)",
       }}
     >
       {activeSourceLabel(source)}
@@ -72,8 +72,8 @@ export function LikelyDoneMark() {
     <span
       style={{
         ...pillBase,
-        border: "1px solid var(--wb-border-strong)",
-        color: "var(--wb-content-secondary)",
+        border: "1px solid var(--ui-border-strong)",
+        color: "var(--ui-content-secondary)",
       }}
     >
       ◷ Likely done
@@ -99,14 +99,14 @@ export function ActivePlanLine({
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "var(--wb-space-8)",
+        gap: "var(--ui-space-8)",
         flexWrap: "wrap",
       }}
     >
       {plan ? (
         <a
           href={sectionHref(slug, "plans", plan.path)}
-          style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+          style={{ color: "var(--ui-accent)", textDecoration: "none" }}
         >
           {plan.title}
         </a>
@@ -130,11 +130,11 @@ export function WorktreeMeta({ worktree }: { worktree: WorktreeItem }) {
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "var(--wb-space-8)",
+        gap: "var(--ui-space-8)",
         flexWrap: "wrap",
       }}
     >
-      <span className="mono" style={{ color: "var(--wb-content-secondary)" }}>
+      <span className="mono" style={{ color: "var(--ui-content-secondary)" }}>
         {worktree.branch ?? "detached"}
       </span>
       {worktree.head_short ? (
@@ -163,7 +163,7 @@ export function WorktreeMeta({ worktree }: { worktree: WorktreeItem }) {
       ) : null}
       {worktree.likely_done ? <LikelyDoneMark /> : null}
       {worktree.degraded ? (
-        <span style={{ ...metaStyle, color: "var(--wb-danger)" }}>
+        <span style={{ ...metaStyle, color: "var(--ui-danger)" }}>
           {worktree.reason ?? "degraded"}
         </span>
       ) : null}
@@ -191,15 +191,15 @@ export function WorktreeChild({
   return (
     <li
       style={{
-        borderBottom: "1px solid var(--wb-border-default)",
-        padding: "var(--wb-space-8) 0",
+        borderBottom: "1px solid var(--ui-border-default)",
+        padding: "var(--ui-space-8) 0",
       }}
     >
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
         }}
       >
@@ -220,9 +220,9 @@ export function WorktreeChild({
             style={{
               display: "grid",
               gridTemplateColumns: "120px 1fr",
-              gap: "var(--wb-space-4) var(--wb-space-16)",
-              margin: "var(--wb-space-8) 0 0 var(--wb-space-24)",
-              fontSize: "var(--wb-font-size-sm)",
+              gap: "var(--ui-space-4) var(--ui-space-16)",
+              margin: "var(--ui-space-8) 0 0 var(--ui-space-24)",
+              fontSize: "var(--ui-font-size-sm)",
             }}
           >
             <dt style={metaStyle}>Path</dt>
@@ -251,12 +251,12 @@ export function WorktreeChild({
             {worktree.active?.note ? (
               <>
                 <dt style={metaStyle}>Note</dt>
-                <dd style={{ margin: 0, color: "var(--wb-danger)" }}>{worktree.active.note}</dd>
+                <dd style={{ margin: 0, color: "var(--ui-danger)" }}>{worktree.active.note}</dd>
               </>
             ) : null}
           </dl>
           {showChanges ? (
-            <div style={{ margin: "var(--wb-space-16) 0 var(--wb-space-8) var(--wb-space-24)" }}>
+            <div style={{ margin: "var(--ui-space-16) 0 var(--ui-space-8) var(--ui-space-24)" }}>
               <ChangesPanel slug={slug} worktree={worktree.branch ?? worktree.path} />
             </div>
           ) : null}
@@ -288,7 +288,7 @@ export function WorktreeChildren({
   if (children.length === 0) return null;
   const likelyDone = children.filter((w) => w.likely_done).length;
   return (
-    <div style={{ margin: "var(--wb-space-4) 0 0 var(--wb-space-16)" }}>
+    <div style={{ margin: "var(--ui-space-4) 0 0 var(--ui-space-16)" }}>
       <Button
         variant="ghost"
         ariaLabel={open ? "Collapse worktrees" : "Expand worktrees"}
@@ -309,8 +309,8 @@ export function WorktreeChildren({
           style={{
             listStyle: "none",
             margin: 0,
-            padding: "0 0 0 var(--wb-space-16)",
-            borderLeft: "1px solid var(--wb-border-default)",
+            padding: "0 0 0 var(--ui-space-16)",
+            borderLeft: "1px solid var(--ui-border-default)",
           }}
         >
           {children.map((worktree) => (

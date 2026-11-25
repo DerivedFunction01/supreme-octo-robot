@@ -48,7 +48,7 @@ export function LifecycleCard({
 }) {
   return (
     <Card title="Lifecycle" anchor="mockups/lifecycle-card">
-      <Field label="Set status" style={{ marginBottom: "var(--wb-space-8)" }}>
+      <Field label="Set status" style={{ marginBottom: "var(--ui-space-8)" }}>
         {(id) => (
           <Select
             id={id}
@@ -64,7 +64,7 @@ export function LifecycleCard({
       </Field>
       <Field
         label="Ruling note (required for Canonical and Hard gate)"
-        style={{ marginBottom: "var(--wb-space-8)" }}
+        style={{ marginBottom: "var(--ui-space-8)" }}
       >
         {(id) => (
           <Input
@@ -77,7 +77,7 @@ export function LifecycleCard({
         )}
       </Field>
       {statusChoice === "hard-gate" ? (
-        <Field label="Gate name" style={{ marginBottom: "var(--wb-space-8)" }}>
+        <Field label="Gate name" style={{ marginBottom: "var(--ui-space-8)" }}>
           {(id) => (
             <Input
               id={id}
@@ -89,7 +89,7 @@ export function LifecycleCard({
           )}
         </Field>
       ) : null}
-      <div style={{ display: "flex", gap: "var(--wb-space-8)", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "var(--ui-space-8)", flexWrap: "wrap" }}>
         <ArmConfirm
           label="Set status"
           confirmLabel="Confirm status change"
@@ -137,7 +137,7 @@ export function LifecycleCard({
         )}
       </div>
       {derived?.drift ? (
-        <div style={{ marginTop: "var(--wb-space-8)" }}>
+        <div style={{ marginTop: "var(--ui-space-8)" }}>
           <Toggle
             checked={acceptDrift}
             onChange={setAcceptDrift}
@@ -145,7 +145,7 @@ export function LifecycleCard({
           />
         </div>
       ) : null}
-      <div style={{ marginTop: "var(--wb-space-12)" }}>
+      <div style={{ marginTop: "var(--ui-space-12)" }}>
         <span style={labelStyle}>Supersede with</span>
         {supersedeCandidates.length > 0 ? (
           <>
@@ -153,7 +153,7 @@ export function LifecycleCard({
               ariaLabel="Superseding entry"
               value={supersedeTarget}
               onChange={(event) => setSupersedeTarget(event.target.value)}
-              style={{ display: "block", width: "100%", marginTop: "var(--wb-space-4)" }}
+              style={{ display: "block", width: "100%", marginTop: "var(--ui-space-4)" }}
               options={[
                 { value: "", label: "Choose the superseding entry…", disabled: true },
                 ...supersedeCandidates.map((candidate) => ({
@@ -168,7 +168,7 @@ export function LifecycleCard({
                 (owner ruling; the disabled
                 reason prose that used to share this row
                 and squeeze the label is dropped). */}
-            <div style={{ marginTop: "var(--wb-space-8)" }}>
+            <div style={{ marginTop: "var(--ui-space-8)" }}>
               <ArmConfirm
                 label="Supersede"
                 confirmLabel="Confirm supersede"
@@ -191,7 +191,7 @@ export function LifecycleCard({
             </div>
           </>
         ) : (
-          <p style={{ margin: "var(--wb-space-4) 0 0", color: "var(--wb-content-secondary)" }}>
+          <p style={{ margin: "var(--ui-space-4) 0 0", color: "var(--ui-content-secondary)" }}>
             No other entries in this project to supersede with.
           </p>
         )}

@@ -64,9 +64,9 @@ export function GrantCard({ snap }: { snap: Snapshot }) {
           className="rn-notice"
           role="status"
           style={{
-            borderColor: "var(--wb-okabe-bluish-green)",
+            borderColor: "var(--ui-okabe-bluish-green)",
             background:
-              "color-mix(in srgb, var(--wb-okabe-bluish-green) 12%, var(--wb-surface-2))",
+              "color-mix(in srgb, var(--ui-okabe-bluish-green) 12%, var(--ui-surface-2))",
           }}
         >
           <span>{note}</span>

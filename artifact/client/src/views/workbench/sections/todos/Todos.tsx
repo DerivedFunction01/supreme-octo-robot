@@ -35,13 +35,13 @@ import { UpdatedAgo } from "../UpdatedAgo";
 const STATUSES = ["todo", "doing", "blocked", "done"] as const;
 
 const selectStyle: React.CSSProperties = {
-  background: "var(--wb-surface-2)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-button-radius)",
-  color: "var(--wb-content-primary)",
+  background: "var(--ui-surface-2)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-button-radius)",
+  color: "var(--ui-content-primary)",
   minHeight: "38px",
-  padding: "0 var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-sm)",
+  padding: "0 var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-sm)",
 };
 
 function TodoRow({
@@ -95,7 +95,7 @@ function TodoRow({
             <a
               className="mono"
               href={todo.project ? sectionHref(todo.project, "plans", todo.plan) : undefined}
-              style={{ color: "var(--wb-accent)", fontSize: "var(--wb-font-size-xs)" }}
+              style={{ color: "var(--ui-accent)", fontSize: "var(--ui-font-size-xs)" }}
             >
               {todo.plan}
               {todo.plan_step ? ` · step ${todo.plan_step}` : ""}
@@ -109,7 +109,7 @@ function TodoRow({
           </span>
         ) : null}
         {invalid ? (
-          <span style={{ display: "block", color: "var(--wb-danger)" }}>
+          <span style={{ display: "block", color: "var(--ui-danger)" }}>
             Invalid front-matter: {(todo.errors ?? []).join("; ")}
           </span>
         ) : null}
@@ -117,7 +117,7 @@ function TodoRow({
           <span
             style={{
               display: "block",
-              color: "var(--wb-content-muted)",
+              color: "var(--ui-content-muted)",
               whiteSpace: "pre-wrap",
             }}
           >
@@ -309,8 +309,8 @@ export function TodosSection({ slug, projectName }: { slug: string; projectName:
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: "var(--wb-space-12)",
-          marginBottom: "var(--wb-space-16)",
+          gap: "var(--ui-space-12)",
+          marginBottom: "var(--ui-space-16)",
         }}
       >
         <UpdatedAgo capturedAt={capturedAt} />
@@ -326,27 +326,27 @@ export function TodosSection({ slug, projectName }: { slug: string; projectName:
         onChange={setScope}
       />
       {scope === "all" && allPendingCount > 0 ? (
-        <p style={{ color: "var(--wb-content-muted)" }}>
+        <p style={{ color: "var(--ui-content-muted)" }}>
           Loading {allPendingCount} project{allPendingCount === 1 ? "" : "s"}…
         </p>
       ) : null}
       {scope === "all" && allFailedNames.length > 0 ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           Could not load {allFailedNames.join(", ")} — the rest of the list is shown.
         </p>
       ) : null}
       {dbFallback ? (
-        <p style={{ color: "var(--wb-content-secondary)" }}>
+        <p style={{ color: "var(--ui-content-secondary)" }}>
           These todos still live in {projectName}&rsquo;s registry DB. They are read-only here.
         </p>
       ) : null}
       {feed.errors && feed.errors.length > 0 ? (
-        <p style={{ color: "var(--wb-danger)" }}>
+        <p style={{ color: "var(--ui-danger)" }}>
           <span className="num">{feed.errors.length}</span> todo file problem(s).
         </p>
       ) : null}
       {mutation.isError ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           The status change was refused.
         </p>
       ) : null}

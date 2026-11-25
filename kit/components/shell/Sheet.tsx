@@ -49,9 +49,9 @@ export function Sheet({ open, title, onClose, anchor, className, children, foote
         onClick={onClose}
         className="absolute inset-0 cursor-default"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--wb-content-primary) 45%, transparent)",
-          transitionDuration: "var(--wb-motion-duration-sheet)",
-          transitionTimingFunction: "var(--wb-motion-ease)",
+          backgroundColor: "color-mix(in srgb, var(--ui-content-primary) 45%, transparent)",
+          transitionDuration: "var(--ui-motion-duration-sheet)",
+          transitionTimingFunction: "var(--ui-motion-ease)",
         }}
       />
       <div
@@ -67,14 +67,14 @@ export function Sheet({ open, title, onClose, anchor, className, children, foote
           .filter(Boolean)
           .join(" ")}
         style={{
-          backgroundColor: "var(--wb-surface-3)",
-          borderColor: "var(--wb-border-default)",
+          backgroundColor: "var(--ui-surface-3)",
+          borderColor: "var(--ui-border-default)",
           borderStyle: "solid",
           borderWidth: 1,
-          borderRadius: "var(--wb-panel-radius)",
-          boxShadow: "var(--wb-shadow-overlay)",
-          padding: "var(--wb-panel-padding)",
-          color: "var(--wb-content-primary)",
+          borderRadius: "var(--ui-panel-radius)",
+          boxShadow: "var(--ui-shadow-overlay)",
+          padding: "var(--ui-panel-padding)",
+          color: "var(--ui-content-primary)",
         }}
       >
         <h2 className="mb-4 text-lg font-semibold">{title}</h2>

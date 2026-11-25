@@ -4,7 +4,7 @@
    define per palette × mode, so this one mapping follows
    every palette and both modes without a per-palette
    copy. Role choices, for legibility on the code
-   background (--wb-surface-sunken): the status *-text
+   background (--ui-surface-sunken): the status *-text
    variants are each hue's contrast-tuned text form;
    keyword rides the palette accent so the two palettes
    keep their own flavor; comment is the muted content
@@ -12,7 +12,7 @@
 
 .hljs-comment,
 .hljs-quote {
-  color: var(--wb-content-muted);
+  color: var(--ui-content-muted);
   font-style: italic;
 }
 
@@ -20,32 +20,32 @@
 .hljs-selector-tag,
 .hljs-doctag,
 .hljs-template-tag {
-  color: var(--wb-accent);
+  color: var(--ui-accent);
 }
 
 .hljs-string,
 .hljs-regexp,
 .hljs-char,
 .hljs-meta .hljs-string {
-  color: var(--wb-status-implemented-text);
+  color: var(--ui-status-implemented-text);
 }
 
 .hljs-number,
 .hljs-literal {
-  color: var(--wb-status-stale-text);
+  color: var(--ui-status-stale-text);
 }
 
 .hljs-title,
 .hljs-section,
 .hljs-name {
-  color: var(--wb-status-canonical-text);
+  color: var(--ui-status-canonical-text);
 }
 
 .hljs-type,
 .hljs-built_in,
 .hljs-builtin-name,
 .hljs-title.class_ {
-  color: var(--wb-status-unexplored-text);
+  color: var(--ui-status-unexplored-text);
 }
 
 .hljs-attr,
@@ -55,7 +55,7 @@
 .hljs-template-variable,
 .hljs-selector-id,
 .hljs-selector-class {
-  color: var(--wb-status-needs-changes-text);
+  color: var(--ui-status-needs-changes-text);
 }
 
 .hljs-symbol,
@@ -63,16 +63,16 @@
 .hljs-link,
 .hljs-selector-attr,
 .hljs-selector-pseudo {
-  color: var(--wb-status-unexplored-text);
+  color: var(--ui-status-unexplored-text);
 }
 
 .hljs-meta,
 .hljs-meta .hljs-keyword {
-  color: var(--wb-content-secondary);
+  color: var(--ui-content-secondary);
 }
 
 .hljs-tag {
-  color: var(--wb-content-muted);
+  color: var(--ui-content-muted);
 }
 
 .hljs-emphasis {
@@ -86,14 +86,14 @@
 /* A highlighted code block spliced into rendered plan
    markdown (PlanBody's fence swap): the same box the
    components draw with the code style object. */
-.wb-codeblock {
-  background: var(--wb-surface-sunken);
-  border: 1px solid var(--wb-border-default);
-  border-radius: var(--wb-radius-md);
-  padding: var(--wb-space-12) var(--wb-space-16);
-  font-family: var(--wb-font-mono);
-  font-size: var(--wb-font-size-sm);
-  line-height: var(--wb-line-height-sm);
+.ui-codeblock {
+  background: var(--ui-surface-sunken);
+  border: 1px solid var(--ui-border-default);
+  border-radius: var(--ui-radius-md);
+  padding: var(--ui-space-12) var(--ui-space-16);
+  font-family: var(--ui-font-mono);
+  font-size: var(--ui-font-size-sm);
+  line-height: var(--ui-line-height-sm);
   overflow-x: auto;
   white-space: pre;
 }
@@ -102,8 +102,8 @@
    PlanBody renders it focusable (tabindex), and its
    focus indication is the kit's one ring — the same
    treatment every focusable surface carries. */
-.wb-codeblock:focus-visible {
-  outline: 2px solid var(--wb-focus-ring);
+.ui-codeblock:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
   outline-offset: 1px;
 }
 
@@ -111,9 +111,9 @@
    the diff views' row tinting, which is the primary
    signal and lives in the components). */
 .hljs-addition {
-  color: var(--wb-status-implemented-text);
+  color: var(--ui-status-implemented-text);
 }
 
 .hljs-deletion {
-  color: var(--wb-status-hard-gate-text);
+  color: var(--ui-status-hard-gate-text);
 }

@@ -107,10 +107,10 @@ function BundleRow({
       <span style={isPhone ? undefined : { flex: 1 }}>
         {bundleTitle(bundle)}
         {plan && !plan.conforming ? (
-          <span style={{ color: "var(--wb-content-secondary)" }}> · source format</span>
+          <span style={{ color: "var(--ui-content-secondary)" }}> · source format</span>
         ) : null}
         {bundle.kind === "bundle" ? (
-          <span style={{ color: "var(--wb-content-muted)" }}> · bundle</span>
+          <span style={{ color: "var(--ui-content-muted)" }}> · bundle</span>
         ) : null}
         <ChecklistStrip todos={bundle.todos} />
       </span>
@@ -120,7 +120,7 @@ function BundleRow({
             display: "flex",
             flexWrap: "wrap",
             alignItems: "center",
-            gap: "var(--wb-space-12)",
+            gap: "var(--ui-space-12)",
           }}
         >
           {meta}
@@ -140,7 +140,7 @@ function BundleRow({
         <div style={rowStyle}>{inner}</div>
       )}
       {bundle.errors.length > 0 ? (
-        <p style={{ color: "var(--wb-danger)", margin: "0 0 var(--wb-space-8)" }}>
+        <p style={{ color: "var(--ui-danger)", margin: "0 0 var(--ui-space-8)" }}>
           {bundle.errors.map((e) => `${e.path}: ${e.error}`).join(" · ")}
         </p>
       ) : null}
@@ -173,7 +173,7 @@ function BundleGroupRow({
             listStyle: "none",
             margin: 0,
             padding: 0,
-            paddingLeft: "var(--wb-space-24)",
+            paddingLeft: "var(--ui-space-24)",
           }}
         >
           {entry.children.map((child) => (
@@ -195,9 +195,9 @@ function BundleGroupRow({
                         ...listRowStyle,
                         flexDirection: "column",
                         alignItems: "stretch",
-                        color: "var(--wb-content-muted)",
+                        color: "var(--ui-content-muted)",
                       }
-                    : { ...listRowStyle, color: "var(--wb-content-muted)" }
+                    : { ...listRowStyle, color: "var(--ui-content-muted)" }
                 }
               >
                 <span className="mono" style={isPhone ? { overflowWrap: "anywhere" } : { flex: 1 }}>
@@ -217,19 +217,19 @@ function FinishedTodos({ bundle }: { bundle: BundleItem }) {
   if (bundle.todos.length === 0) return null;
   return (
     <details>
-      <summary style={{ color: "var(--wb-content-secondary)", cursor: "pointer" }}>
+      <summary style={{ color: "var(--ui-content-secondary)", cursor: "pointer" }}>
         <span className="num">{bundle.todos.length}</span> finished todos
       </summary>
-      <ul style={{ listStyle: "none", margin: "var(--wb-space-8) 0", padding: 0 }}>
+      <ul style={{ listStyle: "none", margin: "var(--ui-space-8) 0", padding: 0 }}>
         {bundle.todos.map((todo) => (
           <li
             key={todo.path ?? todo.id ?? ""}
-            style={{ padding: "var(--wb-space-4) 0", color: "var(--wb-content-secondary)" }}
+            style={{ padding: "var(--ui-space-4) 0", color: "var(--ui-content-secondary)" }}
           >
             <span aria-hidden="true">{STATUS_GLYPH[todo.status ?? ""] ?? "○"} </span>
             {todo.title ?? todo.path} · {todoStatusLabel(todo.status)}
             {todo.body ? (
-              <span style={{ color: "var(--wb-content-muted)" }}> — {todo.body}</span>
+              <span style={{ color: "var(--ui-content-muted)" }}> — {todo.body}</span>
             ) : null}
           </li>
         ))}
@@ -283,8 +283,8 @@ export function PlansSection({
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: "var(--wb-space-12)",
-          marginBottom: "var(--wb-space-16)",
+          gap: "var(--ui-space-12)",
+          marginBottom: "var(--ui-space-16)",
         }}
       >
         <UpdatedAgo capturedAt={feed.captured_at} />
@@ -322,8 +322,8 @@ export function PlansSection({
             <>
               <h2
                 style={{
-                  fontSize: "var(--wb-font-size-base)",
-                  marginTop: "var(--wb-space-24)",
+                  fontSize: "var(--ui-font-size-base)",
+                  marginTop: "var(--ui-space-24)",
                 }}
               >
                 Finished

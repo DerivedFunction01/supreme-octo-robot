@@ -33,11 +33,11 @@ export function ratio(fg, bg) {
 }
 
 // Resolve a status text $value to a hex: literal, a DTCG
-// alias into primitive/status, or a var(--wb-status-*-text)
+// alias into primitive/status, or a var(--ui-status-*-text)
 // reference to another status's same-mode text.
 export function resolveText(raw, mode, seen = new Set()) {
   if (raw.startsWith("#")) return raw;
-  const alias = raw.match(/^var\(--wb-status-([a-z-]+)-text\)$/);
+  const alias = raw.match(/^var\(--ui-status-([a-z-]+)-text\)$/);
   if (alias) {
     if (seen.has(alias[1])) throw new Error(`alias loop: ${raw}`);
     seen.add(alias[1]);
@@ -72,16 +72,16 @@ export function ratioRgb(fg, bg) {
   return (l1 + 0.05) / (l2 + 0.05);
 }
 // Resolve a status hue $value to a hex: literal, a DTCG
-// alias into the primitives, a var(--wb-status-<other>)
+// alias into the primitives, a var(--ui-status-<other>)
 // reference to another status's hue, or deferred's
-// var(--wb-content-secondary) (the palette/mode's own
+// var(--ui-content-secondary) (the palette/mode's own
 // secondary content token).
 export function resolveHue(raw, palette, mode, seen = new Set()) {
   if (raw.startsWith("#")) return raw;
-  if (raw === "var(--wb-content-secondary)") {
+  if (raw === "var(--ui-content-secondary)") {
     return tokens.semantic[palette][mode].content.secondary.$value;
   }
-  const alias = raw.match(/^var\(--wb-status-([a-z-]+)\)$/);
+  const alias = raw.match(/^var\(--ui-status-([a-z-]+)\)$/);
   if (alias) {
     if (seen.has(alias[1])) throw new Error(`hue alias loop: ${raw}`);
     seen.add(alias[1]);

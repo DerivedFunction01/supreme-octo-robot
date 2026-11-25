@@ -13,7 +13,7 @@
 // lib/responsive.ts useIsPhone and nothing else — no second
 // breakpoint, no per-app shell. Theme, palette, and mode arrive
 // through the document's data attributes, as every primitive
-// assumes; all values are --wb-* tokens.
+// assumes; all values are --ui-* tokens.
 
 import {
   type CSSProperties,
@@ -125,16 +125,16 @@ function CountBadge({ item }: { item: AppShellNavItem }) {
         ...(item.hot
           ? {
               backgroundColor:
-                "color-mix(in srgb, var(--wb-okabe-vermilion) 16%, transparent)",
+                "color-mix(in srgb, var(--ui-okabe-vermilion) 16%, transparent)",
               // 43%: the mix-badge text step the contrast
               // gate's Part 3 family B verifies (see LogRow's
               // KindBadge, the same formula).
               color:
-                "color-mix(in srgb, var(--wb-okabe-vermilion) 43%, var(--wb-content-primary))",
+                "color-mix(in srgb, var(--ui-okabe-vermilion) 43%, var(--ui-content-primary))",
             }
           : {
-              backgroundColor: "var(--wb-surface-sunken)",
-              color: "var(--wb-content-secondary)",
+              backgroundColor: "var(--ui-surface-sunken)",
+              color: "var(--ui-content-secondary)",
             }),
       }}
     >
@@ -186,7 +186,7 @@ function SidebarRow({
         borderRadius: 9,
         ...(active
           ? {
-              backgroundColor: "var(--wb-accent-soft)",
+              backgroundColor: "var(--ui-accent-soft)",
               fontWeight: 650,
             }
           : null),
@@ -215,8 +215,8 @@ export function SidebarNav({
     <div
       className="flex w-[224px] flex-[0_0_224px] flex-col p-[14px_10px]"
       style={{
-        backgroundColor: "var(--wb-surface-1)",
-        borderRight: "1px solid var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-1)",
+        borderRight: "1px solid var(--ui-border-default)",
       }}
     >
       <button
@@ -226,7 +226,7 @@ export function SidebarNav({
         style={{
           ...rowReset,
           borderRadius: 9,
-          color: "var(--wb-content-secondary)",
+          color: "var(--ui-content-secondary)",
           fontWeight: 600,
         }}
       >
@@ -256,7 +256,7 @@ export function SidebarNav({
       {footerNavItems && footerNavItems.length > 0 ? (
         <div
           className="mt-auto pt-[10px]"
-          style={{ borderTop: "1px solid var(--wb-border-default)" }}
+          style={{ borderTop: "1px solid var(--ui-border-default)" }}
         >
           <nav className="flex flex-col gap-[2px]" aria-label={`${appName} settings`}>
             {footerNavItems.map((item) => (
@@ -285,8 +285,8 @@ export function TopBar({
     <div
       className="flex h-[52px] flex-[0_0_52px] items-center gap-[14px] px-[22px]"
       style={{
-        borderBottom: "1px solid var(--wb-border-default)",
-        backgroundColor: "var(--wb-surface-1)",
+        borderBottom: "1px solid var(--ui-border-default)",
+        backgroundColor: "var(--ui-surface-1)",
       }}
     >
       {crumb}
@@ -328,7 +328,7 @@ function PhoneNavRow({
           display: "flex",
           alignItems: "center",
           gap: 8,
-          color: "var(--wb-content-muted)",
+          color: "var(--ui-content-muted)",
         }}
       >
         {item ? <CountBadge item={item} /> : null}
@@ -348,8 +348,8 @@ function PhoneGroup({
   return (
     <div
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        border: "1px solid var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        border: "1px solid var(--ui-border-default)",
         borderRadius: 12,
         overflow: "hidden",
         marginTop: first ? 0 : 18,
@@ -406,8 +406,8 @@ export function PhoneShell(props: AppShellProps) {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        backgroundColor: "var(--wb-surface-canvas)",
-        color: "var(--wb-content-primary)",
+        backgroundColor: "var(--ui-surface-canvas)",
+        color: "var(--ui-content-primary)",
         ...style,
       }}
     >
@@ -420,7 +420,7 @@ export function PhoneShell(props: AppShellProps) {
             style={{
               ...rowReset,
               padding: 0,
-              color: "var(--wb-accent)",
+              color: "var(--ui-accent)",
               fontWeight: 550,
             }}
           >
@@ -454,7 +454,7 @@ export function PhoneShell(props: AppShellProps) {
               <PhoneNavRow
                 label="Apps"
                 icon={
-                  <span style={{ color: "var(--wb-content-secondary)", display: "flex" }}>
+                  <span style={{ color: "var(--ui-content-secondary)", display: "flex" }}>
                     <AppsGlyph />
                   </span>
                 }
@@ -468,7 +468,7 @@ export function PhoneShell(props: AppShellProps) {
                     key={item.key}
                     style={
                       i > 0
-                        ? { borderTop: "1px solid var(--wb-border-default)" }
+                        ? { borderTop: "1px solid var(--ui-border-default)" }
                         : undefined
                     }
                   >
@@ -488,7 +488,7 @@ export function PhoneShell(props: AppShellProps) {
                     key={item.key}
                     style={
                       i > 0
-                        ? { borderTop: "1px solid var(--wb-border-default)" }
+                        ? { borderTop: "1px solid var(--ui-border-default)" }
                         : undefined
                     }
                   >
@@ -521,8 +521,8 @@ export function AppShell(props: AppShellProps) {
       style={{
         display: "flex",
         height: "100%",
-        backgroundColor: "var(--wb-surface-canvas)",
-        color: "var(--wb-content-primary)",
+        backgroundColor: "var(--ui-surface-canvas)",
+        color: "var(--ui-content-primary)",
         ...style,
       }}
     >

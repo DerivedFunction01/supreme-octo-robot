@@ -75,18 +75,18 @@ export function ConfigGroup({
           <div
             key={knob.key}
             className="px-3.5 py-[11px]"
-            style={{ borderTopColor: "var(--wb-border-default)" }}
+            style={{ borderTopColor: "var(--ui-border-default)" }}
           >
             <div
               className="text-[14.5px] font-medium [overflow-wrap:anywhere]"
-              style={{ color: "var(--wb-content-primary)" }}
+              style={{ color: "var(--ui-content-primary)" }}
             >
               {knob.label}
             </div>
             <div className="mt-[3px] flex flex-nowrap items-center gap-3">
               <span
                 className="min-w-0 flex-1 text-[12.5px] [overflow-wrap:anywhere]"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
                 {knob.min}–{knob.max} {knob.unit}
               </span>
@@ -102,7 +102,7 @@ export function ConfigGroup({
                 />
                 <span
                   className="text-[12.5px]"
-                  style={{ color: "var(--wb-content-secondary)" }}
+                  style={{ color: "var(--ui-content-secondary)" }}
                 >
                   {knob.unit}
                 </span>
@@ -117,7 +117,7 @@ export function ConfigGroup({
         <p
           role="status"
           className="mt-2 ml-[2px] text-[13px]"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
           {note}
         </p>

@@ -57,8 +57,8 @@ function formatBytes(n: number): string {
 }
 
 const rowTint: Record<string, string | undefined> = {
-  add: "color-mix(in srgb, var(--wb-status-implemented) 13%, transparent)",
-  del: "color-mix(in srgb, var(--wb-status-hard-gate) 11%, transparent)",
+  add: "color-mix(in srgb, var(--ui-status-implemented) 13%, transparent)",
+  del: "color-mix(in srgb, var(--ui-status-hard-gate) 11%, transparent)",
 };
 
 const markerGlyph: Record<string, string> = {
@@ -116,11 +116,11 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
       // every scrollable mono region in the client
       // carries.
       tabIndex={0}
-      className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+      className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
       style={{
-        fontFamily: "var(--wb-font-mono)",
-        fontSize: "var(--wb-font-size-sm)",
-        lineHeight: "var(--wb-line-height-sm)",
+        fontFamily: "var(--ui-font-mono)",
+        fontSize: "var(--ui-font-size-sm)",
+        lineHeight: "var(--ui-line-height-sm)",
         overflowX: "auto",
       }}
     >
@@ -128,9 +128,9 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
         <div key={`${hunk.old_start}:${hunk.new_start}`}>
           <div
             style={{
-              color: "var(--wb-content-muted)",
-              background: "var(--wb-surface-sunken)",
-              padding: "0 var(--wb-space-8)",
+              color: "var(--ui-content-muted)",
+              background: "var(--ui-surface-sunken)",
+              padding: "0 var(--ui-space-8)",
               whiteSpace: "pre",
             }}
           >
@@ -152,9 +152,9 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
                 <span
                   className="num"
                   style={{
-                    color: "var(--wb-content-muted)",
+                    color: "var(--ui-content-muted)",
                     textAlign: "right",
-                    paddingRight: "var(--wb-space-8)",
+                    paddingRight: "var(--ui-space-8)",
                   }}
                 >
                   {line.old_no ?? ""}
@@ -162,14 +162,14 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
                 <span
                   className="num"
                   style={{
-                    color: "var(--wb-content-muted)",
+                    color: "var(--ui-content-muted)",
                     textAlign: "right",
-                    paddingRight: "var(--wb-space-8)",
+                    paddingRight: "var(--ui-space-8)",
                   }}
                 >
                   {line.new_no ?? ""}
                 </span>
-                <span aria-hidden="true" style={{ color: "var(--wb-content-secondary)" }}>
+                <span aria-hidden="true" style={{ color: "var(--ui-content-secondary)" }}>
                   {markerGlyph[line.kind]}
                 </span>
                 {highlighted != null ? (
@@ -190,18 +190,18 @@ export function HunkView({ path, hunks }: { path: string; hunks: DiffHunk[] }) {
 const summaryStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "baseline",
-  gap: "var(--wb-space-12)",
+  gap: "var(--ui-space-12)",
   cursor: "pointer",
-  padding: "var(--wb-space-8) var(--wb-space-12)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  padding: "var(--ui-space-8) var(--ui-space-12)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 const groupBoxStyle: React.CSSProperties = {
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  marginBottom: "var(--wb-space-8)",
-  background: "var(--wb-surface-1)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  marginBottom: "var(--ui-space-8)",
+  background: "var(--ui-surface-1)",
 };
 
 function countsLabel(entry: { additions: number; deletions: number }): string {
@@ -234,16 +234,16 @@ export function DiffFileGroup({ file }: { file: DiffFileEntry }) {
           {countsLabel(file)}
         </span>
         {file.truncated ? (
-          <span style={{ color: "var(--wb-status-stale-text)" }}>truncated</span>
+          <span style={{ color: "var(--ui-status-stale-text)" }}>truncated</span>
         ) : null}
       </summary>
-      <div style={{ borderTop: "1px solid var(--wb-border-default)" }}>
+      <div style={{ borderTop: "1px solid var(--ui-border-default)" }}>
         {file.binary ? (
           <p
             style={{
               margin: 0,
-              padding: "var(--wb-space-8) var(--wb-space-12)",
-              color: "var(--wb-content-secondary)",
+              padding: "var(--ui-space-8) var(--ui-space-12)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Binary file — metadata only.
@@ -262,8 +262,8 @@ function PeekBody({ peek }: { peek: DiffPeek }) {
       <p
         style={{
           margin: 0,
-          padding: "var(--wb-space-8) var(--wb-space-12)",
-          color: "var(--wb-content-secondary)",
+          padding: "var(--ui-space-8) var(--ui-space-12)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         Withheld — secret-shaped path.
@@ -275,8 +275,8 @@ function PeekBody({ peek }: { peek: DiffPeek }) {
       <p
         style={{
           margin: 0,
-          padding: "var(--wb-space-8) var(--wb-space-12)",
-          color: "var(--wb-content-secondary)",
+          padding: "var(--ui-space-8) var(--ui-space-12)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         Not shown — {peek.withheld}.
@@ -288,8 +288,8 @@ function PeekBody({ peek }: { peek: DiffPeek }) {
       <p
         style={{
           margin: 0,
-          padding: "var(--wb-space-8) var(--wb-space-12)",
-          color: "var(--wb-content-secondary)",
+          padding: "var(--ui-space-8) var(--ui-space-12)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         Binary file — metadata only.
@@ -303,8 +303,8 @@ export function UntrackedGroup({ items }: { items: DiffPeek[] }) {
   const isPhone = useIsPhone();
   if (items.length === 0) return null;
   return (
-    <section data-anchor={anchor.changesUntracked} style={{ marginTop: "var(--wb-space-16)" }}>
-      <h3 style={{ fontSize: "var(--wb-font-size-base)", margin: "0 0 var(--wb-space-8)" }}>
+    <section data-anchor={anchor.changesUntracked} style={{ marginTop: "var(--ui-space-16)" }}>
+      <h3 style={{ fontSize: "var(--ui-font-size-base)", margin: "0 0 var(--ui-space-8)" }}>
         Untracked — <span className="num">{items.length}</span> files
       </h3>
       {items.map((item) => (
@@ -317,14 +317,14 @@ export function UntrackedGroup({ items }: { items: DiffPeek[] }) {
               {item.is_dir ? "directory" : formatBytes(item.size_bytes)}
             </span>
             {item.withheld === "secret" ? (
-              <span style={{ color: "var(--wb-status-stale-text)" }}>withheld</span>
+              <span style={{ color: "var(--ui-status-stale-text)" }}>withheld</span>
             ) : null}
             {item.truncated ? (
-              <span style={{ color: "var(--wb-status-stale-text)" }}>truncated</span>
+              <span style={{ color: "var(--ui-status-stale-text)" }}>truncated</span>
             ) : null}
           </summary>
           {item.is_dir ? null : (
-            <div style={{ borderTop: "1px solid var(--wb-border-default)" }}>
+            <div style={{ borderTop: "1px solid var(--ui-border-default)" }}>
               <PeekBody peek={item} />
             </div>
           )}
@@ -356,15 +356,15 @@ function IgnoredRow({
       style={{
         display: "flex",
         alignItems: "baseline",
-        gap: "var(--wb-space-12)",
-        padding: "var(--wb-space-4) 0",
+        gap: "var(--ui-space-12)",
+        padding: "var(--ui-space-4) 0",
         flexWrap: "wrap",
       }}
     >
       <span
         className="mono"
         style={{
-          fontSize: "var(--wb-font-size-sm)",
+          fontSize: "var(--ui-font-size-sm)",
           overflowWrap: isPhone ? "anywhere" : undefined,
         }}
       >
@@ -373,7 +373,7 @@ function IgnoredRow({
       <span style={metaStyle}>{formatBytes(entry.size_bytes)}</span>
       <span style={metaStyle}>recently changed</span>
       {entry.withheld === "secret" ? (
-        <span style={{ color: "var(--wb-status-stale-text)", fontSize: "var(--wb-font-size-xs)" }}>
+        <span style={{ color: "var(--ui-status-stale-text)", fontSize: "var(--ui-font-size-xs)" }}>
           withheld — secret-shaped
         </span>
       ) : entry.is_binary ? (
@@ -387,15 +387,15 @@ function IgnoredRow({
         <div
           style={{
             flexBasis: "100%",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-md)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-md)",
           }}
         >
           <PeekBody peek={peek} />
         </div>
       ) : null}
       {open && query.isPending ? (
-        <span style={{ flexBasis: "100%", color: "var(--wb-content-muted)" }}>Loading peek…</span>
+        <span style={{ flexBasis: "100%", color: "var(--ui-content-muted)" }}>Loading peek…</span>
       ) : null}
     </li>
   );
@@ -414,18 +414,18 @@ export function IgnoredGroup({
 }) {
   if (items.length === 0) return null;
   return (
-    <details data-anchor={anchor.changesIgnored} style={{ marginTop: "var(--wb-space-16)" }}>
+    <details data-anchor={anchor.changesIgnored} style={{ marginTop: "var(--ui-space-16)" }}>
       <summary
         style={{
           cursor: "pointer",
-          color: "var(--wb-content-secondary)",
-          fontSize: "var(--wb-font-size-sm)",
+          color: "var(--ui-content-secondary)",
+          fontSize: "var(--ui-font-size-sm)",
         }}
       >
         Ignored files changed (<span className="num">{items.length}</span>
         {truncated ? "+" : ""})
       </summary>
-      <ul style={{ listStyle: "none", margin: "var(--wb-space-8) 0", padding: 0 }}>
+      <ul style={{ listStyle: "none", margin: "var(--ui-space-8) 0", padding: 0 }}>
         {items.map((entry) => (
           <IgnoredRow key={entry.path} slug={slug} worktree={worktree} entry={entry} />
         ))}
@@ -435,13 +435,13 @@ export function IgnoredGroup({
 }
 
 const revInputStyle: React.CSSProperties = {
-  fontFamily: "var(--wb-font-mono)",
-  fontSize: "var(--wb-font-size-sm)",
-  background: "var(--wb-surface-sunken)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-sm)",
-  color: "var(--wb-content-primary)",
-  padding: "var(--wb-space-4) var(--wb-space-8)",
+  fontFamily: "var(--ui-font-mono)",
+  fontSize: "var(--ui-font-size-sm)",
+  background: "var(--ui-surface-sunken)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-sm)",
+  color: "var(--ui-content-primary)",
+  padding: "var(--ui-space-4) var(--ui-space-8)",
   minWidth: "16em",
 };
 
@@ -510,9 +510,9 @@ export function ChangesPanel({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-16)",
+          gap: "var(--ui-space-16)",
           flexWrap: "wrap",
-          marginBottom: "var(--wb-space-12)",
+          marginBottom: "var(--ui-space-12)",
         }}
       >
         <SegmentedControl
@@ -541,10 +541,10 @@ export function ChangesPanel({
         <form
           style={{
             display: "flex",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             alignItems: "center",
             flexWrap: "wrap",
-            marginBottom: "var(--wb-space-12)",
+            marginBottom: "var(--ui-space-12)",
           }}
           onSubmit={(e) => {
             e.preventDefault();
@@ -584,9 +584,9 @@ export function ChangesPanel({
         <>
           <p
             style={{
-              color: "var(--wb-content-secondary)",
-              margin: "0 0 var(--wb-space-12)",
-              fontSize: "var(--wb-font-size-sm)",
+              color: "var(--ui-content-secondary)",
+              margin: "0 0 var(--ui-space-12)",
+              fontSize: "var(--ui-font-size-sm)",
             }}
           >
             <span className="mono">{payload.base ?? "—"}</span>
@@ -599,14 +599,14 @@ export function ChangesPanel({
             {payload.narrowed ? " · narrowed to the plan's declared files" : ""}
           </p>
           {payload.note ? (
-            <div style={{ marginBottom: "var(--wb-space-8)" }}>
+            <div style={{ marginBottom: "var(--ui-space-8)" }}>
               <KitBanner tone="degraded" message={payload.note} />
             </div>
           ) : null}
           {payload.warnings.map((warning) => (
             <div
               key={`${warning.kind}:${warning.path}`}
-              style={{ marginBottom: "var(--wb-space-8)" }}
+              style={{ marginBottom: "var(--ui-space-8)" }}
             >
               <KitBanner
                 tone="degraded"
@@ -625,8 +625,8 @@ export function ChangesPanel({
                 {group.leg ? (
                   <h3
                     style={{
-                      fontSize: "var(--wb-font-size-base)",
-                      margin: "var(--wb-space-16) 0 var(--wb-space-8)",
+                      fontSize: "var(--ui-font-size-base)",
+                      margin: "var(--ui-space-16) 0 var(--ui-space-8)",
                     }}
                   >
                     {LEG_LABEL[group.leg]}
@@ -672,12 +672,12 @@ export function WorktreeChanges({ slug }: { slug: string }) {
     null;
 
   return (
-    <section data-anchor={anchor.changesWorktrees} style={{ marginTop: "var(--wb-space-24)" }}>
+    <section data-anchor={anchor.changesWorktrees} style={{ marginTop: "var(--ui-space-24)" }}>
       <h2
         style={{
-          fontSize: "var(--wb-font-size-lg)",
-          lineHeight: "var(--wb-line-height-lg)",
-          margin: "0 0 var(--wb-space-8)",
+          fontSize: "var(--ui-font-size-lg)",
+          lineHeight: "var(--ui-line-height-lg)",
+          margin: "0 0 var(--ui-space-8)",
         }}
       >
         Worktree changes
@@ -693,7 +693,7 @@ export function WorktreeChanges({ slug }: { slug: string }) {
         <EmptyWell>No worktrees to show{payload.reason ? ` — ${payload.reason}` : ""}.</EmptyWell>
       ) : (
         <>
-          <div style={{ marginBottom: "var(--wb-space-12)" }}>
+          <div style={{ marginBottom: "var(--ui-space-12)" }}>
             <SegmentedControl
               ariaLabel="Worktree"
               options={worktrees.map((w) => ({

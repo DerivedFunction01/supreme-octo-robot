@@ -45,13 +45,13 @@ import { ENTRY_KINDS, RULED_STATUSES } from "./types";
 type ViewMode = "storyboard" | "contact-sheet";
 
 const headingStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--wb-content-secondary)",
-  margin: "0 0 var(--wb-space-8)",
+  color: "var(--ui-content-secondary)",
+  margin: "0 0 var(--ui-space-8)",
 };
 
 export function EntriesSection({
@@ -172,14 +172,14 @@ export function EntriesSection({
     <section>
       <DegradedBanner feed={feed} />
       {reconcileProblems.length > 0 ? (
-        <div style={{ marginBottom: "var(--wb-space-16)" }}>
+        <div style={{ marginBottom: "var(--ui-space-16)" }}>
           <KitDegradedBanner
             message={`Entries: reconciliation found ${reconcileProblems.length} problem(s) between the registry and the entry folders.`}
           />
         </div>
       ) : null}
       {feed.reconcile?.error ? (
-        <div style={{ marginBottom: "var(--wb-space-16)" }}>
+        <div style={{ marginBottom: "var(--ui-space-16)" }}>
           <KitDegradedBanner
             message="Entries: reconciliation could not be checked for this project."
             detail={feed.reconcile.error}
@@ -200,14 +200,14 @@ export function EntriesSection({
         />
       ) : (
         <>
-          <div data-anchor="mockups/triage-lane" style={{ marginBottom: "var(--wb-space-24)" }}>
+          <div data-anchor="mockups/triage-lane" style={{ marginBottom: "var(--ui-space-24)" }}>
             <h2 style={headingStyle}>
               Triage · <span className="num">{feed.triage.length}</span> awaiting review
             </h2>
             {feed.triage.length === 0 ? (
               <EmptyState message="Nothing awaiting review" />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "var(--wb-space-8)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "var(--ui-space-8)" }}>
                 {feed.triage.map((item) => {
                   const entry = entryById.get(item.id);
                   const needsChanges = item.reasons.some((r) => r.includes("needs-changes"));
@@ -243,14 +243,14 @@ export function EntriesSection({
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "var(--wb-space-16)",
+              gap: "var(--ui-space-16)",
               alignItems: "flex-start",
-              marginBottom: "var(--wb-space-16)",
+              marginBottom: "var(--ui-space-16)",
             }}
           >
             <fieldset style={{ border: 0, margin: 0, padding: 0 }}>
               <legend style={headingStyle}>Status</legend>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--wb-space-4)" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "var(--ui-space-4)" }}>
                 {RULED_STATUSES.map((status) =>
                   isRuledStatus(status) ? (
                     <Chip
@@ -269,7 +269,7 @@ export function EntriesSection({
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "var(--wb-space-12)",
+                  gap: "var(--ui-space-12)",
                   alignItems: "center",
                 }}
               >
@@ -300,7 +300,7 @@ export function EntriesSection({
                 style={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: "var(--wb-space-12)",
+                  gap: "var(--ui-space-12)",
                   alignItems: "center",
                 }}
               >
@@ -351,12 +351,12 @@ export function EntriesSection({
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "var(--wb-space-12)",
+              gap: "var(--ui-space-12)",
               flexWrap: "wrap",
-              marginBottom: "var(--wb-space-16)",
+              marginBottom: "var(--ui-space-16)",
             }}
           >
-            <p style={{ color: "var(--wb-content-secondary)", margin: 0 }}>
+            <p style={{ color: "var(--ui-content-secondary)", margin: 0 }}>
               <span className="num">{visible.length}</span> of{" "}
               <span className="num">{allEntries.length}</span> entries
               {showArchived ? " (archive included)" : ""}
@@ -376,7 +376,7 @@ export function EntriesSection({
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-                gap: "var(--wb-space-16)",
+                gap: "var(--ui-space-16)",
               }}
             >
               {visible.map((entry) => {
@@ -426,18 +426,18 @@ export function EntriesSection({
           ) : (
             <div data-anchor="mockups/contact-sheet">
               {visible.map((entry) => (
-                <div key={entry.id} style={{ marginBottom: "var(--wb-space-16)" }}>
+                <div key={entry.id} style={{ marginBottom: "var(--ui-space-16)" }}>
                   <h3
                     style={{
-                      fontSize: "var(--wb-font-size-sm)",
-                      margin: "0 0 var(--wb-space-8)",
+                      fontSize: "var(--ui-font-size-sm)",
+                      margin: "0 0 var(--ui-space-8)",
                       display: "flex",
-                      gap: "var(--wb-space-8)",
+                      gap: "var(--ui-space-8)",
                       alignItems: "center",
                     }}
                   >
                     {entry.title} <EntryChip entry={entry} />
-                    <span style={{ color: "var(--wb-content-secondary)", fontWeight: 400 }}>
+                    <span style={{ color: "var(--ui-content-secondary)", fontWeight: 400 }}>
                       {ruledStatusLabel(entry.status)} · featured states are state variations of
                       this one entry
                     </span>
@@ -446,7 +446,7 @@ export function EntriesSection({
                     style={{
                       display: "grid",
                       gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                      gap: "var(--wb-space-12)",
+                      gap: "var(--ui-space-12)",
                     }}
                   >
                     {featuredStates(entry).map((state) => (

@@ -73,7 +73,7 @@ export function EntryDetail({
   if (detailQuery.isPending && !entry) {
     return (
       <section data-anchor="mockups/entry-sheet">
-        <p style={{ color: "var(--wb-content-secondary)" }}>Loading {entryId}…</p>
+        <p style={{ color: "var(--ui-content-secondary)" }}>Loading {entryId}…</p>
       </section>
     );
   }
@@ -83,7 +83,7 @@ export function EntryDetail({
         <Button variant="ghost" onClick={onClose}>
           ← All entries
         </Button>
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           Entries: {detailError ?? `entry ${entryId} could not be loaded.`}
         </p>
       </section>
@@ -96,9 +96,9 @@ export function EntryDetail({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
-          marginBottom: "var(--wb-space-16)",
+          marginBottom: "var(--ui-space-16)",
         }}
       >
         <Button variant="ghost" onClick={onClose}>
@@ -106,8 +106,8 @@ export function EntryDetail({
         </Button>
         <h2
           style={{
-            fontSize: "var(--wb-font-size-lg)",
-            lineHeight: "var(--wb-line-height-lg)",
+            fontSize: "var(--ui-font-size-lg)",
+            lineHeight: "var(--ui-line-height-lg)",
             fontWeight: 600,
             margin: 0,
           }}
@@ -117,12 +117,12 @@ export function EntryDetail({
         <EntryBadges derived={derived} approval={approval} needsChanges={needsChanges} />
         <OwnerLine entry={entry} />
         {entry.archived ? (
-          <span style={{ color: "var(--wb-content-secondary)" }}>Archived</span>
+          <span style={{ color: "var(--ui-content-secondary)" }}>Archived</span>
         ) : null}
       </div>
 
       {detailError ? (
-        <p role="status" style={{ color: "var(--wb-content-secondary)" }}>
+        <p role="status" style={{ color: "var(--ui-content-secondary)" }}>
           Entry detail (history and files) could not be loaded — {detailError} What follows is the
           feed's record for this entry.
         </p>
@@ -131,17 +131,17 @@ export function EntryDetail({
         <p
           role="alert"
           style={{
-            color: "var(--wb-danger)",
-            border: "1px solid var(--wb-danger)",
-            borderRadius: "var(--wb-radius-md)",
-            padding: "var(--wb-space-12) var(--wb-space-16)",
+            color: "var(--ui-danger)",
+            border: "1px solid var(--ui-danger)",
+            borderRadius: "var(--ui-radius-md)",
+            padding: "var(--ui-space-12) var(--ui-space-16)",
           }}
         >
           {actionError}
         </p>
       ) : null}
       {actionNotice ? (
-        <p role="status" style={{ color: "var(--wb-content-secondary)" }}>
+        <p role="status" style={{ color: "var(--ui-content-secondary)" }}>
           {actionNotice}
         </p>
       ) : null}
@@ -157,11 +157,11 @@ export function EntryDetail({
           // 398px in a 358px column (measured on the
           // drill-in). Desktop's 7fr/5fr is untouched.
           gridTemplateColumns: isPhone ? "minmax(0, 1fr)" : "7fr 5fr",
-          gap: "var(--wb-space-24)",
+          gap: "var(--ui-space-24)",
           alignItems: "start",
         }}
       >
-        <div style={isPhone ? { minWidth: 0 } : { position: "sticky", top: "var(--wb-space-16)" }}>
+        <div style={isPhone ? { minWidth: 0 } : { position: "sticky", top: "var(--ui-space-16)" }}>
           {/* The page's door (FU-1): its one action
               navigates to the entry's full-page preview
               route — the page no longer renders inside
@@ -185,7 +185,7 @@ export function EntryDetail({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "var(--wb-space-12)",
+                  gap: "var(--ui-space-12)",
                   flexWrap: "wrap",
                 }}
               >
@@ -200,8 +200,8 @@ export function EntryDetail({
                 <span
                   className="mono"
                   style={{
-                    color: "var(--wb-content-secondary)",
-                    fontSize: "var(--wb-font-size-sm)",
+                    color: "var(--ui-content-secondary)",
+                    fontSize: "var(--ui-font-size-sm)",
                     // An unbroken path token wraps rather
                     // than squeezing the door's button —
                     // a button never truncates (owner
@@ -214,7 +214,7 @@ export function EntryDetail({
                 </span>
               </div>
             ) : (
-              <p style={{ margin: 0, color: "var(--wb-content-secondary)" }}>
+              <p style={{ margin: 0, color: "var(--ui-content-secondary)" }}>
                 Page unavailable — this item is held by reference; its files live outside the
                 harness.
               </p>
@@ -226,16 +226,16 @@ export function EntryDetail({
               recorded state is not a second preview either
               and does not wear its title or a frame of its
               own; it is a headed record under the door. */}
-          <section aria-label="Recorded state" style={{ marginTop: "var(--wb-space-16)" }}>
+          <section aria-label="Recorded state" style={{ marginTop: "var(--ui-space-16)" }}>
             <h3
               style={{
-                fontSize: "var(--wb-font-size-xs)",
-                lineHeight: "var(--wb-line-height-xs)",
+                fontSize: "var(--ui-font-size-xs)",
+                lineHeight: "var(--ui-line-height-xs)",
                 fontWeight: 600,
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
-                color: "var(--wb-content-secondary)",
-                margin: "0 0 var(--wb-space-8)",
+                color: "var(--ui-content-secondary)",
+                margin: "0 0 var(--ui-space-8)",
               }}
             >
               Recorded state
@@ -248,7 +248,7 @@ export function EntryDetail({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "var(--wb-space-16)",
+            gap: "var(--ui-space-16)",
             minWidth: isPhone ? 0 : undefined,
           }}
         >

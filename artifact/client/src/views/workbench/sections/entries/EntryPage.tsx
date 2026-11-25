@@ -25,7 +25,7 @@
 // document from the client's own origin, where entry
 // scripts must never run.
 //
-// Chrome: the bar is the kit's Button on --wb-* tokens
+// Chrome: the bar is the kit's Button on --ui-* tokens
 // and follows the shell's appearance state like every
 // surface. The info surface is the kit's one Sheet —
 // the popup drawer at phone width, the docked side
@@ -86,13 +86,13 @@ function InfoGlyph() {
 }
 
 const schemaHeadingStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--wb-content-secondary)",
-  margin: "var(--wb-space-16) 0 var(--wb-space-8)",
+  color: "var(--ui-content-secondary)",
+  margin: "var(--ui-space-16) 0 var(--ui-space-8)",
 };
 
 /** The record's state schema, summarised from the
@@ -198,10 +198,10 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
-          padding: "var(--wb-space-8) var(--wb-space-12)",
-          borderBottom: "1px solid var(--wb-border-default)",
-          backgroundColor: "var(--wb-surface-1)",
+          gap: "var(--ui-space-12)",
+          padding: "var(--ui-space-8) var(--ui-space-12)",
+          borderBottom: "1px solid var(--ui-border-default)",
+          backgroundColor: "var(--ui-surface-1)",
           flex: "0 0 auto",
         }}
       >
@@ -219,8 +219,8 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
             element it is carried on. */}
         <div
           style={{
-            fontSize: "var(--wb-font-size-lg)",
-            lineHeight: "var(--wb-line-height-lg)",
+            fontSize: "var(--ui-font-size-lg)",
+            lineHeight: "var(--ui-line-height-lg)",
             fontWeight: 600,
             margin: 0,
             flex: "1 1 auto",
@@ -233,7 +233,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
           {entry?.title ?? entryId}
         </div>
         {entry?.archived ? (
-          <span style={{ color: "var(--wb-content-secondary)", flex: "0 0 auto" }}>Archived</span>
+          <span style={{ color: "var(--ui-content-secondary)", flex: "0 0 auto" }}>Archived</span>
         ) : null}
         <span style={{ marginLeft: "auto", display: "flex", flex: "0 0 auto" }}>
           <Button
@@ -253,8 +253,8 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
           <p
             style={{
               margin: 0,
-              padding: "var(--wb-space-16)",
-              color: "var(--wb-content-secondary)",
+              padding: "var(--ui-space-16)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Loading entry…
@@ -262,7 +262,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
         ) : detailError && !entry ? (
           <p
             role="alert"
-            style={{ margin: 0, padding: "var(--wb-space-16)", color: "var(--wb-danger)" }}
+            style={{ margin: 0, padding: "var(--ui-space-16)", color: "var(--ui-danger)" }}
           >
             {detailError}
           </p>
@@ -270,8 +270,8 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
           <p
             style={{
               margin: 0,
-              padding: "var(--wb-space-16)",
-              color: "var(--wb-content-secondary)",
+              padding: "var(--ui-space-16)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Page unavailable — this item is held by reference; its files live outside the harness.
@@ -280,8 +280,8 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
           <p
             style={{
               margin: 0,
-              padding: "var(--wb-space-16)",
-              color: "var(--wb-content-secondary)",
+              padding: "var(--ui-space-16)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Loading page…
@@ -289,7 +289,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
         ) : pageError ? (
           <p
             role="alert"
-            style={{ margin: 0, padding: "var(--wb-space-16)", color: "var(--wb-danger)" }}
+            style={{ margin: 0, padding: "var(--ui-space-16)", color: "var(--ui-danger)" }}
           >
             {pageError}
           </p>
@@ -304,7 +304,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
               minHeight: 0,
               width: "100%",
               border: "none",
-              background: "var(--wb-surface-1)",
+              background: "var(--ui-surface-1)",
             }}
           />
         ) : null}

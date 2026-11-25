@@ -32,20 +32,20 @@ export function Lane({
       aria-label={title}
       className={className}
       style={{
-        backgroundColor: "var(--wb-lane-bg)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-lane-bg)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderLeftColor: accent ? "var(--wb-accent)" : "var(--wb-border-default)",
+        borderLeftColor: accent ? "var(--ui-accent)" : "var(--ui-border-default)",
         borderLeftWidth: accent ? 2 : 1,
-        borderRadius: "var(--wb-lane-radius)",
-        color: "var(--wb-content-primary)",
+        borderRadius: "var(--ui-lane-radius)",
+        color: "var(--ui-content-primary)",
       }}
     >
       <header className="flex items-center gap-2 px-4 pt-3 pb-2">
         <h3
           className="text-xs font-semibold tracking-[0.06em] uppercase"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
           {title}
         </h3>
@@ -54,14 +54,14 @@ export function Lane({
           style={
             countWarning
               ? {
-                  backgroundColor: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-                  color: "var(--wb-status-stale-text)",
-                  borderRadius: "var(--wb-chip-radius)",
+                  backgroundColor: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+                  color: "var(--ui-status-stale-text)",
+                  borderRadius: "var(--ui-chip-radius)",
                 }
               : {
-                  backgroundColor: "var(--wb-surface-sunken)",
-                  color: "var(--wb-content-secondary)",
-                  borderRadius: "var(--wb-chip-radius)",
+                  backgroundColor: "var(--ui-surface-sunken)",
+                  color: "var(--ui-content-secondary)",
+                  borderRadius: "var(--ui-chip-radius)",
                 }
           }
         >
@@ -70,7 +70,7 @@ export function Lane({
       </header>
       <div
         className="mx-2 mb-2 flex flex-col gap-2 p-2"
-        style={{ backgroundColor: "var(--wb-lane-well)", borderRadius: "var(--wb-radius-md)" }}
+        style={{ backgroundColor: "var(--ui-lane-well)", borderRadius: "var(--ui-radius-md)" }}
       >
         {children}
       </div>

@@ -52,10 +52,10 @@ change-aware by default — a pathspec runs the affected
 packages with AST-targeted tests; `--all` forces the
 full suite.
 
-The kit (Workhorse Kit v1) does **not** live here — its
-home is the spec-driven starter (`workhorse-kit/` there);
-`kit/` in this repo is a vendored copy, never edited
-directly (see `kit/PROVENANCE.md`). The original repos
+The kit lives here: `kit/` is this repo's own UI kit and
+its source of truth (see `kit/PROVENANCE.md`); it was
+forked from the spec-driven starter's kit, which remains
+that repo's own. The original repos
 are archived as they are; colab-runner is explicitly
 untouched — the venue core lives here alongside it, and
 the Colab adapter replaces its use.

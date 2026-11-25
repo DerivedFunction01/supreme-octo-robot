@@ -114,20 +114,20 @@ function StatusStrip({
 
       {o ? (
         <>
-          <span className="num text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <span className="num text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             {o.registry.total} jobs · {o.outbox.depth} pending pings
           </span>
           {!compact ? (
             <>
               <span
                 className="num text-sm"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
                 ≈{o.expected_wake_per_day} wake-ups/day
               </span>
               <span
                 className="num text-sm"
-                style={{ color: "var(--wb-content-muted)" }}
+                style={{ color: "var(--ui-content-muted)" }}
               >
                 pid {o.pid} · up {fmtDur(o.uptime_secs)}
               </span>

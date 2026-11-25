@@ -74,7 +74,7 @@ export function OwnerLine({ entry }: { entry: FullEntry }) {
   if (owner) parts.push(`Owner: ${owner}`);
   if (entry.deploy_class === "deployed") parts.push("Deployed");
   if (parts.length === 0) return null;
-  return <span style={{ color: "var(--wb-content-secondary)" }}>{parts.join(" · ")}</span>;
+  return <span style={{ color: "var(--ui-content-secondary)" }}>{parts.join(" · ")}</span>;
 }
 
 export function stateValues(entry: FullEntry): Record<string, unknown> {
@@ -125,14 +125,14 @@ export function PreviewSummary({
   const shown = values ?? stateValues(entry);
   const keys = Object.keys(shown);
   return (
-    <div style={{ fontSize: "var(--wb-font-size-sm)", lineHeight: "var(--wb-line-height-sm)" }}>
+    <div style={{ fontSize: "var(--ui-font-size-sm)", lineHeight: "var(--ui-line-height-sm)" }}>
       {/* No title line here: every host names the entry
           itself (the grid frame's title, the contact
           sheet's heading, the drill-in's header line) —
           printing the title inside the summary too was
           one of the three renderings of it on the
           drill-in screen (critic M-5). */}
-      <p style={{ margin: 0, color: "var(--wb-content-secondary)" }}>
+      <p style={{ margin: 0, color: "var(--ui-content-secondary)" }}>
         {kindLabel(entry.kind)} · {entry.source_kind}
         {entry.source_ref ? (
           <>
@@ -148,10 +148,10 @@ export function PreviewSummary({
         ) : null}
       </p>
       {keys.length > 0 ? (
-        <ul style={{ listStyle: "none", margin: "var(--wb-space-8) 0 0", padding: 0 }}>
+        <ul style={{ listStyle: "none", margin: "var(--ui-space-8) 0 0", padding: 0 }}>
           {keys.map((key) => (
             <li key={key} style={{ overflowWrap: "anywhere" }}>
-              <span className="mono" style={{ color: "var(--wb-content-secondary)" }}>
+              <span className="mono" style={{ color: "var(--ui-content-secondary)" }}>
                 {key}
               </span>{" "}
               {String(shown[key])}
@@ -159,12 +159,12 @@ export function PreviewSummary({
           ))}
         </ul>
       ) : (
-        <p style={{ margin: "var(--wb-space-8) 0 0", color: "var(--wb-content-secondary)" }}>
+        <p style={{ margin: "var(--ui-space-8) 0 0", color: "var(--ui-content-secondary)" }}>
           No internal state recorded for this entry.
         </p>
       )}
       {entry.source_kind !== "entry-dir" ? (
-        <p style={{ margin: "var(--wb-space-8) 0 0", color: "var(--wb-content-secondary)" }}>
+        <p style={{ margin: "var(--ui-space-8) 0 0", color: "var(--ui-content-secondary)" }}>
           Preview unavailable — this entry is held by reference ({entry.source_kind}); its files
           live outside the harness.
         </p>

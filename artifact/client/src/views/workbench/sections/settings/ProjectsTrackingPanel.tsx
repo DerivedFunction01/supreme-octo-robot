@@ -33,30 +33,30 @@ import { sectionHref } from "../../lib/routing";
 import { ErrorWell, SkeletonWell } from "../shared";
 
 const panelTitleStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 600,
   textTransform: "uppercase",
   letterSpacing: "0.06em",
-  color: "var(--wb-content-secondary)",
-  marginTop: "var(--wb-space-32)",
+  color: "var(--ui-content-secondary)",
+  marginTop: "var(--ui-space-32)",
 };
 
 const labelStyle: React.CSSProperties = {
   fontWeight: 600,
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   whiteSpace: "nowrap",
 };
 
 const inputStyle: React.CSSProperties = {
-  background: "var(--wb-surface-2)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-sm)",
-  color: "var(--wb-content-primary)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
-  padding: "var(--wb-space-8)",
+  background: "var(--ui-surface-2)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-sm)",
+  color: "var(--ui-content-primary)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
+  padding: "var(--ui-space-8)",
   minHeight: "38px",
   width: "100%",
   minWidth: 0,
@@ -65,9 +65,9 @@ const inputStyle: React.CSSProperties = {
 const fieldRowStyle: React.CSSProperties = {
   display: "grid",
   gridTemplateColumns: "140px 1fr",
-  gap: "var(--wb-space-8) var(--wb-space-16)",
+  gap: "var(--ui-space-8) var(--ui-space-16)",
   alignItems: "center",
-  padding: "var(--wb-space-8) 0",
+  padding: "var(--ui-space-8) 0",
 };
 
 type Expected = RepoRegistryEntry["expected"];
@@ -121,27 +121,27 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
   return (
     <div
       style={{
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        background: "var(--wb-surface-2)",
-        padding: "var(--wb-space-16)",
-        marginBottom: "var(--wb-space-12)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        background: "var(--ui-surface-2)",
+        padding: "var(--ui-space-16)",
+        marginBottom: "var(--ui-space-12)",
       }}
     >
       <div
         style={{
           display: "flex",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           alignItems: "baseline",
           flexWrap: "wrap",
-          marginBottom: "var(--wb-space-8)",
+          marginBottom: "var(--ui-space-8)",
         }}
       >
         <a
           href={sectionHref(id, "code")}
           className="mono"
           style={{
-            color: "var(--wb-accent)",
+            color: "var(--ui-accent)",
             textDecoration: "none",
             fontWeight: 600,
             overflowWrap: "anywhere",
@@ -152,8 +152,8 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
         <span
           className="mono"
           style={{
-            color: "var(--wb-content-muted)",
-            fontSize: "var(--wb-font-size-xs)",
+            color: "var(--ui-content-muted)",
+            fontSize: "var(--ui-font-size-xs)",
             overflowWrap: "anywhere",
           }}
         >
@@ -161,8 +161,8 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
         </span>
         <span
           style={{
-            color: "var(--wb-content-muted)",
-            fontSize: "var(--wb-font-size-xs)",
+            color: "var(--ui-content-muted)",
+            fontSize: "var(--ui-font-size-xs)",
             marginLeft: "auto",
           }}
         >
@@ -208,9 +208,9 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
       <div
         style={{
           display: "flex",
-          gap: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
           alignItems: "center",
-          paddingTop: "var(--wb-space-8)",
+          paddingTop: "var(--ui-space-8)",
         }}
       >
         <Button disabled={!dirty || mutation.isPending} onClick={() => mutation.mutate()}>
@@ -218,13 +218,13 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
         </Button>
         {dirty ? (
           <span
-            style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-sm)" }}
+            style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-sm)" }}
           >
             Unsaved changes
           </span>
         ) : null}
         {result ? (
-          <span role="status" style={{ color: "var(--wb-content-secondary)" }}>
+          <span role="status" style={{ color: "var(--ui-content-secondary)" }}>
             {result}
           </span>
         ) : null}
@@ -256,21 +256,21 @@ function RegistrySummaryRow({
       onClick={onToggle}
       style={{
         display: "flex",
-        gap: "var(--wb-space-12)",
+        gap: "var(--ui-space-12)",
         alignItems: "baseline",
         flexWrap: "wrap",
         width: "100%",
         textAlign: "left",
         background: "none",
         border: "none",
-        borderBottom: "1px solid var(--wb-border-default)",
-        padding: "var(--wb-space-8) 0",
+        borderBottom: "1px solid var(--ui-border-default)",
+        padding: "var(--ui-space-8) 0",
         cursor: "pointer",
         font: "inherit",
-        color: "var(--wb-content-primary)",
+        color: "var(--ui-content-primary)",
       }}
     >
-      <span aria-hidden="true" style={{ color: "var(--wb-content-muted)" }}>
+      <span aria-hidden="true" style={{ color: "var(--ui-content-muted)" }}>
         {expanded ? "▾" : "▸"}
       </span>
       <span className="mono" style={{ fontWeight: 600, overflowWrap: "anywhere" }}>
@@ -279,8 +279,8 @@ function RegistrySummaryRow({
       <span
         className="mono"
         style={{
-          color: "var(--wb-content-muted)",
-          fontSize: "var(--wb-font-size-xs)",
+          color: "var(--ui-content-muted)",
+          fontSize: "var(--ui-font-size-xs)",
           overflowWrap: "anywhere",
         }}
       >
@@ -288,8 +288,8 @@ function RegistrySummaryRow({
       </span>
       <span
         style={{
-          color: "var(--wb-content-muted)",
-          fontSize: "var(--wb-font-size-xs)",
+          color: "var(--ui-content-muted)",
+          fontSize: "var(--ui-font-size-xs)",
           marginLeft: "auto",
         }}
       >
@@ -351,16 +351,16 @@ export function ProjectsTrackingPanel() {
           message={query.data?.error ?? "the repo registry did not answer."}
         />
       ) : ids.length === 0 ? (
-        <p style={{ color: "var(--wb-content-muted)" }}>No projects in the registry yet.</p>
+        <p style={{ color: "var(--ui-content-muted)" }}>No projects in the registry yet.</p>
       ) : (
         <>
           <div
             style={{
               display: "flex",
-              gap: "var(--wb-space-12)",
+              gap: "var(--ui-space-12)",
               alignItems: "center",
               flexWrap: "wrap",
-              marginBottom: "var(--wb-space-8)",
+              marginBottom: "var(--ui-space-8)",
             }}
           >
             <input
@@ -374,7 +374,7 @@ export function ProjectsTrackingPanel() {
               }}
               aria-label="Search projects in the registry"
             />
-            <span style={{ color: "var(--wb-content-muted)", fontSize: "var(--wb-font-size-sm)" }}>
+            <span style={{ color: "var(--ui-content-muted)", fontSize: "var(--ui-font-size-sm)" }}>
               <span className="num">{ids.length}</span> projects
               {needle ? (
                 <>
@@ -388,7 +388,7 @@ export function ProjectsTrackingPanel() {
             </span>
           </div>
           {matched.length === 0 ? (
-            <p style={{ color: "var(--wb-content-muted)" }}>
+            <p style={{ color: "var(--ui-content-muted)" }}>
               No projects match "{search.trim()}".
             </p>
           ) : (
@@ -405,7 +405,7 @@ export function ProjectsTrackingPanel() {
                     onToggle={() => toggleRow(id)}
                   />
                   {isOpen ? (
-                    <div style={{ paddingTop: "var(--wb-space-12)" }}>
+                    <div style={{ paddingTop: "var(--ui-space-12)" }}>
                       <RegistryRow id={id} entry={entry} />
                     </div>
                   ) : null}
@@ -414,7 +414,7 @@ export function ProjectsTrackingPanel() {
             })
           )}
           {windowSize < matched.length ? (
-            <div style={{ paddingTop: "var(--wb-space-12)" }}>
+            <div style={{ paddingTop: "var(--ui-space-12)" }}>
               <Button
                 variant="secondary"
                 onClick={() => setWindowSize((n) => n + WINDOW_STEP)}

@@ -24,15 +24,15 @@ const rowStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  gap: "var(--wb-space-24)",
-  padding: "var(--wb-space-16) 0",
-  borderBottom: "1px solid var(--wb-border-default)",
+  gap: "var(--ui-space-24)",
+  padding: "var(--ui-space-16) 0",
+  borderBottom: "1px solid var(--ui-border-default)",
 };
 
 const labelStyle: React.CSSProperties = {
   fontWeight: 600,
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 export function SettingsSection({
@@ -46,12 +46,12 @@ export function SettingsSection({
     <section data-anchor="settings/appearance-panel">
       <h2
         style={{
-          fontSize: "var(--wb-font-size-xs)",
-          lineHeight: "var(--wb-line-height-xs)",
+          fontSize: "var(--ui-font-size-xs)",
+          lineHeight: "var(--ui-line-height-xs)",
           fontWeight: 600,
           textTransform: "uppercase",
           letterSpacing: "0.06em",
-          color: "var(--wb-content-secondary)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         Appearance

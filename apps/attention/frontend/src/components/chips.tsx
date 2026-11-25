@@ -10,32 +10,32 @@ import type { CSSProperties } from "react";
 import type { PresenceView, Severity } from "../attention/types";
 
 const HUE_VAR: Record<Severity, string> = {
-  ok: "var(--wb-status-implemented)",
-  info: "var(--wb-status-canonical)",
-  warn: "var(--wb-status-stale)",
-  fail: "var(--wb-status-hard-gate)",
-  idle: "var(--wb-content-muted)",
+  ok: "var(--ui-status-implemented)",
+  info: "var(--ui-status-canonical)",
+  warn: "var(--ui-status-stale)",
+  fail: "var(--ui-status-hard-gate)",
+  idle: "var(--ui-content-muted)",
 };
 const TEXT_VAR: Record<Severity, string> = {
-  ok: "var(--wb-status-implemented-text)",
-  info: "var(--wb-status-canonical-text)",
-  warn: "var(--wb-status-stale-text)",
-  fail: "var(--wb-status-hard-gate-text)",
-  idle: "var(--wb-content-secondary)",
+  ok: "var(--ui-status-implemented-text)",
+  info: "var(--ui-status-canonical-text)",
+  warn: "var(--ui-status-stale-text)",
+  fail: "var(--ui-status-hard-gate-text)",
+  idle: "var(--ui-content-secondary)",
 };
 
 function chipStyle(severity: Severity): CSSProperties {
   if (severity === "idle") {
     return {
-      backgroundColor: "var(--wb-surface-sunken)",
+      backgroundColor: "var(--ui-surface-sunken)",
       color: TEXT_VAR.idle,
-      borderRadius: "var(--wb-radius-pill)",
+      borderRadius: "var(--ui-radius-pill)",
     };
   }
   return {
     backgroundColor: `color-mix(in srgb, ${HUE_VAR[severity]} 14%, transparent)`,
     color: TEXT_VAR[severity],
-    borderRadius: "var(--wb-radius-pill)",
+    borderRadius: "var(--ui-radius-pill)",
   };
 }
 
@@ -87,7 +87,7 @@ export function PresenceChipView({
 }
 
 /** Identity dot in the handler's registry color_slot
- * (the token chart series, --wb-chart-1..7). */
+ * (the token chart series, --ui-chart-1..7). */
 export function HandlerDot({ colorSlot, size = 9 }: { colorSlot: number; size?: number }) {
   return (
     <span
@@ -96,7 +96,7 @@ export function HandlerDot({ colorSlot, size = 9 }: { colorSlot: number; size?: 
       style={{
         width: size,
         height: size,
-        backgroundColor: `var(--wb-chart-${((colorSlot - 1) % 7) + 1})`,
+        backgroundColor: `var(--ui-chart-${((colorSlot - 1) % 7) + 1})`,
       }}
     />
   );

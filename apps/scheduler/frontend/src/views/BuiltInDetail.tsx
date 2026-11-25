@@ -65,17 +65,17 @@ export function BuiltInDetail({
         </FactRow>
         <div
           className="px-3.5 py-[11px]"
-          style={{ borderTopColor: "var(--wb-border-default)" }}
+          style={{ borderTopColor: "var(--ui-border-default)" }}
         >
           <div
             className="text-[14.5px] font-medium"
-            style={{ color: "var(--wb-content-primary)" }}
+            style={{ color: "var(--ui-content-primary)" }}
           >
             Latest outcome
           </div>
           <p
             className="mt-1 text-[12.5px] leading-relaxed whitespace-normal [overflow-wrap:anywhere]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {latestOutcome}
           </p>
@@ -97,7 +97,7 @@ export function BuiltInDetail({
               label={
                 <span
                   className="font-semibold"
-                  style={{ color: "var(--wb-accent)" }}
+                  style={{ color: "var(--ui-accent)" }}
                 >
                   Open in {OPEN_IN_LABELS[detail.open_in]}
                 </span>

@@ -62,16 +62,16 @@ export function DataTable<T>({
   };
 
   const rowStyle = (key: string, selected: boolean): CSSProperties => ({
-    backgroundColor: selected || hoverKey === key ? "var(--wb-surface-1)" : "var(--wb-surface-2)",
-    boxShadow: selected ? "inset 2px 0 0 0 var(--wb-accent)" : undefined,
-    height: "var(--wb-row-height)",
+    backgroundColor: selected || hoverKey === key ? "var(--ui-surface-1)" : "var(--ui-surface-2)",
+    boxShadow: selected ? "inset 2px 0 0 0 var(--ui-accent)" : undefined,
+    height: "var(--ui-row-height)",
   });
 
   return (
     <div data-anchor={anchor} className={className}>
       <table aria-label={ariaLabel} className="w-full table-fixed border-collapse text-sm">
         <thead>
-          <tr style={{ backgroundColor: "var(--wb-surface-1)", height: "var(--wb-row-height)" }}>
+          <tr style={{ backgroundColor: "var(--ui-surface-1)", height: "var(--ui-row-height)" }}>
             {columns.map((col) => (
               <th
                 key={col.key}
@@ -81,8 +81,8 @@ export function DataTable<T>({
                   col.numeric ? "text-right" : "text-left",
                 ].join(" ")}
                 style={{
-                  color: "var(--wb-content-secondary)",
-                  borderBottomColor: "var(--wb-border-strong)",
+                  color: "var(--ui-content-secondary)",
+                  borderBottomColor: "var(--ui-border-strong)",
                   borderBottomStyle: "solid",
                   borderBottomWidth: 1,
                 }}
@@ -109,7 +109,7 @@ export function DataTable<T>({
                 onMouseLeave={() => setHoverKey(null)}
                 className={[
                   selectable ? "cursor-pointer" : "",
-                  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-(--wb-focus-ring)",
+                  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-2 focus-visible:outline-(--ui-focus-ring)",
                 ]
                   .filter(Boolean)
                   .join(" ")}
@@ -126,8 +126,8 @@ export function DataTable<T>({
                       .filter(Boolean)
                       .join(" ")}
                     style={{
-                      color: "var(--wb-content-primary)",
-                      borderBottomColor: "var(--wb-border-default)",
+                      color: "var(--ui-content-primary)",
+                      borderBottomColor: "var(--ui-border-default)",
                       borderBottomStyle: "solid",
                       borderBottomWidth: 1,
                     }}

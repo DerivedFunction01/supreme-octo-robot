@@ -17,13 +17,13 @@ import { metaStyle } from "../shared";
 const ANCHOR_TYPES = ["none", "plan", "todo", "entry", "repo"] as const;
 
 const fieldStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 export interface ComposerProject {
@@ -87,7 +87,7 @@ export function MessageComposer({
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: "var(--wb-space-8)",
+        gap: "var(--ui-space-8)",
       }}
     >
       <textarea
@@ -102,7 +102,7 @@ export function MessageComposer({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
           flexWrap: "wrap",
         }}
       >
@@ -159,7 +159,7 @@ export function MessageComposer({
         </Button>
       </div>
       {error ? (
-        <p role="alert" style={{ color: "var(--wb-danger)", margin: 0 }}>
+        <p role="alert" style={{ color: "var(--ui-danger)", margin: 0 }}>
           {error}
         </p>
       ) : null}

@@ -23,36 +23,36 @@ const FIELDS = actionFields<typeof Actions>();
 const CELL_MAX = 80;
 
 const fieldStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   width: "100%",
   resize: "vertical",
-  fontFamily: "var(--wb-font-mono)",
+  fontFamily: "var(--ui-font-mono)",
   boxSizing: "border-box",
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   fontWeight: 600,
-  padding: "var(--wb-space-4) var(--wb-space-12) var(--wb-space-4) 0",
-  borderBottom: "1px solid var(--wb-border-strong)",
+  padding: "var(--ui-space-4) var(--ui-space-12) var(--ui-space-4) 0",
+  borderBottom: "1px solid var(--ui-border-strong)",
   whiteSpace: "nowrap",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "var(--wb-space-4) var(--wb-space-12) var(--wb-space-4) 0",
-  borderBottom: "1px solid var(--wb-border-default)",
+  padding: "var(--ui-space-4) var(--ui-space-12) var(--ui-space-4) 0",
+  borderBottom: "1px solid var(--ui-border-default)",
   whiteSpace: "nowrap",
   verticalAlign: "top",
 };
 
 function CellValue({ value }: { value: DatasetCell }) {
-  if (value == null) return <span style={{ color: "var(--wb-content-muted)" }}>—</span>;
+  if (value == null) return <span style={{ color: "var(--ui-content-muted)" }}>—</span>;
   const text =
     typeof value === "string"
       ? value
@@ -90,7 +90,7 @@ export function DatasetConsole({
 
   if (kind === "duckdb") {
     return (
-      <p style={{ color: "var(--wb-content-secondary)", margin: "var(--wb-space-16) 0 0" }}>
+      <p style={{ color: "var(--ui-content-secondary)", margin: "var(--ui-space-16) 0 0" }}>
         Console unavailable for native DuckDB files — browse only.
       </p>
     );
@@ -118,13 +118,13 @@ export function DatasetConsole({
   };
 
   return (
-    <section style={{ marginTop: "var(--wb-space-24)" }}>
+    <section style={{ marginTop: "var(--ui-space-24)" }}>
       <h4
         style={{
-          fontSize: "var(--wb-font-size-base)",
-          lineHeight: "var(--wb-line-height-base)",
+          fontSize: "var(--ui-font-size-base)",
+          lineHeight: "var(--ui-line-height-base)",
           fontWeight: 600,
-          margin: "0 0 var(--wb-space-8)",
+          margin: "0 0 var(--ui-space-8)",
         }}
       >
         Console
@@ -148,9 +148,9 @@ export function DatasetConsole({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
-          marginTop: "var(--wb-space-8)",
+          marginTop: "var(--ui-space-8)",
         }}
       >
         <Button
@@ -162,23 +162,23 @@ export function DatasetConsole({
         </Button>
       </div>
       {error ? (
-        <p role="alert" style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}>
           {error}
         </p>
       ) : null}
       {result ? (
-        <div style={{ marginTop: "var(--wb-space-12)" }}>
+        <div style={{ marginTop: "var(--ui-space-12)" }}>
           <div
             tabIndex={0}
-            className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+            className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
             style={{ overflowX: "auto" }}
           >
             <table
               className="mono"
               style={{
                 borderCollapse: "collapse",
-                fontSize: "var(--wb-font-size-sm)",
-                lineHeight: "var(--wb-line-height-sm)",
+                fontSize: "var(--ui-font-size-sm)",
+                lineHeight: "var(--ui-line-height-sm)",
               }}
             >
               <thead>
@@ -205,7 +205,7 @@ export function DatasetConsole({
               </tbody>
             </table>
           </div>
-          <p style={{ ...metaStyle, whiteSpace: "normal", margin: "var(--wb-space-8) 0 0" }}>
+          <p style={{ ...metaStyle, whiteSpace: "normal", margin: "var(--ui-space-8) 0 0" }}>
             <span className="num">{result.rows.length}</span> row
             {result.rows.length === 1 ? "" : "s"}
             {result.truncated ? " · Results truncated at the console cap" : ""}

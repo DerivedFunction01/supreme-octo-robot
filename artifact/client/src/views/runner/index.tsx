@@ -20,7 +20,7 @@
 // the one client's action layer (src/lib/actions.ts) —
 // the restoration lane's mapping is complete, zero open
 // seams. The panel's Okabe-Ito theme.css does NOT carry
-// (INTEGRATION.md §9): the views compose on kit --wb-*
+// (INTEGRATION.md §9): the views compose on kit --ui-*
 // tokens. The views are built from the panel of record's
 // behaviour, one file per route:
 //

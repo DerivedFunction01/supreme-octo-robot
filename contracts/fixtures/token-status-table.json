@@ -43,7 +43,7 @@
   },
   "deferred": {
     "hue": {
-      "$value": "var(--wb-content-secondary)",
+      "$value": "var(--ui-content-secondary)",
       "$type": "string"
     },
     "text": {
@@ -169,16 +169,16 @@
   },
   "not-covered": {
     "hue": {
-      "$value": "var(--wb-status-hard-gate)",
+      "$value": "var(--ui-status-hard-gate)",
       "$type": "string"
     },
     "text": {
       "light": {
-        "$value": "var(--wb-status-hard-gate-text)",
+        "$value": "var(--ui-status-hard-gate-text)",
         "$type": "string"
       },
       "dark": {
-        "$value": "var(--wb-status-hard-gate-text)",
+        "$value": "var(--ui-status-hard-gate-text)",
         "$type": "string"
       }
     },
@@ -190,16 +190,16 @@
   },
   "approved": {
     "hue": {
-      "$value": "var(--wb-status-implemented)",
+      "$value": "var(--ui-status-implemented)",
       "$type": "string"
     },
     "text": {
       "light": {
-        "$value": "var(--wb-status-implemented-text)",
+        "$value": "var(--ui-status-implemented-text)",
         "$type": "string"
       },
       "dark": {
-        "$value": "var(--wb-status-implemented-text)",
+        "$value": "var(--ui-status-implemented-text)",
         "$type": "string"
       }
     },
@@ -211,16 +211,16 @@
   },
   "in-triage": {
     "hue": {
-      "$value": "var(--wb-status-canonical)",
+      "$value": "var(--ui-status-canonical)",
       "$type": "string"
     },
     "text": {
       "light": {
-        "$value": "var(--wb-status-canonical-text)",
+        "$value": "var(--ui-status-canonical-text)",
         "$type": "string"
       },
       "dark": {
-        "$value": "var(--wb-status-canonical-text)",
+        "$value": "var(--ui-status-canonical-text)",
         "$type": "string"
       }
     },

@@ -19,19 +19,19 @@ export function EmptyState({ message, detail, action, className }: EmptyStatePro
         .filter(Boolean)
         .join(" ")}
       style={{
-        backgroundColor: "var(--wb-surface-sunken)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-sunken)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "dashed",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-lg)",
-        padding: "var(--wb-panel-padding)",
+        borderRadius: "var(--ui-radius-lg)",
+        padding: "var(--ui-panel-padding)",
       }}
     >
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         {message}
       </p>
       {detail ? (
-        <p className="text-xs" style={{ color: "var(--wb-content-muted)" }}>
+        <p className="text-xs" style={{ color: "var(--ui-content-muted)" }}>
           {detail}
         </p>
       ) : null}

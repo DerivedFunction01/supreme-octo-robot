@@ -239,7 +239,7 @@ export function PresenceSection({
         // shell's copy has not converged to it): no
         // selectable "No expiry", no mode control that
         // can submit — the DigestSection's honest form.
-        <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           {glance.data == null
             ? glance.loading
               ? "Loading presence…"
@@ -343,13 +343,13 @@ export function PresenceSection({
         </>
       )}
       {served?.expires_at ? (
-        <p className="mt-2 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-2 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
           {served.mode_label} until {clock(served.expires_at)}
           {served.expectation ? ` — ${served.expectation}` : ""}
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 text-[13px]" role="alert" style={{ color: "var(--wb-status-hard-gate-text)" }}>
+        <p className="mt-2 text-[13px]" role="alert" style={{ color: "var(--ui-status-hard-gate-text)" }}>
           {error}
         </p>
       ) : null}
@@ -388,7 +388,7 @@ export function DigestSection() {
 
   if (!d) {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         {digest.loading
           ? "Loading digest preferences…"
           : "Digest preferences are unreachable."}
@@ -476,7 +476,7 @@ export function DigestSection() {
         ))}
       </GroupedList>
       {error ? (
-        <p className="mt-2 text-[13px]" role="alert" style={{ color: "var(--wb-status-hard-gate-text)" }}>
+        <p className="mt-2 text-[13px]" role="alert" style={{ color: "var(--ui-status-hard-gate-text)" }}>
           {error}
         </p>
       ) : null}

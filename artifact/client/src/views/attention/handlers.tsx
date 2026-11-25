@@ -177,7 +177,7 @@ export function HandlerDetailView({ handle }: { handle: string }) {
             />
           </div>
           <p className="text-sm [overflow-wrap:anywhere]">{s.summary}</p>
-          <p className="mt-1 text-[13px]" style={{ color: "var(--wb-content-muted)" }}>
+          <p className="mt-1 text-[13px]" style={{ color: "var(--ui-content-muted)" }}>
             {day(s.at)}
           </p>
           {s.done?.length ? (
@@ -193,7 +193,7 @@ export function HandlerDetailView({ handle }: { handle: string }) {
                 <p key={i} className="mt-1 flex flex-wrap items-center gap-2 text-sm">
                   <StatusChip tone="idle" label={t.kind_label} />
                   <span className="min-w-0 [overflow-wrap:anywhere]">{t.title}</span>
-                  <span style={{ color: "var(--wb-content-muted)" }}>
+                  <span style={{ color: "var(--ui-content-muted)" }}>
                     {t.owner === "owner" ? "· your tap" : "· closeout"}
                   </span>
                 </p>
@@ -206,7 +206,7 @@ export function HandlerDetailView({ handle }: { handle: string }) {
               {s.blockers.map((b, i) => (
                 <p key={i} className="mt-1 text-sm [overflow-wrap:anywhere]">
                   {b.summary}{" "}
-                  <span style={{ color: "var(--wb-content-muted)" }}>
+                  <span style={{ color: "var(--ui-content-muted)" }}>
                     — clears when: {b.clearing_act} ({b.whose === "hard" ? "hard stop" : "yours"})
                   </span>
                 </p>
@@ -385,12 +385,12 @@ function DerivedLine({
   return (
     <>
       {!derived.available ? (
-        <p className="mt-3 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-3 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           Workbench state unavailable — {derived.reason ?? ""}
           {derived.last_good_at ? ` · last good ${day(derived.last_good_at)}` : ""}
         </p>
       ) : derived.todos ? (
-        <p className="mt-3 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-3 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           Workbench — {derived.todos.done}/{derived.todos.total} todos done
           {derived.todos.blocked ? ` · ${derived.todos.blocked} blocked` : ""}
           {derived.todos.doing ? ` · ${derived.todos.doing} in progress` : ""}

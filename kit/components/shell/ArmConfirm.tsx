@@ -68,8 +68,8 @@ export function ArmConfirm({
   if (armed && stamp !== armStamp) setArmed(false);
   const inert = disabled || busy;
   return (
-    <span style={{ display: "inline-flex", flexDirection: "column", gap: "var(--wb-space-4)" }}>
-      <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--wb-space-8)" }}>
+    <span style={{ display: "inline-flex", flexDirection: "column", gap: "var(--ui-space-4)" }}>
+      <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--ui-space-8)" }}>
         <Button
           variant={variant}
           disabled={inert}
@@ -87,7 +87,7 @@ export function ArmConfirm({
         </Button>
         {disabled && disabledReason ? (
           <span
-            style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-sm)" }}
+            style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-sm)" }}
           >
             {disabledReason}
           </span>
@@ -96,7 +96,7 @@ export function ArmConfirm({
       {armed && !inert ? (
         <span
           role="status"
-          style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-sm)" }}
+          style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-sm)" }}
         >
           {statement}
         </span>

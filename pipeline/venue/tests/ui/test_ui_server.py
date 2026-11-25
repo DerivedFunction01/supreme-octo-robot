@@ -39,7 +39,7 @@ def test_index_and_theme_served(ui):
     assert "/static/theme.css" in body
     status, css = ui.get("/static/theme.css")
     assert status == 200
-    assert "--wb-accent" in css  # workbench token, mirrored
+    assert "--ui-accent" in css  # workbench token, mirrored
 
 
 def test_state_passes_core_json_through(ui):

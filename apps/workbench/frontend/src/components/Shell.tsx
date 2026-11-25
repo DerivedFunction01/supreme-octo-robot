@@ -157,8 +157,8 @@ export function Shell({
     nav.section === "goal" ? a.goal(nav.slug)?.title : undefined,
   );
   const crumbEl = (
-    <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--wb-content-secondary)" }}>
-      {crumb.left} / <b style={{ color: "var(--wb-content-primary)" }}>{crumb.bold}</b>
+    <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--ui-content-secondary)" }}>
+      {crumb.left} / <b style={{ color: "var(--ui-content-primary)" }}>{crumb.bold}</b>
     </span>
   );
 
@@ -263,9 +263,9 @@ export function Shell({
     <div className={phone ? "relative w-full" : "relative"} ref={searchRef}>
       <div
         className={`flex items-center gap-2 rounded-[9px] px-3 py-1.5 ${phone ? "w-full" : "w-[210px] max-w-[34vw]"}`}
-        style={{ backgroundColor: "var(--wb-surface-sunken)" }}
+        style={{ backgroundColor: "var(--ui-surface-sunken)" }}
       >
-        <Search size={14} className="shrink-0" style={{ color: "var(--wb-content-muted)" }} />
+        <Search size={14} className="shrink-0" style={{ color: "var(--ui-content-muted)" }} />
         <input
           value={query}
           onChange={(e) => {
@@ -277,17 +277,17 @@ export function Shell({
           placeholder="Search everything"
           aria-label="Search everything"
           className="w-full min-w-0 bg-transparent text-[13.5px] outline-none"
-          style={{ color: "var(--wb-content-primary)" }}
+          style={{ color: "var(--ui-content-primary)" }}
         />
       </div>
       {searchOpen && results.length > 0 ? (
         <div
           className={`absolute top-[110%] z-40 overflow-hidden ${phone ? "right-0 left-0 w-auto" : "right-0 w-[320px] max-w-[86vw]"}`}
           style={{
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-md)",
-            boxShadow: "var(--wb-shadow-overlay)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-md)",
+            boxShadow: "var(--ui-shadow-overlay)",
           }}
         >
           {results.map((r, i) => (
@@ -300,10 +300,10 @@ export function Shell({
                 setQuery("");
               }}
               className="block w-full px-3.5 py-2.5 text-left"
-              style={{ borderBottom: i < results.length - 1 ? "1px solid var(--wb-border-default)" : undefined }}
+              style={{ borderBottom: i < results.length - 1 ? "1px solid var(--ui-border-default)" : undefined }}
             >
               <div className="truncate text-sm font-medium">{r.label}</div>
-              <div className="truncate text-xs" style={{ color: "var(--wb-content-secondary)" }}>{r.sub}</div>
+              <div className="truncate text-xs" style={{ color: "var(--ui-content-secondary)" }}>{r.sub}</div>
             </button>
           ))}
         </div>
@@ -331,7 +331,7 @@ export function Shell({
       return (
         <div
           className="flex h-full flex-col"
-          style={{ backgroundColor: "var(--wb-surface-canvas)", color: "var(--wb-content-primary)" }}
+          style={{ backgroundColor: "var(--ui-surface-canvas)", color: "var(--ui-content-primary)" }}
         >
           <main className="min-h-0 flex-1 overflow-y-auto">{children}</main>
         </div>
@@ -352,7 +352,7 @@ export function Shell({
   return (
     <div
       className="flex h-full"
-      style={{ backgroundColor: "var(--wb-surface-canvas)", color: "var(--wb-content-primary)" }}
+      style={{ backgroundColor: "var(--ui-surface-canvas)", color: "var(--ui-content-primary)" }}
     >
       <SidebarNav {...shellProps} />
       <div className="flex min-w-0 flex-1 flex-col">

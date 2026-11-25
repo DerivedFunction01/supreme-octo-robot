@@ -63,13 +63,13 @@ type Envelope = {
 };
 
 const inputStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  border: "1px solid var(--wb-border-strong)",
-  borderRadius: "var(--wb-radius-sm)",
-  color: "var(--wb-content-primary)",
+  background: "var(--ui-surface-sunken)",
+  border: "1px solid var(--ui-border-strong)",
+  borderRadius: "var(--ui-radius-sm)",
+  color: "var(--ui-content-primary)",
   font: "inherit",
   minHeight: "38px",
-  padding: "0 var(--wb-space-12)",
+  padding: "0 var(--ui-space-12)",
   width: "100%",
   maxWidth: "52ch",
 };
@@ -91,15 +91,15 @@ function QuestionRow({
       style={{
         borderLeft:
           state === "answered"
-            ? "2px solid var(--wb-accent)"
-            : "2px solid var(--wb-border-default)",
-        paddingLeft: "var(--wb-space-16)",
-        marginTop: "var(--wb-space-16)",
+            ? "2px solid var(--ui-accent)"
+            : "2px solid var(--ui-border-default)",
+        paddingLeft: "var(--ui-space-16)",
+        marginTop: "var(--ui-space-16)",
       }}
     >
       <MarkdownBlock text={q.text} sectionHeading="Open questions" />
       {q.detail ? <MarkdownBlock text={q.detail} sectionHeading="Open questions" /> : null}
-      <div style={{ marginTop: "var(--wb-space-8)" }}>
+      <div style={{ marginTop: "var(--ui-space-8)" }}>
         {q.type === "choice" ? (
           <SegmentedControl
             ariaLabel={q.text}
@@ -132,9 +132,9 @@ function QuestionRow({
       </div>
       <p
         style={{
-          color: "var(--wb-content-secondary)",
-          fontSize: "var(--wb-font-size-sm)",
-          margin: "var(--wb-space-4) 0 0",
+          color: "var(--ui-content-secondary)",
+          fontSize: "var(--ui-font-size-sm)",
+          margin: "var(--ui-space-4) 0 0",
         }}
       >
         {state === "answered" ? (
@@ -281,7 +281,7 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
   };
 
   return (
-    <div data-annotation-ui="true" style={{ marginTop: "var(--wb-space-24)" }}>
+    <div data-annotation-ui="true" style={{ marginTop: "var(--ui-space-24)" }}>
       <Card title="Questions" anchor={anchor.questionsPanel}>
         {doc.questions.map((q) => (
           <QuestionRow
@@ -299,13 +299,13 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
           <div
             role="alert"
             style={{
-              marginTop: "var(--wb-space-16)",
-              border: "1px solid var(--wb-danger)",
-              borderRadius: "var(--wb-radius-md)",
-              padding: "var(--wb-space-12) var(--wb-space-16)",
+              marginTop: "var(--ui-space-16)",
+              border: "1px solid var(--ui-danger)",
+              borderRadius: "var(--ui-radius-md)",
+              padding: "var(--ui-space-12) var(--ui-space-16)",
             }}
           >
-            <p style={{ margin: "0 0 var(--wb-space-8)" }}>
+            <p style={{ margin: "0 0 var(--ui-space-8)" }}>
               This plan changed on disk since it was opened, so nothing was written. Reloading
               resets the answers staged above to what the file records.
             </p>
@@ -315,7 +315,7 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
           </div>
         ) : null}
         {error ? (
-          <p role="alert" style={{ color: "var(--wb-danger)", marginTop: "var(--wb-space-16)" }}>
+          <p role="alert" style={{ color: "var(--ui-danger)", marginTop: "var(--ui-space-16)" }}>
             {error}
           </p>
         ) : null}
@@ -323,8 +323,8 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--wb-space-12)",
-            marginTop: "var(--wb-space-16)",
+            gap: "var(--ui-space-12)",
+            marginTop: "var(--ui-space-16)",
             flexWrap: "wrap",
           }}
         >
@@ -335,7 +335,7 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
           >
             Resolve
           </Button>
-          <span style={{ color: "var(--wb-content-secondary)" }}>
+          <span style={{ color: "var(--ui-content-secondary)" }}>
             {saved
               ? "Recorded in the plan file."
               : Object.keys(pending).length > 0
@@ -346,9 +346,9 @@ export function QuestionsPanel({ slug, path, doc }: { slug: string; path: string
         {doc.sentinel_errors.length > 0 ? (
           <p
             style={{
-              color: "var(--wb-content-muted)",
-              fontSize: "var(--wb-font-size-sm)",
-              marginTop: "var(--wb-space-12)",
+              color: "var(--ui-content-muted)",
+              fontSize: "var(--ui-font-size-sm)",
+              marginTop: "var(--ui-space-12)",
             }}
           >
             {doc.sentinel_errors.length} malformed question sentinel(s) in this file:{" "}

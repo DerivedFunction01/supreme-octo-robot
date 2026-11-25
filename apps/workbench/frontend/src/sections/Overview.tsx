@@ -47,7 +47,7 @@ function GoalRecordPanel({ slug }: { slug: string }) {
             </Sub>
           </span>
           <span className="ml-auto flex items-center gap-2">
-            <span className="text-xs" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="text-xs" style={{ color: "var(--ui-content-secondary)" }}>
               {g.ping.armed ? "Ping armed" : "Ping disarmed"}
             </span>
             <Toggle

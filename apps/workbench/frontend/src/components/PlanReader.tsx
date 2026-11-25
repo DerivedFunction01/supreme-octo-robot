@@ -119,7 +119,7 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
         <code
           key={key}
           className="rounded px-1 py-px font-mono text-[0.92em]"
-          style={{ backgroundColor: "var(--wb-surface-sunken)" }}
+          style={{ backgroundColor: "var(--ui-surface-sunken)" }}
         >
           {part.slice(1, -1)}
         </code>
@@ -134,7 +134,7 @@ function renderInline(text: string, keyBase: string): ReactNode[] {
     const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(part);
     if (link) {
       return (
-        <span key={key} style={{ color: "var(--wb-accent)", textDecoration: "underline" }}>
+        <span key={key} style={{ color: "var(--ui-accent)", textDecoration: "underline" }}>
           {link[1]}
         </span>
       );
@@ -155,14 +155,14 @@ function highlightCodeLine(line: string, key: string): ReactNode {
     <div key={key}>
       {tokens.map((tok, i) =>
         /^["']/.test(tok) ? (
-          <span key={i} style={{ color: "var(--wb-status-stale-text)" }}>
+          <span key={i} style={{ color: "var(--ui-status-stale-text)" }}>
             {tok}
           </span>
         ) : (
           <span key={i}>
             {tok.split(KEYWORDS).map((piece, j) =>
               KEYWORDS.test(piece) ? (
-                <span key={j} style={{ color: "var(--wb-status-canonical-text)", fontWeight: 600 }}>
+                <span key={j} style={{ color: "var(--ui-status-canonical-text)", fontWeight: 600 }}>
                   {piece}
                 </span>
               ) : (
@@ -172,7 +172,7 @@ function highlightCodeLine(line: string, key: string): ReactNode {
           </span>
         ),
       )}
-      {comment ? <span style={{ color: "var(--wb-content-muted)" }}>{comment}</span> : null}
+      {comment ? <span style={{ color: "var(--ui-content-muted)" }}>{comment}</span> : null}
       {line === "" ? " " : null}
     </div>
   );
@@ -195,7 +195,7 @@ function MermaidBlock({ source }: { source: string }) {
         const mermaid = (mod as { default?: { initialize: (c: object) => void; render: (id: string, src: string) => Promise<{ svg: string }> } }).default;
         if (!mermaid) throw new Error("no renderer");
         mermaid.initialize({ startOnLoad: false });
-        const out = await mermaid.render(`wb-diagram-${Math.abs(source.length * 31)}`, source);
+        const out = await mermaid.render(`ui-diagram-${Math.abs(source.length * 31)}`, source);
         if (live) setSvg(out.svg);
       })
       .catch(() => {
@@ -210,9 +210,9 @@ function MermaidBlock({ source }: { source: string }) {
       <div
         className="my-3 overflow-x-auto p-4"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
         }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -222,12 +222,12 @@ function MermaidBlock({ source }: { source: string }) {
     <div
       className="my-3 overflow-x-auto p-4"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        border: "1px dashed var(--wb-border-strong)",
-        borderRadius: "var(--wb-radius-md)",
+        backgroundColor: "var(--ui-surface-2)",
+        border: "1px dashed var(--ui-border-strong)",
+        borderRadius: "var(--ui-radius-md)",
       }}
     >
-      <div className="mb-2 text-xs font-bold tracking-[0.07em] uppercase" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="mb-2 text-xs font-bold tracking-[0.07em] uppercase" style={{ color: "var(--ui-content-secondary)" }}>
         Diagram{failed ? " · source — the mermaid renderer is not bundled" : " · rendering…"}
       </div>
       <pre className="m-0 font-mono text-xs leading-[1.7] whitespace-pre-wrap">{source}</pre>
@@ -264,18 +264,18 @@ export function PlanReader({
         <div
           className="mb-3 flex items-center gap-3 p-[10px_14px]"
           style={{
-            backgroundColor: "var(--wb-surface-sunken)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-md)",
+            backgroundColor: "var(--ui-surface-sunken)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-md)",
           }}
         >
-          <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+          <span className="min-w-0 flex-1 truncate text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
             Selected: "{selected}"
           </span>
           <button
             type="button"
             className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
-            style={{ backgroundColor: "var(--wb-accent)", color: "var(--wb-on-accent)" }}
+            style={{ backgroundColor: "var(--ui-accent)", color: "var(--ui-on-accent)" }}
             onClick={() => {
               onAnnotate(selected);
               setSelected("");
@@ -291,10 +291,10 @@ export function PlanReader({
         onMouseUp={captureSelection}
         className="p-[18px_20px] text-[14px] leading-[1.65]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
-          color: "var(--wb-content-primary)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
+          color: "var(--ui-content-primary)",
         }}
       >
         {blocks.map((b, i) => {
@@ -315,7 +315,7 @@ export function PlanReader({
                     key={key}
                     id={`pr-${slug}`}
                     className="mt-5 mb-2 border-l-[3px] pl-2.5 text-[15.5px] font-bold first:mt-0"
-                    style={{ borderColor: "var(--wb-accent)" }}
+                    style={{ borderColor: "var(--ui-accent)" }}
                   >
                     {renderInline(b.text, key)}
                   </h4>
@@ -339,14 +339,14 @@ export function PlanReader({
                   key={key}
                   className="my-3 p-[10px_14px]"
                   style={{
-                    backgroundColor: "color-mix(in srgb, var(--wb-okabe-blue) 8%, transparent)",
-                    borderLeft: "3px solid var(--wb-okabe-blue)",
-                    borderRadius: "0 var(--wb-radius-md) var(--wb-radius-md) 0",
+                    backgroundColor: "color-mix(in srgb, var(--ui-okabe-blue) 8%, transparent)",
+                    borderLeft: "3px solid var(--ui-okabe-blue)",
+                    borderRadius: "0 var(--ui-radius-md) var(--ui-radius-md) 0",
                   }}
                 >
                   <div
                     className="mb-1 text-[11px] font-bold tracking-[0.07em] uppercase"
-                    style={{ color: "var(--wb-status-canonical-text)" }}
+                    style={{ color: "var(--ui-status-canonical-text)" }}
                   >
                     Ruling
                   </div>
@@ -366,14 +366,14 @@ export function PlanReader({
                   key={key}
                   className="my-3 overflow-x-auto p-3.5 font-mono text-xs leading-[1.75]"
                   style={{
-                    backgroundColor: "var(--wb-surface-sunken)",
-                    border: "1px solid var(--wb-border-default)",
-                    borderRadius: "var(--wb-radius-md)",
+                    backgroundColor: "var(--ui-surface-sunken)",
+                    border: "1px solid var(--ui-border-default)",
+                    borderRadius: "var(--ui-radius-md)",
                     whiteSpace: "pre",
                   }}
                 >
                   {b.lang ? (
-                    <div className="mb-1.5" style={{ color: "var(--wb-content-muted)" }}>
+                    <div className="mb-1.5" style={{ color: "var(--ui-content-muted)" }}>
                       {b.lang}
                     </div>
                   ) : null}
@@ -390,7 +390,7 @@ export function PlanReader({
                           <th
                             key={j}
                             className="border-b-2 px-2.5 py-1.5 text-left font-bold"
-                            style={{ borderColor: "var(--wb-border-strong)" }}
+                            style={{ borderColor: "var(--ui-border-strong)" }}
                           >
                             {renderInline(h, `${key}-h${j}`)}
                           </th>
@@ -404,7 +404,7 @@ export function PlanReader({
                             <td
                               key={k}
                               className="border-b px-2.5 py-1.5 align-top [overflow-wrap:anywhere]"
-                              style={{ borderColor: "var(--wb-border-default)" }}
+                              style={{ borderColor: "var(--ui-border-default)" }}
                             >
                               {renderInline(r[k] ?? "", `${key}-${j}-${k}`)}
                             </td>
@@ -424,8 +424,8 @@ export function PlanReader({
                         key={j}
                         className="flex items-start gap-2.5 p-[8px_12px]"
                         style={{
-                          backgroundColor: "var(--wb-surface-sunken)",
-                          borderRadius: "var(--wb-radius-md)",
+                          backgroundColor: "var(--ui-surface-sunken)",
+                          borderRadius: "var(--ui-radius-md)",
                           opacity: item.checked ? 0.75 : 1,
                         }}
                       >
@@ -433,9 +433,9 @@ export function PlanReader({
                           aria-hidden
                           className="mt-px flex h-[16px] w-[16px] flex-[0_0_16px] items-center justify-center rounded-[4px] text-[11px] font-bold"
                           style={{
-                            border: `1.5px solid ${item.checked ? "var(--wb-okabe-bluish-green)" : "var(--wb-border-strong)"}`,
-                            backgroundColor: item.checked ? "var(--wb-okabe-bluish-green)" : "transparent",
-                            color: "var(--wb-on-accent)",
+                            border: `1.5px solid ${item.checked ? "var(--ui-okabe-bluish-green)" : "var(--ui-border-strong)"}`,
+                            backgroundColor: item.checked ? "var(--ui-okabe-bluish-green)" : "transparent",
+                            color: "var(--ui-on-accent)",
                           }}
                         >
                           {item.checked ? "✓" : ""}
@@ -444,7 +444,7 @@ export function PlanReader({
                       </div>
                     ) : (
                       <div key={j} className="flex items-start gap-2.5 pl-1">
-                        <span aria-hidden style={{ color: "var(--wb-content-muted)" }}>
+                        <span aria-hidden style={{ color: "var(--ui-content-muted)" }}>
                           •
                         </span>
                         <span className="[overflow-wrap:anywhere]">{renderInline(item.text, `${key}-${j}`)}</span>
@@ -454,7 +454,7 @@ export function PlanReader({
                 </div>
               );
             case "hr":
-              return <hr key={key} className="my-4 border-0 border-t" style={{ borderColor: "var(--wb-border-default)" }} />;
+              return <hr key={key} className="my-4 border-0 border-t" style={{ borderColor: "var(--ui-border-default)" }} />;
           }
         })}
       </div>

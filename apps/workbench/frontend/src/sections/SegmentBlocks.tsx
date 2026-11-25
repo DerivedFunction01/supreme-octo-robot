@@ -20,8 +20,8 @@ function Runs({ runs }: { runs: FeedSegmentRun[] }) {
               key={i}
               className="rounded px-1 py-[1px] font-mono text-[0.92em]"
               style={{
-                backgroundColor: "var(--wb-surface-sunken)",
-                color: "var(--wb-content-primary)",
+                backgroundColor: "var(--ui-surface-sunken)",
+                color: "var(--ui-content-primary)",
               }}
             >
               {run.text}
@@ -38,7 +38,7 @@ function Runs({ runs }: { runs: FeedSegmentRun[] }) {
 
 export function SegmentBlocks({ blocks }: { blocks: FeedSegmentBlock[] }) {
   return (
-    <div className="text-[14.5px] leading-[1.65]" style={{ color: "var(--wb-content-primary)" }}>
+    <div className="text-[14.5px] leading-[1.65]" style={{ color: "var(--ui-content-primary)" }}>
       {blocks.map((block, i) => {
         switch (block.kind) {
           case "heading": {
@@ -68,8 +68,8 @@ export function SegmentBlocks({ blocks }: { blocks: FeedSegmentBlock[] }) {
                 key={i}
                 className="my-3 overflow-x-auto rounded-md p-3 font-mono text-[12.5px] leading-[1.6]"
                 style={{
-                  backgroundColor: "var(--wb-surface-sunken)",
-                  color: "var(--wb-content-primary)",
+                  backgroundColor: "var(--ui-surface-sunken)",
+                  color: "var(--ui-content-primary)",
                 }}
               >
                 {block.text}
