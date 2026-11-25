@@ -565,6 +565,34 @@ def finalize_run(rec: dict, job: dict, session: str, remote_out: str, reader_sta
     if exit_code not in (None, 0):
         mark_terminal(rec, "failed", finished_at=now(), error=f"job payload exited {exit_code}", pulled=pulled, usage_before=usage_before, usage_after=usage_after)
         result = {"run_id": rec["run_id"], "state": "failed", "error": rec["error"], "pulled": pulled}
+    elif job.get("outputs") and not pulled and not rec.get("collection_failed"):
+        # Total collection shortfall (launch-path plan,
+        # Step 4): the payload exited 0, every declared
+        # output stands uncollected, and no collection
+        # failure is on record — the shape the
+        # two-runs-one-name specimen's loser closed in,
+        # complete with pulled [] and an empty results dir,
+        # a record indistinguishable from a successful run
+        # that landed nothing. A run that collected none of
+        # what it declared, with nothing else naming why,
+        # has no complete verdict to give: it closes failed,
+        # the shortfall itself as the error — the missing
+        # names, and for a name another run holds at the
+        # shared root, that run. Two neighbouring shapes
+        # keep their closes: a partial collection completes
+        # with its shortfall named below (some verdict
+        # landed, and the payload's exit code stays its
+        # truth), and a total shortfall the channel itself
+        # failed — collection_failed set, the
+        # truncating-download shape — completes with the
+        # failure named on the collection axis, apart from
+        # the payload's outcome.
+        contended = {e["name"]: e.get("contended_with") for e in misplaced if e.get("contended")}
+        names = ", ".join(
+            f"{name} (contended with {contended[name]})" if name in contended else name
+            for name in sorted(set(missing) | set(empty)))
+        mark_terminal(rec, "failed", finished_at=now(), error=f"payload exited 0 but collected none of its {len(job['outputs'])} declared outputs: {names}", pulled=pulled, usage_before=usage_before, usage_after=usage_after)
+        result = {"run_id": rec["run_id"], "state": "failed", "error": rec["error"], "pulled": pulled}
     else:
         mark_terminal(rec, "complete", finished_at=now(), pulled=pulled, usage_before=usage_before, usage_after=usage_after)
         result = {"run_id": rec["run_id"], "state": "complete", "pulled": pulled}

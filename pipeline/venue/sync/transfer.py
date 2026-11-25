@@ -299,7 +299,33 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
     two runs' copies of one payload — different targets —
     never meet there. Local parts are scratch (resume is
     remote-side) and are removed when the transfer closes.
+
+    Part-0 retry (launch-path plan, Step 5): a pass that
+    fails at part 0 with zero parts landed — the
+    steampower-df-union-gate T161748Z specimen, 3 attempts,
+    0 parts, nothing resumed — retries the whole transfer
+    once inside this call. Nothing exists on the far side
+    to poison, and the failure's class is a saturated
+    channel at the transfer's first burst, which a fresh
+    pass (probe included) re-tests honestly; the retry's
+    result carries "whole_transfer_retry": True. A failure
+    at any later part — or at part 0 with parts already
+    landed — keeps the per-part resume exactly as it was:
+    the pass's own result stands and a re-run moves only
+    the missing parts.
     """
+    result = _chunked_upload_pass(session, local, remote_name, progress=progress, staging_token=staging_token)
+    if result.get("ok") or result.get("stage") != "upload part 0" or result.get("resumed_parts") or result.get("uploaded_parts"):
+        return result
+    retry = _chunked_upload_pass(session, local, remote_name, progress=progress, staging_token=staging_token)
+    retry["whole_transfer_retry"] = True
+    return retry
+
+
+def _chunked_upload_pass(session: str, local: Path, remote_name: str, progress=None, staging_token: str | None = None) -> dict:
+    """One pass of chunked_upload (which see): split, probe
+    the far side's parts, move the missing ones, reassemble,
+    verify end to end."""
     local = Path(local)
     digest = sha256_file(local)
     staging_dir = _xfer_dir(digest, remote_name)

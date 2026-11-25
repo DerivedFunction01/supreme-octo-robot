@@ -590,3 +590,69 @@ def test_upload_parts_are_staged_under_the_transfer_token(tmp_path, monkeypatch)
     assert not (tmp_path / "var" / "chunks" / "run-a").exists()
     assert not (tmp_path / "var" / "chunks" / "run-b").exists()
     assert fake.remote["big.bin"] == bytes(range(199, -1, -1))
+
+
+class ProbeCounter:
+    """A colab wrapper counting the part-hash probe execs —
+    the observable that a whole transfer (probe included)
+    ran again, as against a per-part resume."""
+
+    def __init__(self, fake):
+        self.fake = fake
+        self.probes = 0
+
+    def __call__(self, *args, timeout=3600):
+        if args and args[0] == "exec":
+            code = Path(args[args.index("-f") + 1]).read_text()
+            if "# transfer:part-hashes" in code:
+                self.probes += 1
+        return self.fake(*args, timeout=timeout)
+
+
+def test_upload_part0_exhaustion_retries_the_whole_transfer_once(tmp_path, monkeypatch):
+    """Step 5's specimen (steampower-df-union-gate
+    T161748Z): part 0 exhausts its attempts with zero parts
+    landed — 3 attempts, 0 parts, and the old shape resumed
+    nothing because the launch itself was over. The whole
+    transfer retries once inside the same call: the probe
+    runs again, part 0 lands on the fresh pass, and the
+    file assembles whole."""
+    fake, local = harness(tmp_path, monkeypatch)
+    counter = ProbeCounter(fake)
+    monkeypatch.setattr(xfer, "colab", counter)
+    fake.fail_uploads["big.bin.part-000"] = xfer.PART_ATTEMPTS
+    r = xfer.chunked_upload("s", local, "big.bin")
+    assert r["ok"] and r.get("whole_transfer_retry") is True
+    assert fake.remote["big.bin"] == CONTENT
+    assert counter.probes == 2
+    assert fake.upload_calls.count("big.bin.part-000") == xfer.PART_ATTEMPTS + 1
+
+
+def test_upload_part0_failure_past_the_whole_retry_reports_the_stage(tmp_path, monkeypatch):
+    """The whole-transfer retry is bounded at one: part 0
+    still failing on the fresh pass reports its stage, the
+    result carries the retry marker, and the attempt count
+    shows exactly two passes — no third."""
+    fake, local = harness(tmp_path, monkeypatch)
+    fake.fail_uploads["big.bin.part-000"] = 99
+    r = xfer.chunked_upload("s", local, "big.bin")
+    assert not r["ok"] and r["stage"] == "upload part 0" and r.get("whole_transfer_retry") is True
+    assert fake.upload_calls.count("big.bin.part-000") == 2 * xfer.PART_ATTEMPTS
+
+
+def test_upload_later_part_failure_never_restarts_the_transfer(tmp_path, monkeypatch):
+    """A part-N failure does NOT restart the whole
+    transfer: no retry marker, the probe ran once, the
+    landed parts stay as resume state, and a re-run moves
+    only the missing parts (the per-part resume, unchanged)."""
+    fake, local = harness(tmp_path, monkeypatch)
+    counter = ProbeCounter(fake)
+    monkeypatch.setattr(xfer, "colab", counter)
+    fake.fail_uploads["big.bin.part-002"] = xfer.PART_ATTEMPTS
+    r = xfer.chunked_upload("s", local, "big.bin")
+    assert not r["ok"] and r["stage"] == "upload part 2"
+    assert "whole_transfer_retry" not in r
+    assert counter.probes == 1
+    fake.fail_uploads.clear()
+    r2 = xfer.chunked_upload("s", local, "big.bin")
+    assert r2["ok"] and r2["resumed_parts"] == 2 and "whole_transfer_retry" not in r2
