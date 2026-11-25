@@ -2,7 +2,8 @@
 
 **Canonical owner:** the pipeline registry — one directory for
 callers, handles, programmes, and caller→chat routing. All
-four apps consume it; none keeps a local copy. (Plan §4.1.)
+four apps consume it; none keeps a local copy. The
+implementation homes in `pipeline/registry/`.
 
 **The contract in one line:** every actor the harness can name
 — thread caller, machinery caller, token caller, attention
@@ -15,7 +16,8 @@ three natures that are never blurred.
   tables — operator-written only; no code writes them), the
   code itself (machinery constants), the owner's mint verb
   (token callers), attention's API writers (handlers,
-  programmes, until S7's seed/export form lands).
+  programmes; their tracked seed/export form is the
+  registry's `seed.py`).
 - **Consumers:** the runner's wrapper seams (claim
   validation), the scheduler connector (authentication), the
   bridge-wake minter and the runner's liveness escalation
@@ -54,14 +56,13 @@ three natures that are never blurred.
    and every call refused; raw tokens are printed once at
    mint and never stored in any tracked or stored form —
    attention's bridge token stays a raw-token live-config
-   file on the client side only (attention review §11).
+   file on the client side only (docs/review/review-attention.md §11).
    Scopes: `read`, `write-state`, `send`, `bridge`, `exec` —
    `bridge` is home-side only, never issued to a venue caller.
-   **`exec` (the §10.1 input named by contract 04's
-   disposition) denotes delegated execution:**
+   **`exec` denotes delegated execution:**
    it is the scope the `/ops` surface's `exec` op requires,
    while that surface's `write`/`patch` ops require
-   `write-state` (contract 04's frozen mapping). `exec` is
+   `write-state` (contract 04's mapping). `exec` is
    likewise home-side only, never issued to a venue caller:
    it hands its holder arbitrary command execution in the
    server process, and mapping `exec` onto `write-state`
@@ -78,19 +79,20 @@ three natures that are never blurred.
    permission, pushes, acquires a lease, or writes a
    calendar.
 
-## Handles and programmes (§9.1 annex)
+## Handles and programmes
 
-Attention's two registries join this contract with a form
-delta: at the pin neither has a file form — they are
-API-written rows in the one untracked state store, unseeded
-in tracked code.
+Attention's two registries join this contract: handlers and
+programmes are API-written rows in the one untracked state
+store, and the registry's seed/export step
+(`pipeline/registry/seed.py`) gives them a tracked
+seed/export form — `handlers.json` and `programmes.json`
+on export.
 
 - **Handler registry** — `{handle, label, color_slot, icon,
   thread_id, ui_surface, retired}` (schema:
   `schemas/attention-handler.schema.json`; fixture:
   `fixtures/attention-handler.json`, the demo seed's first
-  row — the live registry's rows share this shape and are
-  captured at S1, never copied here). Written by upsert;
+  row — the live registry's rows share this shape). Written by upsert;
   omitted fields are preserved from the existing entry.
   Handle → thread is the dispatch routing half; programme
   membership is not on the handler.
@@ -101,7 +103,7 @@ in tracked code.
   record_locations[], contract_path, idle_classes[],
   wb_projects[], retired}` (schema:
   `schemas/attention-programme.schema.json`; fixture:
-  `fixtures/attention-programme.json`, the pinned tests'
+  `fixtures/attention-programme.json`, the tests'
   upsert payload). Cadence, band, escalation, and venue are
   declarations, never evaluator constants (**ATT11**). Two
   fields are **contract-sourced**: `rule_text` and
@@ -109,15 +111,16 @@ in tracked code.
   `contract_path` — the goal record owns them (contract 11)
   and the registry row is their directory projection, never
   a duplicate source.
-- **Store migration + seed/export (S7):** the state store
-  migrates verbatim at S1 capture (§3 — existential: losing
-  the file loses every registry it owns), and this contract
-  gives handlers and programmes the tracked seed/export form
-  they have never had. Live registries are re-seeded from
-  the S1 capture only, never from the tracked examples (S7
-  done-evidence).
+- **Store seeding + seed/export:** the merged registry's
+  live store is seeded, never hand-copied
+  (`pipeline/registry/seed.py`): `seed-capture` builds it
+  from the consolidation capture, `seed-examples` builds it
+  from the tracked fictional examples in `fixtures/`, and
+  `export` writes it back out in the per-form files.
+  Live registries are re-seeded from the capture only,
+  never from the tracked examples.
 - **Store discipline (ATT1):** the store these registries
-  live in keeps its discipline through the migration — one
+  live in keeps its discipline — one
   JSON-shaped state written atomically (`.tmp` sibling +
   rename); registry seeds appended when absent, never
   overwritten (`backfill`); and its datetime decode
@@ -131,9 +134,8 @@ Two caller→chat tables fold into this registry:
 
 - **Bridge-wake owners** — `{version, owners: {<caller>:
   {chat}}, drain?: {chat}}` (fixture:
-  `fixtures/bridge-wake-owners.example.yaml`, the pinned
-  test suite's specimen). At the pin it lives misfiled among
-  job bodies; the contract separates config from bodies.
+  `fixtures/bridge-wake-owners.example.yaml`, the test
+  suite's specimen). Config is separate from job bodies.
 - **Notify routes** — `{main, routes: {<caller>: <chat>}}`
   (fixture: `fixtures/notify-routes.example.json`).
   Machinery and unknown callers fall back to `main`.
@@ -150,10 +152,10 @@ registry discipline + no-authority boundary), ATT11
 (programme declaration fields + contract-sourced fields),
 SCH8 (routing tables; the rule rides 05).
 
-## Migration notes
+## Store form
 
-S7 implements this contract as one store with the three
-natures distinct and the seed/example pattern intact
-(contract 04). Venue claims: no caller or routing row carries
-a venue key at the pin; programme rows carry a `venue`
-declaration, which is a different field and stays.
+The registry is one store with the three natures distinct
+and the seed/example pattern intact (contract 04). Venue
+claims: no caller or routing row carries a venue key;
+programme rows carry a `venue` declaration, which is a
+different field and stays.

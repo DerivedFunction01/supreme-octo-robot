@@ -2,8 +2,7 @@
 
 **Canonical owner:** the pipeline scheduling engine — it owns
 the registry the entries land in; the workbench harness and
-the runner lease core are its two registered writers. (Plan
-§4.2.)
+the runner lease core are its two registered writers.
 
 **The contract in one line:** machine-rendered scheduler
 entries are one class — stamp form,
@@ -14,12 +13,10 @@ writer — whichever writer renders them.
 
 The format the writers render — one file per job at
 `jobs/<id>.yaml`, the strict YAML subset, the field
-table, and both `source` stamp forms — is frozen by
-contract 14 (plan §4.14), the format's own contract
-under the same canonical owner. It rode here as this
-contract's shared substrate at S0; amendment 2
-promoted it, and this section is the
-pointer, so the format keeps one home. The writer-class
+table, and both `source` stamp forms — is contract 14,
+the format's own contract under the same canonical
+owner. This section is the pointer, so the format keeps
+one home. The writer-class
 consequences of the machine stamp form (lifecycle owned by the writer,
 drift counted per writer) remain this contract's,
 below.
@@ -30,8 +27,8 @@ itself. The registry store has exactly one mutation
 path — this writer path — so an entry's presence in the
 store IS its admission; there is no directory-drop path
 for a flag to guard, and no admission field exists on
-the entry (amendment 3: the pinned system's
-`migrated: true` stamp step is dropped from the target).
+the entry (no `migrated: true` stamp exists in the
+format).
 Admission evidence — validation counts, proof outcome —
 is recorded as events in the dispatch/ledger store
 (contract 05), not as fields on the entry. Retired
@@ -43,12 +40,9 @@ in `jobs/RETIRED.md`.
 - **No born-admitted class:** machine renders are
   admitted the same way every entry is — by being
   written through the writer path (see Admission above).
-  The pinned system's exception does not carry: the
-  workbench family stamped `migrated: true` at birth
-  under the owner's ruling, and the runner
-  family's renders carried their admission record in
-  `migration_note`; in the target the renders write
-  entries through the path, full stop (amendment 3).
+  No writer stamps an admission exception at birth, and
+  no render carries an admission record in a note field;
+  renders write entries through the path, full stop.
 - **Lifecycle owned by the writer:** a `wb-progress-*` entry
   is deleted in the same writer call that disarms its todo
   (contract 03); a `colab-liveness-*` entry is deleted in the
@@ -67,8 +61,8 @@ in `jobs/RETIRED.md`.
 
 | Writer | Family | Trigger | Fixture |
 |---|---|---|---|
-| workbench harness (`lib/progress/schedule.py`) | `wb-progress-<project>-<todo-id-lower>.yaml` | todo doing-transition arms; terminal/disarmed/archived retires | `fixtures/scheduler-entry-wb-progress.yaml` |
-| runner lease core (`sync/liveness_entry.py`) | `colab-liveness-<session>.yaml` | one per live lease; deleted with the lease record | `fixtures/scheduler-entry-colab-liveness.yaml` |
+| workbench harness (`pipeline/workrecord/lib/progress/schedule.py`) | `wb-progress-<project>-<todo-id-lower>.yaml` | todo doing-transition arms; terminal/disarmed/archived retires | `fixtures/scheduler-entry-wb-progress.yaml` |
+| runner lease core (`pipeline/venue/sync/liveness_entry.py`) | `colab-liveness-<session>.yaml` | one per live lease; deleted with the lease record | `fixtures/scheduler-entry-colab-liveness.yaml` |
 
 The five scheduler-entry fixtures — the two machine
 renders above plus the hand and adoption forms
@@ -81,8 +75,8 @@ renders above plus the hand and adoption forms
 
 SCH1's writer half (the machine-form stamp as rendered
 under this contract; the format itself is contract 14),
-SCH2 (machine-writer exception — its born-admitted half
-retired by amendment 3; catalog/adoption/drift ride
+SCH2 (machine-writer exception — no born-admitted half
+exists; catalog/adoption/drift ride
 contract 07), ARM1 (the entry as the arming projection —
 its form is contract 14's; the arming act itself is
 contract 03).

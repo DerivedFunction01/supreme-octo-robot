@@ -144,7 +144,7 @@ lists of maps.
   expected live form from the stamp and diffs. The machine
   form, stamped by a rendering writer (the wb-progress
   family — retired, Step 6; the harness renders no new
-  ones, lingering entries are deleted at cutover): `writer`,
+  ones and its entries are deleted): `writer`,
   (`project` | `fixture`) — lawful only on an entry whose
   `catalog` block declares `origin: machine`, and counted
   as machine-written by the drift census, never as adopted.
@@ -196,8 +196,8 @@ no credential values, tokens, or key material, ever.
 
 A retired job's entry is deleted, never disabled — the
 registry admits active jobs only. Record the retirement in
-`jobs/RETIRED.md` (create it with the first retirement: id,
-date, and why) so the census history stays complete even
+`jobs/RETIRED.md` (id, what it was, and why it is retired)
+so the census stays complete even
 though the entry is gone.
 
 ## Worked example — scripted

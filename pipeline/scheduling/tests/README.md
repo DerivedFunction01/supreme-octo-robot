@@ -1,4 +1,7 @@
-# Test tree map (spec Step 5)
+# Test tree map — the engine-contract cases
+
+The map of the spec's edge cases (EC-*) to their suites;
+the tree carries further suites beyond this map.
 
 - EC-1 (catch-up collapses to latest), EC-4 (consumed before the
   run; a restart never refires), EC-5 (timeout), EC-7 (fail

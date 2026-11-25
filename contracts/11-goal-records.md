@@ -13,15 +13,11 @@ goal registry.
 
 ## The decoupling
 
-The Muse goal registry was a shell with no effect and the
-owner removed it outright; stall prevention that lived
-under it died with it (the measurement: 15
-registry-listed goals, 11 with no workspace on disk; two
-goal-owned watches ceased to exist when the goals were
-deleted). The consolidation therefore decouples goals from
-the Muse goal system entirely. The contract's two homes
-are pipeline surfaces: the work record and the scheduler
-job definition — nowhere else.
+Goals are decoupled from the Muse goal system entirely:
+no part of the target structure reads or writes any
+Muse-side goal registry. The contract's two homes are
+pipeline surfaces: the work record and the scheduler job
+definition — nowhere else.
 
 ## The goal record
 
@@ -61,8 +57,7 @@ four preserve clauses no other §4 entry owns.
 `todos/` dir of one Markdown file per todo; `finished/`
 holds archived bundles; legacy flat plans enumerate as
 one-file bundles. Front matter (fixture:
-`fixtures/file-todo.md`, written by the pinned bundle
-writer):
+`fixtures/file-todo.md`, written by the bundle writer):
 
 | Field | Rule |
 |---|---|
@@ -122,44 +117,38 @@ WR1, WR2, WR3, WR4 — and §4.11's own terms (the contract
 block as a record field, the workspace as projection,
 record-armed schedules, the decoupling).
 
-## Landing note — the goal-record store
+## The goal-record store
 
-The store this contract names is built. `lib/goals` in
-the work-record service is the goal record's one home:
-one JSON store of records (identity, project, contract
-block as a record field, ping block, status posts in
-contract 03's wire form), every save riding the unified
-writer through the harness's write seam, reads fail-
-closed. The amendment's gate is enforced at that writer:
-an uncited blocked post is refused, the verifying party
-stamps verification as the post is recorded, a terminal
-post clears owner-waiting and retires the record's ping
-in the same call, and a retired ping refuses re-arm.
-The record arms its own ping through the progress
-schedules' writer path — one entry per armed record in
-contract 14's form (`goal-ping-<slug>`, `owner:
+`pipeline/workrecord/lib/writes/goals.py` in the
+work-record service is the goal record's one home: one
+JSON store of records (identity, project, contract block
+as a record field, ping block, status posts in contract
+03's wire form), every save riding the unified writer
+through the work-record library's write seam, reads
+fail-closed. The blocked-state gate below is enforced at
+that writer: an uncited blocked post is refused, the
+verifying party stamps verification as the post is
+recorded, a terminal post clears owner-waiting and
+retires the record's ping in the same call, and a retired
+ping refuses re-arm. The record arms its own ping through
+the progress schedules' writer path — one entry per armed
+record in contract 14's form (`goal-ping-<slug>`, `owner:
 goal:<slug>`, running `wb goal-check <slug>`) — and the
-feeds document's goals block now serves the store's
-records through the work-record server's goals feed.
-One form note: the entry carries no machine source
-stamp (that stamp names a todo; a goal record has none)
-— the registry's existing goal-owned entries are the
+work-record server's goals feed
+(`pipeline/workrecord/server/goals.py`) serves the store's
+records. One form note: the entry carries no machine
+source stamp (that stamp names a todo; a goal record has
+none) — the registry's goal-owned entries are the
 precedent, and the writer + lifecycle are stated in the
-entry's classification and self-removal text. The
-binding migration of live goal state into the store
-remains the cutover step's act, per plan.
+entry's classification and self-removal text.
 
-## Amendment — blocked-state citation and verification
+## Blocked-state citation and verification
 
-Raised by the Goals-section storyboard: the goal contract
-requires a blocked claim to carry a cited basis and a
-verification stamp, but neither the goal record nor the
-status post served them. Amended: a status post asserting
-a blocked state (BLOCKED-OWNER / BLOCKED-HARD) carries
-`basis_citation` (the owner's message reference — thread
-+ time) and `verification` (verified-by + verified-at,
-stamped by the verifying party). The wire home is the
-status post itself, with contract 03's `blockers` group
-carrying the same pair in its progress feeds. A blocked
-post without the pair is invalid at the writer, not a
-renderable state in any app.
+A status post asserting a blocked state (BLOCKED-OWNER /
+BLOCKED-HARD) carries `basis_citation` (the owner's
+message reference — thread + time) and `verification`
+(verified-by + verified-at, stamped by the verifying
+party). The wire home is the status post itself, with
+contract 03's `blockers` group carrying the same pair in
+its progress feeds. A blocked post without the pair is
+invalid at the writer, not a renderable state in any app.

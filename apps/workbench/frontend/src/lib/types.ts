@@ -1,11 +1,11 @@
-// Served shapes for the workbench app, as pinned by the S0
-// contracts and the pinned workbench review
-// (the pinned workbench review in docs/review/, §2–§3).
+// Served shapes for the workbench app, as pinned by the
+// contracts and the workbench review in docs/review/.
 //
 // The app renders served shapes only; every derivation below is
 // a shape the backend serves ready (progress derivation,
-// classification feed, home rollups) — in this build the mock
-// adapter computes them, at S8 the pipeline serves them.
+// classification feed, home rollups) — the live adapter
+// consumes the pipeline's served shapes and the mock adapter
+// mirrors them.
 
 /** Ruled entry statuses — SPEC §5.1, one contract in two files
  *  (contract 06 / kit status table). */

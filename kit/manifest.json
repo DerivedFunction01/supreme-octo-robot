@@ -2,7 +2,7 @@
   "kit": "@workhorse/kit",
   "source": "spec-driven-starter/workhorse-kit",
   "files": {
-    "README.md": "08ad60755dca2408de9ea75c44a087eb379c1d9e22babb231be7751d05c128fb",
+    "README.md": "7dc3726397ed7e5633c846912539ba322b2e3c99c8a5d15d59eb0ede78237bd0",
     "assets/fonts/inter-var.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",
     "assets/fonts/katex/ams/KaTeX_AMS-Regular.woff2": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
     "assets/fonts/katex/caligraphic/KaTeX_Caligraphic-Bold.woff2": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",

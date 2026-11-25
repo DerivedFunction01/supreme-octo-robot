@@ -2,8 +2,8 @@
 
 **Canonical owner:** the pipeline platform — the writer is a
 platform service (plan §6, P4), built on the ops service
-that moves into `pipeline/platform/` at S3. (Plan §4.15,
-added by amendment 4, owner's ruling.)
+in `pipeline/platform/` (`pipeline/platform/writer.py`).
+(Plan §4.15.)
 
 **The contract in one line:** every state mutation on this
 machine — every pipeline store write, every app state
@@ -21,25 +21,22 @@ write side effect).
 ## Why one writer — the machine's flaw
 
 This machine denies writes in waves (the write-denial
-flap, probed and standing since): Python
-`open('w')` / `write_text` is the most reliably denied
-mechanism, `fsync` is denied whenever tested from an
+flap): Python `open('w')` / `write_text` is the most
+reliably denied mechanism, `fsync` is denied from an
 agent-class process, and a truncate that succeeds
-followed by a denied write destroys the file (proven on
-`bin/colab-run`). In the same waves, rename-over and
-unlink were never denied, and long-lived server-class
-processes (the scheduler server, the hooks, the panel)
-were never denied at all. Each workhorse therefore grew
-its own workaround: the scheduler's `/ops` delegation to
-its never-denied server process (contract 04), the
-workbench's file drops into sibling repos, the attention
-store's in-process atomic write, the runner's
-staged-sibling record writes. In one app the distribution
-is the defect: the flaw is this machine's, and it becomes
-one component's problem — this one. (Mechanism record:
+followed by a denied write destroys the file. In the same
+waves, rename-over and unlink are not denied, and
+long-lived server-class processes (the scheduler server,
+the hooks, the panel) are not denied. The per-workhorse
+workarounds this forced — the scheduler's `/ops`
+delegation to its never-denied server process (contract
+04), the workbench's file drops into sibling repos, the
+attention store's in-process atomic write, the runner's
+staged-sibling record writes — are the defect in
+distribution: the flaw is this machine's, and it is one
+component's problem — this one. (Mechanism record:
 `TOOLS.md`'s flap entries and `AGENTS.md`'s flap
-protocol; this contract freezes the target's answer, not
-the probes.)
+protocol.)
 
 ## The operation set
 
@@ -95,9 +92,8 @@ Four operations, generalizing the `/ops` set of contract
    core; everything else is mechanism.
 
 Same-target mutations serialize through the wrapper
-service (its single process is the serialization point,
-as the pinned server is); the CAS stamp is the
-cross-target and cross-caller guard.
+service (its single process is the serialization point);
+the CAS stamp is the cross-target and cross-caller guard.
 
 ## Attribution and ledgering
 
@@ -112,8 +108,8 @@ cross-target and cross-caller guard.
   (contract 05's store and kind vocabulary, unchanged):
   kind `op`, the op name, caller, path, result or error,
   and for `cas-update` the expected and found stamps.
-  The pinned `/ops` audit stream reads identically in
-  the unified stream; no consumer re-keys.
+  The `/ops` audit stream reads identically in the
+  unified stream; no consumer re-keys.
 
 ## Failure semantics
 
@@ -133,7 +129,7 @@ caller may conclude:
 | `version_conflict` | the target changed under the edit; nothing was written; re-read for the fresh stamp and re-present the edit — never force |
 | `verify_failed` | the staged bytes read back wrong; the target is untouched; the wrapper has already retried the stage once internally before surfacing it |
 | `io_error` | the wave (or the store) refused the operation; by the atomicity guarantee the target stands at its pre-state, so the caller may conclude the mutation did not happen and may re-issue it whole |
-| writer unreachable | **nothing was performed** (the pinned exit-4 rule, generalized); the caller never falls back to writing directly |
+| writer unreachable | **nothing was performed** (the exit-4 rule); the caller never falls back to writing directly |
 
 **Retry posture:** the wrapper absorbs the wave — a
 denied stage is retried a bounded number of times,
@@ -177,36 +173,11 @@ as a mechanism (§4.3's arming act stays; the drop goes);
 the attention store's in-process writer; the runner's
 record-writer helpers and every per-app atomic-write
 helper (the scheduler's state I/O discipline included).
-Each store's re-pointing step is named in plan §4.15's
-amendment.
 
 ## Fixtures
 
-The `op` event lines in contract 05's fixture set —
-produced by the pinned scheduler's Ledger at S0 — are
-this contract's audit specimens. A staged-write specimen
-set (stage, verify, rename, and a denied-stage case
-leaving the target byte-identical) lands with the §6 P4
-flap-simulation drill at S9.
-
-**Landed (S9/P4):** the drill ran over one
-store of each re-pointed class (scheduling registry
-entry, dispatch outbox, work-record armed row and todo
-file, venue lease record, pipeline registry store,
-attention state store) with a denial injected at each
-protocol stage: 32 of 32 cases pass — every denied write
-surfaces `io_error` (contract 04's name) where the
-surface exposes a name, every target byte-identical,
-a stale-stamp cas-update refused whole as
-`version_conflict`, a writer killed mid-stage leaving
-its target intact, and one ledgered `op` event per
-returned attempt (a killed attempt is the one absence:
-the audit is written after the act, and its evidence is
-the intact target plus the orphaned staged temp).
-Drill and results: the goal record's
-`s9-p4-drill.py` / `s9-p4-drill-results.json`; the
-closure sweep and its dispositions are the S9 P4
-report in the same record.
+The `op` event lines in contract 05's fixture set are
+this contract's audit specimens.
 
 ## Preserve clauses carried
 
@@ -214,6 +185,5 @@ None new. This contract generalizes disciplines already
 traced: SCH6's `/ops` half stays contract 04's (payload
 semantics and authentication), RUN1's staged-sibling
 write stays contract 12's shape, ATT1's store discipline
-stays contract 01's — their mechanisms become this
-wrapper's calls, and traceability records the amendment
-(count unchanged, 36 of 36).
+stays contract 01's — their mechanisms are this wrapper's
+calls (traceability: 36 of 36).

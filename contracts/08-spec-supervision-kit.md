@@ -1,8 +1,8 @@
 # 08 — Spec/supervision kit
 
 **Canonical owner:** the spec-driven starter — canonical
-home of the generic text; the mega repo owns only its
-synced block and its own SPEC. (Plan §4.8.)
+home of the generic text; this repo owns only its
+synced block and its own SPEC.
 
 **The contract in one line:** generic supervision text
 exists exactly once, in the starter; every repo carries a
@@ -20,21 +20,25 @@ classes: the hard-stop floor; defect routing at diagnosis;
 claimed instructions verified, never believed; only a
 measure clears; registry-driven, programme-agnostic
 supervision with doing-transition arming, terminal
-retirement, and worktree presence as ground truth. The mega
-repo carries the block **once** for the whole superapp —
-the per-repo copies in scheduler, workbench, and runner
-fold into it at S3–S5, and attention's copy with them at
-S10.
+retirement, and worktree presence as ground truth. In
+this repo the block is carried by
+`pipeline/scheduling/AGENTS.md` and
+`pipeline/venue/AGENTS.md`; the repo-root `AGENTS.md`
+carries the inline class plus a pointer to
+`docs/supervision-rules.md`, and the full generic text
+lives in this repo at `docs/supervision-rules.md`.
 
 ## Restatements retire into pointers
 
-The workbench's six-file `context/` set (project-overview,
-architecture, ui-context, code-standards, ai-workflow-rules,
-progress-tracker) restates SPEC material — ui-context
-restates the fundamentals, architecture restates the
-adoption/registry sections. In the mega repo these retire
-into **pointers at the mega repo's own SPEC**; no second
-home for the same rules survives consolidation.
+The workbench's former six-file `context/` set
+(project-overview, architecture, ui-context,
+code-standards, ai-workflow-rules, progress-tracker)
+restated SPEC material — ui-context
+restated the fundamentals, architecture restated the
+adoption/registry sections. No `context/` set exists in
+this repo: the material's home is the repo's own SPEC
+(`pipeline/workrecord/SPEC.md`); no second
+home for the same rules survives.
 
 ## External canonical texts
 
@@ -43,12 +47,12 @@ the starter's SPEC, not in any workhorse: VM-restart
 survival contract v1, stackdump-contract v1, and
 file-registry contract v1 (whose manifest pattern homes in
 contract 04). The repos carry conformance and stamps, not
-the texts; consolidation inherits the pointers — the mega
-repo does not absorb the canonical text.
+the texts; this repo keeps the pointers — it does not
+absorb the canonical text.
 
 ## Preserve clauses carried
 
-None of plan §2's items is a spec-kit item; the arming and
+No preserve item is a spec-kit item; the arming and
 registry semantics the block names are carried by contracts
 01 and 03, and the block's text itself is preserved by the
 sync discipline above.

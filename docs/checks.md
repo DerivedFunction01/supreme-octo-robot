@@ -6,8 +6,7 @@ built, served page instead.
 
 ### Rendered legs
 
-The gate's legs read source; these legs read the built,
-served page in a real browser. They run on a trigger — a
+These legs read the built, served page in a real browser. They run on a trigger — a
 landing that touches a rendered surface, and on whatever
 cadence the project sets for its census — through the
 shard entry below, not inside `check.py`. The webapp
@@ -78,8 +77,8 @@ not run.
   a click would set already holds. This
   is the rendered complement of the misclick audit: the
   audit inventories committing controls, the sweep proves
-  the chrome's controls answer. **Seeded** (S-4)
-  — the family's one leg today.
+  the chrome's controls answer. **Seeded** — the family's
+  one leg today.
 - **Unseeded legs.** The axe leg (`qa-axe.spec.ts`), the
   geometry leg (`qa-geometry.spec.ts`), the truncation
   ruler (`qa-truncation.spec.ts`), and the parity leg

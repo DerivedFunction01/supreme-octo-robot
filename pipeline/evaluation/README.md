@@ -1,8 +1,8 @@
 # Pipeline evaluation (`pipeline/evaluation/`)
 
-The pipeline's evaluation derivations (plan §1, §5
-S4): pure functions over the swept record and the
-workspace's repos — no state of their own, no writer.
+The pipeline's evaluation derivations: pure functions
+over the swept record and the workspace's repos — no
+state of their own, no writer.
 
 - `doctor.py` — the consistency checker over the
   swept set (the `wb doctor` verb's engine): plan /
@@ -23,7 +23,8 @@ The package reads the work record through the
 `pipeline/workrecord` path seam (its `__init__`
 installs it); it never writes the record. The
 server-side board/home derivations are not here —
-they land with the app feed surfaces at S8.
+they live with the workbench service's feed surface
+(`pipeline/workrecord/server/`).
 
 Tests: `tests/` — the pinned derivation suites, run
 from `pipeline/` with the work-record service's venv

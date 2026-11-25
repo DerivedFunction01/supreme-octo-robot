@@ -1,12 +1,10 @@
 # 04 — Platform config (seed/example pattern)
 
 **Canonical owner:** the pipeline platform — the config
-pattern (§4.4: each app keeps its own live config file; the
+pattern (each app keeps its own live config file; the
 pattern, precedence, and source-reporting are
-pipeline-owned), and, by amendment, the platform's
+pipeline-owned), and the platform's
 ops-service and watchdog/keeper clauses below.
-(Plan §4.4, plus the file-registry home added by the S0
-amendment to §4.4.)
 
 **The contract in one line:** every live config is an
 untracked file seeded from a tracked fictional example,
@@ -24,14 +22,13 @@ reporting — and no live value ever enters a tracked file.
   (connector config redacted to caller names and scopes;
   hashes never ride it), and the workbench config states
   the same precedence in its example's comment.
-- **One drift, fixed by this contract:** the scheduler's
-  `config.example.json` says `default_timezone: "UTC"`; the
-  code default is `America/New_York`. The example is
-  corrected to the code when S3 lands the config service —
-  the code is the standing behaviour, the example was the
-  error (plan §4.4).
+- **Timezone default:** the scheduler's
+  `config.example.json` and the code default agree:
+  `default_timezone: "America/New_York"`
+  (`pipeline/scheduling/config.example.json`;
+  `pipeline/scheduling/server/config.py`).
 
-## Instances at the pin
+## Instances
 
 | Live file (untracked) | Tracked example | Fixture |
 |---|---|---|
@@ -55,11 +52,11 @@ The runner's lease config keys (caps and policy:
 spec in an entry is rejected by validation) keep their
 field sets as written in the fixtures.
 
-**Attention is the pattern's weak sibling** (attention
-review §6): settings are env-only, no config file is read,
+**Attention is the pattern's weak sibling**
+(docs/review/review-attention.md §6): settings are env-only, no config file is read,
 and there is no tracked example for its store, handlers, or
 programmes. It gains the pattern through contract 01's
-seed/export step (S7) — attention has nothing to contribute
+seed/export step — attention has nothing to contribute
 here and everything to gain.
 
 **Negative instance:** the runner's `config/profiles.json`
@@ -67,36 +64,34 @@ is retired by ruling and must not exist; records are read
 only in the shape/caller vocabulary they are written in
 today.
 
-## The file registry (S0 amendment to §4.4)
+## The file registry
 
 The scheduler file registry — live manifest
 `registry/file-registry.yaml` (untracked), tracked specimen
 `examples/file-registry/example-file-registry.yaml`,
-checker `ops/file_registry.py` (file-registry contract v1;
+checker `ops/watches/file_registry.py` (file-registry contract v1;
 canonical text in the starter SPEC) — homes under this
-pattern (§12's unhomed store, closed at S0):
+pattern:
 
 - the manifest is a live config under the seed/example
   pattern: tracked fictional specimen, untracked live
   manifest, restored-from-declared-sources semantics as the
   checker defines them;
-- the `file-registry-check` job does not survive as a
-  registry entry — its check becomes an internal
-  health/maintenance loop of the pipeline platform services
-  (plan §12).
+- the `file-registry-check` job is a registry entry
+  (`jobs/file-registry-check.yaml`) whose body runs the
+  checker.
 
 Fixture: `fixtures/file-registry.example.yaml`.
 
 ## The ops service (SCH6 — the `/ops` half)
 
-`POST /ops` is the platform's delegated write/exec service
-(the scheduler review's platform classification; it moves
-into `pipeline/platform/` at S3): the server process
+`POST /ops` is the platform's delegated write/exec service:
+the server process
 performs `write`,
 `patch`, and `exec` on behalf of a caller whose own
 process class cannot be trusted to land a write. The HTTP
 layer only routes; `bin/sched` carries the client verbs
-(`server/ops.py` at the pin). Request forms:
+(`pipeline/scheduling/server/serving/ops.py`). Request forms:
 `{caller, op: "write", path, content}`,
 `{caller, op: "patch", path, old, new}`,
 `{caller, op: "exec", argv, cwd?, timeout?}` — the body is
@@ -119,7 +114,7 @@ capped at 4 MiB.
   | Error | Status | Meaning |
   |---|---|---|
   | `bad_request` | 400 | malformed request shape |
-  | `unauthenticated` | 401 | no valid bearer token presented (§10.1) |
+  | `unauthenticated` | 401 | no valid bearer token presented |
   | `scope_refused` | 403 | authenticated caller lacks the op's scope |
   | `caller_mismatch` | 403 | `caller` label ≠ the authenticated caller |
   | `outside_scope` | 403 | resolved path escapes the workspace |
@@ -137,43 +132,38 @@ capped at 4 MiB.
   05's). Exit 4 on the client means the server was
   unreachable and **nothing was performed** — the client
   never writes directly.
-- **Authentication:** §10.1 (ruled) — `/ops` hardens to the
+- **Authentication:** `/ops` uses the
   `/tools` token model; callers resolve through contract
   01's registry. Exec timeouts default to 120 s, capped at
   600 s.
-- **§10.1 disposition (S9/P4; inputs built by
-  cutover-prep lane OI-2):** the scope
-  mapping is frozen: **`write` and `patch` require the
+- **Scope mapping:** **`write` and `patch` require the
   `write-state` scope; `exec` requires the `exec` scope.**
-  The two inputs the S9/P4 disposition named as missing
-  are now built. (1) **Contract 01 is amended** to add the
+  Contract 01 carries the
   exec-denoting scope `exec` (home-side only, never issued
   to a venue caller — mapping `exec` onto `write-state`
-  would have handed arbitrary command execution to every
+  would hand arbitrary command execution to every
   state-writing token, a widening, not a hardening).
-  (2) **The client token home exists:** `bin/sched`'s ops
+  **The client token home:** `bin/sched`'s ops
   client resolves the acting caller's raw token from an
   untracked per-caller token file — `<caller>.token` in
   the scheduling package's `ops-tokens/` directory (the
   `SCHED_OPS_TOKEN_DIR` env var re-points the home),
   on the bridge-token precedent; contract 01 still stores
-  hashes only, server-side. The hardening is landed:
+  hashes only, server-side. The hardening is in force:
   `ops.perform` authenticates the presented token through
   the connector's registry (read fresh per call, as
   `/tools` does), refuses unauthenticated, mismatched, or
   under-scoped calls as a ledgered refusal before anything
   is performed, and the self-asserted `caller` string is
-  retired as an authentication input (it stays as the
-  audit label). **What remains is the cutover act itself,
-  not build:** the mint/re-issue run over the live caller
-  set at the freeze (`bin/sched connector-token` — mint,
-  re-issue, and `--save-client` delivery into the token
-  home are coded; the first mint bootstraps by direct
+  an audit label only, never an authentication input.
+  Caller provisioning rides `bin/sched connector-token`
+  (mint, re-issue, and `--save-client` delivery into the
+  token home; the first mint bootstraps by direct
   staged write because no token yet exists to authenticate
-  it), and the live config's provisioning from the shipped
-  example (`bin/sched config-init`; the server now refuses
+  it), and the live config is provisioned from the shipped
+  example by `bin/sched config-init`; the server refuses
   to start without a live config rather than running on
-  silent defaults).
+  silent defaults.
 - **The `GIT_SSH_COMMAND` pair rule (SCH6's tail):** the
   exec environment's SSH pair comes from the untracked
   live config, never tracked code — **both keys set, or
@@ -185,8 +175,9 @@ capped at 4 MiB.
 The keeper is the external driver of the platform's
 survival services; it survives server crashes and host
 restarts by design, so no part of it lives in the server
-it watches (`ops/keeper_poller.sh`, `ops/watchdog.sh` at
-the pin; the ladder conforms to the VM-restart survival
+it watches (`pipeline/scheduling/ops/server-care/watchdog.sh`
+and the platform unit templates in
+`pipeline/platform/ops/`; the ladder conforms to the VM-restart survival
 pattern, contract v1, canonical text in the starter SPEC).
 
 - **Two halves:** the wake half — poll wakeable pings,
@@ -214,16 +205,16 @@ pattern, contract v1, canonical text in the starter SPEC).
   spent for the episode. The in-process sibling is the
   stackdump watchdog (`stackdump-contract: v1`), which
   rides the same platform home.
-- **Build home:** plan §6's platform services (step S9) —
-  the survival services' registry-entry forms retire into
-  internal loops there (§12); their external registrations
-  re-home at cutover (S11).
+- **Build home:** the platform services
+  (`pipeline/platform/`, `pipeline/scheduling/ops/server-care/`);
+  the survival services' external registrations are the
+  unit templates in `pipeline/platform/ops/`.
 
 ## Preserve clauses carried
 
 RUN6 (the seed/example pattern itself, whole), SCH6's
 `/health` config half (`/health`'s per-key source reporting
 is this contract's reporting rule) and its `/ops` half
-(payload semantics, above; authentication is §10.1's
+(payload semantics, above; authentication is the token-model
 ruling), and SCH9's watchdog/keeper half (above). The
 remaining SCH6 halves are traced in `traceability.md`.

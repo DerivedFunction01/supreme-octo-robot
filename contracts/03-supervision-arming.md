@@ -2,8 +2,7 @@
 
 **Canonical owner:** the pipeline — the work-record service
 arms and retires; the workbench app owns the todo record, the
-pipeline owns the arm/retire act and both projections. (Plan
-§4.3; evaluator feeds annexed from §9.3.)
+pipeline owns the arm/retire act and both projections.
 
 **The contract in one line:** a todo's doing transition arms
 two projections (a scheduler entry, an attention armed row)
@@ -26,17 +25,15 @@ never fails the todo write.
   check is presence-in-store through the writer path —
   an armed todo whose entry is absent from the registry
   store is the divergence it surfaces; there is no
-  never-admitted field state to key on (the pinned
-  doctor keys on `migrated` being false; amendment 3
-  replaces that key).
+  never-admitted field state to key on.
 - **Sibling seams retained:** the writers locate the
   scheduler registry and the armed directory by
   workspace-relative seams (`WB_SCHEDULER_JOBS_DIR`,
   `WB_ATTENTION_ARMED_DIR`); an absent sibling is a silent
   no-op, because external adopting projects must keep
-  building with the harness absent. In the target structure
-  the same writers write to the pipeline's own registry and
-  armed directory through this contract.
+  building with the harness absent. The writers write to
+  the pipeline's own registry and armed directory through
+  this contract.
 - **Fixture-class writers never write live:** a project
   under a temp root is scratch — its syncs no-op against the
   live registry/armed dir, and its renders carry the
@@ -48,10 +45,8 @@ One entry per armed todo, `wb-progress-<project>-<todo-name>.yaml`
 in the registry (entry form: contract 14; fixture:
 `fixtures/scheduler-entry-wb-progress.yaml`). Written
 through contract 02's writer path — presence in the
-registry store is the entry's admission (amendment 3:
-no `migrated` / `migrated_at` fields exist
-in the target format; the pinned writer's stamp of the
-todo's arming date does not carry), classified-catalog block
+registry store is the entry's admission (no `migrated` /
+`migrated_at` fields exist in the format), classified-catalog block
 (origin machine / generality deployment-specific / use_case
 work-tracking), machine-form source stamp, `${WS}` anchors
 throughout, argv runs `wb progress-check <id>` at the todo's
@@ -65,8 +60,8 @@ One JSON file per armed todo:
 `wb-armed-<project-slug>-<todo-name>.json` (a todo's name
 is its slug id — lowercase by rule, contract 11 WR1).
 Shape: `schemas/armed-row.schema.json`; fixture:
-`fixtures/armed-row.json` (the pinned writer's own output
-from the pinned tests' fixture todo). `handle` is the todo
+`fixtures/armed-row.json` (the writer's own output
+from the tests' fixture todo). `handle` is the todo
 name — harness todos record no posting lane and the writer
 refuses to guess one. Sorted keys, indent 2, atomic `.tmp` +
 `os.replace`; deleted on terminal, disarm, or archive;
@@ -84,7 +79,7 @@ Rows appear by existing and retire by disappearing;
 kept. The evaluator reads `armed_at`, `cadence_minutes`
 (default 15), `status`, `title` from the row.
 
-## Evaluator feeds (§9.3 annex)
+## Evaluator feeds
 
 The evaluator is a pipeline service reading **five** inputs,
 not only the armed rows above:
@@ -92,10 +87,9 @@ not only the armed rows above:
 1. armed rows (this contract),
 2. status posts (below),
 3. programme declarations (contract 01),
-4. runner run records + panel capacity — at the pin these
-   are two read seams: run records read from the runner's
-   results directory, capacity/specs from the panel's served
-   state; in the target structure both are pipeline feeds,
+4. runner run records + panel capacity — two pipeline
+   feeds: run records from the runner's results directory,
+   capacity/specs from the panel's served state,
 5. lane record / worktree snapshots.
 
 The snapshot contracts — **capacity, worktree, record, and
@@ -118,8 +112,8 @@ re-derived from current evidence at every assembly —
 the evaluator. A row escalates to `main` when its age
 passes the programme's `escalation_hours` (default 1 h);
 `phantom_stop` and `steer_undeliverable` escalate
-immediately. Staffing row kinds are a closed vocabulary at
-the pin: understaffed, fleet_idle, record_gap,
+immediately. Staffing row kinds are a closed vocabulary:
+understaffed, fleet_idle, record_gap,
 idle_unlanded, no_successor, phantom_stop, blocked_uncited,
 blocked_unverified, unrouted_defect, serial_plan,
 owner_waiting, owner_waiting_unanswered, armed_unposted,
@@ -131,9 +125,9 @@ their repos (HEAD, ahead/behind vs `origin/main`, dirty) at
 serve time; the five fact states are **current /
 superseded / pushed / gone / unverifiable**; superseded
 titles are rewritten from the measurement; the tick
-self-clears on pushed/gone. In the target structure this
-measurement is a pipeline feed, not a surface-side
-derivation (§9.4), and contract 05's fulfillment derivation
+self-clears on pushed/gone. This measurement is a
+pipeline feed, not a surface-side
+derivation, and contract 05's fulfillment derivation
 consumes it for `push_needed` decisions.
 
 **Workbench classification feed:** the work-record pipeline
@@ -147,14 +141,14 @@ with no plans dir serves `available: false`. Deliberately
 not served: whether a scheduler entry exists on disk — that
 is the scheduling registry's own state, joined
 consumer-side. Digest's parked-plans pull rides this same
-feed family in the target structure; the attention app
-keeps no private workbench client (§9.4).
+feed family; the attention app
+keeps no private workbench client.
 
 ## Status-post form (ATT10)
 
 Schema: `schemas/status-post.schema.json`; fixture:
-`fixtures/status-post.json` (the payload the pinned
-connector CLI builds, from its pinned refs test). Rules:
+`fixtures/status-post.json` (the payload the
+connector CLI builds, from its refs test). Rules:
 the **grouped form** — a group the state does not call for
 is **absent, never empty-filled**; **refs are references
 only** (`{project, plan, todo_ids, steps_open,

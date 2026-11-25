@@ -1,9 +1,12 @@
-# Colab authentication — credential record, the incident, and the guards
+# Colab authentication — the credential, the guards, and re-authorization
 
-Findings first: the stored credential was destroyed by an
-automated CLI call, not by expiry. The defenses below now make that
-class of loss structurally impossible, and any future auth death
-surfaces as an explicit `auth_required` state instead of junk data.
+Findings first: the stored credential is guarded at
+every seam — no automated path may invoke the CLI's
+interactive login, and any auth death surfaces as an
+explicit `auth_required` state instead of junk data.
+The defenses below make the loss class — an automated
+call destroying the token by falling into the
+interactive flow — structurally impossible.
 
 ## The credential
 
@@ -15,48 +18,17 @@ surfaces as an explicit `auth_required` state instead of junk data.
   sdk.cloud.google.com). The client is Google's public Cloud SDK
   installed-app client (`764086051850-…apps.googleusercontent.com`),
   not a project owned by the operator, so no testing-mode refresh-cap
-  applies; the re-auth cadence is measured from the grant record
-  below, not assumed.
+  applies; the re-auth cadence is measured from the live grant,
+  not assumed.
 - Validity check used everywhere: the file parses as JSON and carries
   a `refresh_token` string of length ≥ 20. Contents are never printed
   or logged.
-
-## Grant record
-
-| Grant (consent) | Strategy | Client | Outcome |
-| --- | --- | --- | --- |
-| `2026-10-29 ~15:23Z` | oauth2 InstalledAppFlow | public Cloud SDK client | Worked 3 days; destroyed `2026-11-01` (incident below), not expired |
-| `2026-11-01 13:17:54Z` | oauth2 InstalledAppFlow | public Cloud SDK client | Current credential; recovered by direct code exchange (below) |
-
-Update this table at every re-authorization: grant time, strategy,
-client type. The panel's re-auth cadence is read from it.
-
-## The incident
-
-- ~12:59Z the credential was verified live. By 13:04:06Z the CLI log
-  shows it unloadable; at 13:05:58Z an automated call whose token
-  refresh had failed fell into the CLI's interactive login flow,
-  which overwrites the token file with a 36-byte stub (a lone
-  15-char `refresh_token`) BEFORE prompting. No code ever arrived;
-  the stub remained.
-- Every failure after ~13:06Z traces to the dead credential. The
-  flow's prompt (`Enter the authorization code:`) appeared in the
-  stdout of automated `usage`/`sessions` calls and was consumed as
-  data: budget checks refused as "usage-unparseable", and a session
-  list carrying the prompt read as "session absent", so the auto
-  duty deleted lease #9's record under its still-live session (the
-  session survived unmanaged; its record was reconstructed and
-  re-adopted the same day). A mirror capture also propagated the
-  stub over the mirror's good copy.
-- Recovery: the owner's second authorization code was exchanged
-  directly (authorization code + the flow's PKCE verifier, recovered
-  from the CLI's own log) after two chat-relayed attempts failed —
-  the relayed codes were corrupted in transcription (extra characters
-  appended at the tail, proven byte-for-byte against the message
-  record). Standing rule from this: an authorization code never
-  transits an agent's re-typing unverified — verify the transcribed
-  code against the message record before submitting it, or move it
-  as a file.
+- The current grant is an oauth2 InstalledAppFlow grant on
+  the public Cloud SDK client, recovered by direct code
+  exchange. Standing rule: an authorization code never
+  transits an agent's re-typing unverified — verify the
+  transcribed code against the message record before
+  submitting it, or move it as a file.
 
 ## The guards
 
@@ -106,8 +78,8 @@ client type. The panel's re-auth cadence is read from it.
 2. The owner approves and pastes the code. Verify the code
    byte-for-byte before submitting it (see the standing rule above).
 3. Confirm the token file is valid (keys + refresh_token length
-   only), run a live `usage`/`sessions` check, and add the grant to
-   the record table above.
+   only) and run a live `usage`/`sessions` check; the new
+   grant then stands as the credential of record.
 
 <!-- Portability exception (gate component directive):
 portability-exception: ~/.config/colab-cli/token.json — the colab CLI's own per-user token file, the canonical location this document governs

@@ -11,10 +11,10 @@ point exactly once, in order, or fails safe and says so in
 the ledger — it never duplicates a run and never fires on
 doubt.
 
-The semantics below are the pinned engine's
-(`server/engine.py` at the pin; its EC-1–EC-11 set). The
-engine rescans the registry every tick and fires what is
-due under them:
+The semantics below are the engine's
+(`pipeline/scheduling/server/firing/engine.py`; its
+EC-1–EC-11 set). The engine rescans the registry every
+tick and fires what is due under them:
 
 - **Consume-before-run (EC-4):** a fired grid point is
   consumed — `next_due` advanced and persisted — **before**
@@ -24,7 +24,8 @@ due under them:
   to the latest; the collapse count is ledgered (`catchup`
   event carrying the count). Advance returns the latest
   missed point, the collapsed count, and the new next due
-  as one computation (`server/schedule.py`).
+  as one computation
+  (`pipeline/scheduling/server/firing/schedule.py`).
 - **No self-overlap:** an entry still running at its point
   skips the point; the skip is ledgered
   (`skipped_overlap`).
@@ -39,23 +40,19 @@ due under them:
 - **Fail-safe halt (EC-10):** corrupt durable state means
   **no firing at all**. Doubt stops the engine; it does
   not improvise a partial fleet.
-- **Firing is status + presence (amendment 3):** the
-  engine fires an entry iff its status
-  is `active` and it stands in the pipeline registry
-  store. The store has exactly one mutation path —
-  contract 02's writer path (validate under contract
-  14's format, server-context proof for hand-authored
-  entries) — so presence in the store through that path
-  IS admission; there is no directory-drop path for a
-  flag to guard. The pinned engine's migrated-only clause
-  (fire only `migrated: true` entries) is deliberately
-  NOT carried: the migration field family does not exist
-  in the target format (contract 14). Admission evidence
-  — validation counts, proof outcome — is recorded as
-  events in the dispatch/ledger store (contract 05), not
-  as fields on the entry. This bullet is the firing
-  clause's deliberate, named replacement, recorded as a
-  ruling, not a migration detail.
+- **Firing is status + presence:** the engine fires an
+  entry iff its status is `active` and it stands in the
+  pipeline registry store. The store has exactly one
+  mutation path — contract 02's writer path (validate
+  under contract 14's format, server-context proof for
+  hand-authored entries) — so presence in the store
+  through that path IS admission; there is no
+  directory-drop path for a flag to guard. No
+  migrated-only clause exists: the migration field family
+  does not exist in the entry format (contract 14).
+  Admission evidence — validation counts, proof outcome —
+  is recorded as events in the dispatch/ledger store
+  (contract 05), not as fields on the entry.
 - **Schema → restart → entries ordering:** a registry
   schema change lands as code and is committed → the
   server restarts onto the new schema → only then may
@@ -64,20 +61,10 @@ due under them:
   entry field it predates.
 - **Single instance:** one engine runs against one
   registry and one state store (the single-instance lock
-  at startup); the cutover discipline that depends on it
-  is plan §5's serial exception 3 — no step runs a second
-  engine against live state.
+  at startup); no second engine runs against live state.
 
-## Migration notes
-
-S3 moves the engine behind this contract into
-`pipeline/scheduling/`. A change to any clause above is a
-ruling, not a migration detail: the §2 preserve item
-permits deliberate, named replacements, and amendment 3
-is the firing clause's — recorded in the
-bullet above and in `contracts/traceability.md`. The
-ordering clause's replacement allowance stands as
-written, and the rest carry as written.
+A change to any clause above is a ruling, not an
+implementation detail.
 
 ## Preserve clauses carried
 

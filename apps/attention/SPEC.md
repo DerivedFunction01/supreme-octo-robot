@@ -7,12 +7,11 @@ form. The pipeline derivations these surfaces present are
 contracts 03 (the evaluator), 05 (the send ledger and
 decision machinery), and 06 (the vocabulary); the generic
 supervision rules are stated in the shared spec
-(spec-driven-starter, `docs/supervision-rules.md`). This
+(spec-driven-starter, `docs/supervision-rules.md`; a synced
+copy is `docs/supervision-rules.md` in this repo). This
 file carries the product-specific substance: the row
 families the evaluator serves, what a decision means, and
-the Digest's ruled form. Drawn from the
-original owner-attention spec (§1.11 (a)–(l) and §1.13)
-and the owner's flow rulings.
+the Digest's form.
 
 ## 1. Staffing supervision — the row families
 
@@ -89,11 +88,9 @@ one row per finding, in these families:
 - **Serial plan** — an adopted plan whose remaining
   steps are contract-independent and which fields fewer
   lanes than it has independent steps is an understaffing
-  row at adoption time, read from the declared
-  `steps_open` / `steps_independent` against live lanes;
-  a plan with no declaration draws no row rather than a
-  guessed one. (Serving plan step structure from the
-  work record is the durable gap this family waits on.)
+  row at adoption time, read from the plan's declared
+  step structure against live lanes; a plan with no
+  declaration draws no row rather than a guessed one.
 - **Owner-waiting** — a deliverable the owner
   commissioned and asked for by name is tracked apart
   from the lane queue, under an owner-waiting
@@ -102,7 +99,7 @@ one row per finding, in these families:
   commission, it is a defect row to main from the first
   digest; a status ask about one is priority traffic.
 
-## 2. The owner-action surface (§1.13)
+## 2. The owner-action surface
 
 One owner-action endpoint replaces triage. Items carry
 poster-attached options and a backend-served verb list
@@ -120,15 +117,18 @@ discipline). The seed rules evaluate as patterns: R1, a
 defect item clears when its subject reaches a terminal
 state; R2, a stale status draws a ping; R3, a
 performance clearance is served as for-information, not
-as a decision. The evaluated rule records themselves
-stay engine data.
+as a decision. Three further seeds are recorded with
+their triggers and not yet evaluated: R4, a done/closed
+item with a conflict returns as incomplete; R5, a
+done/closed UI surface draws a critic pass; R6, a
+completion proposes consolidation
+(`pipeline/attention/domain/rules.py`). The evaluated
+rule records themselves stay engine data.
 
 Reply routing is direct to the owning thread, with main
 copied — there is no main triage step.
 
 ## 3. Queue semantics — decision is not fulfillment
-
-(Owner rulings.)
 
 - A decision and its fulfillment are separate events.
   The tap records the verdict at once; the card then
@@ -148,15 +148,16 @@ copied — there is no main triage step.
 
 ## 4. Digest form
 
-(Owner rulings.)
-
-- The Digest is **live cards, generated and stamped on
-  open**: each card carries its `generated_at` stamp,
-  and its facts are measured at render time.
-- The form is a social-app-style feed: a composer at the
-  head, scoped by programme; one continuous stream of
-  programme posts; an action row closing each post;
-  replies open in place under the post they answer.
-- There is **no reply box inside a post**. The earlier
-  dashboard form — cards with an in-card reply box — was
-  rejected and is not a variant.
+- The Digest is the single approval surface, served with
+  a `generated_at` stamp (`pipeline/attention/services/reads/digest.py`);
+  its facts are measured at render time. A Digest portion
+  that has never loaded renders unreachable, never an
+  empty approval queue.
+- The rendered form (`frontend/src/views/DigestView.tsx`)
+  is grouped sections, not a feed: the digest windows and
+  the next window; the owner-placed sections; stalled
+  items; the staffing measure and programme lanes;
+  handlers grouped by topic, each lane carrying its quick
+  verbs; parked plans; and the include switches
+  (decisions waiting, waiting on others, FYI items) that
+  re-derive the preview from the store's counts.

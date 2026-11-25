@@ -1,11 +1,12 @@
 # Study-round protocol
 
 The canonical form of an iterative choice study: per-item
-panels, verdict rounds, and a freeze. `docs/method.md`
-(Study pattern) says when a study runs and that the picked
-study is the spec for the build; this document is the full
-protocol the study itself follows. Mock content inside a
-study obeys `docs/mockup-approval.md` like any mock.
+panels, verdict rounds, and a freeze. The starter's
+`docs/method.md` (Study pattern) says when a study runs
+and that the picked study is the spec for the build; this
+document is the full protocol the study itself follows.
+Mock content inside a study obeys the starter's
+`docs/mockup-approval.md` like any mock.
 
 ## The form
 
@@ -166,8 +167,8 @@ study obeys `docs/mockup-approval.md` like any mock.
   records — the answer record where a harness carries the
   study, the standing-picks record for pattern-level
   forms — and only then is the verdict durable. Artifact
-  deletion at implementation follows `docs/method.md`
-  (Artifact lifecycle).
+  deletion at implementation follows the starter's
+  `docs/method.md` (Artifact lifecycle).
 
 ## Open rulings
 

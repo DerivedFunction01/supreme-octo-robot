@@ -2,7 +2,6 @@
 
 **Canonical owner:** the pipeline scheduling engine — the
 catalog owner; the workbench manifest consumes its axes.
-(Plan §4.7.)
 
 **The contract in one line:** the classification axes are
 defined once, every example is indexed exactly once, and
@@ -26,7 +25,7 @@ that ride with one named entry's adoption and are **never
 adopted standalone**. Classification is descriptive, not
 activating: being catalogued admits nothing.
 
-Fixture: `fixtures/catalog.yaml` (the pinned catalog,
+Fixture: `fixtures/catalog.yaml` (the catalog,
 verbatim) and `fixtures/scheduler-entry-catalog-example.yaml`
 (an entry carrying its block).
 
@@ -60,7 +59,7 @@ live overlay and:
   `state/adoptions/<live-id>/` and named, never performed;
 - runs the admission back half (validate → server-context
   proof → admitted by the writer-path write itself,
-  contract 02; amendment 3) and stamps the
+  contract 02) and stamps the
   adoption-form `source` (`{catalog, catalog_version,
   parameters}`).
 
@@ -69,9 +68,8 @@ live overlay and:
 Drift re-renders adopted entries from their stamps and
 diffs them against the live files. **Volatile fields** —
 named, and excluded from the diff's verdict: `source`.
-(Amendment 3: the pinned list's `migrated`
-and `migrated_at` leave it — those fields do not exist
-in the target format.) Hand-written, machine-written
+(No `migrated` or `migrated_at` fields exist
+in the format.) Hand-written, machine-written
 (per writer family), and per-session entries are counted
 separately; their writers own their lifecycle (contract
 02).
@@ -89,5 +87,4 @@ SCH2 (catalog version 1, adoption rendering, setup-coverage
 rule, drift semantics with its named volatile fields,
 classification evidence and the scripted/agent boundary,
 admission semantics — the machine-writer half rides
-contract 02, its born-admitted exception retired by
-amendment 3).
+contract 02, and no born-admitted exception exists).

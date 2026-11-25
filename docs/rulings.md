@@ -1,10 +1,9 @@
 # Standing rulings — the superapp
 
 Standing owner rulings for this repo that outlive any one
-plan. The consolidation plan
-(`docs/2026-11-12/consolidation-plan.md`) records how the
-repo was formed; this file records what governs the app
-now.
+plan. The consolidation plan (`docs/consolidation-plan.md`)
+records the decisions the repo was formed under; this file
+records what governs the app now.
 
 ## 1. Frontend target — one integrated app
 

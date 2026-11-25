@@ -1,14 +1,13 @@
 # pipeline/platform
 
-Platform services: the ops service, the unified state
-writer, the harness connector, and the three services built
-new under plan §6 — the automatic gate runner (P1), the
-deployment/release record (P2), and state-store backup
-(P3) — plus the survival services (watchdog, stackdump,
-file-registry check).
+Platform services: the unified state writer, the ops
+service and its client, the platform serving core, the
+deployment/release record, state-store backup, and the
+survival machinery (unit templates, the watchdog ladder,
+the healthcheck) under `ops/`.
 
-- **Landed at S3:** `writer.py` — the unified
-  state writer's base implementation (contract 15): the
+- `writer.py` — the unified
+  state writer (contract 15): the
   staged-write protocol core (stage → fsync → read-back →
   rename-over → directory fsync) and the writer operation
   set (write, patch, cas-update, delete) over contract 04's
@@ -19,38 +18,48 @@ file-registry check).
   delegates its staged write to `writer.py`, so the protocol
   has exactly one implementation. `exec` stays the ops
   service's contract-04 clause, not a writer operation.
-- **Retired at S3 (§10.2, ruled):** the retired approval
-  sweeper's connector compatibility — `sweeper_state_read`,
-  `sweeper_state_write`, and `nudge_append` with its inlined
-  schema left the moved connector; the sweeper's records
-  stay on disk, unread by the pipeline.
-- **Landed at S9 — P2 + P3:** `releases.py`
+- `ops_client.py` — the client half of the ops route:
+  token resolution and the server URL, with its retry
+  discipline, for callers that ride `bin/sched exec` /
+  write / patch.
+- `serving.py` — the platform serving core the repo-root
+  `run.py` mounts the surfaces on: `serve` (the coupled
+  scheduler + attention process), `serve-workbench`, and
+  `serve-venue`, each in its own process and unit (below).
+- `releases.py`
   — the deployment/release record: an append-only JSONL
   store tying artifact ↔ repo commit ↔ stage, written
   through the unified writer (first entry `write`, then
   stamp-guarded `cas-update`, acting caller on every
   entry), with `drift_check` as the callable — an artifact
   with no resolving entry reads undeployed, never
-  deployed. `backup.py` — state-store backup: one shared
+  deployed.
+- `backup.py` — state-store backup: one shared
   snapshot/restore act (SHA-256 manifest, hash-verified
   restore, counts proven through each store's own loader)
-  over adapters for the stores that exist now (scheduling
+  over adapters for the stores that exist (scheduling
   registry, the Ledger class's two runtime stores, the
-  work-record store). Gate + drill evidence:
-  `tests/` (13 tests) and the S9 lane report. Still
-  riding their own lanes: P1 (the gate-consolidation
-  lane) and P4 (the flap drill, over S7's re-point).
-- **Lands in S9:** P1–P4 executed over the re-pointed set,
-  and the survival services homed here as platform services
-  (their code rides the scheduling tree until then, per
-  plan §6's build-home ruling; their registry-entry forms
-  retire into internal loops, and S11 re-homes their
-  external registrations).
+  work-record store).
+- `ops/` — the survival machinery: the unit templates
+  and `units-spec.json` (three serving units —
+  `workhorse.service` for the coupled process,
+  `workbench.service`, `venue.service` — each with its
+  watchdog timer), `watchdog.sh` (the ladder the timers
+  drive), `healthcheck.py` (the per-unit healthcheck the
+  ladder reads), the install scripts, the publish
+  machinery, and `ops/cutover/` — the executed cutover's
+  drivers and freeze-record shape, standing as its kit.
+- The retired approval sweeper's connector compatibility
+  (`sweeper_state_read`, `sweeper_state_write`, and
+  `nudge_append` with its inlined schema) is gone from
+  the moved connector; the sweeper's records
+  stay on disk, unread by the pipeline.
 - **Governed by:** contract 04 (platform config + the
   file-registry's home), contract 15 (the writer),
-  contract 10 (the portability/denylist seam lands in the
-  gate runner), contract 01 (the connector's token-caller
+  contract 10 (the portability/denylist seam),
+  contract 01 (the connector's token-caller
   registry).
-- **Ruling that binds here:** `/ops` hardens to the
-  `/tools` token model (§10.1) — see the S3 lane report for
-  its named disposition at this step.
+- **Ruling that binds here:** `/ops` rides the
+  `/tools` token model (§10.1): per-caller
+  token-authenticated calls, hashes only in the live
+  config, every call ledgered.

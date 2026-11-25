@@ -1,16 +1,97 @@
-# Retired jobs — recorded so the census stays complete
+# Retired jobs — the register
 
-- facade-plan-closeout-push — completed its work and removed its own cron (EC-16) before migration; never ran on the server. Its registry entry and body were removed the same day; the steady-state census is the remaining entries.
-- git-repo-viewer-healthcheck, git-repo-viewer-digest — disabled pair deleted under the inactive-schedules ruling; never registered.
-- recruiter-reply-drafter — disabled at the owner's direction (unneeded until he decides to re-enable); its registry entry was deleted the same day under the inactive-schedules ruling. Its body and member state are untouched, and the deleted entry is preserved in the owning goal's files so re-registration on his word is a restore, not a rebuild. (The body file itself was removed from this tracked tree under the genericity ruling — it serves a per-deployment programme and its content is not this repo's; the programme's own records keep it.)
-- flap-study-server-sample — temporary study entry for Step 1 of the write-denial flap tracking plan; registered, fired twice (17:21Z, 17:22Z), and deleted the same day once its samples were recorded. Its finding: a server-spawned child does NOT reproduce the write denial (all canary mechanisms writable while agent-class processes were denied in the same window), so the tracker probe cannot be hosted as a plain scripted job command.
-- approval-sweeper — the agentic cycle of the sweeper apparatus; retired at the closeout of the sweeper apparatus under the owner's commission as boundary-corrected — the successor system is owner-attention; the agentic cycle is the old system.
-- sweeper-nudge-check — the scripted tier of the sweeper apparatus (checker); retired at the closeout of the sweeper apparatus under the owner's commission as boundary-corrected — the successor system is owner-attention; the scripted tier is the old system.
-- sweeper-deliver — the scripted tier of the sweeper apparatus (delivery leg); retired at the closeout of the sweeper apparatus under the owner's commission as boundary-corrected — the successor system is owner-attention; the scripted tier is the old system.
-- sweeper-derive — the scripted tier of the sweeper apparatus (approvals derivation leg); retired at the closeout of the sweeper apparatus under the owner's commission as boundary-corrected — the successor system is owner-attention; the scripted tier is the old system.
-- Five per-deployment entries serving programmes outside this repo — three operator entries (with their driver scripts and one agent body) and two machine-rendered progress arms — removed from the tracked registry under the genericity ruling: the tracked registry carries this system's own fleet only; per-deployment entries are provisioned in the deployment, and their records live with their programmes. Their ids are deliberately not recorded here.
-- workbench-viewer-healthcheck — retired in the survival build (platform & gate lane, commission 3): the S11 one-process entry ran the platform watchdog with no unit distinction against the shared episode marker; replaced by the per-unit entries workhorse-healthcheck, workbench-healthcheck, and venue-healthcheck, one per systemd unit, each with its own episode marker and escalation body. Its entry and body were removed the same day; the body's ladder instructions named the retired per-repo tree, and its content survives in the original repo's archive.
-- owner-attention-healthcheck — retired in the same build and for the same reason: the one-process entry is superseded by the per-unit entries named above (the attention surface is supervised under workhorse-healthcheck, the coupled unit that serves it). Its entry and body were removed the same day; the body's ladder instructions named the retired per-repo tree, and its content survives in the original repo's archive.
-- workhorse-healthcheck, workbench-healthcheck, venue-healthcheck — retired in the watchdog actuation cure (platform & gate lane): the per-unit entries' driver was the scheduler server inside workhorse.service, so that unit's failure silenced the ladder for the whole fleet — proven when workhorse.service sat in start-limit exhaustion from 01:32:19Z and the ledger records no run of any job until the server revived on a hand-issued reset-failed at ~01:36Z, the missed healthcheck dues collapsing into catchup events at 01:38Z. The ladder is now driven by systemd timers (workhorse-watchdog.timer, workbench-watchdog.timer, venue-watchdog.timer, rendered and installed by the platform unit machinery in pipeline/platform/ops), which survive any watched unit's death; the ladder also gained the failed-unit rung (reset-failed, then start) the outage proved missing. Their entries were removed the same day; their escalation bodies are untracked local artefacts and remain on disk.
-- wb-progress-* — the workbench harness's machine-rendered progress entries: the rendering retired in the supervision plan's Step 6, and the 9 lingering entries were deleted at the coordinated cutover, when the app tick took over the supervision measures and the three Muse supervision crons (edgar-parallel-staffing-reminder, gap-closure-sweep, greenfield-progress-watch) were disabled in the same act. The todo files remain the record of truth for the work the entries tracked.
-- load-venue-watch — retired on admission of its successor load-monitor under the owner's ruling: the entry stood suspended with its admission proof run never completed and caught nothing while suspended, including two load-22 episodes; the successor reworks the same watch script with per-process naming, both venue fleets, and the snapshot store the Task Manager section serves.
+Every job whose entry has been deleted from the
+registry, with what it was and why it is retired, so
+the census stays complete. The registry itself admits
+active jobs only; nothing here runs.
+
+- **facade-plan-closeout-push** — a closeout job that
+  completed its work and removed its own cron (EC-16)
+  before the server migration; it never ran on the
+  server. Its registry entry and body are removed.
+- **git-repo-viewer-healthcheck**,
+  **git-repo-viewer-digest** — a disabled pair, deleted
+  under the inactive-schedules ruling; never
+  registered.
+- **recruiter-reply-drafter** — retired at the owner's
+  direction (unneeded until he decides to re-enable).
+  Its registry entry is deleted under the
+  inactive-schedules ruling; its body and member state
+  are untouched, and the deleted entry is preserved in
+  the owning goal's files, so re-registration on his
+  word is a restore, not a rebuild. The body file is
+  not carried in this tracked tree under the genericity
+  ruling — it serves a per-deployment programme and
+  its content is that programme's own record.
+- **flap-study-server-sample** — a temporary study
+  entry for the write-denial flap tracking plan;
+  registered, fired, and deleted once its samples were
+  recorded. Its finding stands: a server-spawned child
+  does NOT reproduce the write denial (all canary
+  mechanisms writable while agent-class processes were
+  denied in the same window), so the tracker probe
+  cannot be hosted as a plain scripted job command.
+- **approval-sweeper**, **sweeper-nudge-check**,
+  **sweeper-deliver**, **sweeper-derive** — the
+  sweeper apparatus (the agentic cycle and its scripted
+  checker, delivery, and approvals-derivation tiers),
+  retired at the apparatus's closeout under the owner's
+  commission as boundary-corrected. The successor
+  system is owner-attention.
+- **Five per-deployment entries** serving programmes
+  outside this repo — three operator entries (with
+  their driver scripts and one agent body) and two
+  machine-rendered progress arms — removed from the
+  tracked registry under the genericity ruling: the
+  tracked registry carries this system's own fleet
+  only; per-deployment entries are provisioned in the
+  deployment, and their records live with their
+  programmes. Their ids are deliberately not recorded
+  here.
+- **workbench-viewer-healthcheck** — the S11
+  one-process entry ran the platform watchdog with no
+  unit distinction against the shared episode marker;
+  superseded by per-unit healthcheck entries, one per
+  systemd unit, each with its own episode marker and
+  escalation body. Its entry and body are removed; the
+  body's ladder instructions named the retired per-repo
+  tree, and its content survives in the original repo's
+  archive.
+- **owner-attention-healthcheck** — retired for the
+  same reason: the one-process entry is superseded by
+  the per-unit entries (the attention surface is
+  supervised under workhorse-healthcheck, the coupled
+  unit that serves it). Its entry and body are removed,
+  with the same archive disposition as above.
+- **workhorse-healthcheck**,
+  **workbench-healthcheck**, **venue-healthcheck** —
+  the per-unit healthcheck entries, retired in the
+  watchdog actuation cure: their driver was the
+  scheduler server inside workhorse.service, so that
+  unit's failure silenced the ladder for the whole
+  fleet. The ladder is now driven by systemd timers
+  (workhorse-watchdog.timer, workbench-watchdog.timer,
+  venue-watchdog.timer, rendered and installed by the
+  platform unit machinery in pipeline/platform/ops),
+  which survive any watched unit's death; the ladder
+  also carries the failed-unit rung (reset-failed, then
+  start). Their entries are removed; their escalation
+  bodies are untracked local artefacts and remain on
+  disk.
+- **wb-progress-\*** — the workbench harness's
+  machine-rendered progress entries: the rendering is
+  retired (supervision plan Step 6), the lingering
+  entries are deleted, and the app tick carries the
+  supervision measures the entries armed (the three
+  Muse supervision crons — edgar-parallel-staffing-
+  reminder, gap-closure-sweep, greenfield-progress-
+  watch — stand disabled with them). The todo files
+  remain the record of truth for the work the entries
+  tracked.
+- **load-venue-watch** — retired on admission of its
+  successor **load-monitor**: the entry stood suspended
+  with its admission proof run never completed and
+  caught nothing while suspended. The successor reworks
+  the same watch script with per-process naming, both
+  venue fleets, and the snapshot store the Task Manager
+  section serves.

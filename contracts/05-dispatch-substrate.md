@@ -3,8 +3,8 @@
 **Canonical owner:** the pipeline dispatch — the scheduler's
 outbox/bridge/wake substrate is the surviving base; the
 workbench message outbox retires into it; attention's
-dispatch expresses over it. (Plan §4.5; attention clauses
-annexed from §9.2 and §9.6.)
+dispatch expresses over it. The implementation homes in
+`pipeline/dispatch/`.
 
 **The contract in one line:** one substrate mints, coalesces,
 wakes, delivers, and audits every ping and send in the
@@ -20,20 +20,20 @@ the work done.
   I/O discipline (temp file + rename, flush, fsync).
 - **Bridge queue** — one JSON record per bridged call under
   `state/connector-bridge/`.
-- **Send ledger** — attention's `sends` list becomes the
-  dispatch ledger (plan §12, survivor). Minting is only
+- **Send ledger** — attention's `sends` list is the
+  dispatch ledger (the survivor). Minting is only
   through `record_send`.
 - **Audit ledger** — the scheduler ledger records the whole
   lifecycle (event kinds below). Its format: canonical
   sorted-key JSON per event (the stored record reproduces
   the JSONL export line byte-for-byte), SQLite store with
-  the pinned schema/indexes, JSONL export with SHA-256
+  the schema/indexes, JSONL export with SHA-256
   verification, import only into an empty store (SCH4 —
   the export/store discipline and the dispatch-audit kinds
   are carried here; the full kind vocabulary spans the
   engine/ops/connector producers, see `traceability.md`).
   Fixture: `fixtures/ledger-events.jsonl` (lines produced
-  by the pinned Ledger/Outbox themselves). Schema:
+  by the Ledger/Outbox themselves). Schema:
   `schemas/ledger-event.schema.json`. Kind vocabulary:
   `run`, `agent_due`, `catchup`, `skipped_overlap`,
   `ping_created`, `ping_coalesced`, `ping_woken`,
@@ -44,7 +44,7 @@ the work done.
 ## Pings (SCH5)
 
 Schema: `schemas/outbox-ping.schema.json`; fixture:
-`fixtures/outbox-ping.json` (a record created by the pinned
+`fixtures/outbox-ping.json` (a record created by the
 Outbox). Rules:
 
 - Kinds: `agent-due`, `escalation`, `report`. Ids are 12 hex
@@ -63,13 +63,12 @@ Outbox). Rules:
 - The keeper is external by design (it survives server
   crashes): it polls wakeable pings, wakes the agent
   surface, and acks after work — the wake half of the
-  keeper contract; its survival half is frozen in
-  contract 04, as amended.
+  keeper contract; its survival half is contract 04's.
 
 ## The bridge queue (SCH8)
 
 Schema: `schemas/bridge-record.schema.json`; fixture:
-`fixtures/bridge-record.json` (the pinned test suite's
+`fixtures/bridge-record.json` (the test suite's
 planted-record form, with its envelope id).
 
 - **Envelope idempotency:** `envelope_id` is 1–128 chars
@@ -103,10 +102,10 @@ planted-record form, with its envelope id).
   half):** pings and records carry `body_ref` and identity
   only; the instructional content lives behind the ref.
 
-## Sends — attention's clauses (§9.2, §9.6)
+## Sends — attention's clauses
 
 Schema: `schemas/attention-send.schema.json`; fixture:
-`fixtures/attention-send.json` (the pinned dispatch tests'
+`fixtures/attention-send.json` (the dispatch tests'
 constructor specimen). Id schemes (**ATT5**): sends
 `sNNNN`; waits `wNNNN`; owner actions `oaNNNN`; items
 `handle:source_ref`. The bridge envelope form is
@@ -118,13 +117,12 @@ template, target, rule_id, sha256(text)}`.
   wait-rule engine, owner verbs, handler actions, and the
   continuation pass mint through `record_send` — owner
   verbs and continuation mint **above** the substrate, not
-  beside it (§9.2c). Shadow sends (`mode: shadow`) are
+  beside it. Shadow sends (`mode: shadow`) are
   never dispatchable (**ATT5**).
-- **Settle-first ordering (§9.2a):** the consumer settles
+- **Settle-first ordering:** the consumer settles
   outstanding bridge records before claiming or enqueueing
   new sends. A merged consumer that enqueues first
-  reintroduces the twin-send class the cures
-  removed — this ordering is contract, not implementation
+  reintroduces the twin-send class — this ordering is contract, not implementation
   detail.
 - **Claim and delivered-only-on-reference (ATT6):** a send
   is claimed by one attributed consumer on a 15-minute
@@ -135,15 +133,15 @@ template, target, rule_id, sha256(text)}`.
 - **Suppress (ATT7):** terminal, reasoned (a mandatory
   reason on the record), **refused on a delivered send**.
   A suppressed send's late fulfillment is **stamped as
-  fact, never resurrected** (§9.2a's suppressed-but-
+  fact, never resurrected** (the suppressed-but-
   fulfilled edge). Attempts exhausted → parked + suppressed
   with the reason on the record.
-- **Failure records (§9.2b):** deduplicated to one per hour
+- **Failure records:** deduplicated to one per hour
   per send + reason; an undelivered failure against an
   understaffed topic surfaces as a `steer_undeliverable`
   staffing row (contract 03).
 
-## Decision machinery (§9.6)
+## Decision machinery
 
 - **Verdict at the tap (ATT2):** the verb is validated
   against the *served* verb set for the item; the decision
@@ -178,11 +176,11 @@ always surfaced, never auto-applied. A **terminal status
 post** resolves its waits (contract 03); an ack alone
 never does.
 
-## §10.2 binding — what this contract does NOT carry
+## What this contract does NOT carry
 
 The retired sweeper's connector tools (`sweeper_state_read`,
 `sweeper_state_write`, `nudge_append`) and their inlined
-schema **retire at S3**; they are not part of this
+schema are retired; they are not part of this
 substrate. The retired records stay on disk, unread by the
 pipeline.
 
@@ -192,53 +190,38 @@ SCH5, SCH8, SCH4 (ledger format — see the audit-ledger
 note above), SCH9's body-ref + ack-after-work half, ATT2,
 ATT3, ATT5, ATT6, ATT7, ATT8.
 
-## Finding from the frontend build
+## Owner items and templates
 
-The attention frontend lane records: no owner-item schema
-exists at S0. The item shape the app validates was
-constructed from this contract's send/decision semantics
-plus the storyboard, and validated structurally rather
-than against a schema in contracts/schemas/. Candidate
-for the S6 freeze: an owner-item schema joins the schema
-set, and the mock's constructed shape is checked against
-it then. A second, smaller gap: the templates fixture
-carries no `decision-reply` row.
-
-## S6 freeze — dispositioned
-
-- **Owner-item schema: FROZEN.** `schemas/owner-item.
-  schema.json` joins the schema set, written from the
-  frontend's constructed `OwnerItem` shape (this
-  contract's decision semantics in field form). The
-  mock's 13 seed items validate against it 13/13, and
-  the frontend's `validate:mocks` now runs items.json
-  through the schema (its structural cross-checks —
-  id scheme, wait/handler/send resolution, verb
-  vocabulary — remain). Specimen fixture:
+- **Owner-item schema:** `schemas/owner-item.schema.json`
+  is part of the schema set, written from the frontend's
+  `OwnerItem` shape (this contract's decision semantics in
+  field form). The frontend's `validate:mocks` runs
+  items.json through the schema (its structural
+  cross-checks — id scheme, wait/handler/send resolution,
+  verb vocabulary — remain). Specimen fixture:
   `fixtures/owner-item.json`.
-- **Templates fixture:** the `decision-reply` row is
-  added (audience `chat`, slots `[summary]`, text
+- **Templates fixture:** `fixtures/attention-templates.json`
+  carries 19 rows, including the `decision-reply` row
+  (audience `chat`, slots `[summary]`, text
   `{summary}` — the producer composes the full reply
-  line, per the decision machinery above); the fixture
-  now carries 19 rows.
-- **The consumer surface freezes with this contract as
-  amended:** pings (outbox), the bridge queue, the wake
-  minter, the send ledger lifecycle, and the message
-  store's watcher outbox are one substrate under
-  `pipeline/dispatch/` (plan §4.5). Settle-first
+  line, per the decision machinery above).
+- **The consumer surface:** pings (outbox), the bridge
+  queue, the wake minter, the send ledger lifecycle, and
+  the message store's watcher outbox are one substrate
+  under `pipeline/dispatch/`. Settle-first
   ordering and the suppressed-but-fulfilled edge are
   substrate semantics (`dispatch.sends`), not consumer
   folklore.
 
-## Card-watch source — Step 1 freeze
+## Card-watch source
 
-The permission-card watcher's source contract, frozen at
-Step 1 of the card-owner plan for its fan-out lanes. Two
+The permission-card watcher's source contract
+(implementation: `pipeline/registry/cards/`). Two
 bridged reads, both `read` scope, both fulfilled by the
 home-side bridge executor; neither carries any authority
 — listing and lookup only, never approve or deny.
 
-- **Card DTO (frozen):** `approval_id`, `purpose`,
+- **Card DTO:** `approval_id`, `purpose`,
   `scope`, `requested_at`, `expires_at` (nullable), and
   origin as `origin_kind` (`chat` | `cron` | `unknown`)
   with `origin_id`. This is the whole whitelist: raw tool
@@ -275,7 +258,7 @@ home-side bridge executor; neither carries any authority
   and the snapshot never reads as zero cards. A drained,
   fulfilled empty list is a real answer — zero cards
   observed.
-- **Watcher state shape (frozen):** provenance rides a
+- **Watcher state shape:** provenance rides a
   `card` subrecord on the posted wait (schema:
   `schemas/attention-wait.schema.json`) — the DTO fields
   with `origin_kind` as mapped (`chat` for a registered

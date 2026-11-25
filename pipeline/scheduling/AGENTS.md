@@ -78,7 +78,7 @@ The full generic supervision text lives in `docs/supervision-rules.md`; read it 
 - **The harness connector grants tools, never authority.**
   `server/serving/connector.py` exposes the agent tier's privileged
   surface as per-caller token-authenticated tools (contract
-  annex in `.plans/`); no tool approves a permission, pushes,
+  annex: the harness-connector tool inventory); no tool approves a permission, pushes,
   acquires a lease, or writes a calendar. The server stores
   only token hashes in the live config's `connector.callers`
   (read fresh per call; mint/revoke via `bin/sched
@@ -90,7 +90,7 @@ The full generic supervision text lives in `docs/supervision-rules.md`; read it 
   harness from one fixed template when a todo's progress
   schedule was armed; the rendering is retired
   (supervision plan Step 6) and the harness renders no
-  new ones — lingering entries are deleted at the
+  new ones — the lingering entries were deleted at the
   coordinated cutover. There is no born-admitted class
   (amendment 3, retiring the pinned system's exception):
   machine renders are admitted the same way

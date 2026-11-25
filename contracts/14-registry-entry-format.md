@@ -3,11 +3,7 @@
 **Canonical owner:** the pipeline scheduling engine — it
 owns the registry the entries land in and the validator
 that enforces the format; every writer, reader, and the
-engine itself conforms to it. (Plan §4.14, added by
-amendment 2, owner's ruling. At S0 this
-format rode as contract 02's shared substrate; the
-substrate note there recorded that §4 assigned it no
-entry of its own, and this contract is the closure.)
+engine itself conforms to it. (Plan §4.14.)
 
 **The contract in one line:** a scheduler job is one
 file in one strict form — `jobs/<id>.yaml`, id equal to
@@ -25,9 +21,8 @@ the format's fields), the arming projection (contract
 03, whose scheduler entries are rendered in this form),
 and the scheduler app viewer, which renders entries and
 never re-derives their semantics (contract 06). The
-store the format lives in is the job registry §12 names
-a survivor — the pipeline scheduling registry in the
-target structure.
+store the format lives in is the pipeline scheduling
+registry (`pipeline/scheduling/jobs/`).
 
 ## The frozen shape
 
@@ -40,12 +35,12 @@ or lists of maps). Unknown fields are invalid and
 quarantined; secret-shaped values anywhere fail
 validation.
 
-The pinned scheduler carries the schema of record as
-tracked prose + validator code (`jobs/README.md`,
-`server/registry.py` at the pin) — no machine-readable
-schema file exists in tracked form, so this field table
-is the frozen statement of the format, field-for-field
-from that schema:
+The schema of record is tracked prose + validator code
+(`pipeline/scheduling/jobs/README.md`,
+`pipeline/scheduling/server/registry.py`) — no
+machine-readable schema file exists in tracked form, so
+this field table is the frozen statement of the format,
+field-for-field from that schema:
 
 | Field | Form |
 |---|---|
@@ -66,17 +61,15 @@ from that schema:
 | `lifetime` | `permanent` \| `until_complete` (+ `self_removal`) |
 | `source` | one of the two stamp forms below — the forms never mix |
 | `catalog` | the classified-catalog block (contract 07) |
+| `config` | the entry config block (contract 09): map form `{version, knobs, constraints}` — `version` the store's version stamp (positive integer), `knobs` a map keyed by knob name (each: `label`, `type` (`integer \| number`), `unit`, `value`, `min`, `max`, optional `env`), `constraints` a map keyed by name (each: `kind: lt`, `left`, `right`, `message`); knob values sit inside their ranges and satisfy every constraint at rest. An entry with no real knobs carries no block |
 
-The pinned schema of record also carries a migration
-field family — `migrated`, `migrated_at`,
-`migration_note`, `proof_pending`. By amendment 3
-(owner's ruling) those fields do NOT exist
-in this format: an entry stands in the registry store
-only by being written through contract 02's writer
-path, so presence in the store is admission and no
-field records it (contract 13 states the firing half).
-Their absence from the table above is ruled, not an
-omission.
+The migration field family — `migrated`, `migrated_at`,
+`migration_note`, `proof_pending` — does NOT exist in
+this format: an entry stands in the registry store only
+by being written through contract 02's writer path, so
+presence in the store is admission and no field records
+it (contract 13 states the firing half). Their absence
+from the table above is ruled, not an omission.
 
 Portability: entry paths may be bare command names or
 start with `${REPO}/`, `${WS}/`, `${HOME}/`; any other
@@ -101,12 +94,12 @@ the writer, drift counted per writer) are contract
 
 ## Fixtures
 
-The scheduler entries S0 gathered, one per source form —
-this contract's evidence:
+Scheduler entries, one per source form — this contract's
+evidence:
 
 | Fixture | Provenance |
 |---|---|
-| `fixtures/scheduler-entry-wb-progress.yaml` | produced by the pinned workbench `render_entry` from the pinned tests' fixture todo (machine form, workbench family) |
+| `fixtures/scheduler-entry-wb-progress.yaml` | produced by the workbench `render_entry` from its tests' fixture todo (machine form, workbench family) |
 | `fixtures/scheduler-entry-colab-liveness.yaml` | the tracked catalog specimen of the runner lease core's render (machine form, runner family) |
 | `fixtures/scheduler-entry-bridge-wake.yaml` | tracked live hand entry (hand form) |
 | `fixtures/scheduler-entry-bridge-drain.yaml` | tracked live agent entry (hand form) |
@@ -116,28 +109,21 @@ Contracts 03 and 07 cite the wb-progress and
 catalog-example fixtures as specimens of their own
 clauses (the arming render; an entry carrying its
 catalog block); the fixtures' home as format evidence
-is here. The fixtures are verbatim specimens of the
-source (pinned) format and are not edited: the machine
-renders among them carry the migration field family
-(`migrated`, `migrated_at`, `migration_note`) as
-history — amendment 3 drops those fields from the
-target format above, and the specimens keep them as
-the record of what the pinned writers wrote.
+is here. The fixtures are verbatim specimens and are not
+edited: specimens among them carry the migration field
+family (`migrated`, `migrated_at`, `migration_note`) as
+the record of what their writers wrote — those fields
+are not part of the format above.
 
-## Migration notes
+## Admission
 
-S3 moves the registry behind this contract into
-`pipeline/scheduling/`: the files move whole, in this
-form, and the moved validator must accept exactly the
-pinned validator's language — no field is added,
-renamed, or relaxed in transit, save the migration
-field family amendment 3 rules out of the target
-format. Admission (validate → server-context proof →
-admitted by the writer-path write itself) is contract
-02's half of the lifecycle and leaves no field on the
-entry; this contract freezes only the form an admitted
-entry takes. A change to the format is a ruling, not
-a migration detail.
+The validator accepts exactly the format above — no
+field outside it is added, renamed, or relaxed. Admission
+(validate → server-context proof → admitted by the
+writer-path write itself) is contract 02's half of the
+lifecycle and leaves no field on the entry; this contract
+freezes only the form an admitted entry takes. A change
+to the format is a ruling, not an implementation detail.
 
 ## Preserve clauses carried
 

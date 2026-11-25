@@ -678,7 +678,7 @@ ships placeholders, not these values):
 | Cap | Value |
 | --- | ----- |
 | `budgets.colab.primary.daily` | 40 CU |
-| `budgets.colab.primary.monthly` | 300 CU |
+| `budgets.colab.primary.monthly` | 400 CU |
 
 - **Projection**: a window projects rate × hours at its shape's
   `rate_cu_per_hour`. A shape whose rate is null has an
@@ -860,8 +860,7 @@ A live assignment can also lose its name: the server-side
 record drops it (the listing shows the endpoint wearing `?`,
 or omits the name while the assignment stands), and every
 lease channel being name-keyed, the named adoption cannot
-reach it — it bills on, unadoptable (a rotated
-pair, released unadopted after hours assigned). The endpoint
+reach it — it bills on, unadoptable. The endpoint
 form, `bin/colab-lease adopt --endpoint EP`, is the cure: the
 name is the machinery's own identifier, not evidence, so the
 flow mints a fresh one through the naming module (checked
@@ -930,37 +929,27 @@ on the reap cadence.
 
 ## Panel server supervision
 
-> **S11 consolidation:** in the consolidated tree
-> the per-surface arrangement below is retired — the panel is
-> served by the repo-root `run.py` under the one workhorse unit
-> (`pipeline/platform/ops/workhorse.service.tmpl`), and the
-> platform ladder (`pipeline/platform/ops/watchdog.sh`) is the
-> restore path. The panel's own unit template, installer, and
-> watchdog were removed with the collapse. The text below is
-> the pre-consolidation record of the pattern the ladder
-> succeeds.
-
 The lease panel's companion server (`ui/server.py` on
-127.0.0.1:8793) conforms to the **VM-restart survival pattern
-contract v1** (canonical text: the spec-driven-starter SPEC;
-conformance under the survival-pattern plan's
-Step 3). The unit's source is the tracked template
-`ui/colab-lease-ui.service.tmpl`, rendered by
-`ui/install-unit.sh` into the system instance and enabled;
-`Restart=always` guards it within a boot. The reaper hook's UI
-duty drives `ui/watchdog.sh` every pass (~120 s): the watchdog
-probes the page (a whole-operation-deadline read), checks the
-unit's presence and render currency beside the health check —
-a missing unit is reinstalled, a unit not byte-equal to the
-current render is re-rendered, both quietly while the server
-answers — and when the page does not answer it runs the ladder:
-install, then the load-state verb (a loaded unit is restarted,
-anything else started), poll-verified, with the pre-systemd
-`ui.sh` start as the last rung. A failed ladder wakes; a
-successful restore is silent. Proof: a
-VM replacement restored the panel unattended in ~2¾ minutes,
-and an adoption drill (unit removed, service
-stopped) is recorded in the repo's run logs.
+127.0.0.1:8793) is served by the repo-root `run.py
+serve-venue` — this panel's own mount on the platform
+serving core — under its own unit,
+`pipeline/platform/ops/venue.service.tmpl`
+(`Restart=always` guards it within a boot). Process
+boundaries follow coupling (owner ruling): the panel
+shares fate with neither the coupled
+scheduler+attention process nor the workbench, because
+its state reads shell out synchronously to the lease
+core and it faces the heaviest polling of the surfaces.
+The platform ladder (`pipeline/platform/ops/watchdog.sh`,
+driven by `venue-watchdog.timer`) is the restore path:
+it probes the page and the unit's health, and a page
+that does not answer runs the ladder — a loaded unit is
+restarted, anything else started, poll-verified. A
+failed ladder wakes; a successful restore is silent.
+Standalone runs (no unit) use `ui/ui.sh`'s nohup +
+pidfile path; when `venue.service` is installed, `ui.sh`
+delegates every verb to systemctl instead (see
+`ui/README.md`).
 
 The server also conforms to the **stack-dump contract**
 (`stackdump-contract: v1`; canonical text: the

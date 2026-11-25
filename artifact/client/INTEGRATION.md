@@ -3,21 +3,17 @@
 The composition contract for the workhorse superapp's single
 integrated frontend (owner ruling;
 audit Addendum 3). **One app: one client, one bundle
-(shipped in split form, §1), one router, the four apps
+(§1), one router, the four apps
 as views on the unified kit.** No
 iframes, no postMessage relay, no per-app bundles, shells,
-or kits. The frame shell this replaced is deleted; do not
+or kits — the one sanctioned iframe is the entry preview's
+(§11.7). The frame shell this replaced is deleted; do not
 rebuild any part of it.
 
-References of record: the seed plan §2/§2b, the kit sheet,
-and the five storyboards (41 frames) — the design pack in
-trash; the kit's home at repo-root
-`kit/` (its README is the consumption rule); the four
-restored originals under `client/pages/<app>/` (behaviour
-and screens of record, §8); the restoration lanes'
-hand-backs (workbench 39/39 actions schema-identical;
-scheduler `pages/scheduler/RESTORE-NOTES.md`; attention
-17/17 mapped; runner mapping complete, zero open seams).
+References of record: the kit at repo-root
+`kit/` (its README is the consumption rule) and the view
+trees under `client/src/views/<app>/` (behaviour and
+screens of record).
 
 ## 1. Shape
 
@@ -88,8 +84,8 @@ Each mount is one module exporting an `AppViewModule`
 
 Subroute grammars (each lane's inventory of record):
 
-- **Workbench** — its restored route table
-  (`pages/workbench/src/lib/routing.ts`) read against the
+- **Workbench** — its route table
+  (`views/workbench/lib/routing.ts`) read against the
   remainder: `/` home · `/projects` chooser ·
   `/board` · `/repos[/<id>]` (id may contain slashes) ·
   `/p/<slug>/<section>[/<item>]` with section ∈ overview |
@@ -106,8 +102,8 @@ Subroute grammars (each lane's inventory of record):
   frame 9 — distinct from the shell's unified
   `#/settings`).
 - **Scheduler** — `/` Overview · `/jobs` · `/jobs/<id>` ·
-  `/pings` · `/ledger` (inventory V-1…V-5 in
-  RESTORE-NOTES.md).
+  `/pings` · `/ledger` (the view inventory in
+  `views/scheduler/`).
 - **Attention** — `/` Today · `/digest` · `/handlers` ·
   `/handlers/<handle>` · `/rules` · `/registries`.
   Presence and Digest settings are NOT routes (§6).
@@ -183,8 +179,8 @@ unreachable backend returning in the same envelope
 shape, never a hang or a throw. Bridge-down handling
 keeps the originals' semantics: last-good stays rendered
 at read time in the view; status 0 is never rendered as
-data. Per-app call mappings are the restoration lanes'
-hand-backs (scheduler: RESTORE-NOTES.md's table —
+data. Per-app call mappings live in each view's model
+module (scheduler: `views/scheduler/model.ts` —
 positional args become named fields: `getJob({jobId})`,
 `getLedger({limit})`).
 
@@ -192,8 +188,7 @@ positional args become named fields: `getJob({jobId})`,
 
 The kit's one home is repo-root `kit/` (package
 `@workhorse/kit`). Consume it from there — **never copy
-kit files into the client** (the five vendored copies of
-the embed era are the defect this build cures).
+kit files into the client**.
 
 - Imports: `@workhorse/kit/components/<Name>` and
   `@workhorse/kit/lib/responsive` — the kit is a
@@ -241,22 +236,17 @@ the embed era are the defect this build cures).
   the bundler inlines the woff2 (Inter, IBM Plex Mono)
   as data URIs; inlined through another file's @import
   chain they resolve against the wrong directory and
-  the build fails.
+  the build fails. `main.tsx` likewise imports
+  `@workhorse/kit/themes/highlight.css` as its own root.
 - Build-facing form: none. The kit's externals (react;
   katex; tailwindcss, imported by its themes entry)
   resolve by walking up from the kit's installed
   location into the artifact's own node_modules — the
   dependency declaration above is the whole mechanism,
   and `client/build.mjs` carries no resolution
-  scaffolding. An earlier form of this build linked
-  the artifact's install at the repo root for the
-  duration of the build (the kit read as if a package
-  root sat above it); that made the build depend on
-  machine-local state and fail from a bare tree
-  (venue gate runs 1–4), and it is
-  removed: nothing creates a repo-root `node_modules`,
-  and a clean checkout verifies end to end with
-  `bun run verify:client` (§10).
+  scaffolding. Nothing creates a repo-root
+  `node_modules`, and a clean checkout verifies end to
+  end with `bun run verify:client` (§10).
 - AppShell composition rule (kit README): views that do
   NOT self-pad take `AppShell` whole (its frame insets
   the content — the shell does this); a view that
@@ -367,7 +357,7 @@ below):
   glance until it lands and refuses presence posts
   while never-loaded (critic M-6 cure).
 
-**Binding (landed):** read via the merged registry's
+**Binding:** read via the merged registry's
 `getGlance` — `useServedPresence`
 (`views/attention/presence.ts`) exposes the presence,
 its expiry, and `decisionCount`; write presence via
@@ -396,13 +386,12 @@ client/src/
     Launcher.tsx      the Launcher view
     Settings.tsx      the unified Settings view
     PresenceControl.tsx
-    PlaceholderView.tsx  skeleton stand-ins (lanes replace)
   views/
-    workbench/index.tsx                 (+ settings-sections n/a)
-    scheduler/index.tsx
-    attention/index.tsx
-    attention/settings-sections.tsx     (§6 mounts)
-    runner/index.tsx
+    workbench/        index.tsx, meta.ts, routes.tsx, lib/, sections/
+    scheduler/        index.tsx, meta.ts, model.ts, hooks.ts, per-route views
+    attention/        index.tsx, meta.ts, model.ts, presence.ts,
+                      settings-sections.tsx (§6 mounts), per-route views
+    runner/           index.tsx, meta.ts, model.ts, state.ts, per-route views
 ```
 
 A lane works inside its own `views/<app>/` directory and
@@ -421,18 +410,12 @@ instead of editing App.tsx in parallel.
 - Assets: the shell stages no static assets. A view
   needing an image imports it from its own `views/<app>/`
   tree and the bundler emits it into `dist/assets/`.
-- The restored originals under `client/pages/<app>/`
-  are reference sources (behaviour, screens, inventories)
-  — never imported, never built, never served. They are
-  removed at final integration, once every view lane has
-  ported from them.
-- Workbench lane, dependency note (from its hand-back):
-  the port needs `dompurify`, `highlight.js`, `katex`,
-  `marked`, `mermaid` (+ dev `@types/katex`) added to
-  `artifact/package.json` — the artifact's current
-  dependency set lacks them; the restored client's own
-  build/tsconfig under `pages/workbench/` are its
-  reference for versions.
+- No reference trees are carried in the client: there is
+  no `client/pages/` directory — the views under
+  `client/src/views/<app>/` are the only client source.
+- Workbench view dependencies are declared in
+  `artifact/package.json`: `dompurify`, `highlight.js`,
+  `katex`, `marked`, `mermaid` (plus dev `@types/katex`).
 
 ## 9. Standing exclusions
 
@@ -470,7 +453,7 @@ From `artifact/`:
 
 ```
 bun x tsc --noEmit -p client/tsconfig.json   # typecheck
-bun run build:client                          # split-form bundle (§1)
+bun run build:client                          # single bundle (§1)
 ```
 
 The whole chain — frozen install, typecheck, build,
@@ -493,15 +476,14 @@ The bun version is pinned in `artifact/package.json`
 version; a lockfile written by a different bun is
 what failed the venue gate's frozen install.
 
-Skeleton-stage results: typecheck clean;
-build stages `dist/index.html` + one JS bundle
-(247,665 B) + one CSS (186,648 B) whose contents assert
-the kit landed: `[data-palette=olive|teal]`,
-`[data-mode=dark]`, `[data-density=compact]` selectors
-and the AppShell sidebar width (224px) all present;
-the kit fonts inlined as data URIs; no frame/relay
-markers anywhere in the bundle. (Local authoring checks
-only — the publish pipeline is the workhorse successor seat's: the seat manages the app end-to-end, tests/gates and publish included.)
+The parity check (`client/parity-check.mjs`, the last
+leg of `verify:client`) asserts the staged form: one
+document, one JS bundle, the kit's
+`[data-palette=olive|teal]`, `[data-mode=dark]`, and
+`[data-density=compact]` selectors and the AppShell
+sidebar width present in the CSS, the kit fonts inlined
+as data URIs, and no frame/relay markers anywhere in
+the bundle.
 
 ## 11. Deviations from the kit sheet / storyboard forms
 

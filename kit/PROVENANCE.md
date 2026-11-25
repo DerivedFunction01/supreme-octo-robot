@@ -102,8 +102,7 @@ Vendoring snapshot:
   re-sync's source (the one later starter commit,
   56b11f7, touches scanners only); the manifest below
   remains the pin this repo verifies against.
-- Regrouping cure applied locally (spec plan
-  `2026-11-21-band-grouping-cures`, Step 3): the starter's
+- Regrouping cure applied locally (spec plan, Step 3): the starter's
   own folder-density cure, applied to this copy ahead of
   the next re-sync so both trees converge on the same
   layout. The 29 components now live in
@@ -179,5 +178,5 @@ ways:
   tree, so a starter-side change that has not been re-synced
   is caught by name.
 
-The rebuild's step-5 publish pipeline calls this check; a
-drifted kit does not publish.
+The publish prep (`pipeline/platform/ops/publish_prep.py`)
+calls this check; a drifted kit does not publish.
