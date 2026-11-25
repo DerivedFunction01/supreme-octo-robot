@@ -22,7 +22,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from gate import portability
+from gate import denylist_match, portability
 
 FIXTURES = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -33,8 +33,9 @@ CLEAN = os.path.join(FIXTURES, "clean.md")
 
 
 def _fixture_literal():
-    for line in portability._load_literals(FIXTURE_DENYLIST):
-        return line
+    with open(FIXTURE_DENYLIST, encoding="utf-8") as fh:
+        for line in denylist_match.parse_literals(fh):
+            return line
     raise AssertionError("fixture denylist carries no literal")
 
 
@@ -81,6 +82,21 @@ class ProvisionedLegTests(unittest.TestCase):
         self.assertNotIn(_fixture_literal(), output)
         self.assertNotIn(_fixture_literal().lower(),
                          output.lower())
+
+    def test_case_variant_specimen_flagged(self):
+        # Matching is case-insensitive, consumed from
+        # denylist_match (the one home): the fixture
+        # literal at lowercase is the same leak.
+        root = _scratch_tree("clean.md", provisioned=True)
+        with open(os.path.join(root, "variant.md"), "w",
+                  encoding="utf-8") as fh:
+            fh.write("approved by "
+                     + _fixture_literal().lower() + "\n")
+        with mock.patch.dict(os.environ, {}, clear=True):
+            code, output = _run_main(root, "--fail-on-denylist")
+        self.assertEqual(code, 1)
+        self.assertIn("variant.md", output)
+        self.assertNotIn("clean.md", output)
 
     def test_clean_tree_leg_runs_and_passes_not_skipped(self):
         root = _scratch_tree("clean.md", provisioned=True)

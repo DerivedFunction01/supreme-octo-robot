@@ -24,8 +24,12 @@ Plus the personal-literal leg:
 - denylist: personal literals (the owner's name included)
   from an untracked file, resolved env-first
   (SCHEDULER_DENYLIST_FILE), else state/denylist.txt under
-  the scan root when present. Matching is case-insensitive.
-  Absent, the leg prints a one-line NOTICE and skips.
+  the scan root when present. Matching is case-insensitive:
+  the matching and list-parsing semantics live in
+  denylist_match.py beside this component (the one home,
+  a synced mirror of the starter scanner's module); this
+  component consumes them and never re-implements the
+  comparison. Absent, the leg prints a one-line NOTICE and skips.
   Findings are reported in their own section and fail only
   under --fail-on-denylist, which the gate passes whenever
   a denylist is provisioned — so an installation that has
@@ -57,6 +61,11 @@ import os
 import re
 import subprocess
 import sys
+
+try:
+    from . import denylist_match
+except ImportError:  # standalone script use
+    import denylist_match
 
 SCAN_SUFFIXES = (
     ".py", ".md", ".toml", ".yaml", ".yml", ".json",
@@ -240,23 +249,14 @@ def _denylist_path(root):
     )
 
 
-def _load_literals(path):
-    literals = []
-    with open(path, encoding="utf-8") as fh:
-        for raw in fh:
-            text = raw.strip()
-            if text and not text.startswith("#"):
-                literals.append(text)
-    return literals
-
-
 def scan_denylist(root, files):
     """(findings, notice, provisioned) — findings carry rule,
     path, line; the literal itself is never reported."""
     path, notice = _denylist_path(root)
     if path is None:
         return [], notice, False
-    literals = [lit.lower() for lit in _load_literals(path)]
+    with open(path, encoding="utf-8") as fh:
+        literals = denylist_match.parse_literals(fh)
     list_real = os.path.realpath(path)
     findings = []
     for relpath in files:
@@ -267,8 +267,7 @@ def scan_denylist(root, files):
         if lines is None:
             continue
         for lineno, line in enumerate(lines, start=1):
-            lowered = line.lower()
-            if any(literal in lowered for literal in literals):
+            if denylist_match.line_matches(line, literals):
                 findings.append(("denylist/personal-literal", relpath, lineno))
     return findings, None, True
 

@@ -30,7 +30,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from gate import portability, runner
+from gate import denylist_match, portability, runner
 
 FIXTURES = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -39,8 +39,9 @@ FIXTURE_DENYLIST = os.path.join(FIXTURES, "denylist.txt")
 
 
 def _fixture_literal():
-    for line in portability._load_literals(FIXTURE_DENYLIST):
-        return line
+    with open(FIXTURE_DENYLIST, encoding="utf-8") as fh:
+        for line in denylist_match.parse_literals(fh):
+            return line
     raise AssertionError("fixture denylist carries no literal")
 
 
