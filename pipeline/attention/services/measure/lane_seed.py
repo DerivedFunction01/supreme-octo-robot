@@ -26,7 +26,7 @@ def edgar_lane_declarations() -> list[dict]:
     lane homes live in — and the collector
     resolves it against the workspace anchor.
     """
-    venue = "storm-mosaic-17"
+    venue = "local-main"
     first = "2026-11-23T23:12:00-05:00"
     amended = "2026-11-24"
     register = (

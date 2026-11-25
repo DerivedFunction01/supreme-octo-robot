@@ -475,7 +475,13 @@ _SEED = (
         # commit with the contract, as the staffable
         # queue does. Seeded from the coordinator's
         # durable declaration record as it stood at
-        # seed time: expected count 20. A lane's
+        # seed time: expected count 20. The lane venue
+        # stem is reconciled to the live fleet by the
+        # declaration-reconcile pass (it named an
+        # expired Colab session until the fleet moved
+        # to the local venues); the count and lane set
+        # re-transcribe from the coordinator's current
+        # declaration when it is next posted. A lane's
         # record file is its own STATE file in the
         # lane home the declaration's termination
         # path names; a lane the declaration names
