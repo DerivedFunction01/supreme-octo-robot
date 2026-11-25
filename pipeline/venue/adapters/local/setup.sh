@@ -99,9 +99,17 @@ if [ "$SKIP_MOUNT" = 0 ]; then
 fi
 
 # Disk guard cron (idempotent: replaces any prior disk-guard line).
+# The guard needs a cron binary: install the package when missing
+# rather than silently skipping the guard.
+if ! command -v crontab >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1; then
+  echo "==> installing cron (the disk guard needs it)"
+  sudo apt-get install -y cron || true
+fi
 if command -v crontab >/dev/null 2>&1; then
   (crontab -l 2>/dev/null | grep -v disk-guard || true; echo "*/15 * * * *  $TARGET/disk-guard.sh") | crontab -
   echo "==> disk-guard cron installed"
+else
+  echo "warning: no crontab available; disk-guard cron not installed" >&2
 fi
 
 if [ "$SKIP_DOCKER" = 1 ]; then
