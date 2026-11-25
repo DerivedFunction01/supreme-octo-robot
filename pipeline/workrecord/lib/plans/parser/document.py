@@ -9,10 +9,70 @@ critical files) that hang off them.
 """
 
 from .grammar import (_BACKTICK_RE, _BULLET_RE,
+                      _CLASS_PHRASES, _DURATION_TOKEN_RE,
                       _FIELD_RE, _FENCE_RE, _LABEL_RE,
                       _SENTINEL_CLOSE, _SENTINEL_OPEN,
-                      _STEP_HEAD_RE, _STEP_ITEM_RE,
-                      _STEPS_INTRO_RE, _TASK_ITEM_RE)
+                      _STEP_BLOCK_RE, _STEP_HEAD_RE,
+                      _STEP_ITEM_RE, _STEPS_INTRO_RE,
+                      _TASK_ITEM_RE, _normalize_words)
+
+
+def names_long_duration_class(text) -> bool:
+    """True when the text (an estimate's justification)
+    names one of the closed long-duration classes, by
+    any of its phrases, on whole normalized words."""
+    padded = f" {_normalize_words(text or '')} "
+    return any(f" {phrase} " in padded
+               for phrase in _CLASS_PHRASES)
+
+
+def first_duration_minutes(text):
+    """The first duration token in the text, in minutes
+    (float), or None when the text carries none."""
+    m = _DURATION_TOKEN_RE.search(text or "")
+    if m is None:
+        return None
+    value = float(m.group(1))
+    if m.group(2).startswith("h"):
+        return value * 60
+    return value
+
+
+def extract_step_blocks(text):
+    """A plan's declared step blocks: the wb-step
+    sentinel comments, one key=value field per line —
+    step, todos (|-separated), requires (|-separated
+    prerequisite todos), est (the step's declared
+    estimate, the machine form of its closing est:
+    line, raw — None when the block declares none), and
+    exactly one of fanout / serial. The lib-side reader
+    of the block grammar; the attention measure's
+    frontier reader reads the same blocks service-side
+    over the workbench seam."""
+    steps = []
+    for match in _STEP_BLOCK_RE.finditer(text or ""):
+        fields = {}
+        for line in match.group(1).splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                fields[key.strip()] = value.strip()
+        todos = [t.strip() for t in
+                 fields.get("todos", "").split("|") if t.strip()]
+        requires = [t.strip() for t in
+                    fields.get("requires", "").split("|")
+                    if t.strip()]
+        try:
+            number = int(fields.get("step", "0"))
+        except ValueError:
+            number = 0
+        steps.append(
+            {"step": number,
+             "todos": todos,
+             "requires": requires,
+             "est": fields.get("est"),
+             "fanout": fields.get("fanout"),
+             "serial": fields.get("serial")})
+    return steps
 
 def _split_fences(lines):
     """Split a section's lines into blocks. Fenced code is its

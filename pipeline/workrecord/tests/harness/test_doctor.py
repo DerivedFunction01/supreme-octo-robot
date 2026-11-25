@@ -437,9 +437,10 @@ class TestPlanTodoChecks(unittest.TestCase):
             [])
 
     def test_as_is_closeout_contradiction_still_fires(self):
-        # The posture downgrades plan-status only: the
-        # exception file's exact shape still produces
-        # its plan-closeout finding, alone.
+        # The posture downgrades plan-status and
+        # plan-estimate: the exception file's exact
+        # shape still produces its plan-closeout
+        # finding, alone.
         write(self.plans / "finished"
               / "2026-01-20-vocabulary.md",
               "# Vocabulary\n\nStatus: planned,\n")
@@ -452,12 +453,17 @@ class TestPlanTodoChecks(unittest.TestCase):
 
     def test_clean_tree_has_no_findings(self):
         write(self.plans / "2026-01-07-plan.md",
-              "# Plan\n\nStatus: draft\n\n## Subplans\n\n"
+              "# Plan\n\nStatus: draft\n"
+              "\n"
+              "## Subplans\n\n"
               "- `finished/2026-01-07-child.md` — filed\n")
         write(self.plans / "finished" / "2026-01-07-child.md",
-              "# Child\n\nStatus: complete\n")
+              "# Child\n\nStatus: complete\n"
+              "")
         bundle = self.plans / "2026-01-08-work"
-        write(bundle / "plan.md", "# Work\n\nStatus: draft\n")
+        write(bundle / "plan.md",
+              "# Work\n\nStatus: draft\n"
+              "")
         write(bundle / "todos" / "a.md",
               todo_text("t-AAAAAAAAAA",
                         plan=".plans/2026-01-07-plan.md"))
@@ -570,7 +576,9 @@ class TestRunPost(unittest.TestCase):
         self.plans = self.root / ".plans"
         self.plans.mkdir(parents=True)
         write(self.plans / "2026-01-01-bare.md",
-              "# Bare\n\n## Objective\n\nNo status.\n")
+              "# Bare\n\n"
+              "\n"
+              "## Objective\n\nNo status.\n")
         self.project = make_project(self.root)
         self.state = self.root / "state" / "doctor.json"
         self.msg_db = self.root / "state" / "messages.db"

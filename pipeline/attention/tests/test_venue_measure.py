@@ -426,6 +426,7 @@ fanout=single lane — the contract the rest read
 step=2
 todos=lane-a|lane-b
 requires=foundation
+est=45m
 fanout=two lanes over the landed contract
 -->
 
@@ -457,6 +458,11 @@ class FrontierComparison(unittest.TestCase):
         self.assertEqual(steps[1]["requires"], ["foundation"])
         self.assertIsNotNone(steps[1]["fanout"])
         self.assertIsNotNone(steps[2]["serial"])
+        # The est field rides the block: declared where
+        # the block declares one, None where it
+        # declares none.
+        self.assertEqual(steps[1]["est"], "45m")
+        self.assertIsNone(steps[0]["est"])
 
     def test_shortfall_and_serial_exception(self):
         steps = venue.parse_step_blocks(PLAN_TEXT)
