@@ -8,6 +8,21 @@ if [ -f /run/secrets/authorized_keys ]; then
   chmod 600 "$AGENT_HOME/.ssh/authorized_keys"
   chown agent:agent "$AGENT_HOME/.ssh/authorized_keys"
 fi
+# GitHub clone auth is provisioned state, restored on every start:
+# the instance's key and the pinned host keys are mounted read-only
+# at /run/secrets (setup.sh places them in the instance folder),
+# and the agent's git config is rewritten to match — a container
+# rebuild never strands jobs without clone auth.
+if [ -s /run/secrets/id_github ] && [ -f /run/secrets/known_hosts_github ]; then
+  AGENT_HOME="$(getent passwd agent | cut -d: -f6)"
+  cp /run/secrets/id_github "$AGENT_HOME/.ssh/id_github"
+  cp /run/secrets/known_hosts_github "$AGENT_HOME/.ssh/known_hosts_github"
+  chmod 600 "$AGENT_HOME/.ssh/id_github"
+  chmod 644 "$AGENT_HOME/.ssh/known_hosts_github"
+  chown agent:agent "$AGENT_HOME/.ssh/id_github" "$AGENT_HOME/.ssh/known_hosts_github"
+  sudo -u agent git config --global url."git@github.com:".insteadOf "https://github.com/"
+  sudo -u agent git config --global core.sshCommand "ssh -i $AGENT_HOME/.ssh/id_github -o UserKnownHostsFile=$AGENT_HOME/.ssh/known_hosts_github -o StrictHostKeyChecking=yes"
+fi
 # Persist SSH host keys in the ssh-host-keys volume so a container
 # recreate does not change the host key and break known_hosts.
 mkdir -p /var/run/sshd /workspace /etc/ssh/host-keys-store

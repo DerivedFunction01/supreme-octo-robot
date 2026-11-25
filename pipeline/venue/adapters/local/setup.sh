@@ -23,6 +23,11 @@
 #   --workspace-gb N      workspace image size   (default 96)
 #   --total-gb N          total disk budget      (default 128)
 #   --authorized-key KEY  one SSH public key line for authorized_keys
+#   --github-key-file F   private key file for GitHub clones from
+#                         inside the container; copied into the
+#                         instance at mode 600 and planted by the
+#                         entrypoint on every start (preserved on
+#                         re-runs, like the auth key)
 #   --skip-mount          do not create/mount the workspace image
 #   --skip-docker         generate files only; do not build or start
 #   --yes                 never prompt (missing authkey is an error)
@@ -34,7 +39,7 @@ TARGET="${HOME}/agent-workspace"
 VENUE_NAME="${TS_HOSTNAME:-}"
 AUTHKEY="${TS_AUTHKEY:-}"
 CPUS=4; MEM=8g; WORKSPACE_GB=96; TOTAL_GB=128
-AUTH_KEY_LINE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
+AUTH_KEY_LINE=""; GH_KEY_FILE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,6 +51,7 @@ while [ $# -gt 0 ]; do
     --workspace-gb) WORKSPACE_GB="$2"; shift 2 ;;
     --total-gb) TOTAL_GB="$2"; shift 2 ;;
     --authorized-key) AUTH_KEY_LINE="$2"; shift 2 ;;
+    --github-key-file) GH_KEY_FILE="$2"; shift 2 ;;
     --skip-mount) SKIP_MOUNT=1; shift ;;
     --skip-docker) SKIP_DOCKER=1; shift ;;
     --yes) ASSUME_YES=1; shift ;;
@@ -80,7 +86,7 @@ fi
 
 echo "==> target $TARGET (name=$VENUE_NAME cpus=$CPUS mem=$MEM workspace=${WORKSPACE_GB}G total=${TOTAL_GB}G)"
 mkdir -p "$TARGET/workspace"
-for f in Dockerfile docker-compose.yml entrypoint.sh disk-guard.sh .dockerignore .gitignore crontab.example; do
+for f in Dockerfile docker-compose.yml entrypoint.sh disk-guard.sh .dockerignore .gitignore crontab.example known_hosts_github; do
   cp "$TEMPLATE/$f" "$TARGET/$f"
 done
 chmod +x "$TARGET/entrypoint.sh" "$TARGET/disk-guard.sh"
@@ -96,6 +102,14 @@ chmod +x "$TARGET/entrypoint.sh" "$TARGET/disk-guard.sh"
 } > "$TARGET/.env"
 chmod 600 "$TARGET/.env"
 [ -n "$AUTH_KEY_LINE" ] && printf '%s\n' "$AUTH_KEY_LINE" > "$TARGET/authorized_keys"
+# The GitHub clone key is instance state beside authorized_keys:
+# given once via --github-key-file, preserved on re-runs (setup
+# never removes it), and planted into the container by the
+# entrypoint on every start.
+if [ -n "$GH_KEY_FILE" ]; then
+  cp "$GH_KEY_FILE" "$TARGET/id_github"
+  chmod 600 "$TARGET/id_github"
+fi
 
 # Workspace hard cap: fixed-size ext4 image, loop-mounted.
 if [ "$SKIP_MOUNT" = 0 ]; then

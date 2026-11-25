@@ -154,6 +154,11 @@ Plan of what the script does:
    `.env` (key + limits + derived guard thresholds) at mode 600
    and `authorized_keys`. A re-run preserves an existing `.env`
    key — rotation is an explicit `--authkey`, never a side effect.
+   The GitHub clone key rides the same way: `--github-key-file`
+   copies it into the instance as `id_github` (mode 600, preserved
+   on re-runs), the template carries the pinned `known_hosts_github`,
+   and the entrypoint plants both into the agent's `.ssh` and git
+   config on every container start.
 3. Creates the workspace image at the requested size, mounts it,
    and adds the `/etc/fstab` remount line if absent.
 4. Installs the disk-guard cron idempotently.
@@ -191,6 +196,26 @@ docker compose down             # stop and remove the containers and network
   running (unreachable, but its state is untouched).
 - Reset all scratch: `docker compose down && docker compose up -d`
   (what survives is listed under Containment).
+
+### Rebuilds — what is restored, what is lost
+
+A rebuild (setup re-run, image rebuild, container recreate) is
+invisible to jobs by construction:
+
+- **Restored by provisioning:** the toolchain and the Chromium OS
+  libraries (the image), the SSH authorized keys and the GitHub
+  clone plant — key, pinned host keys, git config (the entrypoint,
+  from the instance folder, on every start), the SSH host keys
+  (their volume), the tailnet identity (the tailscale-state
+  volume), and the workspace (its disk image).
+- **Lost, by accepted disposition:** the rest of the container
+  filesystem — including `~/runs` with any run outputs not yet
+  collected, and anything installed by hand inside the container.
+  Host-side run records survive a rebuild; work whose outputs
+  were not collected is re-fired by its owning lane from those
+  records. Run outputs are regenerable, so they are not carried
+  across rebuilds — a job that must survive a rebuild writes to
+  `/workspace`.
 
 ## Setup (host, in WSL) — manual fallback, what the script does
 

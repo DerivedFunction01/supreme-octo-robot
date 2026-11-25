@@ -35,6 +35,8 @@ services:
     volumes:
       - ./workspace:/workspace
       - ./authorized_keys:/run/secrets/authorized_keys:ro
+      - ./id_github:/run/secrets/id_github:ro
+      - ./known_hosts_github:/run/secrets/known_hosts_github:ro
       - ssh-host-keys:/etc/ssh/host-keys-store
     healthcheck:
       test: ["CMD-SHELL", "nc -z 127.0.0.1 22"]
