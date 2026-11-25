@@ -31,6 +31,20 @@ def load_claims(runs: Path):
     foundation.REPO = REPO
     foundation.RUNS = runs
     foundation.now = lambda: STARTED
+
+    def _epoch(value):
+        # The production foundation's epoch, mirrored: a
+        # served stamp -> epoch seconds, a missing or
+        # malformed stamp -> None (an honest unknown). The
+        # claim-deadline paths claims.py grew import it; the
+        # stub that predates them never grew it back, and
+        # every test in this file died at the load.
+        try:
+            return datetime.fromisoformat(str(value)).timestamp()
+        except (TypeError, ValueError):
+            return None
+
+    foundation.epoch = _epoch
     foundation.VENUE = "test-venue"
     foundation.staged_write = lambda path, data: Path(path).write_bytes(data)
     sys.modules["runner_claims_unit.foundation"] = foundation

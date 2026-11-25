@@ -212,7 +212,14 @@ def test_prepare_branch_addresses_the_run_dir(tmp_path):
     src.write_bytes(b"#!/usr/bin/env bash\necho base clone\n")
     probe_ok = json.dumps(
         {"size": src.stat().st_size, "sha256": hashlib.sha256(src.read_bytes()).hexdigest()}) + "\n"
-    colab = ScriptedColab([("stdout", probe_ok), ("stdout", f"base clone at {SHA} tree abc\n")])
+    # prepare_branch verifies the session's git plant before
+    # the substrate upload (verify_git_plant): the plant
+    # probe's exec is the drive's first, and its verdict is
+    # the {"failed": [...]} form. The script predates the
+    # plant gate — the upload-verify answer landed in the
+    # plant probe's slot and read as a malformed verdict.
+    plant_ok = json.dumps({"failed": [], "greeting": "Hi x! You have successfully authenticated"}) + "\n"
+    colab = ScriptedColab([("stdout", plant_ok), ("stdout", probe_ok), ("stdout", f"base clone at {SHA} tree abc\n")])
     launch, _journal = load_launch(tmp_path, colab)
     branch = {"kind": "branch", "repo": "r", "branch": "b", "sha": SHA}
     err, info = launch.prepare_branch("sess", branch, "https://example.invalid/r.git", "dest", "run-1")

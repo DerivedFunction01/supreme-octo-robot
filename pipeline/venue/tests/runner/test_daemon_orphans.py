@@ -67,6 +67,22 @@ def load_sweep(runs: Path, var: Path, live: set):
     foundation.now = lambda: "2026-11-23T00:00:00+00:00"
     foundation.staged_write = lambda path, data: Path(path).write_bytes(data)
     foundation.epoch = lambda v: datetime.fromisoformat(str(v)).timestamp() if v else None
+
+    def _json_object_from_output(stdout):
+        # The production helper's shape, mirrored (sync/cli.py
+        # via the foundation's re-export): the JSON object
+        # starting at the output's first '{', exactly one
+        # value, trailing chatter ignored; ValueError when no
+        # complete object is present. reader.py — loaded in
+        # this chain through sweep.py — imports it from the
+        # foundation; the stub never carried it, and every
+        # test in this file died at the load.
+        data, _end = json.JSONDecoder().raw_decode(stdout[stdout.index("{"):])
+        if not isinstance(data, dict):
+            raise ValueError("CLI output's first JSON value is not an object")
+        return data
+
+    foundation.json_object_from_output = _json_object_from_output
     foundation.colab = None
     foundation.lease = _Lease(live)
     sys.modules["runner_sweep_unit.foundation"] = foundation
