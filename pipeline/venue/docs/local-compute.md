@@ -171,10 +171,10 @@ parses).
 ## Operate — start, stop, status
 
 Every command runs on the host, in WSL, from the instance folder
-(the `--target` chosen at setup; default `~/agent-workspace`):
+(the `--target` chosen at setup; default `$HOME/agent-workspace`):
 
 ```bash
-cd ~/agent-workspace
+cd "$HOME/agent-workspace"
 docker compose up -d            # start both services
 docker compose up -d --build    # start, rebuilding after a template change
 docker compose ps               # status: both containers
