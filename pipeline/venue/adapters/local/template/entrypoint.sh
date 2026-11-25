@@ -19,4 +19,13 @@ else
 fi
 chmod 600 /etc/ssh/ssh_host_*_key 2>/dev/null || true
 chown agent:agent /workspace || true
+# Venue clients connect in parallel bursts (the local sshd admits
+# concurrent connections, and each dispatch/poll is its own short
+# connection through a ~1-2 s proxy CONNECT, so the unauthenticated
+# window is long). The stock MaxStartups 10:30:100 drops new
+# connections past 10 concurrent startups — clients die in banner /
+# kex exchange, intermittently, exactly under multi-lane load.
+# Raise the startup window to the venue's real concurrency.
+mkdir -p /etc/ssh/sshd_config.d
+printf 'MaxStartups 30:50:200\n' > /etc/ssh/sshd_config.d/60-venue-maxstartups.conf
 exec /usr/sbin/sshd -D -e
