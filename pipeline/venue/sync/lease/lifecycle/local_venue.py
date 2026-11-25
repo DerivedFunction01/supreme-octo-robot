@@ -35,12 +35,28 @@ start command once and check again — no external service,
 watchdog, or operator step owns the transport's lifecycle.
 Adding a machine is its target entry (its own port and start
 command) plus its shape binding, never a code change.
+
+A forwarder target whose credential can expire mid-service
+(the runtime proxy issues a fresh credential per shell, with
+a variable lifetime) declares it in two more fields: `fwd_pin`
+(the pin file the forwarder re-reads on every CONNECT) and
+`fwd_dest` ([host, port] the CONNECT must reach). For such a
+target, revival is tunnel-shaped, not port-shaped: a port
+that answers with no SSH banner behind it is a forwarder
+holding a dead credential — it is killed and relaunched —
+and every healthy ensure restocks the pin from the calling
+process's own credential, but only with a value that has
+just CONNECT-verified against `fwd_dest`: an empty or
+unverified value never overwrites a live pin.
 """
 
+import base64
+import os
 import re
 import socket
 import subprocess
 import time
+import urllib.parse
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -160,6 +176,143 @@ def _launch_start(target: dict) -> bool:
         return False
 
 
+# The runtime proxy's tailnet route port: the forwarder's
+# CONNECTs go here, and a candidate credential verifies here.
+_PROXY_TAILNET_PORT = 3130
+_FORWARDER_MARK = "local_compute_fwd"
+
+
+def _fwd_pin_path(target: dict) -> Path | None:
+    pin = target.get("fwd_pin")
+    return Path(pin) if isinstance(pin, str) and pin else None
+
+
+def _fwd_dest(target: dict) -> tuple[str, int] | None:
+    dest = target.get("fwd_dest")
+    if isinstance(dest, list) and len(dest) == 2 and isinstance(dest[0], str) and dest[0]:
+        try:
+            return dest[0], int(dest[1])
+        except (TypeError, ValueError):
+            return None
+    return None
+
+
+def _pin_value(pin: Path) -> str:
+    try:
+        for line in pin.read_text().splitlines():
+            line = line.strip()
+            if line.startswith("HTTPS_PROXY="):
+                return line.split("=", 1)[1].strip().strip('"').strip("'")
+    except OSError:
+        pass
+    return ""
+
+
+def _connect_verifies(proxy_url: str, dest: tuple[str, int]) -> bool:
+    """Whether one proxy credential CONNECTs to the forwarder's
+    destination right now: a 200 from the proxy's tailnet route,
+    nothing less. The credential itself is never logged."""
+    u = urllib.parse.urlparse(proxy_url or "")
+    if not u.username or not u.hostname:
+        return False
+    cred = f"{u.username}:{u.password or ''}"
+    try:
+        remote = socket.create_connection((u.hostname, _PROXY_TAILNET_PORT), timeout=10)
+    except OSError:
+        return False
+    try:
+        auth = base64.b64encode(cred.encode()).decode()
+        remote.sendall(
+            f"CONNECT {dest[0]}:{dest[1]} HTTP/1.1\r\nHost: {dest[0]}:{dest[1]}\r\n"
+            f"Proxy-Authorization: Basic {auth}\r\n\r\n".encode()
+        )
+        resp = b""
+        while b"\r\n\r\n" not in resp:
+            chunk = remote.recv(4096)
+            if not chunk:
+                return False
+            resp += chunk
+        return b" 200 " in resp.split(b"\r\n")[0]
+    except OSError:
+        return False
+    finally:
+        remote.close()
+
+
+def refresh_pin(target: dict, env: dict | None = None) -> bool:
+    """Restock a forwarder target's pin from the calling
+    process's own HTTPS_PROXY — the refresh-on-dispatch writer.
+    A value lands only after it CONNECT-verifies against the
+    target's `fwd_dest`; an empty or unverified value leaves
+    the pin untouched, so a shell whose environment carries no
+    credential (the scheduler server's, for one) can never
+    blank a live pin. True when the pin already holds or now
+    holds the caller's verified credential."""
+    pin = _fwd_pin_path(target)
+    dest = _fwd_dest(target)
+    if pin is None or dest is None:
+        return False
+    candidate = (os.environ if env is None else env).get("HTTPS_PROXY", "")
+    if not candidate:
+        return False
+    if candidate == _pin_value(pin):
+        return True
+    if not _connect_verifies(candidate, dest):
+        return False
+    try:
+        lines = [ln for ln in pin.read_text().splitlines() if not ln.strip().startswith("HTTPS_PROXY=")] if pin.exists() else []
+    except OSError:
+        lines = []
+    lines.append(f"HTTPS_PROXY={candidate}")
+    staged = pin.with_name(pin.name + f".tmp-{os.getpid()}")
+    try:
+        staged.write_text("\n".join(lines) + "\n")
+        os.chmod(staged, 0o600)
+        os.replace(staged, pin)
+    except OSError:
+        return False
+    return True
+
+
+def _tunnel_banner_ok(target: dict) -> bool:
+    """Whether the tunnel behind the target's port actually
+    serves: an SSH banner read through it. A forwarder holding
+    a dead credential accepts the TCP connection and then
+    resets or hangs — the port answers, the banner never
+    comes — so for a forwarder target this, not the bare port,
+    is the liveness reading."""
+    try:
+        with socket.create_connection((target["host"], int(target.get("port") or 22)), timeout=5) as s:
+            s.settimeout(5)
+            return s.recv(64).startswith(b"SSH-")
+    except OSError:
+        return False
+
+
+def _kill_forwarders() -> int:
+    """SIGTERM every running forwarder process (matched by the
+    adapter script's name in its cmdline; never this process).
+    The stale half of a revival: a forwarder whose credential
+    died cannot heal in place when every candidate it holds is
+    dead, so it makes room for the relaunch."""
+    killed = 0
+    try:
+        entries = list(Path("/proc").glob("[0-9]*/cmdline"))
+    except OSError:
+        return 0
+    for entry in entries:
+        try:
+            pid = int(entry.parent.name)
+            if pid == os.getpid():
+                continue
+            if _FORWARDER_MARK.encode() in entry.read_bytes():
+                os.kill(pid, 15)
+                killed += 1
+        except (OSError, ValueError):
+            continue
+    return killed
+
+
 def ensure_transport(target: dict | None) -> bool:
     """Whether the target's transport answers, starting it
     first when it is down. Only a loopback target carrying a
@@ -168,19 +321,42 @@ def ensure_transport(target: dict | None) -> bool:
     is the operator's own networking — reported as it answers,
     never launched at. Success is the port answering, not the
     launched process surviving (a second launcher losing the
-    bind race still leaves the transport up)."""
+    bind race still leaves the transport up).
+
+    A forwarder target (one carrying `fwd_pin`/`fwd_dest`) is
+    held to the tunnel-shaped bar instead: the port answering
+    is not enough — the SSH banner must read through the
+    tunnel. Port up and banner down is a stale forwarder
+    holding a dead credential: it is killed and relaunched.
+    Every healthy ensure restocks the pin via refresh_pin."""
     if not target:
         return False
+    fwd = _fwd_pin_path(target) is not None and _fwd_dest(target) is not None
+    managed = target.get("host") in _LOOPBACK_HOSTS
+    if fwd:
+        # Restock first, from this process's own credential:
+        # the refresh verifies directly against the proxy, so
+        # it can heal the pin even while the tunnel is down —
+        # and a healed pin can heal the running forwarder on
+        # its next CONNECT, no relaunch needed.
+        refresh_pin(target)
     if _port_answers(target):
-        return True
-    if target.get("host") not in _LOOPBACK_HOSTS:
+        if not fwd:
+            return True
+        if _tunnel_banner_ok(target) or _tunnel_banner_ok(target):
+            return True
+        if not managed:
+            return False
+        _kill_forwarders()
+    elif not managed:
         return False
     if not _launch_start(target):
         return False
     deadline = time.monotonic() + _START_WAIT_S
     while time.monotonic() < deadline:
         if _port_answers(target):
-            return True
+            if not fwd or _tunnel_banner_ok(target):
+                return True
         time.sleep(0.5)
     return False
 
