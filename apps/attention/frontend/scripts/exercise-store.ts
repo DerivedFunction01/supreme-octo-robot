@@ -1,6 +1,6 @@
 // Headless exercise of the mock store: the full decision
 // loop and every other stateful control, driven against a
-// manual scenario clock. Run: npm run exercise (bun).
+// manual scenario clock. Run: npm run exercise (tsx).
 // Exit 1 on any failed assertion.
 
 import { createMockAttentionStore, manualClock } from "../src/attention/store";
