@@ -34,7 +34,8 @@ _WORD_RE = re.compile(r"[A-Za-z][A-Za-z'-]*")
 _EST_LINE_RE = re.compile(r"^\s*est:\s*(.*)$")
 _DURATION_LEAD_RE = re.compile(
     r"^[\s,+]*(?:\d+(?:\.\d+)?\s*"
-    r"(?:hours?|hrs?|h|minutes?|mins?|m)\b[\s,+]*)+")
+    r"(?:hours?|hrs?|h|minutes?|mins?|m)(?![A-Za-z])"
+    r"[\s,+]*)+")
 
 
 def _step_prose(step):

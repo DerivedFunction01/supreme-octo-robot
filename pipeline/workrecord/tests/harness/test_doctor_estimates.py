@@ -166,6 +166,26 @@ class TestPlanEstimateChecks(unittest.TestCase):
         self.assertIn("carries no duration",
                       found[0]["detail"])
 
+    def test_estimate_combined_form_overrun(self):
+        # A combined form (1h30m) reads at its true
+        # length (90 minutes, past the threshold):
+        # step 1's prose names no long-duration
+        # class, so the unclassed-overrun finding
+        # fires. Read at only its trailing token
+        # (30m) it would sit at the threshold and
+        # post nothing.
+        write(self.plans / "2026-01-23-combined.md",
+              self.ESTIMATE_PLAN.replace(
+                  "est=15m", "est=1h30m").replace(
+                  "est: 15m", "est: 1h30m"))
+        found = [f for f in self.findings()
+                 if f["check"] == "plan-estimate"]
+        self.assertEqual(len(found), 1)
+        self.assertEqual(found[0]["subject"],
+                         "2026-01-23-combined.md step 1")
+        self.assertIn("names no long-duration class",
+                      found[0]["detail"])
+
     def test_estimate_as_is_discarded(self):
         # A pre-amendment corpus (registration: as-is)
         # is flagged by the computation, not failed by

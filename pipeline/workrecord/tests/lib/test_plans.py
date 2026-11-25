@@ -269,6 +269,22 @@ class TestConformingFixture(unittest.TestCase):
         self.assertIsNone(blocks[0]["serial"])
         self.assertEqual(parser.extract_step_blocks(""), [])
 
+    def test_first_duration_combined_form(self):
+        # A combined form (1h30m) reads its leading
+        # token at full length: the unit ends where
+        # no letter follows, so the hour token is
+        # not skipped for the trailing minutes.
+        self.assertEqual(
+            parser.first_duration_minutes("1h30m"), 60)
+        self.assertEqual(
+            parser.first_duration_minutes("2h15m"), 120)
+        self.assertEqual(
+            parser.first_duration_minutes("45m"), 45)
+        self.assertEqual(
+            parser.first_duration_minutes("15mins"), 15)
+        self.assertIsNone(
+            parser.first_duration_minutes("soon"))
+
     def test_steps_carry_all_labels(self):
         doc = self.doc
         self.assertEqual(doc["step_count"], 2)

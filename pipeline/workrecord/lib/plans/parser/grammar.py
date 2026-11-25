@@ -72,8 +72,14 @@ _QUESTION_FIELDS = {"id", "type", "options", "labels",
                     "recommended", "answer"}
 _NUMBERED_ITEM_RE = re.compile(r"^(\d+)[.)]\s+(.*)$")
 _STEP_BLOCK_RE = re.compile(r"<!--\s*wb-step\b(.*?)-->", re.DOTALL)
+# The unit ends where no letter follows, not at a
+# word boundary: in a combined form (1h30m) the
+# hour unit is followed by a digit, a word boundary
+# never occurs there, and a \b-terminated unit
+# silently reads only the trailing token (30m).
 _DURATION_TOKEN_RE = re.compile(
-    r"(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b")
+    r"(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)"
+    r"(?![A-Za-z])")
 
 # The estimate discipline's overrun threshold and its
 # closed set of long-duration classes: the synced mirror
