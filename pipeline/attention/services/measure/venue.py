@@ -460,14 +460,14 @@ def collect(state: dict, settings: Settings, now: datetime) -> bool:
     measured = [
         row
         for row in active
-        if row.get("venue") == "colab" or row["slug"] in terminal_slugs
+        if row.get("venue") in ("colab", "local") or row["slug"] in terminal_slugs
     ]
     snapshot: dict = {}
     for row in measured:
         slug = row["slug"]
         attributed = [r for r in records if attribute_slug(r["caller"], active) == slug]
         facts: dict = {}
-        if row.get("venue") == "colab":
+        if row.get("venue") in ("colab", "local"):
             contract = registry.staffing_contract_for(slug)
             window = (
                 contract["evidence_window_minutes"]

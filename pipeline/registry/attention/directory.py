@@ -9,7 +9,7 @@ on a handler upsert, a plain slug + label on a programme
 upsert, omitted fields preserved from the existing entry,
 the named defaults where no entry exists, ui_surface and
 handler retired coerced to bool, a programme's venue in
-{colab, none}. Contract 01 §9 annex carries the shapes;
+{colab, local, none}. Contract 01 §9 annex carries the shapes;
 the pin carries the semantics, and where the S0 schema's
 guesses differ from the pin (ui_surface typed "string"),
 the pin wins — named in the S7 report.
@@ -91,8 +91,8 @@ def _programme_problems(row, *, stored):
             or band["min"] > band["max"]):
         problems.append("staffing_band must be "
                         "{min, max} with min <= max")
-    if row.get("venue") not in (None, "colab", "none"):
-        problems.append("venue must be colab or none")
+    if row.get("venue") not in (None, "colab", "local", "none"):
+        problems.append("venue must be colab, local or none")
     if stored:
         for field in ("settled", "commissions",
                       "worktree_roots"):

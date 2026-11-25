@@ -142,7 +142,7 @@ REQUIRED_FIELDS = (
     "retired",
 )
 
-_VENUES = ("colab", "none")
+_VENUES = ("colab", "local", "none")
 _ROUTE_KINDS = ("chat", "todo")
 _CONTRACT_FIELDS = (
     "unit",
@@ -455,7 +455,7 @@ _SEED = (
         "cadence_minutes": 15,
         "staffing_band": None,
         "escalation_hours": 1,
-        "venue": "colab",
+        "venue": "local",
         "coordinator_route": {"sender": "wb", "kind": "chat", "handle": "@xbrl"},
         "measure_classes": [
             "idle",
@@ -473,15 +473,20 @@ _SEED = (
         # the coordinator's standing declaration,
         # seeded in the registry form so it amends by
         # commit with the contract, as the staffable
-        # queue does. Seeded from the coordinator's
-        # durable declaration record as it stood at
-        # seed time: expected count 20. The lane venue
-        # stem is reconciled to the live fleet by the
-        # declaration-reconcile pass (it named an
-        # expired Colab session until the fleet moved
-        # to the local venues); the count and lane set
-        # re-transcribe from the coordinator's current
-        # declaration when it is next posted. A lane's
+        # queue does. Transcribed from coordinator
+        # successor III's declaration as posted at
+        # the owner's thread close-out, 2026-11-25:
+        # expected count 11 — ten family lanes and
+        # one formation lane in flight; the 21 family
+        # lanes closed at that close-out and the
+        # spent union v3 formation lane are not
+        # carried. The programme venue is the local
+        # fleet (Colab stood down on an exhausted
+        # monthly budget); per-lane venues ride on
+        # the lane entries themselves. The
+        # declaration-reconcile pass holds this
+        # transcription to the coordinator's posted
+        # declaration and the live fleet. A lane's
         # record file is its own STATE file in the
         # lane home the declaration's termination
         # path names; a lane the declaration names
@@ -491,7 +496,7 @@ _SEED = (
         # datetime where it gives one, else its
         # stated date; an estimate the declaration
         # leaves unstated stays None.
-        "lane_declared_count": 20,
+        "lane_declared_count": 11,
         "lane_declarations": lane_seed.edgar_lane_declarations(),
         "retired": False,
     },

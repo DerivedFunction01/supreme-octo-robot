@@ -19,142 +19,87 @@ def edgar_lane_declarations() -> list[dict]:
     the lane home its termination path names (its
     STATE file is the lane's record), its seat
     where the declaration names one, and its
-    termination condition. Venue is the session
-    stem the declaration declares for every lane.
-    A record path is carried relative to the
-    workspace root — the greenfield-ci tree the
-    lane homes live in — and the collector
+    termination condition. Venue is per lane: the
+    fleet member the declaration names for that
+    lane's work, or "none" where the lane fires no
+    venue work. A record path is carried relative
+    to the workspace root — the greenfield-ci tree
+    the lane homes live in — and the collector
     resolves it against the workspace anchor.
+
+    Current transcription: coordinator successor
+    III's declaration as posted at the owner's
+    thread close-out, 2026-11-25 — eleven lanes in
+    flight (ten family lanes, one formation lane).
+    The lanes closed at that close-out (21 family
+    lanes archived on bar or on exhaustion-grade
+    proven-NOT, and the spent union v3 formation
+    lane) are not carried forward.
     """
-    venue = "local-main"
-    first = "2026-11-23T23:12:00-05:00"
-    amended = "2026-11-24"
+    declared = "2026-11-25"
     register = (
         "Register delivered at greenfield-ci/"
         "{home}/register-*.md with a BUILD-READY or NOT verdict"
     )
-    rows = [
-        # key, label, minutes, declared_at, home, seat, condition
+    # key, label, venue, home — family lanes in
+    # flight. Venue is the fleet member the
+    # declaration names; load-routed lanes carry
+    # the member their recent work rode.
+    families = [
+        ("restructuring", "Restructuring", "local-main", "restructuring"),
+        ("equity-statement", "Equity statement", "local-main", "equity-statement"),
+        ("pension", "Pension", "local-main", "pension"),
         (
-            "segment-cure-continuation",
-            "Segment cure continuation",
-            120,
-            first,
-            "segment-formation",
-            "successor",
+            "stock-comp-rollforward",
+            "Stock comp rollforward",
+            "local-hp",
+            "stock-comp-rollforward",
+        ),
+        ("cash-flow", "Cash flow", "local-main", "cash-flow"),
+        (
+            "goodwill-rollforward",
+            "Goodwill rollforward",
+            "local-hp",
+            "goodwill-rollforward",
+        ),
+        (
+            "shares-purchased",
+            "Shares purchased",
+            "local-main",
+            "shares-purchased",
+        ),
+        ("inventory", "Inventory", "local-main", "inventory"),
+        ("debt-maturity", "Debt maturity", "none", "debt-maturity"),
+        ("lease-maturity", "Lease maturity", "none", "lease-maturity"),
+    ]
+    rows = [
+        (
+            key,
+            label,
+            None,
+            declared,
+            home,
+            None,
+            register.format(home=home),
+            venue,
+        )
+        for key, label, venue, home in families
+    ]
+    rows.append(
+        (
+            "packet-union-formation",
+            "Packet union formation",
+            None,
+            declared,
+            None,
+            "coordinator",
             "Hand-back carrying branch tip SHA + gate verdict; "
             "packet lands at a named SHA",
-        ),
-        (
-            "group-formation-probe",
-            "Group-formation probe",
-            240,
-            first,
-            "group-formation-probe",
-            None,
-            register.format(home="group-formation-probe"),
-        ),
-        (
-            "decomposition-registry",
-            "Decomposition portion registry.py",
-            180,
-            first,
-            None,
-            None,
-            register.format(home="classify-decomposition"),
-        ),
-        (
-            "decomposition-analysis",
-            "Decomposition portion analysis.py",
-            None,
-            amended,
-            None,
-            None,
-            register.format(home="classify-decomposition"),
-        ),
-        (
-            "deferred-tax-s3-pricing",
-            "Deferred_tax S3 pricing",
-            180,
-            first,
-            "dt-s3-pricing",
-            None,
-            register.format(home="dt-s3-pricing"),
-        ),
-        (
-            "inventory-d3-measurement",
-            "Inventory D3 measurement",
-            120,
-            first,
-            "inv-recall",
-            "successor",
-            register.format(home="inv-recall"),
-        ),
-    ]
-    families = [
-        ("income-statement", "Income statement", "is-residual"),
-        ("fair-value", "Fair value", "fair-value-residual"),
-        ("commitments", "Commitments/contingencies", "commitments-residual"),
-        ("lease-maturity", "Lease maturity", "lease-residual"),
-        ("debt-maturity", "Debt maturity", "debt-residual"),
-        ("credit-losses", "Credit losses", "credit-losses-residual"),
-        ("intangibles", "Intangibles", "intangibles-residual"),
-        ("pension", "Pension", "pension-residual"),
-        ("labor-contracts", "Labor contracts", "labor-residual"),
-        ("restructuring", "Restructuring", "restructuring-residual"),
-    ]
-    for stem, label, home in families:
-        rows.append(
-            (
-                f"{stem}-residual-pricing",
-                f"{label} residual pricing",
-                180,
-                amended,
-                home,
-                None,
-                register.format(home=home),
-            )
+            "local-main",
         )
-    rows += [
-        (
-            "firm-concentrated-trio",
-            "Firm-concentrated trio adjudication",
-            180,
-            amended,
-            "firm-concentrated",
-            None,
-            register.format(home="firm-concentrated"),
-        ),
-        (
-            "segment-caption-pricing",
-            "Segment caption pricing",
-            180,
-            amended,
-            "segment-caption",
-            "successor",
-            register.format(home="segment-caption"),
-        ),
-        (
-            "ci-gold-trace-pricing",
-            "CI-gold trace pricing",
-            60,
-            amended,
-            "ci-gold-trace",
-            None,
-            register.format(home="ci-gold-trace"),
-        ),
-        (
-            "w-year-1-micro-cure",
-            "W-YEAR-1 micro-cure",
-            None,
-            amended,
-            None,
-            None,
-            "Closes at its landing",
-        ),
-    ]
+    )
     declarations = []
-    for key, label, minutes, declared_at, home, seat, condition in rows:
+    for key, label, minutes, declared_at, home, seat, condition, venue in rows:
         entry = {
             "key": key,
             "label": label,

@@ -531,8 +531,8 @@ def upsert_programme(state: dict, payload: dict) -> dict:
         or band["min"] > band["max"]
     ):
         errors.append({"field": "staffing_band", "message": "min and max, min <= max"})
-    if payload.get("venue") not in (None, "colab", "none"):
-        errors.append({"field": "venue", "message": "colab or none"})
+    if payload.get("venue") not in (None, "colab", "local", "none"):
+        errors.append({"field": "venue", "message": "colab, local or none"})
     if errors:
         raise Validation("Programme failed validation.", errors)
     existing = next((p for p in state.get("programmes") or [] if p["slug"] == slug), {})
