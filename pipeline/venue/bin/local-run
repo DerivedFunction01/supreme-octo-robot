@@ -7,8 +7,12 @@ A job is a manifest at adapters/local/jobs/<name>/job.json:
 {"script": "run.sh", "caller"?, "shape"?, "timeout_s"?} — the
 script beside the manifest ships to the venue over SSH and runs
 detached in the container under ~/runs/<run_id>/, so a dropped
-connection never kills the job (the venue's own rule: long work
-launches detached and is polled). The run's record is the
+connection never kills the job. Detached launch here is the
+dispatcher's drop-safety form, not a channel constraint: the
+local venue's sshd admits concurrent connections (the
+one-connection-at-a-time property belongs to Colab runtimes),
+and the short control calls (mkdir, upload, launch, each poll
+read) are ordinary synchronous SSH. The run's record is the
 runner's own record shape, written through the runner's record
 machinery with venue "local"; its terminal transition emits the
 runner's one run-terminal event, so the runs portion serves a

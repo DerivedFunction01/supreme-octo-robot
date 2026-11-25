@@ -243,7 +243,9 @@ snippet jobs:
 
 ## Synchronous channel claims
 
-A runtime admits one SSH connection at a time, so a synchronous
+A Colab runtime admits one SSH connection at a time (a property
+of the Colab bridge channel, not of venues generally — a local
+venue's sshd admits concurrent connections), so a synchronous
 `colab-sh` / `colab-fs` call holds the channel for its whole
 duration. Synchronous use is therefore a claim, not a default
 (design: the sync-channel design):

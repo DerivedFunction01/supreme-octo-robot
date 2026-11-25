@@ -38,6 +38,16 @@ host (e.g. `$HOME/muse-compute/` in WSL), fill it in, `docker compose up -d`.
   simply unavailable — a probe failure, never an error, a spend
   event, or a lease breach. Liveness probe: tailnet peer present +
   SSH banner from the workspace container.
+- **Concurrent SSH.** SSH terminates in the workspace container's
+  OpenSSH sshd, which admits concurrent connections (measured:
+  4 parallel connections with 5 s sleeps finished in 12 s wall,
+  all exit 0) — the one-connection-at-a-time property belongs to
+  Colab runtimes and their bridge channel, not to this venue.
+  Each connection pays roughly 1–2 s of CONNECT setup through the
+  proxy. `bin/local-run` still launches jobs detached (nohup +
+  exit file) and polls their records: drop-safety by dispatcher
+  design, so a lost client connection never kills a job — never
+  a channel constraint.
 - Registration is a test of the venue layer's genericity: it should
   register through configuration and records, with no massive code
   change. Any surface that cannot name `local` beside `colab` is
