@@ -29,9 +29,9 @@ import {
 
 function SweepChip({ sweep }: { sweep: "swept" | "degraded" | "manifest-only" }) {
   const map = {
-    swept: { label: "Swept", bg: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)", fg: "var(--wb-status-implemented-text)", dot: "var(--wb-okabe-bluish-green)" },
-    degraded: { label: "Degraded", bg: "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)", fg: "var(--wb-status-stale-text)", dot: "var(--wb-okabe-orange)" },
-    "manifest-only": { label: "Manifest only", bg: "var(--wb-surface-sunken)", fg: "var(--wb-content-secondary)", dot: "var(--wb-content-muted)" },
+    swept: { label: "Swept", bg: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)", fg: "var(--ui-status-implemented-text)", dot: "var(--ui-okabe-bluish-green)" },
+    degraded: { label: "Degraded", bg: "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)", fg: "var(--ui-status-stale-text)", dot: "var(--ui-okabe-orange)" },
+    "manifest-only": { label: "Manifest only", bg: "var(--ui-surface-sunken)", fg: "var(--ui-content-secondary)", dot: "var(--ui-content-muted)" },
   } as const;
   const s = map[sweep];
   return (
@@ -48,7 +48,7 @@ function SweepChip({ sweep }: { sweep: "swept" | "degraded" | "manifest-only" })
 function DiffFiles({ files }: { files: DiffFile[] }) {
   if (files.length === 0) {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         No file changes in this view.
       </p>
     );
@@ -60,17 +60,17 @@ function DiffFiles({ files }: { files: DiffFile[] }) {
           key={f.path}
           className="overflow-hidden"
           style={{
-            backgroundColor: "var(--wb-surface-2)",
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-lg)",
+            backgroundColor: "var(--ui-surface-2)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-lg)",
           }}
         >
           <div
             className="flex items-center gap-2 px-3.5 py-2 font-mono text-xs font-bold"
-            style={{ borderBottom: "1px solid var(--wb-border-default)" }}
+            style={{ borderBottom: "1px solid var(--ui-border-default)" }}
           >
             <span className="min-w-0 truncate">{f.path}</span>
-            <span className="ml-auto shrink-0" style={{ color: "var(--wb-content-secondary)" }}>
+            <span className="ml-auto shrink-0" style={{ color: "var(--ui-content-secondary)" }}>
               +{f.adds} · −{f.dels}
             </span>
           </div>
@@ -81,9 +81,9 @@ function DiffFiles({ files }: { files: DiffFile[] }) {
                 style={{
                   backgroundColor:
                     l.kind === "add"
-                      ? "color-mix(in srgb, var(--wb-okabe-bluish-green) 16%, transparent)"
+                      ? "color-mix(in srgb, var(--ui-okabe-bluish-green) 16%, transparent)"
                       : l.kind === "del"
-                        ? "color-mix(in srgb, var(--wb-okabe-vermilion) 14%, transparent)"
+                        ? "color-mix(in srgb, var(--ui-okabe-vermilion) 14%, transparent)"
                         : undefined,
                   borderRadius: 4,
                   padding: "0 4px",
@@ -115,11 +115,11 @@ function DiffPanel({ repoSlug }: { repoSlug: string }) {
           onChange={(v) => setMode(v as DiffMode)}
         />
       </div>
-      <p className="mb-3 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="mb-3 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
         {diff.label}
       </p>
       {diff.note ? (
-        <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           {diff.note}
         </p>
       ) : null}
@@ -138,8 +138,8 @@ function DiffPanel({ repoSlug }: { repoSlug: string }) {
 }
 
 const repoInputStyle: React.CSSProperties = {
-  backgroundColor: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
+  backgroundColor: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
   borderRadius: 9,
   padding: "6px 10px",
   fontSize: 13.5,
@@ -173,7 +173,7 @@ export function RepoDetail({ repoSlug }: { repoSlug: string }) {
         type="button"
         onClick={() => navigate({ section: "home" })}
         className="mb-3 text-sm font-semibold"
-        style={{ color: "var(--wb-accent)" }}
+        style={{ color: "var(--ui-accent)" }}
       >
         ‹ Projects
       </button>
@@ -216,11 +216,11 @@ export function RepoDetail({ repoSlug }: { repoSlug: string }) {
                 <span
                   className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
                   style={{
-                    backgroundColor: "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)",
-                    color: "var(--wb-status-stale-text)",
+                    backgroundColor: "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)",
+                    color: "var(--ui-status-stale-text)",
                   }}
                 >
-                  <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--wb-okabe-orange)" }} />
+                  <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--ui-okabe-orange)" }} />
                   {repo.modifiedCount} files modified
                 </span>
               ) : (
@@ -247,8 +247,8 @@ export function RepoDetail({ repoSlug }: { repoSlug: string }) {
                   <span
                     className="ml-auto inline-flex rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
                     style={{
-                      backgroundColor: "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)",
-                      color: "var(--wb-status-stale-text)",
+                      backgroundColor: "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)",
+                      color: "var(--ui-status-stale-text)",
                     }}
                   >
                     Dirty · {w.dirty}
@@ -257,8 +257,8 @@ export function RepoDetail({ repoSlug }: { repoSlug: string }) {
                   <span
                     className="ml-auto inline-flex rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
                     style={{
-                      backgroundColor: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-                      color: "var(--wb-status-implemented-text)",
+                      backgroundColor: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+                      color: "var(--ui-status-implemented-text)",
                     }}
                   >
                     Clean

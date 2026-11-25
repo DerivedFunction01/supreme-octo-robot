@@ -17,19 +17,19 @@ import { fmtTimeOfDay } from "../format";
 export type Tone = "ok" | "info" | "warn" | "fail" | "idle";
 
 const TONE_HUE: Record<Tone, string> = {
-  ok: "var(--wb-status-done)",
-  info: "var(--wb-status-canonical)",
-  warn: "var(--wb-status-stale)",
-  fail: "var(--wb-status-hard-gate)",
-  idle: "var(--wb-content-muted)",
+  ok: "var(--ui-status-done)",
+  info: "var(--ui-status-canonical)",
+  warn: "var(--ui-status-stale)",
+  fail: "var(--ui-status-hard-gate)",
+  idle: "var(--ui-content-muted)",
 };
 
 const TONE_TEXT: Record<Tone, string> = {
-  ok: "var(--wb-status-done-text)",
-  info: "var(--wb-status-canonical-text)",
-  warn: "var(--wb-status-stale-text)",
-  fail: "var(--wb-status-hard-gate-text)",
-  idle: "var(--wb-content-secondary)",
+  ok: "var(--ui-status-done-text)",
+  info: "var(--ui-status-canonical-text)",
+  warn: "var(--ui-status-stale-text)",
+  fail: "var(--ui-status-hard-gate-text)",
+  idle: "var(--ui-content-secondary)",
 };
 
 /** Settings-row composition for the kit Toggle: the row
@@ -52,10 +52,10 @@ export function OutcomeChip({
   const style: CSSProperties = {
     backgroundColor:
       tone === "idle"
-        ? "var(--wb-surface-sunken)"
+        ? "var(--ui-surface-sunken)"
         : `color-mix(in srgb, ${TONE_HUE[tone]} 14%, transparent)`,
     color: TONE_TEXT[tone],
-    borderRadius: "var(--wb-chip-radius)",
+    borderRadius: "var(--ui-chip-radius)",
   };
   const inner = (
     <>
@@ -84,7 +84,7 @@ export function OutcomeChip({
         }}
         // The button form is a tap target: 28px tall clears
         // the 24px target bar the static chip's 21px missed.
-        className={`${classes} min-h-[28px] cursor-pointer border-0 focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} min-h-[28px] cursor-pointer border-0 focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)`}
         style={style}
       >
         {inner}
@@ -167,7 +167,7 @@ export function GroupLabel({ children }: { children: ReactNode }) {
   return (
     <div
       className="mt-5 mb-2 ml-[2px] text-xs font-bold tracking-[0.07em] uppercase first:mt-0"
-      style={{ color: "var(--wb-content-secondary)" }}
+      style={{ color: "var(--ui-content-secondary)" }}
     >
       {children}
     </div>
@@ -179,11 +179,11 @@ export function Group({ children }: { children: ReactNode }) {
     <div
       className="overflow-hidden [&>*+*]:border-t"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-lg)",
+        borderRadius: "var(--ui-radius-lg)",
         // [&>*+*] needs the colour too; border-top colour inherits
         // this element's border colour via border-color on children.
       }}
@@ -225,7 +225,7 @@ export function Row({
     <ChevronRight
       size={15}
       className="flex-none"
-      style={{ color: "var(--wb-content-muted)" }}
+      style={{ color: "var(--ui-content-muted)" }}
     />
   ) : null;
   const content = (
@@ -233,7 +233,7 @@ export function Row({
       <div className="flex flex-nowrap items-center gap-3">
         <div
           className="min-w-0 flex-1 truncate text-[14.5px] font-medium"
-          style={{ color: "var(--wb-content-primary)" }}
+          style={{ color: "var(--ui-content-primary)" }}
         >
           {label}
         </div>
@@ -244,7 +244,7 @@ export function Row({
         <div className="flex flex-nowrap items-center gap-2">
           <div
             className="min-w-0 flex-1 truncate text-[12.5px]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {sub}
           </div>
@@ -255,13 +255,13 @@ export function Row({
   );
   const classes =
     "flex min-h-[47px] w-full flex-nowrap items-center gap-3 px-3.5 py-[11px] text-left";
-  const style: CSSProperties = { borderTopColor: "var(--wb-border-default)" };
+  const style: CSSProperties = { borderTopColor: "var(--ui-border-default)" };
   if (onClick) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)`}
         style={style}
       >
         {content}
@@ -283,8 +283,8 @@ export function ServiceTag({ label }: { label: string }) {
     <span
       className="flex-none rounded-[7px] px-[7px] py-[2px] text-[11px] font-bold tracking-[0.05em]"
       style={{
-        color: "var(--wb-content-secondary)",
-        backgroundColor: "var(--wb-surface-sunken)",
+        color: "var(--ui-content-secondary)",
+        backgroundColor: "var(--ui-surface-sunken)",
       }}
     >
       {label}
@@ -309,7 +309,7 @@ export function CompactRow({
     <>
       <span
         className="min-w-0 flex-1 truncate text-[13.5px] font-medium"
-        style={{ color: "var(--wb-content-primary)" }}
+        style={{ color: "var(--ui-content-primary)" }}
       >
         {label}
       </span>
@@ -318,13 +318,13 @@ export function CompactRow({
   );
   const classes =
     "flex min-h-[36px] w-full flex-nowrap items-center gap-3 px-3.5 py-1.5 text-left";
-  const style: CSSProperties = { borderTopColor: "var(--wb-border-default)" };
+  const style: CSSProperties = { borderTopColor: "var(--ui-border-default)" };
   if (onClick) {
     return (
       <button
         type="button"
         onClick={onClick}
-        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)`}
         style={style}
       >
         {content}
@@ -355,17 +355,17 @@ export function FactRow({
   return (
     <div
       className="flex min-h-[47px] min-w-0 items-center gap-3 px-3.5 py-[11px] max-[480px]:flex-col max-[480px]:items-stretch max-[480px]:gap-1"
-      style={{ borderTopColor: "var(--wb-border-default)" }}
+      style={{ borderTopColor: "var(--ui-border-default)" }}
     >
       <span
         className="shrink-0 text-[14.5px] font-medium"
-        style={{ color: "var(--wb-content-primary)" }}
+        style={{ color: "var(--ui-content-primary)" }}
       >
         {label}
       </span>
       <span
         className="ml-auto flex min-w-0 items-center gap-2 text-right text-sm [overflow-wrap:anywhere] max-[480px]:ml-0 max-[480px]:text-left"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {children}
       </span>
@@ -385,11 +385,11 @@ export function NoticeRow({
       className="mb-[18px] flex items-start gap-[11px] rounded-xl px-3.5 py-3 text-sm"
       style={{
         backgroundColor:
-          "color-mix(in srgb, var(--wb-okabe-orange) 20%, var(--wb-surface-2))",
-        borderColor: "var(--wb-okabe-orange)",
+          "color-mix(in srgb, var(--ui-okabe-orange) 20%, var(--ui-surface-2))",
+        borderColor: "var(--ui-okabe-orange)",
         borderStyle: "solid",
         borderWidth: 1,
-        color: "var(--wb-status-stale-text)",
+        color: "var(--ui-status-stale-text)",
       }}
       role="status"
     >
@@ -414,9 +414,9 @@ export function ActionRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[47px] w-full cursor-pointer items-center px-3.5 py-[11px] text-left hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
+      className="flex min-h-[47px] w-full cursor-pointer items-center px-3.5 py-[11px] text-left hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
       style={{
-        borderTopColor: "var(--wb-border-default)",
+        borderTopColor: "var(--ui-border-default)",
         backgroundColor: "transparent",
         borderWidth: 0,
       }}
@@ -425,8 +425,8 @@ export function ActionRow({
         className="min-w-0 truncate text-[14.5px] font-semibold"
         style={{
           color: danger
-            ? "var(--wb-status-hard-gate-text)"
-            : "var(--wb-accent)",
+            ? "var(--ui-status-hard-gate-text)"
+            : "var(--ui-accent)",
         }}
       >
         {label}
@@ -453,13 +453,13 @@ export function LargeTitle({
     <>
       <h2
         className="sc-largetitle m-0 text-[27px] font-bold tracking-[-0.015em] [overflow-wrap:anywhere]"
-        style={{ color: "var(--wb-content-primary)" }}
+        style={{ color: "var(--ui-content-primary)" }}
       >
         {title}
       </h2>
       <p
         className="mt-1 mb-5 text-sm [overflow-wrap:anywhere]"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {subtitle}
       </p>
@@ -473,7 +473,7 @@ export function ActionError({ message }: { message: string | null }) {
     <p
       role="alert"
       className="mt-2 ml-[2px] text-[13px]"
-      style={{ color: "var(--wb-status-hard-gate-text)" }}
+      style={{ color: "var(--ui-status-hard-gate-text)" }}
     >
       {message}
     </p>

@@ -113,7 +113,7 @@ export function HandlerDetailView({ handle }: { handle: string }) {
         <p
           className="text-sm"
           role="alert"
-          style={{ color: "var(--wb-status-hard-gate-text)", margin: "8px 4px 0" }}
+          style={{ color: "var(--ui-status-hard-gate-text)", margin: "8px 4px 0" }}
         >
           {actionError}
         </p>

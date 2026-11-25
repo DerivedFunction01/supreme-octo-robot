@@ -58,24 +58,24 @@ function PlanRow({
 const ANCHOR_STYLE: Record<AnnotationThread["status"], { label: string; bg: string; fg: string }> = {
   anchored: {
     label: "Anchored",
-    bg: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-    fg: "var(--wb-status-implemented-text)",
+    bg: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+    fg: "var(--ui-status-implemented-text)",
   },
   relocated: {
     label: "Relocated",
-    bg: "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)",
-    fg: "var(--wb-status-stale-text)",
+    bg: "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)",
+    fg: "var(--ui-status-stale-text)",
   },
   orphaned: {
     label: "Orphaned",
-    bg: "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)",
-    fg: "var(--wb-status-hard-gate-text)",
+    bg: "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)",
+    fg: "var(--ui-status-hard-gate-text)",
   },
 };
 
 const planInputStyle: React.CSSProperties = {
-  backgroundColor: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
+  backgroundColor: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
   borderRadius: 9,
   padding: "6px 10px",
   fontSize: 13.5,
@@ -161,9 +161,9 @@ export function Plans({ initialBundle }: { initialBundle?: string }) {
                     onClick={() => t && navigate({ section: "todos" })}
                     className="mb-2.5 block w-full p-[12px_14px] text-left"
                     style={{
-                      backgroundColor: "var(--wb-surface-2)",
-                      border: "1px solid var(--wb-border-default)",
-                      borderRadius: "var(--wb-radius-md)",
+                      backgroundColor: "var(--ui-surface-2)",
+                      border: "1px solid var(--ui-border-default)",
+                      borderRadius: "var(--ui-radius-md)",
                     }}
                   >
                     <span className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function Plans({ initialBundle }: { initialBundle?: string }) {
                     </span>
                     <span
                       className="mt-[3px] block text-[12.8px] [overflow-wrap:anywhere]"
-                      style={{ color: "var(--wb-content-secondary)" }}
+                      style={{ color: "var(--ui-content-secondary)" }}
                     >
                       {s.detail}
                     </span>
@@ -192,10 +192,10 @@ export function Plans({ initialBundle }: { initialBundle?: string }) {
             <pre
               className="overflow-x-auto p-4 font-mono text-[12.5px] leading-[1.7] whitespace-pre-wrap"
               style={{
-                backgroundColor: "var(--wb-surface-2)",
-                border: "1px solid var(--wb-border-default)",
-                borderRadius: "var(--wb-radius-md)",
-                color: "var(--wb-content-primary)",
+                backgroundColor: "var(--ui-surface-2)",
+                border: "1px solid var(--ui-border-default)",
+                borderRadius: "var(--ui-radius-md)",
+                color: "var(--ui-content-primary)",
               }}
             >
               {plan.raw}
@@ -254,14 +254,14 @@ function QuestionsPanel({
             key={q.id}
             className="p-[12px_14px]"
             style={{
-              backgroundColor: "var(--wb-surface-2)",
-              border: "1px solid var(--wb-border-default)",
-              borderRadius: "var(--wb-radius-md)",
+              backgroundColor: "var(--ui-surface-2)",
+              border: "1px solid var(--ui-border-default)",
+              borderRadius: "var(--ui-radius-md)",
             }}
           >
             <div className="text-sm font-semibold [overflow-wrap:anywhere]">{q.text}</div>
             {q.answer ? (
-              <div className="mt-1.5 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+              <div className="mt-1.5 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
                 Answered: {q.answer}
                 {q.answeredBy ? ` · ${q.answeredBy}` : ""}
                 {q.answeredLabel ? ` · ${q.answeredLabel}` : ""}
@@ -340,9 +340,9 @@ function AnnotationsPanel({
       <div
         className="mb-3 p-[12px_14px]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
         }}
       >
         <input
@@ -389,9 +389,9 @@ function AnnotationsPanel({
               key={t.id}
               className="p-[12px_14px]"
               style={{
-                backgroundColor: "var(--wb-surface-2)",
-                border: "1px solid var(--wb-border-default)",
-                borderRadius: "var(--wb-radius-md)",
+                backgroundColor: "var(--ui-surface-2)",
+                border: "1px solid var(--ui-border-default)",
+                borderRadius: "var(--ui-radius-md)",
                 opacity: t.resolved ? 0.72 : 1,
               }}
             >
@@ -403,11 +403,11 @@ function AnnotationsPanel({
                   {chip.label}
                 </span>
                 {t.resolved ? (
-                  <span className="text-xs font-semibold" style={{ color: "var(--wb-content-secondary)" }}>
+                  <span className="text-xs font-semibold" style={{ color: "var(--ui-content-secondary)" }}>
                     Resolved
                   </span>
                 ) : null}
-                <span className="min-w-0 flex-1 truncate text-[13px] italic" style={{ color: "var(--wb-content-secondary)" }}>
+                <span className="min-w-0 flex-1 truncate text-[13px] italic" style={{ color: "var(--ui-content-secondary)" }}>
                   "{t.anchorQuote}"
                 </span>
               </div>
@@ -415,7 +415,7 @@ function AnnotationsPanel({
                 {t.messages.map((m) => (
                   <div key={m.id} className="text-[13.5px] leading-[1.5]">
                     <span className="font-bold">{m.author}</span>{" "}
-                    <span style={{ color: "var(--wb-content-muted)" }}>{m.when}</span>
+                    <span style={{ color: "var(--ui-content-muted)" }}>{m.when}</span>
                     <span className="block [overflow-wrap:anywhere]">{m.body}</span>
                   </div>
                 ))}
@@ -466,7 +466,7 @@ function AnnotationsPanel({
           );
         })}
         {threads.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             No annotations on this plan yet.
           </p>
         ) : null}

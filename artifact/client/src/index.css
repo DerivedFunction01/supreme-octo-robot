@@ -33,8 +33,8 @@ body {
   margin: 0;
   font-family:
     "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  background-color: var(--wb-surface-canvas);
-  color: var(--wb-content-primary);
+  background-color: var(--ui-surface-canvas);
+  color: var(--ui-content-primary);
 }
 
 /* The SDK shell wrapper (.hatch-space-root) paints its
@@ -53,8 +53,8 @@ body {
    so boot and runtime switch apply it identically by
    construction. */
 .hatch-space-root[data-hatch-space-root] {
-  --bg: var(--wb-surface-canvas);
-  --text: var(--wb-content-primary);
+  --bg: var(--ui-surface-canvas);
+  --text: var(--ui-content-primary);
 }
 
 /* Scroll ownership (owner defect D5, 2026-11-17): the
@@ -97,7 +97,7 @@ body {
    navbar carries the screen title, so a view-level large
    title carrying this class is suppressed — otherwise a
    pushed phone screen shows the title twice (the workbench
-   original's .wb-largetitle seam, carried to the one
+   original's .ui-largetitle seam, carried to the one
    client). */
 @media (max-width: 480px) {
   .wh-largetitle {

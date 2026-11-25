@@ -70,7 +70,7 @@ export function RulesView() {
   return (
     <PageColumn>
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           {active} active · {rules.length - active} shadow
         </span>
         <span className="ml-auto">
@@ -726,7 +726,7 @@ function RuleDrawer({
       </div>
 
       {error ? (
-        <p className="mt-4 text-sm" style={{ color: "var(--wb-status-hard-gate-text)" }} role="alert">
+        <p className="mt-4 text-sm" style={{ color: "var(--ui-status-hard-gate-text)" }} role="alert">
           {error}
         </p>
       ) : null}
@@ -740,14 +740,14 @@ function RuleDrawer({
                 <b>{w.wait_id}</b> · {w.action}
                 {w.template ? ` · ${w.template}` : ""}
                 {w.text ? (
-                  <span className="block" style={{ color: "var(--wb-content-secondary)" }}>
+                  <span className="block" style={{ color: "var(--ui-content-secondary)" }}>
                     {w.text}
                   </span>
                 ) : null}
               </p>
             ))
           ) : (
-            <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               This rule would not fire on anything currently waiting.
             </p>
           )}

@@ -18,7 +18,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const appRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(import.meta.url);
 
-const tmp = mkdtempSync(join(tmpdir(), "wb-math-"));
+const tmp = mkdtempSync(join(tmpdir(), "ui-math-"));
 const entry = join(tmp, "entry.tsx");
 writeFileSync(
   entry,

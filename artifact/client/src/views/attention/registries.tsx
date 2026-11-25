@@ -128,7 +128,7 @@ export function RegistriesView() {
           <Card key={t.kind} className="mb-3">
             <p className="text-sm">
               <b>{t.kind}</b>{" "}
-              <span style={{ color: "var(--wb-content-secondary)" }}>
+              <span style={{ color: "var(--ui-content-secondary)" }}>
                 v{t.version} · {t.audience} · slots: {t.slots.join(", ") || "none"}
               </span>
             </p>

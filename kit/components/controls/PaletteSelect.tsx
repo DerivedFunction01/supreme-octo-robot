@@ -34,14 +34,14 @@ export function PaletteSelect({ value, options, onChange }: PaletteSelectProps) 
         id={selectId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[38px] max-w-full cursor-pointer px-3 text-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring) [@media(pointer:coarse)]:min-h-[44px]"
+        className="min-h-[38px] max-w-full cursor-pointer px-3 text-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring) [@media(pointer:coarse)]:min-h-[44px]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          color: "var(--wb-content-primary)",
-          borderColor: "var(--wb-field-border)",
+          backgroundColor: "var(--ui-surface-2)",
+          color: "var(--ui-content-primary)",
+          borderColor: "var(--ui-field-border)",
           borderStyle: "solid",
           borderWidth: 1,
-          borderRadius: "var(--wb-button-radius)",
+          borderRadius: "var(--ui-button-radius)",
         }}
       >
         {options.map((o) => (

@@ -29,14 +29,14 @@ import { callVerdict, useRunner } from "./state";
 
 function line(children: ReactNode) {
   return (
-    <p className="mt-1.5 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+    <p className="mt-1.5 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
       {children}
     </p>
   );
 }
 
 function b(children: ReactNode) {
-  return <b style={{ color: "var(--wb-content-primary)", fontWeight: 600 }}>{children}</b>;
+  return <b style={{ color: "var(--ui-content-primary)", fontWeight: 600 }}>{children}</b>;
 }
 
 function conflictValue(v: unknown): string {
@@ -140,9 +140,9 @@ function OrphanCard({
               <p
                 key={e.id}
                 className="text-sm"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
-                <span style={{ fontFamily: "var(--wb-font-mono, monospace)" }}>
+                <span style={{ fontFamily: "var(--ui-font-mono, monospace)" }}>
                   {e.id}
                 </span>{" "}
                 · {e.kind} · {e.state} · {fmtAge(e.started_at, now)}
@@ -208,7 +208,7 @@ function OrphanCard({
         <p
           key={i}
           className="mt-1.5 text-sm"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
           Conflict — {c.field}:{" "}
           {(Array.isArray(c.values) ? c.values : [])

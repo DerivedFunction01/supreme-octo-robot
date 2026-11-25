@@ -15,12 +15,12 @@ import { metaStyle } from "../shared";
 export const pillBase: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
-  gap: "var(--wb-space-4)",
+  gap: "var(--ui-space-4)",
   height: "24px",
-  padding: "0 var(--wb-space-8)",
-  borderRadius: "var(--wb-radius-pill)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  padding: "0 var(--ui-space-8)",
+  borderRadius: "var(--ui-radius-pill)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   fontWeight: 500,
   whiteSpace: "nowrap",
 };
@@ -39,7 +39,7 @@ function outlinePill(tone: string, textTone: string): React.CSSProperties {
 export function PublicationMark({ summary }: { summary: RepoSummary }) {
   if (summary.publication == null) return null;
   return (
-    <span style={outlinePill("--wb-border-strong", "--wb-content-secondary")}>
+    <span style={outlinePill("--ui-border-strong", "--ui-content-secondary")}>
       <span aria-hidden="true">⬡</span> {publicationLabel(summary.publication)}
       {summary.remote_stale ? " · remote view stale" : ""}
     </span>
@@ -51,7 +51,7 @@ export function PublicationMark({ summary }: { summary: RepoSummary }) {
 export function SyncMark({ summary }: { summary: RepoSummary }) {
   if (summary.sync == null) return null;
   return (
-    <span style={outlinePill("--wb-border-strong", "--wb-content-secondary")}>
+    <span style={outlinePill("--ui-border-strong", "--ui-content-secondary")}>
       {syncStateLabel(summary.sync.state)}
       {summary.sync.unpushed_count > 0 ? (
         <>
@@ -64,10 +64,10 @@ export function SyncMark({ summary }: { summary: RepoSummary }) {
 }
 
 const EXPOSURE_TONES: Record<string, { tone: string; text: string }> = {
-  local_only: { tone: "--wb-status-hard-gate", text: "--wb-status-hard-gate-text" },
-  uncommitted_work: { tone: "--wb-status-stale", text: "--wb-status-stale-text" },
-  unbacked_commits: { tone: "--wb-status-stale", text: "--wb-status-stale-text" },
-  backed_up: { tone: "--wb-status-implemented", text: "--wb-status-implemented-text" },
+  local_only: { tone: "--ui-status-hard-gate", text: "--ui-status-hard-gate-text" },
+  uncommitted_work: { tone: "--ui-status-stale", text: "--ui-status-stale-text" },
+  unbacked_commits: { tone: "--ui-status-stale", text: "--ui-status-stale-text" },
+  backed_up: { tone: "--ui-status-implemented", text: "--ui-status-implemented-text" },
 };
 
 /** What is not backed up, in one badge: the level word +
@@ -77,8 +77,8 @@ export function ExposureMark({ summary }: { summary: RepoSummary }) {
   const exposure = summary.exposure;
   if (exposure == null) return null;
   const tones = EXPOSURE_TONES[exposure.level] ?? {
-    tone: "--wb-border-strong",
-    text: "--wb-content-secondary",
+    tone: "--ui-border-strong",
+    text: "--ui-content-secondary",
   };
   return (
     <span style={outlinePill(tones.tone, tones.text)}>

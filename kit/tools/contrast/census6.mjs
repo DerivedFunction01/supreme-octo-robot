@@ -27,27 +27,27 @@ function censusFail6(label) {
 // focus-ring role and no other token.
 let focusSpends6 = 0;
 for (const file of componentFiles6) {
-  focusSpends6 += (file.text.match(/outline-\(--wb-focus-ring\)/g) || []).length;
-  for (const m of file.text.matchAll(/outline-\(--wb-([a-z-]+)\)/g)) {
+  focusSpends6 += (file.text.match(/outline-\(--ui-focus-ring\)/g) || []).length;
+  for (const m of file.text.matchAll(/outline-\(--ui-([a-z-]+)\)/g)) {
     if (m[1] !== "focus-ring") {
-      censusFail6(`${file.name}: a focus outline spends --wb-${m[1]}, not the focus-ring role`);
+      censusFail6(`${file.name}: a focus outline spends --ui-${m[1]}, not the focus-ring role`);
     }
   }
-  for (const m of file.text.matchAll(/outline[^;\n"]*?var\(--wb-([a-z-]+)\)/g)) {
+  for (const m of file.text.matchAll(/outline[^;\n"]*?var\(--ui-([a-z-]+)\)/g)) {
     if (m[1] !== "focus-ring") {
-      censusFail6(`${file.name}: a focus outline spends --wb-${m[1]}, not the focus-ring role`);
+      censusFail6(`${file.name}: a focus outline spends --ui-${m[1]}, not the focus-ring role`);
     }
   }
 }
-focusSpends6 += (indexCss6.match(/outline: 2px solid var\(--wb-focus-ring\)/g) || []).length;
+focusSpends6 += (indexCss6.match(/outline: 2px solid var\(--ui-focus-ring\)/g) || []).length;
 if (focusSpends6 === 0) censusFail6("no focus spends found — the census is blind");
 // The kit-owned focus rules must be present in the
 // generated themes (the generator emits them into
 // themes/index.css).
 const REQUIRED_THEME_RULES6 = [
-  ".wb-segmented-input:focus-visible + .wb-segmented-segment",
-  ".wb-toggle:focus-visible .wb-toggle-track",
-  ".wb-checkbox:focus-visible",
+  ".ui-segmented-input:focus-visible + .ui-segmented-segment",
+  ".ui-toggle:focus-visible .ui-toggle-track",
+  ".ui-checkbox:focus-visible",
 ];
 for (const selector of REQUIRED_THEME_RULES6) {
   if (!indexCss6.includes(selector)) {
@@ -76,8 +76,8 @@ const OUTLINE_NONE6 = [
   },
   {
     file: "Toggle.tsx",
-    needle: "wb-toggle group relative inline-flex",
-    by: "group ring on the track span (group-focus-visible outline utilities) + the kit theme rule .wb-toggle:focus-visible .wb-toggle-track, whose inset on-accent separator band is priced in F3",
+    needle: "ui-toggle group relative inline-flex",
+    by: "group ring on the track span (group-focus-visible outline utilities) + the kit theme rule .ui-toggle:focus-visible .ui-toggle-track, whose inset on-accent separator band is priced in F3",
   },
 ];
 let outlineNoneCount6 = 0;
@@ -98,7 +98,7 @@ for (const file of componentFiles6) {
     }
   }
 }
-// Border spends: every var(--wb-*) spent on a border
+// Border spends: every var(--ui-*) spent on a border
 // property, per file, classified below as priced (by a
 // Part 6 family), decorative (with its reason), or
 // provisional (a re-point owed elsewhere, printed as a
@@ -106,7 +106,7 @@ for (const file of componentFiles6) {
 // entry this class carried, Button's secondary
 // boundary, retired when its re-point to field-border
 // landed). A hue spent through
-// a `var(--wb-status-${…})` template is keyed
+// a `var(--ui-status-${…})` template is keyed
 // status-<dynamic>.
 const BORDER_SPENDS6 = {
   "AnnotationBadge.tsx|status-<dynamic>": [
@@ -222,18 +222,18 @@ for (const file of componentFiles6) {
     // Style-property form: a border property (never
     // borderRadius) whose value spends token(s).
     if (/border(?!Radius)[A-Za-z-]*\s*:/.test(line)) {
-      for (const m of line.matchAll(/var\(--wb-([a-z-]+)\)/g)) {
+      for (const m of line.matchAll(/var\(--ui-([a-z-]+)\)/g)) {
         borderSpendKeys6.add(`${file.name}|${m[1]}`);
       }
     }
-    // Utility form: border-(--wb-…) (the var() shorthand).
-    for (const m of line.matchAll(/border-\(--wb-([a-z-]+)\)/g)) {
+    // Utility form: border-(--ui-…) (the var() shorthand).
+    for (const m of line.matchAll(/border-\(--ui-([a-z-]+)\)/g)) {
       borderSpendKeys6.add(`${file.name}|${m[1]}`);
     }
   }
   // A status hue spent through a template (the badge
   // family's `hue` local) on a border property.
-  if (file.text.includes("var(--wb-status-${") && /border(Color)?\s*:/.test(file.text)) {
+  if (file.text.includes("var(--ui-status-${") && /border(Color)?\s*:/.test(file.text)) {
     borderSpendKeys6.add(`${file.name}|status-<dynamic>`);
   }
 }
@@ -258,30 +258,30 @@ for (const [key, [kind, reason]] of Object.entries(BORDER_SPENDS6)) {
 // percentages: this kit's constants are inline
 // literals, so a changed percentage breaks its needle.
 const COLOR_MIX_SPENDS6 = [
-  { file: "AppShell.tsx", needle: "var(--wb-okabe-vermilion) 16%", as: "priced — Part 3 family B (hot CountBadge tint); on the active nav row the stack is M4" },
-  { file: "AppShell.tsx", needle: "var(--wb-okabe-vermilion) 43%", as: "priced — Part 3 family B (hot CountBadge text mix); the active-row stack is M4" },
+  { file: "AppShell.tsx", needle: "var(--ui-okabe-vermilion) 16%", as: "priced — Part 3 family B (hot CountBadge tint); on the active nav row the stack is M4" },
+  { file: "AppShell.tsx", needle: "var(--ui-okabe-vermilion) 43%", as: "priced — Part 3 family B (hot CountBadge text mix); the active-row stack is M4" },
   { file: "Badge.tsx", needle: "${hue} 14%", as: "priced — Part 3 family A (approved tint)" },
-  { file: "Button.tsx", needle: "var(--wb-accent) 88%", as: "priced — Part 5 (primary active mix)" },
-  { file: "Button.tsx", needle: "var(--wb-danger) 88%", as: "priced — Part 5 (danger hover mix)" },
-  { file: "Button.tsx", needle: "var(--wb-danger) 78%", as: "priced — Part 5 (danger active mix)" },
+  { file: "Button.tsx", needle: "var(--ui-accent) 88%", as: "priced — Part 5 (primary active mix)" },
+  { file: "Button.tsx", needle: "var(--ui-danger) 88%", as: "priced — Part 5 (danger hover mix)" },
+  { file: "Button.tsx", needle: "var(--ui-danger) 78%", as: "priced — Part 5 (danger active mix)" },
   { file: "Chip.tsx", needle: "${pressed ? 22 : 14}%", as: "priced — Part 3 family A (chip tints, rest 14% / pressed 22%)" },
-  { file: "DegradedBanner.tsx", needle: "var(--wb-status-stale) 14%", as: "priced — Part 3 family A2 (banner ground)" },
-  { file: "GroupedList.tsx", needle: "var(--wb-status-hard-gate) 12%", as: "priced — Part 3 family C (NoticeRow blend)" },
-  { file: "GroupedList.tsx", needle: "var(--wb-okabe-orange) 20%", as: "priced — Part 3 family C (NoticeRow stale blend)" },
-  { file: "Lane.tsx", needle: "var(--wb-status-stale) 14%", as: "priced — Part 3 family A (count chip on the stale tint)" },
+  { file: "DegradedBanner.tsx", needle: "var(--ui-status-stale) 14%", as: "priced — Part 3 family A2 (banner ground)" },
+  { file: "GroupedList.tsx", needle: "var(--ui-status-hard-gate) 12%", as: "priced — Part 3 family C (NoticeRow blend)" },
+  { file: "GroupedList.tsx", needle: "var(--ui-okabe-orange) 20%", as: "priced — Part 3 family C (NoticeRow stale blend)" },
+  { file: "Lane.tsx", needle: "var(--ui-status-stale) 14%", as: "priced — Part 3 family A (count chip on the stale tint)" },
   { file: "LogRow.tsx", needle: "${hue} 16%", as: "priced — Part 3 family B (KindBadge tint)" },
   { file: "LogRow.tsx", needle: "${hue} 43%", as: "priced — Part 3 family B (KindBadge text mix)" },
   {
     file: "LogRow.tsx",
-    needle: "var(--wb-content-primary) 45%",
+    needle: "var(--ui-content-primary) 45%",
     as: "classified — the drawer backdrop composite carries no text and no text pair over it is well-formed: the dismiss control is aria-labelled only (no visible glyph), the panel it serves is opaque surface-2 (its text is priced in Parts 1–2), and the page behind an aria-modal drawer is deliberately obscured and inert — subordination is the composite's job, so no pair is invented for it",
   },
   {
     file: "Sheet.tsx",
-    needle: "var(--wb-content-primary) 45%",
+    needle: "var(--ui-content-primary) 45%",
     as: "classified — the backdrop composite, as the LogRow drawer entry: no text pair over it is well-formed, and the panel it serves is opaque surface-3",
   },
-  { file: "StateControls.tsx", needle: "var(--wb-status-stale) 14%", as: "priced — Part 3 family A2 (FieldError ground)" },
+  { file: "StateControls.tsx", needle: "var(--ui-status-stale) 14%", as: "priced — Part 3 family A2 (FieldError ground)" },
   { file: "StatusChip.tsx", needle: "${TONE_HUE[tone]} 14%", as: "priced — Part 3 family A (chip tint)" },
 ];
 let mixCensusFailures6 = 0;

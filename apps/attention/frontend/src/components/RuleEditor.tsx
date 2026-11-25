@@ -630,23 +630,23 @@ export function RuleEditor({
           <div>
             <div className="glabel">Preview — against the open waits now</div>
             {preview.length === 0 ? (
-              <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+              <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
                 This rule would not fire on any open wait.
               </p>
             ) : (
               <div className="flex flex-col gap-2">
                 {preview.map((w) => (
                   <div key={w.wait_id} className="text-sm">
-                    <span style={{ color: "var(--wb-content-primary)" }}>
+                    <span style={{ color: "var(--ui-content-primary)" }}>
                       {WOULD_LABEL[w.action] ?? w.action}
                     </span>
-                    <span style={{ color: "var(--wb-content-secondary)" }}>
+                    <span style={{ color: "var(--ui-content-secondary)" }}>
                       {" "}
                       · {w.wait_id}
                       {w.target ? ` · to ${w.target}` : ""}
                     </span>
                     {w.text ? (
-                      <div style={{ color: "var(--wb-content-secondary)" }}>{w.text}</div>
+                      <div style={{ color: "var(--ui-content-secondary)" }}>{w.text}</div>
                     ) : null}
                   </div>
                 ))}
@@ -659,7 +659,7 @@ export function RuleEditor({
           <p
             className="text-sm"
             role="alert"
-            style={{ color: "var(--wb-status-hard-gate-text)" }}
+            style={{ color: "var(--ui-status-hard-gate-text)" }}
           >
             {error}
           </p>

@@ -138,10 +138,10 @@ function Chevron() {
 }
 
 const TONE_HUE: Record<Exclude<LogRowTone, "idle">, string> = {
-  ok: "var(--wb-okabe-bluish-green)",
-  info: "var(--wb-okabe-blue)",
-  warn: "var(--wb-okabe-orange)",
-  fail: "var(--wb-okabe-vermilion)",
+  ok: "var(--ui-okabe-bluish-green)",
+  info: "var(--ui-okabe-blue)",
+  warn: "var(--ui-okabe-orange)",
+  fail: "var(--ui-okabe-vermilion)",
 };
 
 /** The kind badge: filled pill, dot + word, flex-none — the
@@ -152,8 +152,8 @@ function KindBadge({ kind }: { kind: LogRowKind }) {
       <span
         className="inline-flex max-w-full items-center gap-1.5 whitespace-nowrap"
         style={{
-          backgroundColor: "var(--wb-surface-sunken)",
-          color: "var(--wb-content-secondary)",
+          backgroundColor: "var(--ui-surface-sunken)",
+          color: "var(--ui-content-secondary)",
           borderRadius: 999,
           padding: "2.5px 9px",
           fontSize: 12,
@@ -163,7 +163,7 @@ function KindBadge({ kind }: { kind: LogRowKind }) {
         <span
           aria-hidden="true"
           className="inline-block shrink-0 rounded-full"
-          style={{ width: 7, height: 7, backgroundColor: "var(--wb-content-muted)" }}
+          style={{ width: 7, height: 7, backgroundColor: "var(--ui-content-muted)" }}
         />
         {kind.label}
       </span>
@@ -179,7 +179,7 @@ function KindBadge({ kind }: { kind: LogRowKind }) {
         // scale where the word clears 4.5:1 on its own tint
         // over every surface, both modes (contrast gate
         // Part 3, family B — tools/verify-contrast.mjs).
-        color: `color-mix(in srgb, ${hue} 43%, var(--wb-content-primary))`,
+        color: `color-mix(in srgb, ${hue} 43%, var(--ui-content-primary))`,
         borderRadius: 999,
         padding: "2.5px 9px",
         fontSize: 12,
@@ -221,12 +221,12 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
   const style: CSSProperties = {
     backgroundColor: interactive
       ? active
-        ? "var(--wb-surface-sunken)"
+        ? "var(--ui-surface-sunken)"
         : hover
-          ? "var(--wb-surface-1)"
+          ? "var(--ui-surface-1)"
           : "transparent"
       : "transparent",
-    color: "var(--wb-content-primary)",
+    color: "var(--ui-content-primary)",
     padding: "10px 14px",
     textAlign: "left",
     width: "100%",
@@ -240,7 +240,7 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
             flex: "0 0 48px",
             marginTop: 2,
             fontSize: 12.5,
-            color: "var(--wb-content-secondary)",
+            color: "var(--ui-content-secondary)",
           }}
         >
           {entry.dateToken}
@@ -259,7 +259,7 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
         {interactive ? (
           <span
             className="shrink-0"
-            style={{ color: "var(--wb-content-muted)", marginTop: 3, lineHeight: 1 }}
+            style={{ color: "var(--ui-content-muted)", marginTop: 3, lineHeight: 1 }}
           >
             <Chevron />
           </span>
@@ -272,7 +272,7 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
           marginTop: 2,
           fontSize: 12.5,
           lineHeight: 1.4,
-          color: "var(--wb-content-secondary)",
+          color: "var(--ui-content-secondary)",
         }}
       >
         <span className="mono">{entry.time}</span>
@@ -288,14 +288,14 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
         e.stopPropagation();
         setExpanded((v) => !v);
       }}
-      className="flex cursor-pointer items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+      className="flex cursor-pointer items-center gap-1.5 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
       style={{
         marginLeft: 56,
         marginTop: 4,
         minHeight: 24,
         padding: "2px 8px 2px 0",
         backgroundColor: "transparent",
-        color: "var(--wb-accent)",
+        color: "var(--ui-accent)",
         fontSize: 12.5,
         fontWeight: 600,
       }}
@@ -325,7 +325,7 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
         }}
         onMouseDown={() => setActive(true)}
         onMouseUp={() => setActive(false)}
-        className={`${classes} cursor-pointer focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} cursor-pointer focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)`}
         style={style}
       >
         {inner}
@@ -353,7 +353,7 @@ export function LogRow({ entry, onOpen, className }: LogRowProps) {
         onClick={onOpen}
         onMouseDown={() => setActive(true)}
         onMouseUp={() => setActive(false)}
-        className="block w-full cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+        className="block w-full cursor-pointer text-left focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
         style={{
           backgroundColor: "transparent",
           color: "inherit",
@@ -377,7 +377,7 @@ function GroupLabel({ children }: { children: ReactNode }) {
         fontWeight: 700,
         letterSpacing: "0.07em",
         textTransform: "uppercase",
-        color: "var(--wb-content-secondary)",
+        color: "var(--ui-content-secondary)",
         margin: "20px 0 8px 2px",
       }}
     >
@@ -387,11 +387,11 @@ function GroupLabel({ children }: { children: ReactNode }) {
 }
 
 const factGroupStyle: CSSProperties = {
-  backgroundColor: "var(--wb-surface-2)",
-  borderColor: "var(--wb-border-default)",
+  backgroundColor: "var(--ui-surface-2)",
+  borderColor: "var(--ui-border-default)",
   borderStyle: "solid",
   borderWidth: 1,
-  borderRadius: "var(--wb-radius-md)",
+  borderRadius: "var(--ui-radius-md)",
   overflow: "hidden",
 };
 
@@ -437,7 +437,7 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
         onClick={onClose}
         className="absolute inset-0 cursor-default"
         style={{
-          backgroundColor: "color-mix(in srgb, var(--wb-content-primary) 45%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--ui-content-primary) 45%, transparent)",
         }}
       />
       <div
@@ -448,11 +448,11 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
         tabIndex={-1}
         className="relative focus-visible:outline-none"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          borderRadius: "var(--wb-panel-radius) var(--wb-panel-radius) 0 0",
-          boxShadow: "var(--wb-shadow-overlay)",
+          backgroundColor: "var(--ui-surface-2)",
+          borderRadius: "var(--ui-panel-radius) var(--ui-panel-radius) 0 0",
+          boxShadow: "var(--ui-shadow-overlay)",
           padding: "6px 18px 20px",
-          color: "var(--wb-content-primary)",
+          color: "var(--ui-content-primary)",
           maxHeight: "82vh",
           overflowY: "auto",
         }}
@@ -463,12 +463,12 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
             width: 36,
             height: 5,
             borderRadius: 3,
-            backgroundColor: "var(--wb-border-strong)",
+            backgroundColor: "var(--ui-border-strong)",
             margin: "8px auto 14px",
           }}
         />
         <div className="flex items-center gap-2">
-          <span className="mono" style={{ fontSize: 13.5, color: "var(--wb-content-secondary)" }}>
+          <span className="mono" style={{ fontSize: 13.5, color: "var(--ui-content-secondary)" }}>
             {entry.dateToken} · {entry.time}
           </span>
           {entry.kind ? (
@@ -489,7 +489,7 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
               style={{
                 padding: "11px 14px",
                 minHeight: 47,
-                borderTop: i > 0 ? "1px solid var(--wb-border-default)" : undefined,
+                borderTop: i > 0 ? "1px solid var(--ui-border-default)" : undefined,
               }}
             >
               <span style={{ fontSize: 14.5, fontWeight: 550 }}>{fact.label}</span>
@@ -498,7 +498,7 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
                 style={{
                   marginLeft: "auto",
                   fontSize: 14,
-                  color: "var(--wb-content-secondary)",
+                  color: "var(--ui-content-secondary)",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -514,11 +514,11 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
               <button
                 type="button"
                 onClick={onEntityOpen}
-                className="flex w-full cursor-pointer items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                className="flex w-full cursor-pointer items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                 style={{
                   padding: "11px 14px",
                   minHeight: 47,
-                  color: "var(--wb-content-primary)",
+                  color: "var(--ui-content-primary)",
                   backgroundColor: "transparent",
                 }}
               >
@@ -530,7 +530,7 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
                   {detail.entity.sub ? (
                     <span
                       className="block"
-                      style={{ fontSize: 12.5, color: "var(--wb-content-secondary)" }}
+                      style={{ fontSize: 12.5, color: "var(--ui-content-secondary)" }}
                     >
                       {detail.entity.sub}
                     </span>
@@ -538,7 +538,7 @@ export function LogRowDrawer({ entry, onClose, onEntityOpen, entityLeading }: Lo
                 </span>
                 <span
                   className="shrink-0"
-                  style={{ color: "var(--wb-content-muted)", lineHeight: 1 }}
+                  style={{ color: "var(--ui-content-muted)", lineHeight: 1 }}
                 >
                   <Chevron />
                 </span>

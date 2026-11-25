@@ -25,22 +25,22 @@ const GLYPHS: Record<BadgeKind, string> = {
 };
 
 function badgeStyle(kind: BadgeKind): CSSProperties {
-  const hue = `var(--wb-status-${kind})`;
+  const hue = `var(--ui-status-${kind})`;
   if (kind === "approved") {
     return {
       backgroundColor: `color-mix(in srgb, ${hue} 14%, transparent)`,
-      color: "var(--wb-status-approved-text)",
+      color: "var(--ui-status-approved-text)",
       borderWidth: 0,
-      borderRadius: "var(--wb-chip-radius)",
+      borderRadius: "var(--ui-chip-radius)",
     };
   }
   return {
     backgroundColor: "transparent",
-    color: `var(--wb-status-${kind}-text)`,
+    color: `var(--ui-status-${kind}-text)`,
     borderColor: hue,
     borderStyle: "solid",
     borderWidth: 1,
-    borderRadius: "var(--wb-chip-radius)",
+    borderRadius: "var(--ui-chip-radius)",
   };
 }
 
@@ -58,7 +58,7 @@ export function Badge({ kind, text, stateHash, className }: BadgeProps) {
       <span
         aria-hidden="true"
         className="shrink-0 text-xs leading-none"
-        style={{ color: `var(--wb-status-${kind})` }}
+        style={{ color: `var(--ui-status-${kind})` }}
       >
         {GLYPHS[kind]}
       </span>

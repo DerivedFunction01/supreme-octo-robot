@@ -19,9 +19,9 @@ import {
 // and the project's standing chip; across-projects facts below.
 
 const DOT: Record<string, string> = {
-  ok: "var(--wb-okabe-bluish-green)",
-  warn: "var(--wb-okabe-orange)",
-  muted: "var(--wb-content-muted)",
+  ok: "var(--ui-okabe-bluish-green)",
+  warn: "var(--ui-okabe-orange)",
+  muted: "var(--ui-content-muted)",
 };
 
 export function Home() {
@@ -66,7 +66,7 @@ export function Home() {
               ) : (
                 <span
                   className="inline-flex max-w-full rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
-                  style={{ backgroundColor: "var(--wb-surface-sunken)", color: "var(--wb-content-secondary)" }}
+                  style={{ backgroundColor: "var(--ui-surface-sunken)", color: "var(--ui-content-secondary)" }}
                 >
                   <span className="truncate">{r.chip.text}</span>
                 </span>

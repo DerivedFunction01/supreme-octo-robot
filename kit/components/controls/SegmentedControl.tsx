@@ -33,8 +33,8 @@ export type SegmentedControlProps<V extends string> = {
 // Focus: the radio is visually hidden, so the segment
 // carries the focus indication — the peer-focus-visible
 // utilities below, and the kit-owned rule in the generated
-// themes (.wb-segmented-input:focus-visible +
-// .wb-segmented-segment) that holds even where a consumer's
+// themes (.ui-segmented-input:focus-visible +
+// .ui-segmented-segment) that holds even where a consumer's
 // Tailwind build never generated the peer utilities.
 //
 // Target size: the pill is the visible control, and the
@@ -45,10 +45,10 @@ export type SegmentedControlProps<V extends string> = {
 // leg for this primitive). The fieldset's padding drops to
 // zero so the track hugs the pills at the same height.
 const SEGMENT_CLASSES = [
-  "inline-flex min-h-[38px] max-w-full min-w-0 cursor-pointer items-center rounded-[var(--wb-radius-sm)] border border-transparent px-3 py-1.5 text-sm [overflow-wrap:anywhere] [@media(pointer:coarse)]:min-h-[44px]",
-  "text-(--wb-content-secondary) hover:text-(--wb-content-primary)",
-  "peer-checked:border-(--wb-field-border) peer-checked:bg-(--wb-surface-2) peer-checked:font-semibold peer-checked:text-(--wb-content-primary)",
-  "peer-focus-visible:outline-2 peer-focus-visible:outline-solid peer-focus-visible:outline-offset-1 peer-focus-visible:outline-(--wb-focus-ring)",
+  "inline-flex min-h-[38px] max-w-full min-w-0 cursor-pointer items-center rounded-[var(--ui-radius-sm)] border border-transparent px-3 py-1.5 text-sm [overflow-wrap:anywhere] [@media(pointer:coarse)]:min-h-[44px]",
+  "text-(--ui-content-secondary) hover:text-(--ui-content-primary)",
+  "peer-checked:border-(--ui-field-border) peer-checked:bg-(--ui-surface-2) peer-checked:font-semibold peer-checked:text-(--ui-content-primary)",
+  "peer-focus-visible:outline-2 peer-focus-visible:outline-solid peer-focus-visible:outline-offset-1 peer-focus-visible:outline-(--ui-focus-ring)",
   "peer-disabled:cursor-not-allowed",
 ].join(" ");
 
@@ -90,8 +90,8 @@ export function SegmentedControl<V extends string>({
       // Inert whenever the options fit on one line, as on
       // the desktop canvas.
       style={{
-        backgroundColor: "var(--wb-surface-sunken)",
-        borderRadius: "var(--wb-radius-sm)",
+        backgroundColor: "var(--ui-surface-sunken)",
+        borderRadius: "var(--ui-radius-sm)",
         maxWidth: "100%",
       }}
     >
@@ -108,9 +108,9 @@ export function SegmentedControl<V extends string>({
             checked={opt.value === value}
             disabled={disabled}
             onChange={() => onChange(opt.value)}
-            className="peer sr-only wb-segmented-input"
+            className="peer sr-only ui-segmented-input"
           />
-          <span className={`${SEGMENT_CLASSES} wb-segmented-segment`}>{opt.label}</span>
+          <span className={`${SEGMENT_CLASSES} ui-segmented-segment`}>{opt.label}</span>
         </label>
       ))}
     </fieldset>

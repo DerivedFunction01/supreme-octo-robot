@@ -59,8 +59,8 @@ export type CheckboxProps = {
 export function Checkbox({ checked, onChange, label, disabled = false, className }: CheckboxProps) {
   const style: CSSProperties = {
     ...LOCKED_BOX(24),
-    backgroundColor: checked ? "var(--wb-status-done)" : "transparent",
-    border: `2px solid ${checked ? "var(--wb-status-done)" : "var(--wb-field-border)"}`,
+    backgroundColor: checked ? "var(--ui-status-done)" : "transparent",
+    border: `2px solid ${checked ? "var(--ui-status-done)" : "var(--ui-field-border)"}`,
     color: "#fff",
     padding: 0,
   };
@@ -76,7 +76,7 @@ export function Checkbox({ checked, onChange, label, disabled = false, className
         onChange?.(!checked);
       }}
       className={[
-        "wb-checkbox flex items-center justify-center focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)",
+        "ui-checkbox flex items-center justify-center focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)",
         disabled ? "cursor-not-allowed opacity-55" : onChange ? "cursor-pointer" : "",
         className ?? "",
       ]
@@ -121,7 +121,7 @@ export function Radio({ checked, onSelect, label, disabled = false, className }:
   const style: CSSProperties = {
     ...LOCKED_BOX(24),
     backgroundColor: "transparent",
-    border: `2px solid ${checked ? "var(--wb-accent)" : "var(--wb-field-border)"}`,
+    border: `2px solid ${checked ? "var(--ui-accent)" : "var(--ui-field-border)"}`,
     padding: 0,
   };
   return (
@@ -136,7 +136,7 @@ export function Radio({ checked, onSelect, label, disabled = false, className }:
         onSelect?.();
       }}
       className={[
-        "flex items-center justify-center focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)",
+        "flex items-center justify-center focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)",
         disabled ? "cursor-not-allowed opacity-55" : onSelect ? "cursor-pointer" : "",
         className ?? "",
       ]
@@ -148,7 +148,7 @@ export function Radio({ checked, onSelect, label, disabled = false, className }:
         <span
           aria-hidden="true"
           className="inline-block rounded-full"
-          style={{ width: 10, height: 10, flex: "0 0 10px", backgroundColor: "var(--wb-accent)" }}
+          style={{ width: 10, height: 10, flex: "0 0 10px", backgroundColor: "var(--ui-accent)" }}
         />
       ) : null}
     </button>

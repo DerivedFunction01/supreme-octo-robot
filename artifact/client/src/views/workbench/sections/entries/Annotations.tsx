@@ -102,13 +102,13 @@ export function anchorLabelOf(root: MessageItem): string {
 
 /** The ::selection tint for an annotation surface: the
  * live selection wears the active palette's accent
- * derivation (the --wb-highlight-selection-* tokens).
+ * derivation (the --ui-highlight-selection-* tokens).
  * Sections mark their annotation root with
  * data-annotation-scope. */
 export function SelectionTintStyle() {
   return (
     <style>
-      {`[data-annotation-scope] ::selection { background: var(--wb-highlight-selection-fill); box-shadow: inset 0 -2px 0 var(--wb-highlight-selection-bar); }`}
+      {`[data-annotation-scope] ::selection { background: var(--ui-highlight-selection-fill); box-shadow: inset 0 -2px 0 var(--ui-highlight-selection-bar); }`}
     </style>
   );
 }
@@ -120,7 +120,7 @@ export function SelectionTintStyle() {
 /** Remove every annotation mark under `container`,
  * restoring the underlying text nodes. */
 export function clearAnnotationMarks(container: HTMLElement) {
-  for (const mark of Array.from(container.querySelectorAll("mark[data-wb-annotation]"))) {
+  for (const mark of Array.from(container.querySelectorAll("mark[data-ui-annotation]"))) {
     mark.replaceWith(document.createTextNode(mark.textContent ?? ""));
   }
   container.normalize();
@@ -175,21 +175,21 @@ function errorOf(e: unknown): string {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: "var(--wb-surface-1)",
-  border: "1px solid var(--wb-border-default)",
+  background: "var(--ui-surface-1)",
+  border: "1px solid var(--ui-border-default)",
   borderRadius: "10px",
-  padding: "var(--wb-space-12)",
+  padding: "var(--ui-space-12)",
 };
 
 /** The house field look (MessageComposer's fieldStyle). */
 const fieldStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   width: "100%",
   resize: "vertical",
 };
@@ -293,7 +293,7 @@ export function AnnotationComposer({
   return (
     <div
       data-annotation-ui="true"
-      style={{ position: "relative", marginTop: "var(--wb-space-16)" }}
+      style={{ position: "relative", marginTop: "var(--ui-space-16)" }}
     >
       {/* Phone (§20): the composer is the same AnchoredComment
           surface as an in-flow full-width sheet — the
@@ -312,7 +312,7 @@ export function AnnotationComposer({
               width: "7px",
               height: "7px",
               borderRadius: "50%",
-              background: "var(--wb-accent)",
+              background: "var(--ui-accent)",
             }}
           />
           <span
@@ -323,19 +323,19 @@ export function AnnotationComposer({
               left: "21px",
               width: "1.5px",
               height: "6px",
-              background: "var(--wb-accent)",
+              background: "var(--ui-accent)",
             }}
           />
         </>
       ) : null}
-      <div style={{ ...cardStyle, boxShadow: "var(--wb-shadow-overlay)" }}>
+      <div style={{ ...cardStyle, boxShadow: "var(--ui-shadow-overlay)" }}>
         {quote !== undefined ? (
           <p
             className="mono"
             style={{
-              margin: "0 0 var(--wb-space-8)",
-              fontSize: "var(--wb-font-size-xs)",
-              color: "var(--wb-accent)",
+              margin: "0 0 var(--ui-space-8)",
+              fontSize: "var(--ui-font-size-xs)",
+              color: "var(--ui-accent)",
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
@@ -353,20 +353,20 @@ export function AnnotationComposer({
           style={fieldStyle}
         />
         {error ? (
-          <p style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}>{error}</p>
+          <p style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}>{error}</p>
         ) : null}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--wb-space-8)",
-            marginTop: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
+            marginTop: "var(--ui-space-8)",
           }}
         >
           {selection.kind === "component" ? (
             <span
               className="mono"
-              style={{ fontSize: "var(--wb-font-size-xs)", color: "var(--wb-content-secondary)" }}
+              style={{ fontSize: "var(--ui-font-size-xs)", color: "var(--ui-content-secondary)" }}
             >
               anchor · {selection.component_label ?? selection.component_id}
             </span>
@@ -405,14 +405,14 @@ function AuthorAvatar({ author, small }: { author: string; small?: boolean }) {
   return author === "Muse" ? (
     <span
       aria-hidden="true"
-      style={{ ...base, border: "1.5px solid var(--wb-accent)", color: "var(--wb-accent)" }}
+      style={{ ...base, border: "1.5px solid var(--ui-accent)", color: "var(--ui-accent)" }}
     >
       {initial}
     </span>
   ) : (
     <span
       aria-hidden="true"
-      style={{ ...base, background: "var(--wb-accent)", color: "var(--wb-on-accent)" }}
+      style={{ ...base, background: "var(--ui-accent)", color: "var(--ui-on-accent)" }}
     >
       {initial}
     </span>
@@ -462,25 +462,25 @@ export function AnnotationThreadCard({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-8)",
-          marginBottom: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
+          marginBottom: "var(--ui-space-8)",
         }}
       >
         <AuthorAvatar author={root.author} />
         <span style={{ fontWeight: 600 }}>{authorLabelOf(root.author)}</span>
-        <span style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-xs)" }}>
+        <span style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-xs)" }}>
           {formatRelative(root.created_at)}
         </span>
       </div>
       {moved && sel?.kind === "text" ? (
-        <div style={{ marginBottom: "var(--wb-space-8)" }}>
+        <div style={{ marginBottom: "var(--ui-space-8)" }}>
           <span
             style={{
-              fontSize: "var(--wb-font-size-xs)",
+              fontSize: "var(--ui-font-size-xs)",
               fontWeight: 600,
               letterSpacing: "0.04em",
               textTransform: "uppercase",
-              color: "var(--wb-content-secondary)",
+              color: "var(--ui-content-secondary)",
             }}
           >
             Anchor moved
@@ -488,9 +488,9 @@ export function AnnotationThreadCard({
           <p
             className="mono"
             style={{
-              margin: "var(--wb-space-4) 0 0",
-              fontSize: "var(--wb-font-size-xs)",
-              color: "var(--wb-content-secondary)",
+              margin: "var(--ui-space-4) 0 0",
+              fontSize: "var(--ui-font-size-xs)",
+              color: "var(--ui-content-secondary)",
               whiteSpace: "pre-wrap",
             }}
           >
@@ -503,26 +503,26 @@ export function AnnotationThreadCard({
         <div
           key={reply.id}
           style={{
-            borderTop: "1px solid var(--wb-border-default)",
-            marginTop: "var(--wb-space-8)",
-            paddingTop: "var(--wb-space-8)",
-            paddingLeft: "var(--wb-space-12)",
+            borderTop: "1px solid var(--ui-border-default)",
+            marginTop: "var(--ui-space-8)",
+            paddingTop: "var(--ui-space-8)",
+            paddingLeft: "var(--ui-space-12)",
           }}
         >
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "var(--wb-space-8)",
-              marginBottom: "var(--wb-space-4)",
+              gap: "var(--ui-space-8)",
+              marginBottom: "var(--ui-space-4)",
             }}
           >
             <AuthorAvatar author={reply.author} small />
-            <span style={{ fontWeight: 600, fontSize: "var(--wb-font-size-sm)" }}>
+            <span style={{ fontWeight: 600, fontSize: "var(--ui-font-size-sm)" }}>
               {authorLabelOf(reply.author)}
             </span>
             <span
-              style={{ color: "var(--wb-content-secondary)", fontSize: "var(--wb-font-size-xs)" }}
+              style={{ color: "var(--ui-content-secondary)", fontSize: "var(--ui-font-size-xs)" }}
             >
               {formatRelative(reply.created_at)}
             </span>
@@ -534,21 +534,21 @@ export function AnnotationThreadCard({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-8)",
-          marginTop: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
+          marginTop: "var(--ui-space-8)",
         }}
       >
         <AnnotationBadge state={root.state} />
         {sel?.kind === "component" ? (
           <span
             className="mono"
-            style={{ fontSize: "var(--wb-font-size-xs)", color: "var(--wb-content-secondary)" }}
+            style={{ fontSize: "var(--ui-font-size-xs)", color: "var(--ui-content-secondary)" }}
           >
             anchor · {sel.component_label ?? sel.component_id}
           </span>
         ) : null}
       </div>
-      <div style={{ marginTop: "var(--wb-space-8)" }}>
+      <div style={{ marginTop: "var(--ui-space-8)" }}>
         <textarea
           aria-label="Reply to annotation"
           placeholder="Reply…"
@@ -558,10 +558,10 @@ export function AnnotationThreadCard({
           style={fieldStyle}
         />
         {replyError ? (
-          <p style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}>{replyError}</p>
+          <p style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}>{replyError}</p>
         ) : null}
         <div
-          style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--wb-space-8)" }}
+          style={{ display: "flex", justifyContent: "flex-end", marginTop: "var(--ui-space-8)" }}
         >
           <Button
             variant="secondary"
@@ -605,9 +605,9 @@ export function AnnotationList({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "var(--wb-space-12)",
-                  padding: "var(--wb-space-8) 0",
-                  borderBottom: "1px solid var(--wb-border-default)",
+                  gap: "var(--ui-space-12)",
+                  padding: "var(--ui-space-8) 0",
+                  borderBottom: "1px solid var(--ui-border-default)",
                   // Phone: the row wraps rather than letting
                   // the nowrap pieces squeeze the first line
                   // out; every piece stays, nothing dropped.
@@ -617,8 +617,8 @@ export function AnnotationList({
                 <span
                   className="mono"
                   style={{
-                    fontSize: "var(--wb-font-size-xs)",
-                    color: "var(--wb-content-secondary)",
+                    fontSize: "var(--ui-font-size-xs)",
+                    color: "var(--ui-content-secondary)",
                     // Phone: a long component label (a full
                     // section heading) wraps as prose instead
                     // of painting one 457px line past the row.
@@ -630,7 +630,7 @@ export function AnnotationList({
                 {sel?.kind === "text" ? (
                   <span
                     style={{
-                      color: "var(--wb-content-secondary)",
+                      color: "var(--ui-content-secondary)",
                       whiteSpace: "nowrap",
                       overflow: "hidden",
                       textOverflow: "ellipsis",
@@ -658,11 +658,11 @@ export function AnnotationList({
         </ul>
       ) : null}
       {movedThreads.length > 0 ? (
-        <div style={{ marginTop: "var(--wb-space-16)" }}>
-          <h4 style={{ margin: "0 0 var(--wb-space-8)", color: "var(--wb-content-secondary)" }}>
+        <div style={{ marginTop: "var(--ui-space-16)" }}>
+          <h4 style={{ margin: "0 0 var(--ui-space-8)", color: "var(--ui-content-secondary)" }}>
             Anchor moved
           </h4>
-          <div style={{ display: "grid", gap: "var(--wb-space-8)" }}>
+          <div style={{ display: "grid", gap: "var(--ui-space-8)" }}>
             {movedThreads.map((t) => (
               <AnnotationThreadCard key={t.root.id} slug={slug} thread={t} moved />
             ))}

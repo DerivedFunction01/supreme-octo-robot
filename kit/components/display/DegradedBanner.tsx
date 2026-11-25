@@ -25,33 +25,33 @@ export function DegradedBanner({
       style={
         degraded
           ? {
-              backgroundColor: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-              borderColor: "var(--wb-status-stale)",
+              backgroundColor: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+              borderColor: "var(--ui-status-stale)",
               borderStyle: "solid",
               borderWidth: 1,
-              borderRadius: "var(--wb-radius-md)",
-              color: "var(--wb-content-primary)",
+              borderRadius: "var(--ui-radius-md)",
+              color: "var(--ui-content-primary)",
             }
           : {
-              backgroundColor: "var(--wb-surface-1)",
-              borderColor: "var(--wb-border-default)",
+              backgroundColor: "var(--ui-surface-1)",
+              borderColor: "var(--ui-border-default)",
               borderStyle: "solid",
               borderWidth: 1,
-              borderRadius: "var(--wb-radius-md)",
-              color: "var(--wb-content-primary)",
+              borderRadius: "var(--ui-radius-md)",
+              color: "var(--ui-content-primary)",
             }
       }
     >
       <span
         aria-hidden="true"
         className="shrink-0 text-sm leading-none"
-        style={{ color: degraded ? "var(--wb-status-stale)" : "var(--wb-content-secondary)" }}
+        style={{ color: degraded ? "var(--ui-status-stale)" : "var(--ui-content-secondary)" }}
       >
         {degraded ? "⚠" : "ℹ"}
       </span>
       <div className="min-w-0 flex-1 text-sm [overflow-wrap:anywhere]">
         <p>{message}</p>
-        {detail ? <p style={{ color: "var(--wb-content-secondary)" }}>{detail}</p> : null}
+        {detail ? <p style={{ color: "var(--ui-content-secondary)" }}>{detail}</p> : null}
       </div>
     </div>
   );

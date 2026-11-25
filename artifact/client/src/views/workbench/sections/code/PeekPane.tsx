@@ -26,13 +26,13 @@ import { highlightCode, highlightLines } from "../../lib/highlight";
 import { DatasetTable } from "./DatasetTable";
 
 const codeStyle: React.CSSProperties = {
-  fontFamily: "var(--wb-font-mono)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
-  background: "var(--wb-surface-sunken)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-12)",
+  fontFamily: "var(--ui-font-mono)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-12)",
   overflow: "auto",
   whiteSpace: "pre",
   margin: 0,
@@ -43,7 +43,7 @@ const codeStyle: React.CSSProperties = {
  * the axe scrollable-region-focusable cure (critic
  * WB5-1). */
 const scrollRegionFocusClass =
-  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
+  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)";
 
 /** Whole-file content with highlight.js coloring via
  * the shared helper (lib/highlight): the path's mapped
@@ -137,7 +137,7 @@ function RawDiffView({ path, diff }: { path: string; diff: string }) {
       className={scrollRegionFocusClass}
       style={{
         ...codeStyle,
-        padding: "var(--wb-space-8) 0",
+        padding: "var(--ui-space-8) 0",
       }}
     >
       {lines.map((line, i) => {
@@ -149,14 +149,14 @@ function RawDiffView({ path, diff }: { path: string; diff: string }) {
             key={i}
             style={{
               whiteSpace: "pre",
-              padding: "0 var(--wb-space-12)",
+              padding: "0 var(--ui-space-12)",
               background:
                 kind === "add"
-                  ? "color-mix(in srgb, var(--wb-status-implemented) 13%, transparent)"
+                  ? "color-mix(in srgb, var(--ui-status-implemented) 13%, transparent)"
                   : kind === "del"
-                    ? "color-mix(in srgb, var(--wb-status-hard-gate) 11%, transparent)"
+                    ? "color-mix(in srgb, var(--ui-status-hard-gate) 11%, transparent)"
                     : undefined,
-              color: kind === "hunk" || kind === "meta" ? "var(--wb-content-muted)" : undefined,
+              color: kind === "hunk" || kind === "meta" ? "var(--ui-content-muted)" : undefined,
             }}
           >
             {line === "" ? (
@@ -230,14 +230,14 @@ export function PeekPane({
 
   if (query.isPending) {
     return (
-      <p style={{ color: "var(--wb-content-muted)", padding: "var(--wb-space-12)" }}>
+      <p style={{ color: "var(--ui-content-muted)", padding: "var(--ui-space-12)" }}>
         Peeking <span className="mono">{path}</span>…
       </p>
     );
   }
   if (!basePeek) {
     return (
-      <p role="alert" style={{ color: "var(--wb-danger)", padding: "var(--wb-space-12)" }}>
+      <p role="alert" style={{ color: "var(--ui-danger)", padding: "var(--ui-space-12)" }}>
         {envelope?.error ?? "The file could not be peeked."}
       </p>
     );
@@ -251,20 +251,20 @@ export function PeekPane({
   const defaultView: PeekView = dataset && peek?.content == null ? "table" : "content";
   const activeView = view ?? defaultView;
   return (
-    <div data-anchor="repos/peek" style={{ padding: "var(--wb-space-12)", minWidth: 0 }}>
+    <div data-anchor="repos/peek" style={{ padding: "var(--ui-space-12)", minWidth: 0 }}>
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
-          marginBottom: "var(--wb-space-12)",
+          marginBottom: "var(--ui-space-12)",
         }}
       >
         <span
           className="mono"
           style={{
-            fontSize: "var(--wb-font-size-sm)",
+            fontSize: "var(--ui-font-size-sm)",
             fontWeight: 600,
             overflowWrap: "anywhere",
             minWidth: 0,
@@ -282,7 +282,7 @@ export function PeekPane({
           value={activeView}
           onChange={(next) => setView(next as PeekView)}
         />
-        <span style={{ marginLeft: "auto", display: "inline-flex", gap: "var(--wb-space-8)" }}>
+        <span style={{ marginLeft: "auto", display: "inline-flex", gap: "var(--ui-space-8)" }}>
           {isRevealedSecret ? (
             <Button
               variant="ghost"
@@ -308,10 +308,10 @@ export function PeekPane({
       <p
         className="mono"
         style={{
-          fontSize: "var(--wb-font-size-xs)",
-          color: "var(--wb-content-muted)",
+          fontSize: "var(--ui-font-size-xs)",
+          color: "var(--ui-content-muted)",
           overflowWrap: "anywhere",
-          margin: "0 0 var(--wb-space-12)",
+          margin: "0 0 var(--ui-space-12)",
         }}
       >
         sha256 {peek?.sha256 ? formatShortHash(peek.sha256) : "—"} ·{" "}
@@ -330,7 +330,7 @@ export function PeekPane({
         peek?.diff ? (
           <RawDiffView path={path} diff={peek.diff} />
         ) : (
-          <p style={{ color: "var(--wb-content-secondary)" }}>
+          <p style={{ color: "var(--ui-content-secondary)" }}>
             No changes vs HEAD.
           </p>
         )
@@ -339,20 +339,20 @@ export function PeekPane({
       ) : peek?.withheld === "secret" ? (
         <div
           style={{
-            border: "1px solid var(--wb-border-strong)",
-            borderRadius: "var(--wb-radius-md)",
-            padding: "var(--wb-space-16)",
+            border: "1px solid var(--ui-border-strong)",
+            borderRadius: "var(--ui-radius-md)",
+            padding: "var(--ui-space-16)",
           }}
         >
-          <p style={{ margin: "0 0 var(--wb-space-8)", fontWeight: 600 }}>
+          <p style={{ margin: "0 0 var(--ui-space-8)", fontWeight: 600 }}>
             Withheld — secret-shaped path
           </p>
-          <p style={{ margin: "0 0 var(--wb-space-12)", color: "var(--wb-content-secondary)" }}>
+          <p style={{ margin: "0 0 var(--ui-space-12)", color: "var(--ui-content-secondary)" }}>
             This file's name matches the secret patterns, so its content is not served. The
             revealed content is shown for this view only and never cached.
           </p>
           {confirmingReveal ? (
-            <span style={{ display: "inline-flex", gap: "var(--wb-space-8)", flexWrap: "wrap" }}>
+            <span style={{ display: "inline-flex", gap: "var(--ui-space-8)", flexWrap: "wrap" }}>
               <Button variant="danger" disabled={revealing} onClick={() => void doReveal()}>
                 Confirm: reveal {path}
               </Button>
@@ -366,25 +366,25 @@ export function PeekPane({
             </Button>
           )}
           {revealError ? (
-            <p role="alert" style={{ color: "var(--wb-danger)" }}>
+            <p role="alert" style={{ color: "var(--ui-danger)" }}>
               {revealError}
             </p>
           ) : null}
         </div>
       ) : peek?.is_binary ? (
-        <p style={{ color: "var(--wb-content-secondary)" }}>
+        <p style={{ color: "var(--ui-content-secondary)" }}>
           Binary file — metadata only.
         </p>
       ) : peek?.content != null ? (
         <>
           <CodeView path={path} content={peek.content} />
           {!peek.editable ? (
-            <p style={{ color: "var(--wb-content-secondary)", marginTop: "var(--wb-space-8)" }}>
+            <p style={{ color: "var(--ui-content-secondary)", marginTop: "var(--ui-space-8)" }}>
               Read-only — {peek.editable_reason ?? "not editable"}.
             </p>
           ) : null}
           {peek.truncated ? (
-            <p style={{ color: "var(--wb-content-secondary)", marginTop: "var(--wb-space-8)" }}>
+            <p style={{ color: "var(--ui-content-secondary)", marginTop: "var(--ui-space-8)" }}>
               Truncated at the peek caps.
             </p>
           ) : null}

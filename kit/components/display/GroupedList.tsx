@@ -41,7 +41,7 @@ function Chevron() {
       strokeLinecap="round"
       aria-hidden="true"
       className="shrink-0"
-      style={{ color: "var(--wb-content-muted)" }}
+      style={{ color: "var(--ui-content-muted)" }}
     >
       <path d="M1.5 1.5 6.5 6.5 1.5 11.5" />
     </svg>
@@ -99,17 +99,17 @@ export function GroupedList({ children, className }: GroupedListProps) {
   return (
     <div
       className={[
-        "overflow-hidden [&>*+*]:[border-top:1px_solid_var(--wb-border-default)]",
+        "overflow-hidden [&>*+*]:[border-top:1px_solid_var(--ui-border-default)]",
         className ?? "",
       ]
         .filter(Boolean)
         .join(" ")}
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-lg)",
+        borderRadius: "var(--ui-radius-lg)",
       }}
     >
       {children}
@@ -121,7 +121,7 @@ export function GroupLabel({ children }: { children: ReactNode }) {
   return (
     <div
       className="mt-5 mb-2 ml-[2px] text-xs font-bold tracking-[0.07em] uppercase first:mt-0"
-      style={{ color: "var(--wb-content-secondary)" }}
+      style={{ color: "var(--ui-content-secondary)" }}
     >
       {children}
     </div>
@@ -162,7 +162,7 @@ export function Row({
       <div className="flex flex-nowrap items-center gap-3">
         <div
           className="min-w-0 flex-1 truncate text-[14.5px] font-medium"
-          style={{ color: "var(--wb-content-primary)" }}
+          style={{ color: "var(--ui-content-primary)" }}
         >
           {label}
         </div>
@@ -176,7 +176,7 @@ export function Row({
         <div className="flex flex-nowrap items-center gap-2">
           <div
             className="min-w-0 flex-1 truncate text-[12.5px]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {sub}
           </div>
@@ -196,7 +196,7 @@ export function Row({
       <button
         type="button"
         onClick={onClick}
-        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} cursor-pointer border-0 bg-transparent hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)`}
       >
         {content}
       </button>
@@ -217,13 +217,13 @@ export function StatRow({ label, children }: StatRowProps) {
     <div className="flex min-h-[47px] min-w-0 items-center gap-3 px-3.5 py-[11px]">
       <span
         className="shrink-0 text-[14.5px] font-medium"
-        style={{ color: "var(--wb-content-primary)" }}
+        style={{ color: "var(--ui-content-primary)" }}
       >
         {label}
       </span>
       <span
         className="ml-auto flex min-w-0 items-center gap-2 text-right text-sm [overflow-wrap:anywhere]"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {children}
       </span>
@@ -250,14 +250,14 @@ export function SwitchRow({ label, sub, checked, onChange, disabled }: SwitchRow
       <div className="min-w-0 flex-1">
         <div
           className="truncate text-[14.5px] font-medium"
-          style={{ color: "var(--wb-content-primary)" }}
+          style={{ color: "var(--ui-content-primary)" }}
         >
           {label}
         </div>
         {sub ? (
           <div
             className="truncate text-[12.5px]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {sub}
           </div>
@@ -295,26 +295,26 @@ export function RadioRow({ label, sub, selected, onSelect }: RadioRowProps) {
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className="flex min-h-[47px] w-full cursor-pointer flex-nowrap items-center gap-3 border-0 bg-transparent px-3.5 py-[11px] text-left hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
+      className="flex min-h-[47px] w-full cursor-pointer flex-nowrap items-center gap-3 border-0 bg-transparent px-3.5 py-[11px] text-left hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
     >
       <span className="min-w-0 flex-1">
         <span
           className="block truncate text-[14.5px] font-medium"
-          style={{ color: "var(--wb-content-primary)" }}
+          style={{ color: "var(--ui-content-primary)" }}
         >
           {label}
         </span>
         {sub ? (
           <span
             className="block truncate text-[12.5px]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {sub}
           </span>
         ) : null}
       </span>
       {selected ? (
-        <span className="flex-none" style={{ color: "var(--wb-accent)" }}>
+        <span className="flex-none" style={{ color: "var(--ui-accent)" }}>
           <Check size={18} strokeWidth={2.6} />
         </span>
       ) : null}
@@ -337,19 +337,19 @@ export function NoticeRow({ title, children, tone = "warn" }: NoticeRowProps) {
     tone === "fail"
       ? {
           backgroundColor:
-            "color-mix(in srgb, var(--wb-status-hard-gate) 12%, var(--wb-surface-2))",
-          borderColor: "var(--wb-status-hard-gate)",
+            "color-mix(in srgb, var(--ui-status-hard-gate) 12%, var(--ui-surface-2))",
+          borderColor: "var(--ui-status-hard-gate)",
           borderStyle: "solid",
           borderWidth: 1,
-          color: "var(--wb-status-hard-gate-text)",
+          color: "var(--ui-status-hard-gate-text)",
         }
       : {
           backgroundColor:
-            "color-mix(in srgb, var(--wb-okabe-orange) 20%, var(--wb-surface-2))",
-          borderColor: "var(--wb-okabe-orange)",
+            "color-mix(in srgb, var(--ui-okabe-orange) 20%, var(--ui-surface-2))",
+          borderColor: "var(--ui-okabe-orange)",
           borderStyle: "solid",
           borderWidth: 1,
-          color: "var(--wb-status-stale-text)",
+          color: "var(--ui-status-stale-text)",
         };
   return (
     <div
@@ -380,12 +380,12 @@ export function ActionRow({ label, danger = false, onClick }: ActionRowProps) {
     <button
       type="button"
       onClick={onClick}
-      className="flex min-h-[47px] w-full cursor-pointer items-center border-0 bg-transparent px-3.5 py-[11px] text-left hover:bg-(--wb-surface-1) focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)"
+      className="flex min-h-[47px] w-full cursor-pointer items-center border-0 bg-transparent px-3.5 py-[11px] text-left hover:bg-(--ui-surface-1) focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)"
     >
       <span
         className="min-w-0 truncate text-[14.5px] font-semibold"
         style={{
-          color: danger ? "var(--wb-status-hard-gate-text)" : "var(--wb-accent)",
+          color: danger ? "var(--ui-status-hard-gate-text)" : "var(--ui-accent)",
         }}
       >
         {label}

@@ -220,17 +220,17 @@ export function JobDetail({
         ) : null}
         <div
           className="px-3.5 py-[11px]"
-          style={{ borderTopColor: "var(--wb-border-default)" }}
+          style={{ borderTopColor: "var(--ui-border-default)" }}
         >
           <div
             className="text-[14.5px] font-medium"
-            style={{ color: "var(--wb-content-primary)" }}
+            style={{ color: "var(--ui-content-primary)" }}
           >
             Classification
           </div>
           <p
             className="mt-1 text-[12.5px] leading-relaxed whitespace-normal [overflow-wrap:anywhere]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {detail.classification}
           </p>
@@ -238,16 +238,16 @@ export function JobDetail({
         {detail.state_paths.length > 0 ? (
           <div
             className="px-3.5 py-[11px]"
-            style={{ borderTopColor: "var(--wb-border-default)" }}
+            style={{ borderTopColor: "var(--ui-border-default)" }}
           >
             <div
               className="text-[14.5px] font-medium"
-              style={{ color: "var(--wb-content-primary)" }}
+              style={{ color: "var(--ui-content-primary)" }}
             >
               State paths
             </div>
             {detail.state_paths.map((path) => (
-              <div key={path} className="mono mt-1 text-[12px] break-all" style={{ color: "var(--wb-content-secondary)" }}>
+              <div key={path} className="mono mt-1 text-[12px] break-all" style={{ color: "var(--ui-content-secondary)" }}>
                 {path}
               </div>
             ))}

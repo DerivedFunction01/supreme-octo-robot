@@ -41,12 +41,12 @@ function StreakChip({ label, since }: { label: string; since: string }) {
         display: "inline-flex",
         alignItems: "center",
         height: "24px",
-        padding: "0 var(--wb-space-8)",
-        borderRadius: "var(--wb-radius-pill)",
-        border: "1px solid var(--wb-status-stale)",
-        color: "var(--wb-status-stale-text)",
-        fontSize: "var(--wb-font-size-xs)",
-        lineHeight: "var(--wb-line-height-xs)",
+        padding: "0 var(--ui-space-8)",
+        borderRadius: "var(--ui-radius-pill)",
+        border: "1px solid var(--ui-status-stale)",
+        color: "var(--ui-status-stale-text)",
+        fontSize: "var(--ui-font-size-xs)",
+        lineHeight: "var(--ui-line-height-xs)",
         fontWeight: 500,
         whiteSpace: "nowrap",
       }}
@@ -69,14 +69,14 @@ function CodeHeader({
 }) {
   const name = status.registry?.display_name || row.name;
   return (
-    <header style={{ marginBottom: "var(--wb-space-16)" }}>
-      <p style={{ margin: "0 0 var(--wb-space-4)" }}>
+    <header style={{ marginBottom: "var(--ui-space-16)" }}>
+      <p style={{ margin: "0 0 var(--ui-space-4)" }}>
         <a
           href={sectionHref(slug, "overview")}
           style={{
-            color: "var(--wb-accent)",
+            color: "var(--ui-accent)",
             textDecoration: "none",
-            fontSize: "var(--wb-font-size-sm)",
+            fontSize: "var(--ui-font-size-sm)",
           }}
         >
           ← Project overview
@@ -86,17 +86,17 @@ function CodeHeader({
       <p
         className="mono"
         style={{
-          color: "var(--wb-content-muted)",
-          fontSize: "var(--wb-font-size-xs)",
+          color: "var(--ui-content-muted)",
+          fontSize: "var(--ui-font-size-xs)",
           overflowWrap: "anywhere",
-          margin: "var(--wb-space-4) 0 var(--wb-space-12)",
+          margin: "var(--ui-space-4) 0 var(--ui-space-12)",
         }}
       >
         {status.id} · {status.root}
         {status.is_worktree ? " · linked worktree" : ""}
       </p>
       {status.error ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           This checkout's state could not be derived — {status.error}
         </p>
       ) : (
@@ -104,11 +104,11 @@ function CodeHeader({
           <p
             style={{
               display: "flex",
-              gap: "var(--wb-space-8)",
+              gap: "var(--ui-space-8)",
               alignItems: "baseline",
               flexWrap: "wrap",
-              margin: "0 0 var(--wb-space-8)",
-              fontSize: "var(--wb-font-size-sm)",
+              margin: "0 0 var(--ui-space-8)",
+              fontSize: "var(--ui-font-size-sm)",
             }}
           >
             <span className="mono" style={{ fontWeight: 600 }}>
@@ -124,7 +124,7 @@ function CodeHeader({
           <p
             style={{
               display: "flex",
-              gap: "var(--wb-space-8)",
+              gap: "var(--ui-space-8)",
               alignItems: "center",
               flexWrap: "wrap",
               margin: 0,
@@ -163,7 +163,7 @@ function CheckoutSelector({
   }));
   const value = checkout ?? row.checkouts[0]?.id;
   return (
-    <div style={{ marginBottom: "var(--wb-space-16)" }}>
+    <div style={{ marginBottom: "var(--ui-space-16)" }}>
       <SegmentedControl
         ariaLabel="Checkout"
         options={options}
@@ -201,10 +201,10 @@ export function CodeSection({ slug }: { slug: string }) {
   if (row?.missing) {
     return (
       <div data-anchor="code/missing">
-        <p style={{ margin: "0 0 var(--wb-space-4)" }}>
+        <p style={{ margin: "0 0 var(--ui-space-4)" }}>
           <a
             href={sectionHref(slug, "overview")}
-            style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+            style={{ color: "var(--ui-accent)", textDecoration: "none" }}
           >
             ← Project overview
           </a>
@@ -240,7 +240,7 @@ export function CodeSection({ slug }: { slug: string }) {
           <>
             <CodeHeader slug={slug} row={row} status={status} history={history} />
             <CheckoutSelector row={row} checkout={checkout} onChange={setCheckout} />
-            <div style={{ marginBottom: "var(--wb-space-16)" }}>
+            <div style={{ marginBottom: "var(--ui-space-16)" }}>
               <SegmentedControl
                 ariaLabel="Code view"
                 options={TAB_OPTIONS}
@@ -296,7 +296,7 @@ export function RepoOnlyOverview({ slug }: { slug: string }) {
       <p className="mono" style={{ ...metaStyle, overflowWrap: "anywhere" }}>
         {row.id} · {row.root ?? ""}
       </p>
-      <p style={{ color: "var(--wb-content-secondary)" }}>
+      <p style={{ color: "var(--ui-content-secondary)" }}>
         {row.missing
           ? "Missing — the registry knows this project, but discovery did not find it on disk."
           : "Repository only — this checkout carries no workbench manifest, so it has no Entries, Plans, Todos, or Board. Its git surface lives in Code."}
@@ -306,7 +306,7 @@ export function RepoOnlyOverview({ slug }: { slug: string }) {
           <p
             style={{
               display: "flex",
-              gap: "var(--wb-space-8)",
+              gap: "var(--ui-space-8)",
               alignItems: "center",
               flexWrap: "wrap",
             }}
@@ -326,7 +326,7 @@ export function RepoOnlyOverview({ slug }: { slug: string }) {
           <p>
             <a
               href={sectionHref(slug, "code")}
-              style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+              style={{ color: "var(--ui-accent)", textDecoration: "none" }}
             >
               Open Code →
             </a>
@@ -354,12 +354,12 @@ export function UnknownProjectSection({
   const row = indexRow(indexPayloadOf(indexQuery.data), slug);
   if (row == null) {
     return (
-      <p style={{ color: "var(--wb-content-secondary)" }}>
+      <p style={{ color: "var(--ui-content-secondary)" }}>
         Project <span className="mono">{slug}</span> is not in the current sweep.{" "}
         <a
           href={homeHref()}
           style={{
-            color: "var(--wb-accent)",
+            color: "var(--ui-accent)",
             textDecoration: "underline",
             textUnderlineOffset: "0.14em",
           }}
@@ -383,7 +383,7 @@ export function UnknownProjectSection({
         <p>
           <a
             href={sectionHref(slug, "code")}
-            style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+            style={{ color: "var(--ui-accent)", textDecoration: "none" }}
           >
             Open Code →
           </a>

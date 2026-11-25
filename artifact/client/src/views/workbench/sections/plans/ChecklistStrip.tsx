@@ -18,23 +18,23 @@ export function ChecklistStrip({ todos }: { todos: TodoItem[] }) {
     <ul
       style={{
         listStyle: "none",
-        margin: "var(--wb-space-8) 0 0",
+        margin: "var(--ui-space-8) 0 0",
         padding: 0,
         display: "flex",
         flexWrap: "wrap",
-        gap: "var(--wb-space-8)",
+        gap: "var(--ui-space-8)",
       }}
     >
       {todos.map((todo) => (
         <li
           key={todo.path ?? todo.id ?? todo.title ?? ""}
           style={{
-            border: "1px solid var(--wb-border-default)",
-            borderRadius: "var(--wb-radius-pill)",
-            padding: "0 var(--wb-space-8)",
-            fontSize: "var(--wb-font-size-xs)",
-            lineHeight: "var(--wb-line-height-xs)",
-            color: todo.valid === false ? "var(--wb-danger)" : "var(--wb-content-secondary)",
+            border: "1px solid var(--ui-border-default)",
+            borderRadius: "var(--ui-radius-pill)",
+            padding: "0 var(--ui-space-8)",
+            fontSize: "var(--ui-font-size-xs)",
+            lineHeight: "var(--ui-line-height-xs)",
+            color: todo.valid === false ? "var(--ui-danger)" : "var(--ui-content-secondary)",
           }}
         >
           <span aria-hidden="true">

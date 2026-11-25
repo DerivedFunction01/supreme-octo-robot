@@ -29,9 +29,9 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div
       className="flex items-baseline justify-between gap-4 py-[5px] text-sm"
-      style={{ borderBottom: "1px solid var(--wb-border-default)" }}
+      style={{ borderBottom: "1px solid var(--ui-border-default)" }}
     >
-      <span style={{ color: "var(--wb-content-secondary)" }}>{label}</span>
+      <span style={{ color: "var(--ui-content-secondary)" }}>{label}</span>
       <span className="min-w-0 text-right [overflow-wrap:anywhere]">{children}</span>
     </div>
   );
@@ -53,11 +53,11 @@ function WideFact({ label, children }: { label: string; children: ReactNode }) {
       style={{
         gridColumn: "1 / -1",
         gridTemplateColumns: "120px 1fr",
-        columnGap: "var(--wb-space-16)",
-        borderBottom: "1px solid var(--wb-border-default)",
+        columnGap: "var(--ui-space-16)",
+        borderBottom: "1px solid var(--ui-border-default)",
       }}
     >
-      <span style={{ color: "var(--wb-content-secondary)" }}>{label}</span>
+      <span style={{ color: "var(--ui-content-secondary)" }}>{label}</span>
       <span className="min-w-0 [overflow-wrap:anywhere]">{children}</span>
     </div>
   );
@@ -73,7 +73,7 @@ function HistoryRow({
   return (
     <div
       className="flex flex-wrap items-center gap-2.5 py-[5px] text-sm"
-      style={first ? undefined : { borderTop: "1px solid var(--wb-border-default)" }}
+      style={first ? undefined : { borderTop: "1px solid var(--ui-border-default)" }}
     >
       {children}
     </div>
@@ -82,14 +82,14 @@ function HistoryRow({
 
 function RowTime({ ts }: { ts: string }) {
   return (
-    <span className="mono num text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+    <span className="mono num text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
       {fmtTime(ts)}
     </span>
   );
 }
 
 function Dim({ children }: { children: ReactNode }) {
-  return <span style={{ color: "var(--wb-content-secondary)" }}>{children}</span>;
+  return <span style={{ color: "var(--ui-content-secondary)" }}>{children}</span>;
 }
 
 export function JobDetail({
@@ -156,7 +156,7 @@ export function JobDetail({
             navigate("#/scheduler/jobs");
           }}
           className="inline-block py-[2px]"
-          style={{ color: "var(--wb-accent)" }}
+          style={{ color: "var(--ui-accent)" }}
         >
           ← all jobs
         </a>
@@ -225,10 +225,10 @@ export function JobDetail({
             {latest.stdout_tail ? (
               <pre
                 tabIndex={0}
-                className="mono my-1.5 max-h-[180px] overflow-auto rounded-[7px] p-2.5 text-xs whitespace-pre-wrap [word-break:break-word] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                className="mono my-1.5 max-h-[180px] overflow-auto rounded-[7px] p-2.5 text-xs whitespace-pre-wrap [word-break:break-word] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                 style={{
-                  backgroundColor: "var(--wb-surface-sunken)",
-                  border: "1px solid var(--wb-border-default)",
+                  backgroundColor: "var(--ui-surface-sunken)",
+                  border: "1px solid var(--ui-border-default)",
                 }}
               >
                 {latest.stdout_tail}
@@ -237,10 +237,10 @@ export function JobDetail({
             {latest.stderr_tail ? (
               <pre
                 tabIndex={0}
-                className="mono my-1.5 max-h-[180px] overflow-auto rounded-[7px] p-2.5 text-xs whitespace-pre-wrap [word-break:break-word] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                className="mono my-1.5 max-h-[180px] overflow-auto rounded-[7px] p-2.5 text-xs whitespace-pre-wrap [word-break:break-word] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                 style={{
-                  backgroundColor: "var(--wb-surface-sunken)",
-                  border: "1px solid var(--wb-border-default)",
+                  backgroundColor: "var(--ui-surface-sunken)",
+                  border: "1px solid var(--ui-border-default)",
                 }}
               >
                 {latest.stderr_tail}

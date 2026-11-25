@@ -61,7 +61,7 @@ function chipInner(status: RuledStatus, label: string): ReactNode {
       <span
         aria-hidden="true"
         className="inline-block h-2 w-2 shrink-0 rounded-full"
-        style={{ backgroundColor: `var(--wb-status-${status})` }}
+        style={{ backgroundColor: `var(--ui-status-${status})` }}
       />
       <span aria-hidden="true" className="shrink-0 text-xs leading-none">
         {GLYPHS[status]}
@@ -74,15 +74,15 @@ function chipInner(status: RuledStatus, label: string): ReactNode {
 export function Chip({ status, gate, pressed = false, onPress, className }: ChipProps) {
   const [hover, setHover] = useState(false);
   const label = gate && status === "hard-gate" ? `${WORDS[status]} · ${gate}` : WORDS[status];
-  const hue = `var(--wb-status-${status})`;
+  const hue = `var(--ui-status-${status})`;
   const outlined = Boolean(onPress) || status === "abandoned";
   const pillStyle: CSSProperties = {
     backgroundColor: `color-mix(in srgb, ${hue} ${pressed ? 22 : 14}%, transparent)`,
-    color: `var(--wb-status-${status}-text)`,
+    color: `var(--ui-status-${status}-text)`,
     borderColor: !onPress || pressed || hover ? hue : "transparent",
     borderStyle: status === "abandoned" ? "dashed" : "solid",
     borderWidth: outlined ? 1 : 0,
-    borderRadius: "var(--wb-chip-radius)",
+    borderRadius: "var(--ui-chip-radius)",
   };
   const classes = [BASE_CLASSES, className ?? ""].filter(Boolean).join(" ");
 
@@ -99,7 +99,7 @@ export function Chip({ status, gate, pressed = false, onPress, className }: Chip
       >
         <span aria-hidden="true" className={HIT_AREA_CLASSES} />
         <span
-          className={`${classes} group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-1 group-focus-visible:outline-(--wb-focus-ring)`}
+          className={`${classes} group-focus-visible:outline-2 group-focus-visible:outline-solid group-focus-visible:outline-offset-1 group-focus-visible:outline-(--ui-focus-ring)`}
           style={pillStyle}
         >
           {chipInner(status, label)}

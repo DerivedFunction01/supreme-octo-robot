@@ -144,7 +144,7 @@ export function Settings() {
         </Row>
       </Group>
       {housekeeping ? (
-        <p className="mt-2 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-2 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
           {housekeeping}
         </p>
       ) : null}
@@ -243,14 +243,14 @@ export function Settings() {
             >
               <Lab>{w} px</Lab>
               {s.boardLaneWidth === w ? (
-                <span className="ml-auto font-bold" style={{ color: "var(--wb-accent)" }}>
+                <span className="ml-auto font-bold" style={{ color: "var(--ui-accent)" }}>
                   ✓
                 </span>
               ) : null}
             </Row>
           ))}
         </Group>
-        <p className="mt-3 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mt-3 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
           Applies to the Board's lanes immediately.
         </p>
       </Sheet>

@@ -102,7 +102,7 @@ export function Editor({ repoSlug, path }: { repoSlug: string; path: string }) {
   if (!repo || !file) {
     return (
       <div className="px-[26px] py-[22px]">
-        <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           That file is not in the served tree.
         </p>
       </div>
@@ -117,23 +117,23 @@ export function Editor({ repoSlug, path }: { repoSlug: string; path: string }) {
           type="button"
           onClick={() => navigate({ section: "browse", repo: repoSlug, path: path.split("/").slice(0, -1) })}
           className="shrink-0 text-sm font-semibold"
-          style={{ color: "var(--wb-accent)" }}
+          style={{ color: "var(--ui-accent)" }}
         >
           ‹ Files
         </button>
-        <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--wb-content-secondary)" }}>
-          {repo.name} / <b style={{ color: "var(--wb-content-primary)" }}>{file.name}</b>
+        <span className="min-w-0 flex-1 truncate text-[13.5px]" style={{ color: "var(--ui-content-secondary)" }}>
+          {repo.name} / <b style={{ color: "var(--ui-content-primary)" }}>{file.name}</b>
         </span>
         <span className="ml-auto flex items-center gap-2">
           {dirty ? (
             <span
               className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
               style={{
-                backgroundColor: "color-mix(in srgb, var(--wb-okabe-orange) 16%, transparent)",
-                color: "var(--wb-status-stale-text)",
+                backgroundColor: "color-mix(in srgb, var(--ui-okabe-orange) 16%, transparent)",
+                color: "var(--ui-status-stale-text)",
               }}
             >
-              <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--wb-okabe-orange)" }} />
+              <span className="block h-[7px] w-[7px] rounded-full" style={{ backgroundColor: "var(--ui-okabe-orange)" }} />
               Edited · unsaved
             </span>
           ) : null}
@@ -174,10 +174,10 @@ export function Editor({ repoSlug, path }: { repoSlug: string; path: string }) {
         spellCheck={false}
         className="w-full p-5 font-mono text-[13px] leading-[1.75]"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-lg)",
-          color: "var(--wb-content-primary)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-lg)",
+          color: "var(--ui-content-primary)",
           outline: "none",
         }}
       />

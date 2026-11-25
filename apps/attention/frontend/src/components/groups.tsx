@@ -13,8 +13,8 @@ export function GroupLabel({ children }: { children: ReactNode }) {
 }
 
 export function Group({ children }: { children: ReactNode }) {
-  // .wb-group, not .group — see the collision note in app.css.
-  return <div className="wb-group">{children}</div>;
+  // .ui-group, not .group — see the collision note in app.css.
+  return <div className="ui-group">{children}</div>;
 }
 
 export function Row({
@@ -68,7 +68,7 @@ export function RowValue({ children }: { children: ReactNode }) {
 
 export function Chevron() {
   return (
-    <span style={{ marginLeft: "auto", color: "var(--wb-content-muted)", flex: "0 0 auto" }}>
+    <span style={{ marginLeft: "auto", color: "var(--ui-content-muted)", flex: "0 0 auto" }}>
       <ChevronRight size={15} strokeWidth={2.2} />
     </span>
   );
@@ -96,7 +96,7 @@ export function RadioRow({
     >
       <RowText label={label} sub={sub} />
       {selected ? (
-        <span style={{ marginLeft: "auto", color: "var(--wb-accent)", flex: "0 0 auto" }}>
+        <span style={{ marginLeft: "auto", color: "var(--ui-accent)", flex: "0 0 auto" }}>
           <Check size={18} strokeWidth={2.6} />
         </span>
       ) : null}

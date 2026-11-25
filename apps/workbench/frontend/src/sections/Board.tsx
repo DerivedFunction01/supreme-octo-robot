@@ -30,29 +30,29 @@ function CardView({
     <div
       draggable
       onDragStart={(e) => {
-        e.dataTransfer.setData("text/wb-card", card.id);
+        e.dataTransfer.setData("text/ui-card", card.id);
         e.dataTransfer.effectAllowed = "move";
       }}
       onClick={onOpen}
       className="cursor-pointer p-[11px_12px]"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
+        backgroundColor: "var(--ui-surface-2)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
       }}
       role="button"
       aria-label={card.title}
     >
       <div
         className="truncate text-[11px] font-bold tracking-[0.03em]"
-        style={{ color: "var(--wb-status-canonical-text)" }}
+        style={{ color: "var(--ui-status-canonical-text)" }}
       >
         {card.projectTag}
       </div>
       <div className="my-[3px] text-[13.5px] leading-[1.3] font-semibold [overflow-wrap:anywhere]">{card.title}</div>
       <div
         className="flex flex-wrap items-center gap-2 text-xs"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {card.meta ? <span className="min-w-0 truncate">{card.meta}</span> : null}
         {card.badge?.kind === "review" ? (
@@ -125,7 +125,7 @@ export function Board() {
               onDragLeave={() => setOverLane(null)}
               onDrop={(e) => {
                 e.preventDefault();
-                const id = e.dataTransfer.getData("text/wb-card");
+                const id = e.dataTransfer.getData("text/ui-card");
                 if (id) void a.moveBoardCard(id, lane.key);
                 setOverLane(null);
               }}
@@ -139,16 +139,16 @@ export function Board() {
                 <div
                   className="flex min-h-[120px] flex-col gap-2"
                   style={{
-                    outline: overLane === lane.key ? "2px dashed var(--wb-accent)" : undefined,
+                    outline: overLane === lane.key ? "2px dashed var(--ui-accent)" : undefined,
                     outlineOffset: 2,
-                    borderRadius: "var(--wb-radius-md)",
+                    borderRadius: "var(--ui-radius-md)",
                   }}
                 >
                   {laneCards.map((c) => (
                     <CardView key={c.id} card={c} onOpen={() => open(c)} />
                   ))}
                   {laneCards.length === 0 ? (
-                    <p className="p-2 text-xs" style={{ color: "var(--wb-content-muted)" }}>
+                    <p className="p-2 text-xs" style={{ color: "var(--ui-content-muted)" }}>
                       Drop cards here
                     </p>
                   ) : null}
@@ -157,7 +157,7 @@ export function Board() {
                       type="button"
                       onClick={() => setDoneShown((n) => n + DONE_PAGE)}
                       className="p-2 text-left text-xs font-semibold"
-                      style={{ color: "var(--wb-accent)" }}
+                      style={{ color: "var(--ui-accent)" }}
                     >
                       Show more · {doneWindow.total - doneShown} older done cards
                     </button>

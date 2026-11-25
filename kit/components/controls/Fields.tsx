@@ -35,16 +35,16 @@ import {
  * site that needs a narrower field constrains its
  * container or pins a width class of its own. */
 export const FIELD_STYLE: CSSProperties = {
-  backgroundColor: "var(--wb-surface-2)",
-  color: "var(--wb-content-primary)",
-  borderColor: "var(--wb-field-border)",
+  backgroundColor: "var(--ui-surface-2)",
+  color: "var(--ui-content-primary)",
+  borderColor: "var(--ui-field-border)",
   borderStyle: "solid",
   borderWidth: 1,
-  borderRadius: "var(--wb-button-radius)",
+  borderRadius: "var(--ui-button-radius)",
 };
 
 export const FIELD_CLASSES =
-  "min-h-[38px] w-full max-w-full min-w-0 px-3 text-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring) disabled:cursor-not-allowed disabled:opacity-55 [@media(pointer:coarse)]:min-h-[44px]";
+  "min-h-[38px] w-full max-w-full min-w-0 px-3 text-sm focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring) disabled:cursor-not-allowed disabled:opacity-55 [@media(pointer:coarse)]:min-h-[44px]";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   options: { value: string; label: string; disabled?: boolean }[];
@@ -120,12 +120,12 @@ export function Field({ label, labelHidden = false, children, className, style }
             ? undefined
             : {
                 display: "block",
-                color: "var(--wb-content-secondary)",
-                fontSize: "var(--wb-font-size-xs)",
-                lineHeight: "var(--wb-line-height-xs)",
+                color: "var(--ui-content-secondary)",
+                fontSize: "var(--ui-font-size-xs)",
+                lineHeight: "var(--ui-line-height-xs)",
                 textTransform: "uppercase",
                 letterSpacing: "0.06em",
-                marginBottom: "var(--wb-space-4)",
+                marginBottom: "var(--ui-space-4)",
               }
         }
       >

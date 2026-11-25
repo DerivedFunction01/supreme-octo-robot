@@ -21,43 +21,43 @@ export type ButtonProps = {
 };
 
 const FOCUS =
-  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
+  "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)";
 
 function variantStyle(variant: ButtonVariant, hover: boolean, active: boolean): CSSProperties {
-  const base: CSSProperties = { borderRadius: "var(--wb-button-radius)" };
+  const base: CSSProperties = { borderRadius: "var(--ui-button-radius)" };
   switch (variant) {
     case "primary":
       return {
         ...base,
         backgroundColor: active
-          ? "color-mix(in srgb, var(--wb-accent) 88%, var(--wb-press-shade))"
+          ? "color-mix(in srgb, var(--ui-accent) 88%, var(--ui-press-shade))"
           : hover
-            ? "var(--wb-accent-hover)"
-            : "var(--wb-accent)",
-        color: "var(--wb-on-accent)",
+            ? "var(--ui-accent-hover)"
+            : "var(--ui-accent)",
+        color: "var(--ui-on-accent)",
         borderWidth: 0,
       };
     case "danger":
       return {
         ...base,
         backgroundColor: active
-          ? "color-mix(in srgb, var(--wb-danger) 78%, var(--wb-press-shade))"
+          ? "color-mix(in srgb, var(--ui-danger) 78%, var(--ui-press-shade))"
           : hover
-            ? "color-mix(in srgb, var(--wb-danger) 88%, var(--wb-press-shade))"
-            : "var(--wb-danger)",
-        color: "var(--wb-on-accent)",
+            ? "color-mix(in srgb, var(--ui-danger) 88%, var(--ui-press-shade))"
+            : "var(--ui-danger)",
+        color: "var(--ui-on-accent)",
         borderWidth: 0,
       };
     case "secondary":
       return {
         ...base,
         backgroundColor: active
-          ? "var(--wb-surface-sunken)"
+          ? "var(--ui-surface-sunken)"
           : hover
-            ? "var(--wb-surface-1)"
-            : "var(--wb-surface-2)",
-        color: "var(--wb-content-primary)",
-        borderColor: "var(--wb-field-border)",
+            ? "var(--ui-surface-1)"
+            : "var(--ui-surface-2)",
+        color: "var(--ui-content-primary)",
+        borderColor: "var(--ui-field-border)",
         borderStyle: "solid",
         borderWidth: 1,
       };
@@ -65,11 +65,11 @@ function variantStyle(variant: ButtonVariant, hover: boolean, active: boolean): 
       return {
         ...base,
         backgroundColor: active
-          ? "var(--wb-surface-sunken)"
+          ? "var(--ui-surface-sunken)"
           : hover
-            ? "var(--wb-surface-1)"
+            ? "var(--ui-surface-1)"
             : "transparent",
-        color: hover || active ? "var(--wb-content-primary)" : "var(--wb-content-secondary)",
+        color: hover || active ? "var(--ui-content-primary)" : "var(--ui-content-secondary)",
         borderWidth: 0,
       };
   }

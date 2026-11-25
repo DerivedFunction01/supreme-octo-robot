@@ -54,7 +54,7 @@ function CodeCard({ slug }: { slug: string }) {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
         }}
       >
@@ -85,7 +85,7 @@ function CodeCard({ slug }: { slug: string }) {
         ) : null}
         <a
           href={sectionHref(slug, "code")}
-          style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+          style={{ color: "var(--ui-accent)", textDecoration: "none" }}
         >
           Open Code →
         </a>
@@ -110,7 +110,7 @@ function ShowcaseCard({
           No active plan in the main checkout.
         </EmptyWell>
         {showcase?.note ? (
-          <p style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}>
+          <p style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}>
             {showcase.note}
           </p>
         ) : null}
@@ -124,7 +124,7 @@ function ShowcaseCard({
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
         }}
       >
@@ -132,20 +132,20 @@ function ShowcaseCard({
           <a
             href={sectionHref(slug, "plans", plan.path)}
             style={{
-              color: "var(--wb-content-primary)",
+              color: "var(--ui-content-primary)",
               textDecoration: "none",
               fontWeight: 600,
-              fontSize: "var(--wb-font-size-lg)",
+              fontSize: "var(--ui-font-size-lg)",
             }}
           >
             {plan.title}
           </a>
         ) : (
-          <span style={{ fontWeight: 600, fontSize: "var(--wb-font-size-lg)" }}>{bundle.id}</span>
+          <span style={{ fontWeight: 600, fontSize: "var(--ui-font-size-lg)" }}>{bundle.id}</span>
         )}
         <ProvenanceMark source={showcase.source} />
       </div>
-      <p style={{ color: "var(--wb-content-secondary)", margin: "var(--wb-space-8) 0 0" }}>
+      <p style={{ color: "var(--ui-content-secondary)", margin: "var(--ui-space-8) 0 0" }}>
         {plan ? (
           <>
             {planBucketLabel(plan.status_bucket)} · modified {formatDate(plan.modified)}{" "}
@@ -159,20 +159,20 @@ function ShowcaseCard({
         {showcase.declared?.since ? <> · declared {formatDate(showcase.declared.since)}</> : null}
       </p>
       {showcase.note ? (
-        <p style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}>
+        <p style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}>
           {showcase.note}
         </p>
       ) : null}
       {showcase.also_in_progress.length > 0 ? (
-        <div style={{ marginTop: "var(--wb-space-12)" }}>
+        <div style={{ marginTop: "var(--ui-space-12)" }}>
           <div style={metaStyle}>Also in progress here</div>
-          <ul style={{ listStyle: "none", margin: "var(--wb-space-4) 0 0", padding: 0 }}>
+          <ul style={{ listStyle: "none", margin: "var(--ui-space-4) 0 0", padding: 0 }}>
             {showcase.also_in_progress.map((other) => (
-              <li key={other.bundle.id} style={{ padding: "var(--wb-space-4) 0" }}>
+              <li key={other.bundle.id} style={{ padding: "var(--ui-space-4) 0" }}>
                 {other.plan ? (
                   <a
                     href={sectionHref(slug, "plans", other.plan.path)}
-                    style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                    style={{ color: "var(--ui-accent)", textDecoration: "none" }}
                   >
                     {other.plan.title}
                   </a>
@@ -221,23 +221,23 @@ function WorktreesCard({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "var(--wb-space-12)",
+                  gap: "var(--ui-space-12)",
                   flexWrap: "wrap",
                 }}
               >
                 <span style={{ fontWeight: 600 }}>Main checkout</span>
                 <WorktreeMeta worktree={main} />
               </div>
-              <div style={{ marginTop: "var(--wb-space-4)" }}>
+              <div style={{ marginTop: "var(--ui-space-4)" }}>
                 <ActivePlanLine slug={slug} active={main.active} />
               </div>
-              <div className="mono" style={{ ...metaStyle, marginTop: "var(--wb-space-4)" }}>
+              <div className="mono" style={{ ...metaStyle, marginTop: "var(--ui-space-4)" }}>
                 {main.path}
               </div>
               {/* The main checkout's drill-in: its Changes
                   panel (§18), behind the same kind of toggle
                   the linked children expand with. */}
-              <div style={{ marginTop: "var(--wb-space-8)" }}>
+              <div style={{ marginTop: "var(--ui-space-8)" }}>
                 <Button
                   variant="ghost"
                   ariaLabel={
@@ -248,7 +248,7 @@ function WorktreesCard({
                   <span aria-hidden="true">{mainChangesOpen ? "▾" : "▸"}</span> Changes
                 </Button>
                 {mainChangesOpen ? (
-                  <div style={{ marginTop: "var(--wb-space-12)" }}>
+                  <div style={{ marginTop: "var(--ui-space-12)" }}>
                     <ChangesPanel slug={slug} worktree={main.branch ?? main.path} />
                   </div>
                 ) : null}
@@ -295,11 +295,11 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
         <div
           role="status"
           style={{
-            border: "1px solid var(--wb-border-strong)",
-            borderRadius: "var(--wb-radius-md)",
-            padding: "var(--wb-space-12) var(--wb-space-16)",
-            color: "var(--wb-content-secondary)",
-            marginBottom: "var(--wb-space-16)",
+            border: "1px solid var(--ui-border-strong)",
+            borderRadius: "var(--ui-radius-md)",
+            padding: "var(--ui-space-12) var(--ui-space-16)",
+            color: "var(--ui-content-secondary)",
+            marginBottom: "var(--ui-space-16)",
           }}
         >
           Some of this project's data is degraded — {row.reasons.join(" · ")}.
@@ -309,7 +309,7 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "var(--wb-space-16)",
+          gap: "var(--ui-space-16)",
         }}
       >
         <ShowcaseCard slug={slug} projectName={projectName} showcase={showcase} />
@@ -322,13 +322,13 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
             <div
               style={{
                 display: "flex",
-                gap: "var(--wb-space-24)",
+                gap: "var(--ui-space-24)",
                 flexWrap: "wrap",
               }}
             >
               <a
                 href={sectionHref(slug, "todos")}
-                style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 Todos · <span className="num">{row.todos.total}</span>
                 {row.todos.available
@@ -340,7 +340,7 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
               </a>
               <a
                 href={sectionHref(slug, "plans")}
-                style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 Plans ·{" "}
                 <span className="num">
@@ -349,13 +349,13 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
               </a>
               <a
                 href={sectionHref(slug, "entries")}
-                style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 In triage · <span className="num">{row.review.triage_count}</span>
               </a>
               <a
                 href={sectionHref(slug, "board")}
-                style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 Board
               </a>

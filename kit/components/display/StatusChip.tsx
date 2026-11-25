@@ -20,17 +20,17 @@ import { type CSSProperties } from "react";
 export type StatusTone = "ok" | "info" | "warn" | "fail" | "idle";
 
 const TONE_HUE: Record<Exclude<StatusTone, "idle">, string> = {
-  ok: "var(--wb-status-done)",
-  info: "var(--wb-status-canonical)",
-  warn: "var(--wb-status-stale)",
-  fail: "var(--wb-status-hard-gate)",
+  ok: "var(--ui-status-done)",
+  info: "var(--ui-status-canonical)",
+  warn: "var(--ui-status-stale)",
+  fail: "var(--ui-status-hard-gate)",
 };
 
 const TONE_TEXT: Record<Exclude<StatusTone, "idle">, string> = {
-  ok: "var(--wb-status-done-text)",
-  info: "var(--wb-status-canonical-text)",
-  warn: "var(--wb-status-stale-text)",
-  fail: "var(--wb-status-hard-gate-text)",
+  ok: "var(--ui-status-done-text)",
+  info: "var(--ui-status-canonical-text)",
+  warn: "var(--ui-status-stale-text)",
+  fail: "var(--ui-status-hard-gate-text)",
 };
 
 export type StatusChipProps = {
@@ -47,14 +47,14 @@ export function StatusChip({ tone, label, onPress, large = false, className }: S
   const style: CSSProperties =
     tone === "idle"
       ? {
-          backgroundColor: "var(--wb-surface-sunken)",
-          color: "var(--wb-content-secondary)",
-          borderRadius: "var(--wb-chip-radius)",
+          backgroundColor: "var(--ui-surface-sunken)",
+          color: "var(--ui-content-secondary)",
+          borderRadius: "var(--ui-chip-radius)",
         }
       : {
           backgroundColor: `color-mix(in srgb, ${TONE_HUE[tone]} 14%, transparent)`,
           color: TONE_TEXT[tone],
-          borderRadius: "var(--wb-chip-radius)",
+          borderRadius: "var(--ui-chip-radius)",
         };
   const inner = (
     <>
@@ -62,7 +62,7 @@ export function StatusChip({ tone, label, onPress, large = false, className }: S
         aria-hidden="true"
         className="inline-block h-[7px] w-[7px] shrink-0 rounded-full"
         style={{
-          backgroundColor: tone === "idle" ? "var(--wb-content-muted)" : TONE_HUE[tone],
+          backgroundColor: tone === "idle" ? "var(--ui-content-muted)" : TONE_HUE[tone],
         }}
       />
       <span className="truncate">{label}</span>
@@ -83,7 +83,7 @@ export function StatusChip({ tone, label, onPress, large = false, className }: S
           e.stopPropagation();
           onPress();
         }}
-        className={`${classes} cursor-pointer border-0 focus-visible:outline-2 focus-visible:outline-(--wb-focus-ring)`}
+        className={`${classes} cursor-pointer border-0 focus-visible:outline-2 focus-visible:outline-(--ui-focus-ring)`}
         style={style}
       >
         {inner}

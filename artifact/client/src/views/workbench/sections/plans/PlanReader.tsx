@@ -88,7 +88,7 @@ function SubplanRows({
         if (!target) {
           return (
             <li key={declaredPath}>
-              <div style={{ ...rowStyle, color: "var(--wb-content-muted)" }}>
+              <div style={{ ...rowStyle, color: "var(--ui-content-muted)" }}>
                 <span
                   className="mono"
                   style={isPhone ? { flex: "1 1 100%", overflowWrap: "anywhere" } : { flex: 1 }}
@@ -130,13 +130,13 @@ function SourceView({ source }: { source: string }) {
     };
   }, [source]);
   const style: React.CSSProperties = {
-    background: "var(--wb-surface-sunken)",
-    border: "1px solid var(--wb-border-default)",
-    borderRadius: "var(--wb-radius-md)",
-    padding: "var(--wb-space-16)",
-    fontFamily: "var(--wb-font-mono)",
-    fontSize: "var(--wb-font-size-sm)",
-    lineHeight: "var(--wb-line-height-sm)",
+    background: "var(--ui-surface-sunken)",
+    border: "1px solid var(--ui-border-default)",
+    borderRadius: "var(--ui-radius-md)",
+    padding: "var(--ui-space-16)",
+    fontFamily: "var(--ui-font-mono)",
+    fontSize: "var(--ui-font-size-sm)",
+    lineHeight: "var(--ui-line-height-sm)",
     overflowX: "auto",
     whiteSpace: "pre",
   };
@@ -144,7 +144,7 @@ function SourceView({ source }: { source: string }) {
   // in the style above): keyboard-focusable with the
   // kit's focus ring (critic WB5-1).
   const focusClass =
-    "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)";
+    "focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)";
   if (html == null)
     return (
       <pre tabIndex={0} className={focusClass} style={style}>
@@ -345,7 +345,7 @@ export function PlanReader({
           width: isPhone ? "100%" : "300px",
           flexShrink: 0,
           display: "grid",
-          gap: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
           alignContent: "start",
         }}
       >
@@ -366,11 +366,11 @@ export function PlanReader({
       onKeyUp={armFromSelection}
     >
       <SelectionTintStyle />
-      <p style={{ color: "var(--wb-content-secondary)" }}>
+      <p style={{ color: "var(--ui-content-secondary)" }}>
         <a
           href={sectionHref(slug, "plans")}
           style={{
-            color: "var(--wb-accent)",
+            color: "var(--ui-accent)",
             textDecoration: "underline",
             textUnderlineOffset: "0.14em",
           }}
@@ -384,7 +384,7 @@ export function PlanReader({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          gap: "var(--wb-space-16)",
+          gap: "var(--ui-space-16)",
           // Phone: the title takes its own line and the
           // Annotations count + view switch wrap under it
           // (the mockup carries the count in the top bar;
@@ -399,7 +399,7 @@ export function PlanReader({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             // Phone: the cluster may shrink below its
             // max-content so the view switch wraps inside
             // the header instead of painting past it.
@@ -411,17 +411,17 @@ export function PlanReader({
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "var(--wb-space-4)",
+              gap: "var(--ui-space-4)",
               height: "24px",
-              padding: "0 var(--wb-space-8)",
-              border: "1px solid var(--wb-border-strong)",
-              borderRadius: "var(--wb-radius-pill)",
-              fontSize: "var(--wb-font-size-xs)",
-              color: "var(--wb-content-secondary)",
+              padding: "0 var(--ui-space-8)",
+              border: "1px solid var(--ui-border-strong)",
+              borderRadius: "var(--ui-radius-pill)",
+              fontSize: "var(--ui-font-size-xs)",
+              color: "var(--ui-content-secondary)",
               whiteSpace: "nowrap",
             }}
           >
-            <span aria-hidden="true" style={{ color: "var(--wb-accent)" }}>
+            <span aria-hidden="true" style={{ color: "var(--ui-accent)" }}>
               ✎
             </span>
             Annotations · <span className="num">{count}</span>
@@ -442,11 +442,11 @@ export function PlanReader({
       {/* D7's second compose surface: a comment box anchored
           to the open plan (the Overview showcase mount is the
           same box on the same anchor). */}
-      <div style={{ marginTop: "var(--wb-space-8)" }}>
+      <div style={{ marginTop: "var(--ui-space-8)" }}>
         <AnchoredComment slug={slug} projectName={projectName} anchorType="plan" anchorRef={path} />
       </div>
       {!doc.conforming ? (
-        <div style={{ margin: "var(--wb-space-16) 0" }}>
+        <div style={{ margin: "var(--ui-space-16) 0" }}>
           <KitBanner
             tone="source-format"
             message="Source format"
@@ -454,7 +454,7 @@ export function PlanReader({
         </div>
       ) : null}
       {view === "changes" ? (
-        <div style={{ marginTop: "var(--wb-space-16)" }}>
+        <div style={{ marginTop: "var(--ui-space-16)" }}>
           <ChangesPanel slug={slug} bundle={bundle?.id ?? null} />
         </div>
       ) : view === "source" ? (
@@ -468,10 +468,10 @@ export function PlanReader({
               data-anchor={anchor.planHeader}
               style={{
                 borderCollapse: "collapse",
-                margin: "var(--wb-space-16) 0",
-                background: "var(--wb-surface-2)",
-                border: "1px solid var(--wb-border-default)",
-                borderRadius: "var(--wb-radius-md)",
+                margin: "var(--ui-space-16) 0",
+                background: "var(--ui-surface-2)",
+                border: "1px solid var(--ui-border-default)",
+                borderRadius: "var(--ui-radius-md)",
               }}
             >
               <tbody>
@@ -480,9 +480,9 @@ export function PlanReader({
                     <th
                       style={{
                         textAlign: "left",
-                        padding: "var(--wb-space-8) var(--wb-space-16)",
-                        color: "var(--wb-content-secondary)",
-                        borderBottom: "1px solid var(--wb-border-default)",
+                        padding: "var(--ui-space-8) var(--ui-space-16)",
+                        color: "var(--ui-content-secondary)",
+                        borderBottom: "1px solid var(--ui-border-default)",
                         whiteSpace: "nowrap",
                         verticalAlign: "top",
                       }}
@@ -491,8 +491,8 @@ export function PlanReader({
                     </th>
                     <td
                       style={{
-                        padding: "var(--wb-space-8) var(--wb-space-16)",
-                        borderBottom: "1px solid var(--wb-border-default)",
+                        padding: "var(--ui-space-8) var(--ui-space-16)",
+                        borderBottom: "1px solid var(--ui-border-default)",
                         whiteSpace: "pre-wrap",
                         overflowWrap: isPhone ? "anywhere" : undefined,
                       }}
@@ -520,18 +520,18 @@ export function PlanReader({
                   style={{
                     display: "flex",
                     flexDirection: isPhone ? "column" : "row",
-                    gap: "var(--wb-space-16)",
+                    gap: "var(--ui-space-16)",
                     alignItems: isPhone ? "stretch" : "flex-start",
                   }}
                 >
                   <section
                     data-anchor={sectionAnchor}
-                    style={{ flex: 1, minWidth: 0, marginTop: "var(--wb-space-24)" }}
+                    style={{ flex: 1, minWidth: 0, marginTop: "var(--ui-space-24)" }}
                   >
                     <h3
                       style={{
-                        fontSize: "var(--wb-font-size-lg)",
-                        lineHeight: "var(--wb-line-height-lg)",
+                        fontSize: "var(--ui-font-size-lg)",
+                        lineHeight: "var(--ui-line-height-lg)",
                       }}
                     >
                       {section.heading}
@@ -545,7 +545,7 @@ export function PlanReader({
                               style={{
                                 display: "flex",
                                 flexDirection: isPhone ? "column" : "row",
-                                gap: "var(--wb-space-16)",
+                                gap: "var(--ui-space-16)",
                                 alignItems: isPhone ? "stretch" : "flex-start",
                               }}
                             >
@@ -563,8 +563,8 @@ export function PlanReader({
                     ) : section.is_rulings ? (
                       <div
                         style={{
-                          borderLeft: "2px solid var(--wb-accent)",
-                          paddingLeft: "var(--wb-space-16)",
+                          borderLeft: "2px solid var(--ui-accent)",
+                          paddingLeft: "var(--ui-space-16)",
                         }}
                       >
                         {sectionBlocks.map((block) => (
@@ -600,9 +600,9 @@ export function PlanReader({
       )}
       {view === "formatted" && activeArmed?.hostAnchor === anchor.planReader ? composer : null}
       {threads.length > 0 ? (
-        <div style={{ marginTop: "var(--wb-space-32)" }}>
+        <div style={{ marginTop: "var(--ui-space-32)" }}>
           <h3
-            style={{ fontSize: "var(--wb-font-size-lg)", lineHeight: "var(--wb-line-height-lg)" }}
+            style={{ fontSize: "var(--ui-font-size-lg)", lineHeight: "var(--ui-line-height-lg)" }}
           >
             Annotations · <span className="num">{count}</span>
           </h3>

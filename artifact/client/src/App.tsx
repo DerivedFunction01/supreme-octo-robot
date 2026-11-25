@@ -165,11 +165,11 @@ function useMediaQuery(query: string): boolean {
  *  sectionTitleStyle), so the shell H1 and the views'
  *  remaining headings read as one system. */
 const SHELL_TITLE_STYLE: CSSProperties = {
-  fontSize: "var(--wb-font-size-xl)",
-  lineHeight: "var(--wb-line-height-xl)",
+  fontSize: "var(--ui-font-size-xl)",
+  lineHeight: "var(--ui-line-height-xl)",
   fontWeight: 600,
   letterSpacing: "-0.011em",
-  margin: "0 0 var(--wb-space-16)",
+  margin: "0 0 var(--ui-space-16)",
 };
 
 function Crumb({ segments }: { segments: string[] }) {
@@ -178,7 +178,7 @@ function Crumb({ segments }: { segments: string[] }) {
       {segments.map((segment, i) => (
         <span key={i} className="flex min-w-0 items-center gap-[8px]">
           {i > 0 ? (
-            <span aria-hidden style={{ color: "var(--wb-content-muted)" }}>
+            <span aria-hidden style={{ color: "var(--ui-content-muted)" }}>
               /
             </span>
           ) : null}
@@ -187,8 +187,8 @@ function Crumb({ segments }: { segments: string[] }) {
             style={{
               color:
                 i === segments.length - 1
-                  ? "var(--wb-content-primary)"
-                  : "var(--wb-content-secondary)",
+                  ? "var(--ui-content-primary)"
+                  : "var(--ui-content-secondary)",
               fontWeight: i === segments.length - 1 ? 650 : 500,
             }}
           >
@@ -377,7 +377,7 @@ export default function App() {
           key: "settings",
           label: "Settings",
           icon: (
-            <span style={{ color: "var(--wb-content-secondary)", display: "flex" }}>
+            <span style={{ color: "var(--ui-content-secondary)", display: "flex" }}>
               <SettingsGlyph />
             </span>
           ),
@@ -411,7 +411,7 @@ export default function App() {
             style={{
               display: "flex",
               justifyContent: "flex-end",
-              marginBottom: "var(--wb-space-16)",
+              marginBottom: "var(--ui-space-16)",
             }}
           >
             <div style={{ width: "min(320px, 100%)" }}>{search}</div>

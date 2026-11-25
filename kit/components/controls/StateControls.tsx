@@ -169,8 +169,8 @@ function OptionRows({
         .filter(Boolean)
         .join(" ")}
       style={{
-        backgroundColor: "var(--wb-surface-sunken)",
-        borderRadius: "var(--wb-radius-sm)",
+        backgroundColor: "var(--ui-surface-sunken)",
+        borderRadius: "var(--ui-radius-sm)",
       }}
     >
       <legend className="sr-only">{ariaLabel}</legend>
@@ -186,32 +186,32 @@ function OptionRows({
               checked={checked}
               disabled={disabled}
               onChange={() => onChange(option)}
-              className="peer sr-only wb-segmented-input"
+              className="peer sr-only ui-segmented-input"
             />
             <span
               className={[
-                "wb-segmented-segment flex min-h-[38px] flex-col justify-center gap-0.5 rounded-[var(--wb-radius-sm)] border border-transparent px-3 py-2 [@media(pointer:coarse)]:min-h-[44px]",
-                "peer-checked:border-(--wb-field-border) peer-checked:bg-(--wb-surface-2)",
-                "peer-focus-visible:outline-2 peer-focus-visible:outline-solid peer-focus-visible:outline-offset-1 peer-focus-visible:outline-(--wb-focus-ring)",
+                "ui-segmented-segment flex min-h-[38px] flex-col justify-center gap-0.5 rounded-[var(--ui-radius-sm)] border border-transparent px-3 py-2 [@media(pointer:coarse)]:min-h-[44px]",
+                "peer-checked:border-(--ui-field-border) peer-checked:bg-(--ui-surface-2)",
+                "peer-focus-visible:outline-2 peer-focus-visible:outline-solid peer-focus-visible:outline-offset-1 peer-focus-visible:outline-(--ui-focus-ring)",
                 "peer-disabled:cursor-not-allowed",
               ].join(" ")}
             >
               <span
                 className="text-sm"
                 style={{
-                  color: checked ? "var(--wb-content-primary)" : "var(--wb-content-secondary)",
+                  color: checked ? "var(--ui-content-primary)" : "var(--ui-content-secondary)",
                   fontWeight: checked ? 600 : 400,
                 }}
               >
                 {humanize(option)}
                 {option === recommended ? (
-                  <span style={{ color: "var(--wb-content-secondary)", fontWeight: 400 }}>
+                  <span style={{ color: "var(--ui-content-secondary)", fontWeight: 400 }}>
                     {" · recommended"}
                   </span>
                 ) : null}
               </span>
               {note ? (
-                <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+                <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
                   {note}
                 </span>
               ) : null}
@@ -229,15 +229,15 @@ function FieldError({ problem }: { problem: string }) {
       role="alert"
       className="px-3 py-2 text-sm"
       style={{
-        backgroundColor: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-        borderColor: "var(--wb-status-stale)",
+        backgroundColor: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+        borderColor: "var(--ui-status-stale)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-md)",
-        color: "var(--wb-content-primary)",
+        borderRadius: "var(--ui-radius-md)",
+        color: "var(--ui-content-primary)",
       }}
     >
-      <span aria-hidden="true" style={{ color: "var(--wb-status-stale)" }}>
+      <span aria-hidden="true" style={{ color: "var(--ui-status-stale)" }}>
         ⚠{" "}
       </span>
       {problem}
@@ -288,7 +288,7 @@ export function StateControls({
         const recommended = recommendedValue(spec);
         const notes = optionNotes(spec);
         const questionBlock = question ? (
-          <p className="text-sm" style={{ margin: "0 0 var(--wb-space-4)", fontWeight: 600 }}>
+          <p className="text-sm" style={{ margin: "0 0 var(--ui-space-4)", fontWeight: 600 }}>
             {question}
           </p>
         ) : null;
@@ -297,8 +297,8 @@ export function StateControls({
             <p
               className="text-sm"
               style={{
-                margin: "var(--wb-space-4) 0 0",
-                color: "var(--wb-content-secondary)",
+                margin: "var(--ui-space-4) 0 0",
+                color: "var(--ui-content-secondary)",
               }}
             >
               Recommended:{" "}
@@ -307,14 +307,14 @@ export function StateControls({
           ) : null;
         const notesBlock =
           notes.length > 0 ? (
-            <div style={{ marginTop: "var(--wb-space-4)" }}>
+            <div style={{ marginTop: "var(--ui-space-4)" }}>
               {notes.map(([option, note]) => (
                 <p
                   key={option}
                   className="text-sm"
                   style={{
-                    margin: "0 0 var(--wb-space-2)",
-                    color: "var(--wb-content-secondary)",
+                    margin: "0 0 var(--ui-space-2)",
+                    color: "var(--ui-content-secondary)",
                   }}
                 >
                   <span className="mono">{option}</span>
@@ -342,7 +342,7 @@ export function StateControls({
             <div key={key} className="py-1">
               <p
                 className="text-xs font-semibold tracking-[0.06em] uppercase"
-                style={{ margin: "0 0 var(--wb-space-2)", color: "var(--wb-content-muted)" }}
+                style={{ margin: "0 0 var(--ui-space-2)", color: "var(--ui-content-muted)" }}
               >
                 {label}
               </p>
@@ -480,14 +480,14 @@ export function StateControls({
               }
             >
               {labelIsSpan ? (
-                <span className="min-w-0 text-sm" style={{ color: "var(--wb-content-primary)" }}>
+                <span className="min-w-0 text-sm" style={{ color: "var(--ui-content-primary)" }}>
                   {label}
                 </span>
               ) : (
                 <label
                   htmlFor={controlId}
                   className="min-w-0 text-sm"
-                  style={{ color: "var(--wb-content-primary)" }}
+                  style={{ color: "var(--ui-content-primary)" }}
                 >
                   {label}
                 </label>
@@ -507,17 +507,17 @@ export function StateControls({
       aria-label={title}
       className={className}
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-panel-radius)",
-        padding: "var(--wb-panel-padding)",
+        borderRadius: "var(--ui-panel-radius)",
+        padding: "var(--ui-panel-padding)",
       }}
     >
       <h3
         className="mb-3 text-xs font-semibold tracking-[0.06em] uppercase"
-        style={{ color: "var(--wb-content-secondary)" }}
+        style={{ color: "var(--ui-content-secondary)" }}
       >
         {title}
       </h3>

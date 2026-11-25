@@ -131,7 +131,7 @@ export function TodayView() {
             label={`FYI · ${today.fyi.count} items`}
             sub={today.fyi.newest_title ? `Newest: ${today.fyi.newest_title}` : "Nothing new"}
           />
-          <span style={{ marginLeft: "auto", color: "var(--wb-content-muted)" }}>
+          <span style={{ marginLeft: "auto", color: "var(--ui-content-muted)" }}>
             {fyiOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </span>
         </Row>

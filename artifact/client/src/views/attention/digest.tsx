@@ -74,7 +74,7 @@ export function DigestView() {
               <div className="text-[15px] font-semibold [overflow-wrap:anywhere]">{row.title}</div>
               <div
                 className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px]"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
                 {handlerLink(row.handle, row.handler_label)}
                 <span>
@@ -99,7 +99,7 @@ export function DigestView() {
               </div>
               <div
                 className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px]"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
                 {handlerLink(s.handle, s.handler_label)}
                 <span>· no status for {s.age_hours}h</span>
@@ -167,7 +167,7 @@ export function DigestView() {
                     {l.status_label ? (
                       <StatusChip tone="info" label={l.status_label} />
                     ) : (
-                      <span style={{ color: "var(--wb-content-muted)" }}>no status</span>
+                      <span style={{ color: "var(--ui-content-muted)" }}>no status</span>
                     )}
                     {l.stale ? <StatusChip tone="warn" label="Stalled" /> : null}
                     {(l.quick_verbs ?? []).map((v) => (
@@ -202,7 +202,7 @@ export function DigestView() {
                 <div className="text-[15px] font-semibold [overflow-wrap:anywhere]">
                   {p.title || p.path}
                 </div>
-                <div className="mt-1 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+                <div className="mt-1 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
                   {p.project}
                   {p.age_days === null
                     ? ""
@@ -243,7 +243,7 @@ function StaffingCards({
           </div>
           <div
             className="mt-1 flex flex-wrap items-center gap-1.5 text-[13px]"
-            style={{ color: "var(--wb-content-secondary)" }}
+            style={{ color: "var(--ui-content-secondary)" }}
           >
             {s.handle ? handlerLink(s.handle, s.topic) : null}
             <span>{s.detail}</span>

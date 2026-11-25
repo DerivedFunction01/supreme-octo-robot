@@ -254,12 +254,12 @@ export function DecisionSheet({
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <HandlerChip label={item.handler_label} severity={item.severity} />
-          <span className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <span className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             {item.waiting_label}
           </span>
         </div>
         {item.rule_hint ? (
-          <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             {item.rule_hint}
           </p>
         ) : null}
@@ -268,8 +268,8 @@ export function DecisionSheet({
           <div
             className="rounded-md px-3 py-2 text-sm"
             style={{
-              backgroundColor: "color-mix(in srgb, var(--wb-status-hard-gate) 12%, transparent)",
-              color: "var(--wb-status-hard-gate-text)",
+              backgroundColor: "color-mix(in srgb, var(--ui-status-hard-gate) 12%, transparent)",
+              color: "var(--ui-status-hard-gate-text)",
             }}
             role="alert"
           >
@@ -319,7 +319,7 @@ export function DecisionSheet({
         ) : null}
 
         {ruleArmed ? (
-          <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             Now tap the option to rule standing.
           </p>
         ) : null}
@@ -381,7 +381,7 @@ export function DecisionSheet({
         ) : null}
 
         {error ? (
-          <p className="text-sm" role="alert" style={{ color: "var(--wb-status-hard-gate-text)" }}>
+          <p className="text-sm" role="alert" style={{ color: "var(--ui-status-hard-gate-text)" }}>
             {error}
           </p>
         ) : null}

@@ -35,28 +35,28 @@ function varName(path) {
   const tier = parts[0];
   if (tier === "primitive") {
     parts = parts.slice(1);
-    if (parts[0] === "color") parts = parts.slice(1); // --wb-olive-500, --wb-okabe-blue
-    return `--wb-${parts.join("-")}`;
+    if (parts[0] === "color") parts = parts.slice(1); // --ui-olive-500, --ui-okabe-blue
+    return `--ui-${parts.join("-")}`;
   }
   if (tier === "semantic") {
     parts = parts.slice(3); // drop semantic.<palette>.<mode>
-    return `--wb-${parts.join("-")}`;
+    return `--ui-${parts.join("-")}`;
   }
   if (tier === "status") {
     const [, name, kind] = parts;
-    if (name === "chart") return `--wb-chart-${kind}`;
-    if (kind === "hue") return `--wb-status-${name}`;
-    if (kind === "text") return `--wb-status-${name}-text`;
-    return `--wb-status-${name}-${kind}`;
+    if (name === "chart") return `--ui-chart-${kind}`;
+    if (kind === "hue") return `--ui-status-${name}`;
+    if (kind === "text") return `--ui-status-${name}-text`;
+    return `--ui-status-${name}-${kind}`;
   }
   if (tier === "component") {
-    return `--wb-${parts.slice(1).join("-")}`;
+    return `--ui-${parts.slice(1).join("-")}`;
   }
   if (tier === "density") {
     // density.<set>.<name> -> the SAME variable the component tier defines
-    // (--wb-card-padding, --wb-row-height, ...): density re-points names,
+    // (--ui-card-padding, --ui-row-height, ...): density re-points names,
     // it never renames them.
-    return `--wb-${parts.slice(2).join("-")}`;
+    return `--ui-${parts.slice(2).join("-")}`;
   }
   throw new Error(`unknown tier: ${path.join(".")}`);
 }
@@ -80,7 +80,7 @@ function cssValue(raw) {
     const target = raw.slice(1, -1);
     return `var(${varName(target.split("."))})`;
   }
-  return raw; // literal, or an explicit var(--wb-...) recorded in tokens.json
+  return raw; // literal, or an explicit var(--ui-...) recorded in tokens.json
 }
 
 function declarations(entries, indent = "  ") {
@@ -171,8 +171,8 @@ function paletteCss(palette) {
     const stat = [];
     for (const [name, st] of Object.entries(tokens.status)) {
       if (name === "chart") continue;
-      stat.push([`--wb-status-${name}`, cssValue(st.hue.$value)]);
-      stat.push([`--wb-status-${name}-text`, cssValue(st.text[mode].$value)]);
+      stat.push([`--ui-status-${name}`, cssValue(st.hue.$value)]);
+      stat.push([`--ui-status-${name}-text`, cssValue(st.text[mode].$value)]);
     }
     const comp = flatten(tokens.component, ["component"]);
     return [...sem, ...stat, ...comp];
@@ -232,7 +232,7 @@ const indexCss =
   palettes.map((p) => `@import "./${p}.css";`).join("\n") +
   "\n\n:root {\n" +
   declarations([...primitiveDecls, ...chartDecls]) +
-  "\n  scrollbar-color: var(--wb-border-default) transparent;\n  scrollbar-width: thin;\n}\n" +
+  "\n  scrollbar-color: var(--ui-border-default) transparent;\n  scrollbar-width: thin;\n}\n" +
   "\n@theme {\n" +
   themeLines.join("\n") +
   "\n}\n" +
@@ -246,16 +246,16 @@ const indexCss =
   // inline in App.tsx; the phone shell is plain flow and
   // needs nothing of its own.)
   "\nhtml {\n  overscroll-behavior: none;\n}\n" +
-  "\nbody {\n  font-family: var(--wb-font-ui);\n  background: var(--wb-surface-canvas);\n  color: var(--wb-content-primary);\n  overscroll-behavior: none;\n}\n" +
+  "\nbody {\n  font-family: var(--ui-font-ui);\n  background: var(--ui-surface-canvas);\n  color: var(--ui-content-primary);\n  overscroll-behavior: none;\n}\n" +
   "\n.hatch-space-root {\n  overscroll-behavior: none;\n}\n" +
   '\n.num {\n  font-feature-settings: "tnum";\n}\n' +
-  '\n.mono {\n  font-family: var(--wb-font-mono);\n  font-feature-settings: "zero";\n}\n' +
+  '\n.mono {\n  font-family: var(--ui-font-mono);\n  font-feature-settings: "zero";\n}\n' +
   // Task lists (plan syntax standard): marked already emits
   // disabled checkbox inputs for - [ ] / - [x] items; the
   // prose scope only drops the redundant bullet and styles
   // the box from tokens.
-  '\n.wb-prose li:has(> input[type="checkbox"]) {\n  list-style: none;\n}\n' +
-  '\n.wb-prose li > input[type="checkbox"] {\n  accent-color: var(--wb-accent);\n  margin-right: var(--wb-space-8);\n  vertical-align: -0.12em;\n}\n' +
+  '\n.ui-prose li:has(> input[type="checkbox"]) {\n  list-style: none;\n}\n' +
+  '\n.ui-prose li > input[type="checkbox"] {\n  accent-color: var(--ui-accent);\n  margin-right: var(--ui-space-8);\n  vertical-align: -0.12em;\n}\n' +
   // Prose links (plan syntax standard): marked emits
   // bare anchors into the prose scope, and the document
   // preflight leaves them inheriting the body colour
@@ -269,7 +269,7 @@ const indexCss =
   // underline with a small offset. The accent token is
   // already per-palette and per-mode, so one rule
   // covers every appearance.
-  '\n.wb-prose a {\n  color: var(--wb-accent);\n  text-decoration: underline;\n  text-underline-offset: 0.14em;\n}\n' +
+  '\n.ui-prose a {\n  color: var(--ui-accent);\n  text-decoration: underline;\n  text-underline-offset: 0.14em;\n}\n' +
   // Segmented controls (SegmentedControl, StateControls
   // option rows): the native radio is visually hidden, so
   // its keyboard focus indication must land on the visible
@@ -278,7 +278,7 @@ const indexCss =
   // Tailwind build generated it from kit sources (the
   // @source seam in the kit README) — this kit-owned rule
   // ships in the kit's own CSS and holds regardless.
-  '\n.wb-segmented-input:focus-visible + .wb-segmented-segment {\n  outline: 2px solid var(--wb-focus-ring);\n  outline-offset: 1px;\n}\n' +
+  '\n.ui-segmented-input:focus-visible + .ui-segmented-segment {\n  outline: 2px solid var(--ui-focus-ring);\n  outline-offset: 1px;\n}\n' +
   // Toggle (components/controls/Toggle.tsx): the visible focus
   // indicator lands on the track span, not the button —
   // the button suppresses its own outline so the ring
@@ -301,7 +301,7 @@ const indexCss =
   // outset separator would need contrast with the
   // backdrop instead, which the kit cannot know — the
   // track sits on cards, rows, and canvas alike.)
-  '\n.wb-toggle:focus-visible .wb-toggle-track {\n  outline: 2px solid var(--wb-focus-ring);\n  outline-offset: 1px;\n  box-shadow: inset 0 0 0 2px var(--wb-on-accent);\n}\n' +
+  '\n.ui-toggle:focus-visible .ui-toggle-track {\n  outline: 2px solid var(--ui-focus-ring);\n  outline-offset: 1px;\n  box-shadow: inset 0 0 0 2px var(--ui-on-accent);\n}\n' +
   // Checkbox (components/controls/Checkbox.tsx): the same
   // camouflage shape as the Toggle, one component over.
   // The visible element IS the button — a locked circle
@@ -322,7 +322,7 @@ const indexCss =
   // its on- colour is constant too, and the band holds
   // against the fill the same 3.42:1 the check itself
   // does, in both modes.
-  '\n.wb-checkbox:focus-visible {\n  outline: 2px solid var(--wb-focus-ring);\n  outline-offset: 1px;\n  box-shadow: inset 0 0 0 2px #fff;\n}\n' +
+  '\n.ui-checkbox:focus-visible {\n  outline: 2px solid var(--ui-focus-ring);\n  outline-offset: 1px;\n  box-shadow: inset 0 0 0 2px #fff;\n}\n' +
   "\n@media (prefers-reduced-motion: reduce) {\n  *, *::before, *::after {\n    animation-duration: 0.01ms !important;\n    transition-duration: 0.01ms !important;\n  }\n}\n" +
   densityCss;
 

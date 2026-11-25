@@ -14,9 +14,9 @@ import { formatShortHash } from "../../lib/format";
 import type { EntryFile, Envelope, PeekResult } from "./types";
 
 const monoStyle: React.CSSProperties = {
-  fontFamily: "var(--wb-font-mono)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  fontFamily: "var(--ui-font-mono)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
 };
 
 export function FilePanel({
@@ -37,7 +37,7 @@ export function FilePanel({
   return (
     <Card title="Files">
       {files.length === 0 ? (
-        <p style={{ margin: 0, color: "var(--wb-content-secondary)" }}>
+        <p style={{ margin: 0, color: "var(--ui-content-secondary)" }}>
           No local files — this entry is held by reference.
         </p>
       ) : (
@@ -55,35 +55,35 @@ export function FilePanel({
                   type="button"
                   aria-pressed={selected === file.path}
                   onClick={() => setSelected(file.path)}
-                  className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                  className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "var(--wb-space-8)",
+                    gap: "var(--ui-space-8)",
                     width: "100%",
-                    minHeight: "max(38px, var(--wb-row-height))",
-                    padding: "var(--wb-space-4) var(--wb-space-8)",
+                    minHeight: "max(38px, var(--ui-row-height))",
+                    padding: "var(--ui-space-4) var(--ui-space-8)",
                     textAlign: "left",
                     cursor: "pointer",
-                    background: selected === file.path ? "var(--wb-surface-1)" : "transparent",
+                    background: selected === file.path ? "var(--ui-surface-1)" : "transparent",
                     border:
                       selected === file.path
-                        ? "1px solid var(--wb-border-strong)"
+                        ? "1px solid var(--ui-border-strong)"
                         : "1px solid transparent",
-                    borderRadius: "var(--wb-radius-md)",
-                    color: "var(--wb-content-primary)",
+                    borderRadius: "var(--ui-radius-md)",
+                    color: "var(--ui-content-primary)",
                   }}
                 >
                   <span className="mono" style={{ overflowWrap: "anywhere" }}>
                     {file.path}
                   </span>
                   {file.is_main ? (
-                    <span style={{ color: "var(--wb-content-secondary)" }}>main file</span>
+                    <span style={{ color: "var(--ui-content-secondary)" }}>main file</span>
                   ) : null}
                   {configPath && file.path === configPath ? (
-                    <span style={{ color: "var(--wb-content-secondary)" }}>config</span>
+                    <span style={{ color: "var(--ui-content-secondary)" }}>config</span>
                   ) : null}
-                  <span className="num" style={{ color: "var(--wb-content-secondary)" }}>
+                  <span className="num" style={{ color: "var(--ui-content-secondary)" }}>
                     {file.size_bytes} B
                   </span>
                 </button>
@@ -158,28 +158,28 @@ function PeekView({
   });
 
   return (
-    <div style={{ marginTop: "var(--wb-space-12)" }}>
+    <div style={{ marginTop: "var(--ui-space-12)" }}>
       {peekQuery.isPending ? (
-        <p style={{ color: "var(--wb-content-secondary)" }}>Peeking {path}…</p>
+        <p style={{ color: "var(--ui-content-secondary)" }}>Peeking {path}…</p>
       ) : peekEnvelope && peekEnvelope.status !== 200 ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           {peekEnvelope.error ?? "The file could not be peeked."}
         </p>
       ) : peek ? (
         <>
           <p
-            style={{ ...monoStyle, color: "var(--wb-content-secondary)", overflowWrap: "anywhere" }}
+            style={{ ...monoStyle, color: "var(--ui-content-secondary)", overflowWrap: "anywhere" }}
           >
             sha256 {peek.sha256 ?? "—"}
             {peek.truncated ? " · truncated at the peek caps" : ""}
             {peek.line_count != null ? ` · ${peek.line_count} lines` : ""}
           </p>
           {peek.withheld === "secret" ? (
-            <p role="alert" style={{ color: "var(--wb-danger)" }}>
+            <p role="alert" style={{ color: "var(--ui-danger)" }}>
               Withheld — this path is secret-shaped and is never shown here.
             </p>
           ) : peek.is_binary ? (
-            <p style={{ color: "var(--wb-content-secondary)" }}>
+            <p style={{ color: "var(--ui-content-secondary)" }}>
               Binary file — no text preview. sha {formatShortHash(peek.sha256)} identifies its
               current content.
             </p>
@@ -193,18 +193,18 @@ function PeekView({
                 style={{
                   ...monoStyle,
                   width: "100%",
-                  background: "var(--wb-surface-sunken)",
-                  color: "var(--wb-content-primary)",
-                  border: "1px solid var(--wb-border-default)",
-                  borderRadius: "var(--wb-radius-md)",
-                  padding: "var(--wb-space-8)",
+                  background: "var(--ui-surface-sunken)",
+                  color: "var(--ui-content-primary)",
+                  border: "1px solid var(--ui-border-default)",
+                  borderRadius: "var(--ui-radius-md)",
+                  padding: "var(--ui-space-8)",
                 }}
               />
               <div
                 style={{
                   display: "flex",
-                  gap: "var(--wb-space-8)",
-                  marginTop: "var(--wb-space-8)",
+                  gap: "var(--ui-space-8)",
+                  marginTop: "var(--ui-space-8)",
                 }}
               >
                 <Button
@@ -228,34 +228,34 @@ function PeekView({
             <>
               <pre
                 tabIndex={0}
-                className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                 style={{
                   ...monoStyle,
                   whiteSpace: "pre-wrap",
                   overflowWrap: "anywhere",
                   maxHeight: "320px",
                   overflow: "auto",
-                  background: "var(--wb-surface-sunken)",
-                  border: "1px solid var(--wb-border-default)",
-                  borderRadius: "var(--wb-radius-md)",
-                  padding: "var(--wb-space-8)",
+                  background: "var(--ui-surface-sunken)",
+                  border: "1px solid var(--ui-border-default)",
+                  borderRadius: "var(--ui-radius-md)",
+                  padding: "var(--ui-space-8)",
                   margin: 0,
                 }}
               >
                 {peek.content}
               </pre>
-              <p style={{ color: "var(--wb-content-secondary)" }}>
+              <p style={{ color: "var(--ui-content-secondary)" }}>
                 Read-only — {peek.editable_reason ?? "not editable"}.
               </p>
             </>
           )}
           {conflict ? (
-            <p role="alert" style={{ color: "var(--wb-danger)" }}>
+            <p role="alert" style={{ color: "var(--ui-danger)" }}>
               {conflict}
             </p>
           ) : null}
           {notice ? (
-            <p role="status" style={{ color: "var(--wb-content-secondary)" }}>
+            <p role="status" style={{ color: "var(--ui-content-secondary)" }}>
               {notice}
             </p>
           ) : null}

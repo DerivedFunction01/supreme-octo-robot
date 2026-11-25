@@ -33,13 +33,13 @@ const countBadgeStyle: React.CSSProperties = {
   // inside a flex container those collapse, which jammed
   // label+count together ("Plans2· 1 in progress",
   // critic m-6). Badge children are separate elements.
-  gap: "var(--wb-space-4)",
-  padding: "1px var(--wb-space-8)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-pill)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
-  color: "var(--wb-content-secondary)",
+  gap: "var(--ui-space-4)",
+  padding: "1px var(--ui-space-8)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-pill)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
+  color: "var(--ui-content-secondary)",
   whiteSpace: "nowrap",
 };
 
@@ -62,7 +62,7 @@ function AlsoAtLine({ row }: { row: HomeRow }) {
   const also = row.also_at ?? [];
   if (also.length === 0) return null;
   return (
-    <div style={{ ...metaStyle, marginTop: "var(--wb-space-4)" }} title={also.join("\n")}>
+    <div style={{ ...metaStyle, marginTop: "var(--ui-space-4)" }} title={also.join("\n")}>
       <span className="num">{also.length}</span> {also.length === 1 ? "stale copy" : "stale copies"}{" "}
       folded into this project
     </div>
@@ -88,22 +88,22 @@ function ProjectRow({ row }: { row: HomeRow }) {
     return (
       <li
         style={{
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-lg)",
-          background: "var(--wb-surface-1)",
-          padding: "var(--wb-card-padding)",
-          marginBottom: "var(--wb-space-16)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-lg)",
+          background: "var(--ui-surface-1)",
+          padding: "var(--ui-card-padding)",
+          marginBottom: "var(--ui-space-16)",
         }}
       >
         <div>
           <a
             href={sectionHref(row.slug, "overview")}
             style={{
-              color: "var(--wb-content-primary)",
+              color: "var(--ui-content-primary)",
               textDecoration: "none",
               fontWeight: 700,
-              fontSize: "var(--wb-font-size-base)",
-              lineHeight: "var(--wb-line-height-base)",
+              fontSize: "var(--ui-font-size-base)",
+              lineHeight: "var(--ui-line-height-base)",
               // The name is the card's only target. As a
               // plain inline box its target height is the
               // font's content height (20px at base size);
@@ -123,9 +123,9 @@ function ProjectRow({ row }: { row: HomeRow }) {
             style={{
               display: "flex",
               flexWrap: "wrap",
-              gap: "var(--wb-space-8)",
+              gap: "var(--ui-space-8)",
               alignItems: "center",
-              marginTop: "var(--wb-space-8)",
+              marginTop: "var(--ui-space-8)",
             }}
           >
             <span className="mono" style={countBadgeStyle}>
@@ -139,14 +139,14 @@ function ProjectRow({ row }: { row: HomeRow }) {
             {children.length > 0 ? <span style={countBadgeStyle}>main checkout</span> : null}
           </div>
         ) : (
-          <div style={{ ...metaStyle, marginTop: "var(--wb-space-8)" }}>not a git repo</div>
+          <div style={{ ...metaStyle, marginTop: "var(--ui-space-8)" }}>not a git repo</div>
         )}
         <div
           style={{
             display: "flex",
             flexWrap: "wrap",
-            gap: "var(--wb-space-8)",
-            marginTop: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
+            marginTop: "var(--ui-space-8)",
           }}
         >
           {row.plans.available ? (
@@ -179,24 +179,24 @@ function ProjectRow({ row }: { row: HomeRow }) {
           ) : null}
         </div>
         {row.last_activity ? (
-          <div style={{ ...metaStyle, marginTop: "var(--wb-space-8)" }}>
+          <div style={{ ...metaStyle, marginTop: "var(--ui-space-8)" }}>
             active {formatDate(row.last_activity)} {formatRelative(row.last_activity)}
           </div>
         ) : null}
         {row.degraded ? (
-          <div style={{ ...metaStyle, color: "var(--wb-danger)", marginTop: "var(--wb-space-4)" }}>
+          <div style={{ ...metaStyle, color: "var(--ui-danger)", marginTop: "var(--ui-space-4)" }}>
             degraded{row.reasons[0] ? ` — ${row.reasons[0]}` : ""}
           </div>
         ) : null}
         <AlsoAtLine row={row} />
-        <div style={{ marginTop: "var(--wb-space-8)" }}>
+        <div style={{ marginTop: "var(--ui-space-8)" }}>
           {row.showcase && row.showcase.source !== "none" ? (
             <ActivePlanLine slug={row.slug} active={row.showcase} />
           ) : row.plans.in_progress ? (
-            <span style={{ display: "inline-flex", gap: "var(--wb-space-8)", flexWrap: "wrap" }}>
+            <span style={{ display: "inline-flex", gap: "var(--ui-space-8)", flexWrap: "wrap" }}>
               <a
                 href={sectionHref(row.slug, "plans", row.plans.in_progress.path)}
-                style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+                style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 {row.plans.in_progress.title}
               </a>
@@ -213,22 +213,22 @@ function ProjectRow({ row }: { row: HomeRow }) {
   return (
     <li
       style={{
-        borderBottom: "1px solid var(--wb-border-default)",
-        padding: "var(--wb-space-12) 0",
+        borderBottom: "1px solid var(--ui-border-default)",
+        padding: "var(--ui-space-12) 0",
       }}
     >
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
         }}
       >
         <a
           href={sectionHref(row.slug, "overview")}
           style={{
-            color: "var(--wb-content-primary)",
+            color: "var(--ui-content-primary)",
             textDecoration: "none",
             fontWeight: 600,
           }}
@@ -257,7 +257,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
           </span>
         ) : null}
         {row.degraded ? (
-          <span style={{ ...metaStyle, color: "var(--wb-danger)" }}>
+          <span style={{ ...metaStyle, color: "var(--ui-danger)" }}>
             degraded{row.reasons[0] ? ` — ${row.reasons[0]}` : ""}
           </span>
         ) : null}
@@ -266,13 +266,13 @@ function ProjectRow({ row }: { row: HomeRow }) {
       <div
         style={{
           display: "flex",
-          gap: "var(--wb-space-24)",
+          gap: "var(--ui-space-24)",
           flexWrap: "wrap",
-          marginTop: "var(--wb-space-4)",
-          fontSize: "var(--wb-font-size-sm)",
+          marginTop: "var(--ui-space-4)",
+          fontSize: "var(--ui-font-size-sm)",
         }}
       >
-        <span style={{ color: "var(--wb-content-secondary)" }}>
+        <span style={{ color: "var(--ui-content-secondary)" }}>
           {row.plans.available ? (
             <>
               Plans <span className="num">{row.plans.total}</span>
@@ -282,7 +282,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
             "No plans directory"
           )}
         </span>
-        <span style={{ color: "var(--wb-content-secondary)" }}>
+        <span style={{ color: "var(--ui-content-secondary)" }}>
           {row.todos.available ? (
             <>
               Todos <span className="num">{row.todos.total}</span>
@@ -293,20 +293,20 @@ function ProjectRow({ row }: { row: HomeRow }) {
           )}
         </span>
         {row.review.available && (row.review.triage_count > 0 || row.review.stale_count > 0) ? (
-          <span style={{ color: "var(--wb-content-secondary)" }}>
+          <span style={{ color: "var(--ui-content-secondary)" }}>
             <span className="num">{row.review.triage_count}</span> in triage ·{" "}
             <span className="num">{row.review.stale_count}</span> stale
           </span>
         ) : null}
       </div>
-      <div style={{ marginTop: "var(--wb-space-4)" }}>
+      <div style={{ marginTop: "var(--ui-space-4)" }}>
         {row.showcase && row.showcase.source !== "none" ? (
           <ActivePlanLine slug={row.slug} active={row.showcase} />
         ) : row.plans.in_progress ? (
-          <span style={{ display: "inline-flex", gap: "var(--wb-space-8)" }}>
+          <span style={{ display: "inline-flex", gap: "var(--ui-space-8)" }}>
             <a
               href={sectionHref(row.slug, "plans", row.plans.in_progress.path)}
-              style={{ color: "var(--wb-accent)", textDecoration: "none" }}
+              style={{ color: "var(--ui-accent)", textDecoration: "none" }}
             >
               {row.plans.in_progress.title}
             </a>
@@ -345,22 +345,22 @@ function RepoOnlyRow({ row }: { row: ProjectIndexRow }) {
   return (
     <li
       style={{
-        borderBottom: "1px solid var(--wb-border-default)",
-        padding: "var(--wb-space-12) 0",
+        borderBottom: "1px solid var(--ui-border-default)",
+        padding: "var(--ui-space-12) 0",
       }}
     >
       <div
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
         }}
       >
         <a
           href={sectionHref(row.id, "overview")}
           style={{
-            color: "var(--wb-content-primary)",
+            color: "var(--ui-content-primary)",
             textDecoration: "none",
             fontWeight: 600,
           }}
@@ -390,7 +390,7 @@ function RepoOnlyRow({ row }: { row: ProjectIndexRow }) {
           </span>
         ) : null}
         {row.missing ? (
-          <span style={{ ...metaStyle, color: "var(--wb-danger)" }}>
+          <span style={{ ...metaStyle, color: "var(--ui-danger)" }}>
             not found on disk
           </span>
         ) : null}
@@ -441,7 +441,7 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            marginBottom: "var(--wb-space-12)",
+            marginBottom: "var(--ui-space-12)",
           }}
         >
           {picker ? (
@@ -449,18 +449,18 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           ) : (
             <span
               style={{
-                fontSize: "var(--wb-font-size-xs)",
-                lineHeight: "var(--wb-line-height-xs)",
+                fontSize: "var(--ui-font-size-xs)",
+                lineHeight: "var(--ui-line-height-xs)",
                 fontWeight: 700,
                 letterSpacing: "0.07em",
                 textTransform: "uppercase",
-                color: "var(--wb-content-muted)",
+                color: "var(--ui-content-muted)",
               }}
             >
               Projects
             </span>
           )}
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--wb-space-8)" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "var(--ui-space-8)" }}>
             <UpdatedAgo capturedAt={feed.captured_at} />
             <span className="num" style={countBadgeStyle}>
               {feed.projects.length}
@@ -478,15 +478,15 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           style={{
             display: "flex",
             alignItems: "baseline",
-            gap: "var(--wb-space-12)",
-            marginBottom: "var(--wb-space-16)",
+            gap: "var(--ui-space-12)",
+            marginBottom: "var(--ui-space-16)",
           }}
         >
           <UpdatedAgo capturedAt={feed.captured_at} />
         </div>
       )}
       {sweepErrors.length > 0 ? (
-        <p style={{ color: "var(--wb-danger)" }}>
+        <p style={{ color: "var(--ui-danger)" }}>
           {sweepErrors.map((e) => `${e.path ?? "sweep"}: ${e.reason ?? ""}`).join(" · ")}
         </p>
       ) : null}
@@ -494,11 +494,11 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
         <div
           style={{
             display: "flex",
-            gap: "var(--wb-space-24)",
+            gap: "var(--ui-space-24)",
             flexWrap: "wrap",
-            marginBottom: "var(--wb-space-16)",
-            fontSize: "var(--wb-font-size-sm)",
-            color: "var(--wb-content-secondary)",
+            marginBottom: "var(--ui-space-16)",
+            fontSize: "var(--ui-font-size-sm)",
+            color: "var(--ui-content-secondary)",
           }}
         >
           <span>
@@ -537,8 +537,8 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           <div
             style={{
               ...metaStyle,
-              marginTop: "var(--wb-space-24)",
-              marginBottom: "var(--wb-space-4)",
+              marginTop: "var(--ui-space-24)",
+              marginBottom: "var(--ui-space-4)",
               fontWeight: 700,
               letterSpacing: "0.07em",
               textTransform: "uppercase",
@@ -558,8 +558,8 @@ export function HomeSection({ picker = false }: { picker?: boolean } = {}) {
           <div
             style={{
               ...metaStyle,
-              marginTop: "var(--wb-space-24)",
-              marginBottom: "var(--wb-space-4)",
+              marginTop: "var(--ui-space-24)",
+              marginBottom: "var(--ui-space-4)",
               fontWeight: 700,
               letterSpacing: "0.07em",
               textTransform: "uppercase",

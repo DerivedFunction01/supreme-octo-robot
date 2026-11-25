@@ -1,15 +1,11 @@
 # Workhorse Kit v1
 
 The one shared design system for the workhorse apps (scheduler,
-workbench, runner, attention) and every later consumer. The
-kit's source of truth is the spec-driven starter's
-`workhorse-kit/` directory; this directory is that kit's
-vendored copy in this repo (see `PROVENANCE.md` for the sync
-discipline and the drift check). Consumers in this repo resolve
-the kit from here; the kit is never forked or copied per app.
-The token system was authored in workbench-viewer (extraction
-pin `b0b9cc5`); the workbench is a consumer like every other
-app.
+workbench, runner, attention) and every later consumer. This
+directory is the kit's home, in this repo: the kit is built
+once here; the apps consume it, they never fork or copy it.
+Each app eventually gets its own kit; until an app splits,
+this shared kit is its kit (see `PROVENANCE.md`).
 
 ## Contents
 
@@ -26,25 +22,20 @@ Consumers depend on this home as the package `@workhorse/kit`
   text and essential-content token against every surface, both
   palettes × both modes, read from `tokens/tokens.json`.
 - `themes/` — the generated CSS distribution (`index.css`,
-  `fonts.css`, `olive.css`, `teal.css`): the `--wb-*` variables
+  `fonts.css`, `olive.css`, `teal.css`): the `--ui-*` variables
   every consumer renders with. Generated, checked in, never
-  edited by hand. Also carried: `highlight.css`, the
-  hand-authored syntax-highlight stylesheet consumers import
-  as its own stylesheet root.
+  edited by hand.
 - `assets/fonts/` — the bundled woff2 the generated `fonts.css`
   references (Inter variable; IBM Plex Mono 400/500/600), via
   local `@font-face` only — no external fetch, ever; plus
   `assets/fonts/katex/` — KaTeX's 20 woff2 (see `Math`, below).
-- `components/` — the viewer primitives, grouped by role:
-  `controls/` (10 files), `display/` (12 files), and `shell/`
-  (7 files) — 29 files carrying the named components (Badge,
-  Button, Card, Chip, DataTable, Lane, Sheet, TriageRow,
-  SegmentedControl, Toggle, Tooltip, …); some files carry
-  several (`Fields.tsx` carries three: Select, Input, Field).
-  Also carried: `shell/Specimen.tsx`, the specimen harness
-  (`KitSpecimen`) that renders every primitive in its
-  contracted variants (a review surface, not itself a
-  primitive).
+- `components/` — the 24 viewer primitives (Badge, Button, Card,
+  Chip, DataTable, Lane, Sheet, TriageRow, SegmentedControl,
+  Toggle, Tooltip, …): 24 named components in 23 files —
+  `Fields.tsx` carries three (Select, Input, Field). Also
+  carried: `Specimen.tsx`, the specimen harness that renders
+  every primitive in its contracted variants (a review surface,
+  not itself a primitive).
 - `components/shell/AppShell.tsx` — the one app shell (contract 09):
   `AppShell` switches between its two
   presentations on the `lib/responsive.ts` seam — `SidebarNav`
@@ -107,8 +98,7 @@ Consumers depend on this home as the package `@workhorse/kit`
   size, never scaled down (frame 4b, shrink-to-fit, was
   rejected). KaTeX's assets are vendored in this home —
   `assets/katex-fonts.css`, `assets/katex.css`,
-  `assets/katex-sizing.css`, `assets/katex-symbols.css`,
-  and `assets/math.css`
+  `assets/katex-sizing.css` and `assets/katex-symbols.css`
   (woff2-only) and its 20 woff2 fonts in
   `assets/fonts/katex/` — and imported by the component itself,
   never through `themes/`; TS consumers also take
@@ -126,23 +116,18 @@ bun tools/verify-contrast.mjs   # the contrast gate
 
 `gen-tokens.mjs` reads `tokens/tokens.json` and regenerates
 `themes/` deterministically: same tokens in, byte-identical CSS
-out (no timestamps). The contrast gate
-(`tools/verify-contrast.mjs`, Parts 1–6, with the Part 6 census
-and pair modules under `tools/contrast/`) checks status-text,
-content, text-on-tint, text-on-solid, button-state, and
-non-text pairs across both palettes × both modes, read from
-`tokens/tokens.json`.
+out (no timestamps). At extraction, regeneration from this home
+reproduced the workbench's pinned checked-in CSS byte-for-byte,
+and the contrast gate passed both palettes × both modes
+(280 status-text/surface pairs, 60 content/surface pairs,
+0 failures).
 
 ## Consumption rule
 
 Consumers take the generated CSS in `themes/` as a checked-in
-distribution from the kit's home (vendored with provenance);
-they do not regenerate it, and no second generator exists in any
-language — one generator, in the kit's home, full stop
-(plan §10.4). In this repo the consumers are the artifact
-(through its `@workhorse/kit: file:../kit` dependency) and the
-four per-app frontends (through their `@workhorse/kit` /
-`@kit` aliases to this directory). A new
+distribution from this home (vendored with provenance); they do
+not regenerate it, and no second generator exists in any
+language — one generator, here, full stop (plan §10.4). A new
 look is a few file edits in this home's token/theme files,
 never edits across consumers; needing to touch consumers is a
 defect against the kit. A surface needing more extends the kit
@@ -181,7 +166,7 @@ removed: `themes/` carries no KaTeX reference. The kit's
 math component (above) vendors KaTeX
 under `assets/` and imports it from the component itself —
 the dangling-reference failure this gap names does not
-return by that door either. Gap K3 (closed): `--wb-accent-soft`
+return by that door either. Gap K3 (closed): `--ui-accent-soft`
 is a semantic token (the accent at resting-fill alpha,
 both palettes × both modes); consumers no longer fall
 back for it.

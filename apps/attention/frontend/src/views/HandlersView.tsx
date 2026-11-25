@@ -52,14 +52,14 @@ export function HandlersView() {
                   </span>
                 ))}
               </div>
-              <div style={{ color: "var(--wb-content-secondary)" }}>
+              <div style={{ color: "var(--ui-content-secondary)" }}>
                 {p.cadence_label} · {p.band_label} · {p.escalation_label} · {p.venue_label}
               </div>
               <div>
                 {p.open_decisions} decision{p.open_decisions === 1 ? "" : "s"} waiting
                 {p.awaiting > 0 ? ` · ${p.awaiting} awaiting fulfillment` : ""}
               </div>
-              <p className="text-xs" style={{ color: "var(--wb-content-muted)" }}>
+              <p className="text-xs" style={{ color: "var(--ui-content-muted)" }}>
                 {p.rule_text}
               </p>
             </div>

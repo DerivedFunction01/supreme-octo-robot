@@ -36,12 +36,12 @@ export function Frame({
       data-anchor={anchor}
       className={[archived ? "saturate-[0.6]" : "", className ?? ""].filter(Boolean).join(" ")}
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-frame-radius)",
-        color: "var(--wb-content-primary)",
+        borderRadius: "var(--ui-frame-radius)",
+        color: "var(--ui-content-primary)",
         margin: 0,
       }}
     >
@@ -51,15 +51,15 @@ export function Frame({
       </figcaption>
       <div
         className="relative mx-4 mb-3"
-        style={{ backgroundColor: "var(--wb-surface-sunken)", borderRadius: "var(--wb-radius-md)" }}
+        style={{ backgroundColor: "var(--ui-surface-sunken)", borderRadius: "var(--ui-radius-md)" }}
       >
         {viewportLabel ? (
           <span
             className="mono pointer-events-none absolute top-2 right-2 rounded-full px-2 py-0.5 text-xs"
             style={{
-              color: "var(--wb-content-secondary)",
-              backgroundColor: "var(--wb-surface-2)",
-              borderColor: "var(--wb-border-default)",
+              color: "var(--ui-content-secondary)",
+              backgroundColor: "var(--ui-surface-2)",
+              borderColor: "var(--ui-border-default)",
               borderStyle: "solid",
               borderWidth: 1,
             }}

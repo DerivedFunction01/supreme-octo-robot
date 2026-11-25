@@ -231,7 +231,7 @@ export function BudgetView({ snap }: { snap: Snapshot }) {
                 </Button>
               </span>
               {note ? (
-                <span style={{ color: "var(--wb-content-secondary)", minWidth: 0 }}>{note}</span>
+                <span style={{ color: "var(--ui-content-secondary)", minWidth: 0 }}>{note}</span>
               ) : null}
             </div>
             {error ? <ErrorNotice message={error} /> : null}

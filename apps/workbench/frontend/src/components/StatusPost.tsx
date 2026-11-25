@@ -17,51 +17,51 @@ type Tone = { dot: string; bg: string; fg: string };
 
 const TONES: Record<StatusPost["status_code"], Tone> = {
   WORKING: {
-    dot: "var(--wb-okabe-blue)",
-    bg: "color-mix(in srgb, var(--wb-okabe-blue) 12%, transparent)",
-    fg: "var(--wb-status-canonical-text)",
+    dot: "var(--ui-okabe-blue)",
+    bg: "color-mix(in srgb, var(--ui-okabe-blue) 12%, transparent)",
+    fg: "var(--ui-status-canonical-text)",
   },
   CONTINUE: {
-    dot: "var(--wb-okabe-sky-blue)",
-    bg: "color-mix(in srgb, var(--wb-okabe-sky-blue) 16%, transparent)",
-    fg: "var(--wb-status-canonical-text)",
+    dot: "var(--ui-okabe-sky-blue)",
+    bg: "color-mix(in srgb, var(--ui-okabe-sky-blue) 16%, transparent)",
+    fg: "var(--ui-status-canonical-text)",
   },
   REVIEW: {
-    dot: "var(--wb-okabe-reddish-purple)",
-    bg: "color-mix(in srgb, var(--wb-okabe-reddish-purple) 12%, transparent)",
-    fg: "var(--wb-status-needs-changes-text)",
+    dot: "var(--ui-okabe-reddish-purple)",
+    bg: "color-mix(in srgb, var(--ui-okabe-reddish-purple) 12%, transparent)",
+    fg: "var(--ui-status-needs-changes-text)",
   },
   PARKED: {
-    dot: "var(--wb-content-muted)",
-    bg: "var(--wb-surface-sunken)",
-    fg: "var(--wb-content-secondary)",
+    dot: "var(--ui-content-muted)",
+    bg: "var(--ui-surface-sunken)",
+    fg: "var(--ui-content-secondary)",
   },
   "BLOCKED-OWNER": {
-    dot: "var(--wb-okabe-orange)",
-    bg: "color-mix(in srgb, var(--wb-okabe-orange) 18%, transparent)",
-    fg: "var(--wb-status-deferred-text)",
+    dot: "var(--ui-okabe-orange)",
+    bg: "color-mix(in srgb, var(--ui-okabe-orange) 18%, transparent)",
+    fg: "var(--ui-status-deferred-text)",
   },
   "BLOCKED-HARD": {
-    dot: "var(--wb-okabe-vermilion)",
-    bg: "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)",
-    fg: "var(--wb-status-hard-gate-text)",
+    dot: "var(--ui-okabe-vermilion)",
+    bg: "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)",
+    fg: "var(--ui-status-hard-gate-text)",
   },
   DONE: {
-    dot: "var(--wb-okabe-bluish-green)",
-    bg: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-    fg: "var(--wb-status-done-text)",
+    dot: "var(--ui-okabe-bluish-green)",
+    bg: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+    fg: "var(--ui-status-done-text)",
   },
   CLOSED: {
-    dot: "var(--wb-okabe-bluish-green)",
-    bg: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-    fg: "var(--wb-status-done-text)",
+    dot: "var(--ui-okabe-bluish-green)",
+    bg: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+    fg: "var(--ui-status-done-text)",
   },
 };
 
 const NO_POST_TONE: Tone = {
-  dot: "var(--wb-content-muted)",
-  bg: "var(--wb-surface-sunken)",
-  fg: "var(--wb-content-secondary)",
+  dot: "var(--ui-content-muted)",
+  bg: "var(--ui-surface-sunken)",
+  fg: "var(--ui-content-secondary)",
 };
 
 function chipShell(tone: Tone, label: string) {
@@ -147,11 +147,11 @@ export function StatusPostFormRows({ goal }: { goal: GoalRecord }) {
   };
 
   const inputCls =
-    "min-w-0 flex-1 rounded-[var(--wb-radius-sm)] px-2.5 py-2 text-sm";
+    "min-w-0 flex-1 rounded-[var(--ui-radius-sm)] px-2.5 py-2 text-sm";
   const inputStyle = {
-    backgroundColor: "var(--wb-surface-1)",
-    border: "1px solid var(--wb-border-default)",
-    color: "var(--wb-content-primary)",
+    backgroundColor: "var(--ui-surface-1)",
+    border: "1px solid var(--ui-border-default)",
+    color: "var(--ui-content-primary)",
   } as const;
 
   return (
@@ -184,7 +184,7 @@ export function StatusPostFormRows({ goal }: { goal: GoalRecord }) {
               onChange={(e) => setCiteAt(e.target.value)}
               placeholder="Message time"
               aria-label="Basis citation time"
-              className="w-[170px] rounded-[var(--wb-radius-sm)] px-2.5 py-2 text-sm"
+              className="w-[170px] rounded-[var(--ui-radius-sm)] px-2.5 py-2 text-sm"
               style={inputStyle}
             />
           </span>
@@ -208,7 +208,7 @@ export function StatusPostFormRows({ goal }: { goal: GoalRecord }) {
       {error ? (
         <Row last>
           <Sub>
-            <span style={{ color: "var(--wb-danger)" }}>{error}</span>
+            <span style={{ color: "var(--ui-danger)" }}>{error}</span>
           </Sub>
         </Row>
       ) : null}

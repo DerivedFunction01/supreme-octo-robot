@@ -46,13 +46,13 @@ import {
 } from "./pickers";
 import { callApi, callVerdict, useRunner } from "./state";
 
-export const MONO = { fontFamily: "var(--wb-font-mono, monospace)" } as const;
+export const MONO = { fontFamily: "var(--ui-font-mono, monospace)" } as const;
 
 function kv(label: ReactNode, children: ReactNode) {
   return (
-    <p className="mt-1.5 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+    <p className="mt-1.5 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
       {label}{" "}
-      <b style={{ color: "var(--wb-content-primary)", fontWeight: 600 }}>{children}</b>
+      <b style={{ color: "var(--ui-content-primary)", fontWeight: 600 }}>{children}</b>
     </p>
   );
 }
@@ -74,8 +74,8 @@ export function ListenerLines({
   if (!census) return null;
   if (census.error) {
     return (
-      <p className="mt-1.5 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
-        Listeners <b style={{ color: "var(--wb-content-primary)" }}>census failed</b>
+      <p className="mt-1.5 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
+        Listeners <b style={{ color: "var(--ui-content-primary)" }}>census failed</b>
       </p>
     );
   }
@@ -85,9 +85,9 @@ export function ListenerLines({
         <p
           key={i}
           className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
-          Port <b style={{ color: "var(--wb-content-primary)" }}>{String(l.port)}</b> ·
+          Port <b style={{ color: "var(--ui-content-primary)" }}>{String(l.port)}</b> ·
           pid {String(l.pid)} · <span style={MONO}>{l.cwd || "—"}</span>
           {(l.suspect || []).length ? (
             <StatusChip tone="warn" label={`suspect: ${(l.suspect || []).join(", ")}`} />
@@ -204,7 +204,7 @@ function LeaseCard({
         <button
           type="button"
           className="min-w-0 cursor-pointer truncate text-left text-[15px] font-semibold"
-          style={{ color: "var(--wb-content-primary)", minHeight: 24 }}
+          style={{ color: "var(--ui-content-primary)", minHeight: 24 }}
           onClick={() => navigate(`#/runner/leases/${encodeURIComponent(session)}`)}
         >
           {title}
@@ -450,7 +450,7 @@ function GrantCardInner({
           )}
           <p
             className="mt-2.5 text-sm font-semibold"
-            style={{ color: "var(--wb-content-primary)" }}
+            style={{ color: "var(--ui-content-primary)" }}
           >
             Envelope leases
           </p>
@@ -459,21 +459,21 @@ function GrantCardInner({
               <p
                 key={i}
                 className="mt-1 text-sm"
-                style={{ color: "var(--wb-content-secondary)" }}
+                style={{ color: "var(--ui-content-secondary)" }}
               >
-                · <b style={{ color: "var(--wb-content-primary)" }}>{specLabel(specs, rec.shape)}</b>
+                · <b style={{ color: "var(--ui-content-primary)" }}>{specLabel(specs, rec.shape)}</b>
                 {rec.caller ? (
                   <>
                     {" "}
-                    · caller <b style={{ color: "var(--wb-content-primary)" }}>{rec.caller}</b>
+                    · caller <b style={{ color: "var(--ui-content-primary)" }}>{rec.caller}</b>
                   </>
                 ) : null}{" "}
                 · until{" "}
-                <b style={{ color: "var(--wb-content-primary)" }}>{fmtTime(rec.deadline)}</b>
+                <b style={{ color: "var(--ui-content-primary)" }}>{fmtTime(rec.deadline)}</b>
               </p>
             ))
           ) : (
-            <p className="mt-1 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+            <p className="mt-1 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
               No envelope leases yet.
             </p>
           )}

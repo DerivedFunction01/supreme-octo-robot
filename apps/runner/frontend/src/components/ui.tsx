@@ -108,10 +108,10 @@ export function ActionRow({
 }
 
 const TONE_HUE: Record<Exclude<Tone, "idle">, string> = {
-  ok: "var(--wb-okabe-bluish-green)",
-  info: "var(--wb-okabe-blue)",
-  warn: "var(--wb-okabe-orange)",
-  fail: "var(--wb-okabe-vermilion)",
+  ok: "var(--ui-okabe-bluish-green)",
+  info: "var(--ui-okabe-blue)",
+  warn: "var(--ui-okabe-orange)",
+  fail: "var(--ui-okabe-vermilion)",
 };
 
 export function StatusChip({ tone, label }: { tone: Tone; label: string }) {
@@ -120,11 +120,11 @@ export function StatusChip({ tone, label }: { tone: Tone; label: string }) {
       <span
         className="rn-chip"
         style={{
-          backgroundColor: "var(--wb-surface-sunken)",
-          color: "var(--wb-content-secondary)",
+          backgroundColor: "var(--ui-surface-sunken)",
+          color: "var(--ui-content-secondary)",
         }}
       >
-        <i style={{ backgroundColor: "var(--wb-content-muted)" }} />
+        <i style={{ backgroundColor: "var(--ui-content-muted)" }} />
         <span className="rn-chip-lab">{label}</span>
       </span>
     );
@@ -135,7 +135,7 @@ export function StatusChip({ tone, label }: { tone: Tone; label: string }) {
       className="rn-chip"
       style={{
         backgroundColor: `color-mix(in srgb, ${hue} 16%, transparent)`,
-        color: `color-mix(in srgb, ${hue} 78%, var(--wb-content-primary))`,
+        color: `color-mix(in srgb, ${hue} 78%, var(--ui-content-primary))`,
       }}
     >
       <i style={{ backgroundColor: hue }} />
@@ -169,14 +169,14 @@ export function PickerChips<T extends string>({
             style={
               on
                 ? {
-                    backgroundColor: "var(--wb-accent)",
-                    borderColor: "var(--wb-accent)",
-                    color: "var(--wb-on-accent)",
+                    backgroundColor: "var(--ui-accent)",
+                    borderColor: "var(--ui-accent)",
+                    color: "var(--ui-on-accent)",
                   }
                 : {
-                    backgroundColor: "var(--wb-surface-2)",
-                    borderColor: "var(--wb-border-strong)",
-                    color: "var(--wb-content-secondary)",
+                    backgroundColor: "var(--ui-surface-2)",
+                    borderColor: "var(--ui-border-strong)",
+                    color: "var(--ui-content-secondary)",
                   }
             }
           >

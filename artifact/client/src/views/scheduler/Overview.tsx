@@ -30,7 +30,7 @@ import {
 function StatLine({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3 py-[2.5px] text-sm">
-      <span style={{ color: "var(--wb-content-secondary)" }}>{label}</span>
+      <span style={{ color: "var(--ui-content-secondary)" }}>{label}</span>
       <span className="num text-right">{children}</span>
     </div>
   );
@@ -118,7 +118,7 @@ export function Overview({
                     navigate("#/scheduler/ledger");
                   }}
                   className="mono text-xs"
-                  style={{ color: "var(--wb-accent)" }}
+                  style={{ color: "var(--ui-accent)" }}
                 >
                   sched logs …
                 </a>
@@ -139,7 +139,7 @@ export function Overview({
                 className="flex flex-wrap items-center gap-2.5 py-[5px]"
                 style={
                   i > 0
-                    ? { borderTop: "1px solid var(--wb-border-default)" }
+                    ? { borderTop: "1px solid var(--ui-border-default)" }
                     : undefined
                 }
               >
@@ -154,13 +154,13 @@ export function Overview({
                     navigate(`#/scheduler/jobs/${encodeURIComponent(j.id)}`);
                   }}
                   className="font-medium"
-                  style={{ color: "var(--wb-accent)" }}
+                  style={{ color: "var(--ui-accent)" }}
                 >
                   {j.id}
                 </a>
                 <span
                   className="num text-sm"
-                  style={{ color: "var(--wb-content-secondary)" }}
+                  style={{ color: "var(--ui-content-secondary)" }}
                 >
                   streak ×{j.failure_streak}
                 </span>

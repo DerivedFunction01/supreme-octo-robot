@@ -9,13 +9,13 @@ import type { ReactNode } from "react";
 import type { FeedEnvelope } from "../lib/api-types";
 
 const wellStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-lg)",
-  padding: "var(--wb-panel-padding)",
-  color: "var(--wb-content-secondary)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-lg)",
+  padding: "var(--ui-panel-padding)",
+  color: "var(--ui-content-secondary)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 export function EmptyWell({ children }: { children: ReactNode }) {
@@ -24,7 +24,7 @@ export function EmptyWell({ children }: { children: ReactNode }) {
 
 export function ErrorWell({ section, message }: { section: string; message: string }) {
   return (
-    <div style={{ ...wellStyle, color: "var(--wb-danger)" }} role="alert">
+    <div style={{ ...wellStyle, color: "var(--ui-danger)" }} role="alert">
       {section}: {message}
     </div>
   );
@@ -46,14 +46,14 @@ export function DegradedBanner({ feed }: { feed: FeedEnvelope }) {
   return (
     <div
       style={{
-        background: "var(--wb-surface-1)",
-        border: "1px solid var(--wb-border-strong)",
-        borderRadius: "var(--wb-radius-md)",
-        padding: "var(--wb-space-12) var(--wb-space-16)",
-        color: "var(--wb-content-secondary)",
-        fontSize: "var(--wb-font-size-sm)",
-        lineHeight: "var(--wb-line-height-sm)",
-        marginBottom: "var(--wb-space-16)",
+        background: "var(--ui-surface-1)",
+        border: "1px solid var(--ui-border-strong)",
+        borderRadius: "var(--ui-radius-md)",
+        padding: "var(--ui-space-12) var(--ui-space-16)",
+        color: "var(--ui-content-secondary)",
+        fontSize: "var(--ui-font-size-sm)",
+        lineHeight: "var(--ui-line-height-sm)",
+        marginBottom: "var(--ui-space-16)",
       }}
       role="status"
     >
@@ -63,11 +63,11 @@ export function DegradedBanner({ feed }: { feed: FeedEnvelope }) {
 }
 
 export const sectionTitleStyle: React.CSSProperties = {
-  fontSize: "var(--wb-font-size-xl)",
-  lineHeight: "var(--wb-line-height-xl)",
+  fontSize: "var(--ui-font-size-xl)",
+  lineHeight: "var(--ui-line-height-xl)",
   fontWeight: 600,
   letterSpacing: "-0.011em",
-  margin: "0 0 var(--wb-space-16)",
+  margin: "0 0 var(--ui-space-16)",
 };
 
 /** A detail title — styled title TEXT, never a heading
@@ -94,28 +94,28 @@ export function SectionTitle({
 export const listRowStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "var(--wb-space-12)",
-  minHeight: "var(--wb-row-height)",
-  padding: "var(--wb-space-8) var(--wb-space-12)",
-  borderBottom: "1px solid var(--wb-border-default)",
-  color: "var(--wb-content-primary)",
+  gap: "var(--ui-space-12)",
+  minHeight: "var(--ui-row-height)",
+  padding: "var(--ui-space-8) var(--ui-space-12)",
+  borderBottom: "1px solid var(--ui-border-default)",
+  color: "var(--ui-content-primary)",
   textDecoration: "none",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 export const metaStyle: React.CSSProperties = {
-  color: "var(--wb-content-muted)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  color: "var(--ui-content-muted)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
   whiteSpace: "nowrap",
 };
 
 export const badgeStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  borderRadius: "var(--wb-radius-pill)",
-  padding: "0 var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
-  color: "var(--wb-content-secondary)",
+  background: "var(--ui-surface-sunken)",
+  borderRadius: "var(--ui-radius-pill)",
+  padding: "0 var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
+  color: "var(--ui-content-secondary)",
 };

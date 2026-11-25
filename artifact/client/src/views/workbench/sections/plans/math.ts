@@ -32,14 +32,14 @@ function escapeHtml(text: string): string {
  * text content is the escaped source span, so before (or
  * without) KaTeX the formula still reads as written. */
 export function mathPlaceholder(index: number, raw: string): string {
-  return `<span data-wb-math="${index}">${escapeHtml(raw)}</span>`;
+  return `<span data-ui-math="${index}">${escapeHtml(raw)}</span>`;
 }
 
 /** Matches one placeholder in marked + sanitized HTML. The
  * content can contain no markup (it was HTML-escaped at
  * extraction), so the first `</span>` closes it. */
 export function mathPlaceholderRe(index: number): RegExp {
-  return new RegExp(`<span data-wb-math="${index}">[\\s\\S]*?</span>`);
+  return new RegExp(`<span data-ui-math="${index}">[\\s\\S]*?</span>`);
 }
 
 export function extractMath(text: string): { text: string; spans: MathSpan[] } {

@@ -1,7 +1,7 @@
 // AnnotationBadge — the message-lifecycle badge for
 // annotations (repo-home spec §12): outline pill, glyph +
 // word, in the palette-constant Okabe–Ito lifecycle hues
-// (tokens --wb-status-sent / -acknowledged / -done). A
+// (tokens --ui-status-sent / -acknowledged / -done). A
 // message's lifecycle state is neither a registry ruling
 // nor a chip, so it takes the derived-badge form (SPEC
 // §11) — never the filled Chip. Draft and archived carry
@@ -32,15 +32,15 @@ const WORDS: Record<string, string> = {
 };
 
 export const selectionMarkStyle: CSSProperties = {
-  backgroundColor: "var(--wb-highlight-selection-fill)",
-  boxShadow: "inset 0 -2px 0 var(--wb-highlight-selection-bar)",
+  backgroundColor: "var(--ui-highlight-selection-fill)",
+  boxShadow: "inset 0 -2px 0 var(--ui-highlight-selection-bar)",
   borderRadius: "3px",
   padding: "1px 2px",
 };
 
 export const annotationMarkStyle: CSSProperties = {
-  backgroundColor: "var(--wb-highlight-annotation-fill)",
-  boxShadow: "inset 0 -2px 0 var(--wb-highlight-annotation-bar)",
+  backgroundColor: "var(--ui-highlight-annotation-fill)",
+  boxShadow: "inset 0 -2px 0 var(--ui-highlight-annotation-bar)",
   borderRadius: "3px",
   padding: "1px 2px",
 };
@@ -51,23 +51,23 @@ export function AnnotationBadge({ state }: { state: AnnotationState }) {
     return (
       <span
         className="inline-flex h-6 items-center text-xs whitespace-nowrap"
-        style={{ color: "var(--wb-content-muted)" }}
+        style={{ color: "var(--ui-content-muted)" }}
       >
         {WORDS[state] ?? state}
       </span>
     );
   }
-  const hue = `var(--wb-status-${badged.token})`;
+  const hue = `var(--ui-status-${badged.token})`;
   return (
     <span
       className="inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 px-2.5 text-xs font-medium whitespace-nowrap"
       style={{
         backgroundColor: "transparent",
-        color: `var(--wb-status-${badged.token}-text)`,
+        color: `var(--ui-status-${badged.token}-text)`,
         borderColor: hue,
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-chip-radius)",
+        borderRadius: "var(--ui-chip-radius)",
       }}
     >
       <span aria-hidden="true" className="shrink-0 text-xs leading-none" style={{ color: hue }}>

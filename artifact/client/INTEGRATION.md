@@ -429,7 +429,7 @@ instead of editing App.tsx in parallel.
   GitHub-dark palette, attention's navy/paper theme,
   runner's Okabe-Ito `theme.css` dialect all retire
   into the kit (§2b: a repo-specific look is a defect
-  against the kit). Views compose on `--wb-*` tokens
+  against the kit). Views compose on `--ui-*` tokens
   only. (The Okabe-Ito hues survive as the kit's status
   system, which is where the runner's palette already
   lived in the token base.)

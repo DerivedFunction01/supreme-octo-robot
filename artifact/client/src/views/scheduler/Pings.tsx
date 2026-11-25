@@ -41,10 +41,10 @@ function PingCard({ ping, skewMs, now }: { ping: PingPayload; skewMs: number; no
     <section
       className="p-[13px_15px]"
       style={{
-        backgroundColor: "var(--wb-card-bg)",
-        border: `1px solid ${ping.overdue ? "var(--wb-status-stale)" : "var(--wb-border-default)"}`,
-        borderRadius: "var(--wb-card-radius)",
-        color: "var(--wb-content-primary)",
+        backgroundColor: "var(--ui-card-bg)",
+        border: `1px solid ${ping.overdue ? "var(--ui-status-stale)" : "var(--ui-border-default)"}`,
+        borderRadius: "var(--ui-card-radius)",
+        color: "var(--ui-content-primary)",
       }}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -52,21 +52,21 @@ function PingCard({ ping, skewMs, now }: { ping: PingPayload; skewMs: number; no
         <StatusChip tone="idle" label={ping.kind} />
         {ping.overdue ? <StatusChip tone="warn" label="past ack timeout" /> : null}
       </div>
-      <div className="mt-1 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="mt-1 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         due {fmtTime(ping.due)} · waiting{" "}
         <span className="num">{fmtDur(age)}</span>
       </div>
       {ping.coalesced_count > 1 ? (
-        <div className="text-xs" style={{ color: "var(--wb-content-secondary)" }}>
+        <div className="text-xs" style={{ color: "var(--ui-content-secondary)" }}>
           {ping.coalesced_count} dues coalesced
         </div>
       ) : null}
       {ping.body_ref ? (
-        <div className="text-xs" style={{ color: "var(--wb-content-secondary)" }}>
+        <div className="text-xs" style={{ color: "var(--ui-content-secondary)" }}>
           body: {ping.body_ref}
         </div>
       ) : null}
-      <div className="text-xs" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="text-xs" style={{ color: "var(--ui-content-secondary)" }}>
         Ack: <code className="mono">bin/sched ack {ping.id}</code>
       </div>
     </section>

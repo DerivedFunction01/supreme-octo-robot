@@ -92,11 +92,11 @@ function AppTile({
     <button
       type="button"
       onClick={() => onOpen(appHref(app))}
-      className="flex cursor-pointer flex-col items-start gap-[10px] rounded-[var(--wb-radius-lg)] border p-[14px] text-left"
+      className="flex cursor-pointer flex-col items-start gap-[10px] rounded-[var(--ui-radius-lg)] border p-[14px] text-left"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
-        color: "var(--wb-content-primary)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
+        color: "var(--ui-content-primary)",
         fontFamily: "inherit",
       }}
     >
@@ -111,8 +111,8 @@ function AppTile({
           <span
             className="absolute -top-[6px] -right-[6px] flex h-[20px] min-w-[20px] items-center justify-center rounded-full px-[5px] text-[12px] font-bold"
             style={{
-              backgroundColor: "var(--wb-notify)",
-              color: "var(--wb-on-notify)",
+              backgroundColor: "var(--ui-notify)",
+              color: "var(--ui-on-notify)",
             }}
           >
             {badge}
@@ -135,7 +135,7 @@ export function Launcher({ presence, attentionCount, nextDigestLabel, presenceEx
         <h1 className="sr-only">Workhorse Superapp</h1>
         <div
           className="text-[15px] font-semibold"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
           {dateLabel(now)}
         </div>
@@ -161,7 +161,7 @@ export function Launcher({ presence, attentionCount, nextDigestLabel, presenceEx
             <Row
               label="Presence"
               end={
-                <span style={{ color: "var(--wb-content-secondary)" }}>
+                <span style={{ color: "var(--ui-content-secondary)" }}>
                   {PRESENCE_LABELS[presence]}
                   {presenceExpiresAt
                     ? ` · until ${clock(presenceExpiresAt)}`
@@ -184,11 +184,11 @@ export function Launcher({ presence, attentionCount, nextDigestLabel, presenceEx
           <button
             type="button"
             onClick={() => onOpen(settingsHref())}
-            className="flex cursor-pointer flex-col items-start gap-[10px] rounded-[var(--wb-radius-lg)] border p-[14px] text-left"
+            className="flex cursor-pointer flex-col items-start gap-[10px] rounded-[var(--ui-radius-lg)] border p-[14px] text-left"
             style={{
-              backgroundColor: "var(--wb-surface-2)",
-              borderColor: "var(--wb-border-default)",
-              color: "var(--wb-content-primary)",
+              backgroundColor: "var(--ui-surface-2)",
+              borderColor: "var(--ui-border-default)",
+              color: "var(--ui-content-primary)",
               fontFamily: "inherit",
             }}
           >

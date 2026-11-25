@@ -66,10 +66,10 @@ function logTone(ev: LogEvent): LogRowTone {
 }
 
 const LEVEL_DOT: Record<string, string> = {
-  ok: "var(--wb-okabe-bluish-green)",
-  info: "var(--wb-okabe-blue)",
-  warn: "var(--wb-okabe-orange)",
-  error: "var(--wb-okabe-vermilion)",
+  ok: "var(--ui-okabe-bluish-green)",
+  info: "var(--ui-okabe-blue)",
+  warn: "var(--ui-okabe-orange)",
+  error: "var(--ui-okabe-vermilion)",
 };
 
 export function EventsView({ navigate }: { navigate: (hash: string) => void }) {
@@ -175,7 +175,7 @@ export function EventsView({ navigate }: { navigate: (hash: string) => void }) {
         />
         <span
           className="flex items-center gap-2.5 text-xs"
-          style={{ color: "var(--wb-content-secondary)" }}
+          style={{ color: "var(--ui-content-secondary)" }}
         >
           {(["ok", "info", "warn", "error"] as const).map((l) => (
             <span key={l} className="flex items-center gap-1">
@@ -212,7 +212,7 @@ export function EventsView({ navigate }: { navigate: (hash: string) => void }) {
                 </GroupedList>
               </div>
             ))}
-            <p className="text-xs" style={{ color: "var(--wb-content-muted)" }}>
+            <p className="text-xs" style={{ color: "var(--ui-content-muted)" }}>
               Showing {shown.length} of {allEvents.length}
             </p>
           </>

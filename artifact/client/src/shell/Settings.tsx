@@ -72,7 +72,7 @@ export function Settings({
             backgroundColor: "transparent",
             border: "none",
             padding: 0,
-            color: "var(--wb-accent)",
+            color: "var(--ui-accent)",
             fontWeight: 550,
             fontFamily: "inherit",
           }}

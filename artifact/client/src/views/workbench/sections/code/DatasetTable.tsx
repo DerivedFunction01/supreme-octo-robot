@@ -46,33 +46,33 @@ const OP_LABELS: Record<DatasetFilter["op"], string> = {
 };
 
 const fieldStyle: React.CSSProperties = {
-  background: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-8)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  background: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-8)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
 };
 
 const thStyle: React.CSSProperties = {
   textAlign: "left",
   fontWeight: 600,
-  padding: "var(--wb-space-4) var(--wb-space-12) var(--wb-space-4) 0",
-  borderBottom: "1px solid var(--wb-border-strong)",
+  padding: "var(--ui-space-4) var(--ui-space-12) var(--ui-space-4) 0",
+  borderBottom: "1px solid var(--ui-border-strong)",
   whiteSpace: "nowrap",
   verticalAlign: "bottom",
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: "var(--wb-space-4) var(--wb-space-12) var(--wb-space-4) 0",
-  borderBottom: "1px solid var(--wb-border-default)",
+  padding: "var(--ui-space-4) var(--ui-space-12) var(--ui-space-4) 0",
+  borderBottom: "1px solid var(--ui-border-default)",
   whiteSpace: "nowrap",
   verticalAlign: "top",
 };
 
 function CellValue({ value }: { value: DatasetCell }) {
-  if (value == null) return <span style={{ color: "var(--wb-content-muted)" }}>—</span>;
+  if (value == null) return <span style={{ color: "var(--ui-content-muted)" }}>—</span>;
   const text =
     typeof value === "string"
       ? value
@@ -235,9 +235,9 @@ export function DatasetTable({
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             flexWrap: "wrap",
-            marginBottom: "var(--wb-space-12)",
+            marginBottom: "var(--ui-space-12)",
           }}
         >
           <label style={metaStyle} htmlFor={`dataset-table-${path}`}>
@@ -260,11 +260,11 @@ export function DatasetTable({
           {schemaQuery.isPending ? <span style={metaStyle}>Loading schema…</span> : null}
         </div>
       ) : schemaQuery.isPending ? (
-        <p style={{ color: "var(--wb-content-muted)" }}>Loading schema…</p>
+        <p style={{ color: "var(--ui-content-muted)" }}>Loading schema…</p>
       ) : null}
 
       {schemaError ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           {schemaError}
         </p>
       ) : null}
@@ -275,10 +275,10 @@ export function DatasetTable({
             <div
               style={{
                 display: "flex",
-                gap: "var(--wb-space-8)",
+                gap: "var(--ui-space-8)",
                 flexWrap: "wrap",
                 alignItems: "center",
-                marginBottom: "var(--wb-space-12)",
+                marginBottom: "var(--ui-space-12)",
               }}
             >
               <select
@@ -335,40 +335,40 @@ export function DatasetTable({
             </div>
           ) : null}
 
-          <div style={{ marginBottom: "var(--wb-space-12)" }}>
+          <div style={{ marginBottom: "var(--ui-space-12)" }}>
             <Button variant="ghost" onClick={() => setShowStats((v) => !v)}>
               {showStats ? "Hide stats" : "Stats"}
             </Button>
             {showStats ? (
               statsQuery.isPending ? (
-                <p style={{ color: "var(--wb-content-muted)", margin: "var(--wb-space-8) 0 0" }}>
+                <p style={{ color: "var(--ui-content-muted)", margin: "var(--ui-space-8) 0 0" }}>
                   Loading stats…
                 </p>
               ) : statsError ? (
                 <p
                   role="alert"
-                  style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) 0 0" }}
+                  style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) 0 0" }}
                 >
                   {statsError}
                 </p>
               ) : stats ? (
-                <div style={{ marginTop: "var(--wb-space-8)" }}>
+                <div style={{ marginTop: "var(--ui-space-8)" }}>
                   <p
-                    style={{ ...metaStyle, whiteSpace: "normal", margin: "0 0 var(--wb-space-8)" }}
+                    style={{ ...metaStyle, whiteSpace: "normal", margin: "0 0 var(--ui-space-8)" }}
                   >
                     ≈ <span className="num">{formatCount(stats.approx_rows)}</span> rows
                   </p>
                   <div
                     tabIndex={0}
-                    className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                    className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                     style={{ overflowX: "auto" }}
                   >
                     <table
                       className="mono"
                       style={{
                         borderCollapse: "collapse",
-                        fontSize: "var(--wb-font-size-sm)",
-                        lineHeight: "var(--wb-line-height-sm)",
+                        fontSize: "var(--ui-font-size-sm)",
+                        lineHeight: "var(--ui-line-height-sm)",
                       }}
                     >
                       <thead>
@@ -403,24 +403,24 @@ export function DatasetTable({
           </div>
 
           {rowsError ? (
-            <p role="alert" style={{ color: "var(--wb-danger)" }}>
+            <p role="alert" style={{ color: "var(--ui-danger)" }}>
               {rowsError}
             </p>
           ) : rowsQuery.isPending || !page ? (
-            <p style={{ color: "var(--wb-content-muted)" }}>Loading rows…</p>
+            <p style={{ color: "var(--ui-content-muted)" }}>Loading rows…</p>
           ) : (
             <>
               <div
                 tabIndex={0}
-                className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--wb-focus-ring)"
+                className="focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-1 focus-visible:outline-(--ui-focus-ring)"
                 style={{ overflowX: "auto" }}
               >
                 <table
                   className="mono"
                   style={{
                     borderCollapse: "collapse",
-                    fontSize: "var(--wb-font-size-sm)",
-                    lineHeight: "var(--wb-line-height-sm)",
+                    fontSize: "var(--ui-font-size-sm)",
+                    lineHeight: "var(--ui-line-height-sm)",
                   }}
                 >
                   <thead>
@@ -447,8 +447,8 @@ export function DatasetTable({
                             <div
                               style={{
                                 fontWeight: 400,
-                                color: "var(--wb-content-muted)",
-                                fontSize: "var(--wb-font-size-xs)",
+                                color: "var(--ui-content-muted)",
+                                fontSize: "var(--ui-font-size-xs)",
                               }}
                             >
                               {typeByName.get(name)}
@@ -462,7 +462,7 @@ export function DatasetTable({
                     {page.rows.length === 0 ? (
                       <tr>
                         <td style={tdStyle} colSpan={Math.max(1, headerNames.length)}>
-                          <span style={{ color: "var(--wb-content-muted)" }}>
+                          <span style={{ color: "var(--ui-content-muted)" }}>
                             No rows{appliedFilter ? " match the filter" : ""}.
                           </span>
                         </td>
@@ -487,9 +487,9 @@ export function DatasetTable({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "var(--wb-space-12)",
+                  gap: "var(--ui-space-12)",
                   flexWrap: "wrap",
-                  marginTop: "var(--wb-space-8)",
+                  marginTop: "var(--ui-space-8)",
                 }}
               >
                 <Button

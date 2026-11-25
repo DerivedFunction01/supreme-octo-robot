@@ -171,7 +171,7 @@ function BudgetCard({ model }: { model: CardModel }) {
   return (
     <Card title={model.title}>
       {model.sub ? (
-        <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           {model.sub}
         </p>
       ) : null}
@@ -187,7 +187,7 @@ function BudgetCard({ model }: { model: CardModel }) {
           {capRow("Daily cap", "daily")}
           {capRow("Monthly cap", "monthly")}
           {capRow("Standing daily cap", "standing")}
-          <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             Blank = no cap.
           </p>
           <div className="flex flex-wrap gap-2">

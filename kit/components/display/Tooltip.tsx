@@ -14,9 +14,9 @@ export type TooltipProps = {
 const TIP_CLASSES = [
   "after:pointer-events-none after:absolute after:bottom-full after:left-1/2 after:z-50 after:mb-2",
   "after:-translate-x-1/2 after:px-2 after:py-1 after:text-xs after:whitespace-nowrap",
-  "after:bg-(--wb-content-primary) after:text-(--wb-surface-1)",
-  "after:rounded-[var(--wb-radius-sm)] after:shadow-[var(--wb-shadow-overlay)]",
-  "after:opacity-0 after:transition-opacity after:duration-(--wb-motion-duration-pop)",
+  "after:bg-(--ui-content-primary) after:text-(--ui-surface-1)",
+  "after:rounded-[var(--ui-radius-sm)] after:shadow-[var(--ui-shadow-overlay)]",
+  "after:opacity-0 after:transition-opacity after:duration-(--ui-motion-duration-pop)",
   "after:content-[attr(data-tip)]",
   "group-focus-within:after:opacity-100 group-focus-within:after:delay-300",
   "group-hover:after:opacity-100 group-hover:after:delay-300",

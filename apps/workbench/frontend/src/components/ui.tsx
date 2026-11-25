@@ -12,7 +12,7 @@ export function GroupLabel({ children }: { children: ReactNode }) {
   return (
     <div
       className="mt-5 mb-2 ml-1 text-xs font-bold tracking-[0.07em] uppercase [overflow-wrap:anywhere] first:mt-0"
-      style={{ color: "var(--wb-content-secondary)" }}
+      style={{ color: "var(--ui-content-secondary)" }}
     >
       {children}
     </div>
@@ -24,11 +24,11 @@ export function Group({ children, style }: { children: ReactNode; style?: CSSPro
     <div
       className="overflow-hidden"
       style={{
-        backgroundColor: "var(--wb-surface-2)",
-        borderColor: "var(--wb-border-default)",
+        backgroundColor: "var(--ui-surface-2)",
+        borderColor: "var(--ui-border-default)",
         borderStyle: "solid",
         borderWidth: 1,
-        borderRadius: "var(--wb-radius-lg)",
+        borderRadius: "var(--ui-radius-lg)",
         ...style,
       }}
     >
@@ -56,10 +56,10 @@ export function Row({
     minHeight: 47,
     width: "100%",
     textAlign: "left",
-    backgroundColor: selected ? "var(--wb-highlight-selection-fill)" : undefined,
-    borderBottom: last ? undefined : "1px solid var(--wb-border-default)",
+    backgroundColor: selected ? "var(--ui-highlight-selection-fill)" : undefined,
+    borderBottom: last ? undefined : "1px solid var(--ui-border-default)",
     cursor: onClick ? "pointer" : undefined,
-    color: "var(--wb-content-primary)",
+    color: "var(--ui-content-primary)",
   };
   if (onClick) {
     return (
@@ -86,13 +86,13 @@ export function Sub({ children, truncate = false }: { children: ReactNode; trunc
   // wrap-anywhere behavior.
   if (truncate) {
     return (
-      <div className="truncate text-[12.5px]" style={{ color: "var(--wb-content-secondary)" }}>
+      <div className="truncate text-[12.5px]" style={{ color: "var(--ui-content-secondary)" }}>
         {children}
       </div>
     );
   }
   return (
-    <div className="text-[12.5px] [overflow-wrap:anywhere]" style={{ color: "var(--wb-content-secondary)" }}>
+    <div className="text-[12.5px] [overflow-wrap:anywhere]" style={{ color: "var(--ui-content-secondary)" }}>
       {children}
     </div>
   );
@@ -102,7 +102,7 @@ export function Val({ children, mono }: { children: ReactNode; mono?: boolean })
   return (
     <span
       className={`ml-auto max-w-[60%] min-w-0 truncate text-sm ${mono ? "font-mono" : ""}`}
-      style={{ color: "var(--wb-content-secondary)" }}
+      style={{ color: "var(--ui-content-secondary)" }}
     >
       {children}
     </span>
@@ -110,7 +110,7 @@ export function Val({ children, mono }: { children: ReactNode; mono?: boolean })
 }
 
 export function Chev() {
-  return <ChevronRight size={15} style={{ color: "var(--wb-content-muted)", flex: "0 0 auto" }} />;
+  return <ChevronRight size={15} style={{ color: "var(--ui-content-muted)", flex: "0 0 auto" }} />;
 }
 
 export function ActionRow({
@@ -128,7 +128,7 @@ export function ActionRow({
     <Row onClick={onClick} last={last}>
       <span
         className="min-w-0 truncate text-[14.5px] font-semibold"
-        style={{ color: danger ? "var(--wb-danger)" : "var(--wb-accent)" }}
+        style={{ color: danger ? "var(--ui-danger)" : "var(--ui-accent)" }}
       >
         {label}
       </span>
@@ -138,13 +138,13 @@ export function ActionRow({
 
 export function LargeTitle({ children }: { children: ReactNode }) {
   return (
-    <h2 className="wb-largetitle m-0 mb-1 text-[27px] font-bold tracking-[-0.015em] [overflow-wrap:anywhere]">{children}</h2>
+    <h2 className="ui-largetitle m-0 mb-1 text-[27px] font-bold tracking-[-0.015em] [overflow-wrap:anywhere]">{children}</h2>
   );
 }
 
 export function Subtitle({ children }: { children: ReactNode }) {
   return (
-    <p className="m-0 mb-5 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--wb-content-secondary)" }}>
+    <p className="m-0 mb-5 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--ui-content-secondary)" }}>
       {children}
     </p>
   );
@@ -178,27 +178,27 @@ export function ReviewBadge({
 const TODO_PILL: Record<TodoStatus, { word: string; dot: string; bg: string; fg: string }> = {
   done: {
     word: "Done",
-    dot: "var(--wb-okabe-bluish-green)",
-    bg: "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
-    fg: "var(--wb-status-implemented-text)",
+    dot: "var(--ui-okabe-bluish-green)",
+    bg: "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
+    fg: "var(--ui-status-implemented-text)",
   },
   doing: {
     word: "Doing",
-    dot: "var(--wb-okabe-blue)",
-    bg: "color-mix(in srgb, var(--wb-okabe-blue) 12%, transparent)",
-    fg: "var(--wb-status-canonical-text)",
+    dot: "var(--ui-okabe-blue)",
+    bg: "color-mix(in srgb, var(--ui-okabe-blue) 12%, transparent)",
+    fg: "var(--ui-status-canonical-text)",
   },
   todo: {
     word: "To do",
-    dot: "var(--wb-content-muted)",
-    bg: "var(--wb-surface-sunken)",
-    fg: "var(--wb-content-secondary)",
+    dot: "var(--ui-content-muted)",
+    bg: "var(--ui-surface-sunken)",
+    fg: "var(--ui-content-secondary)",
   },
   blocked: {
     word: "Blocked",
-    dot: "var(--wb-okabe-vermilion)",
-    bg: "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)",
-    fg: "var(--wb-status-hard-gate-text)",
+    dot: "var(--ui-okabe-vermilion)",
+    bg: "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)",
+    fg: "var(--ui-status-hard-gate-text)",
   },
 };
 

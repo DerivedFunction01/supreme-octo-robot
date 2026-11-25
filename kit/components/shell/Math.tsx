@@ -86,11 +86,11 @@ export function Math({ source, display = false, valid = true, children, classNam
 
   if (!valid) {
     return display ? (
-      <div className={["wb-math-broken-block", className ?? ""].filter(Boolean).join(" ")}>
+      <div className={["ui-math-broken-block", className ?? ""].filter(Boolean).join(" ")}>
         {source}
       </div>
     ) : (
-      <span className={["wb-math-broken", className ?? ""].filter(Boolean).join(" ")}>
+      <span className={["ui-math-broken", className ?? ""].filter(Boolean).join(" ")}>
         {source}
       </span>
     );
@@ -98,10 +98,10 @@ export function Math({ source, display = false, valid = true, children, classNam
 
   if (display) {
     return (
-      <div className={["wb-math-display", className ?? ""].filter(Boolean).join(" ")}>
-        {children != null ? <span className="wb-math-eqno">{children}</span> : null}
+      <div className={["ui-math-display", className ?? ""].filter(Boolean).join(" ")}>
+        {children != null ? <span className="ui-math-eqno">{children}</span> : null}
         <span
-          className="wb-math-scroll-inner"
+          className="ui-math-scroll-inner"
           role="math"
           aria-label={source}
           dangerouslySetInnerHTML={{ __html: html ?? "" }}
@@ -112,7 +112,7 @@ export function Math({ source, display = false, valid = true, children, classNam
 
   return (
     <span
-      className={["wb-math-inline", className ?? ""].filter(Boolean).join(" ")}
+      className={["ui-math-inline", className ?? ""].filter(Boolean).join(" ")}
       role="math"
       aria-label={source}
       dangerouslySetInnerHTML={{ __html: html ?? "" }}

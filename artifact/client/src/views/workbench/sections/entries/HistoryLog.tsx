@@ -27,7 +27,7 @@ export function ReviewLog({ history }: { history: HistoryRow[] }) {
   return (
     <Card title="Review log">
       {reviews.length === 0 ? (
-        <p style={{ margin: 0, color: "var(--wb-content-secondary)" }}>No reviews yet.</p>
+        <p style={{ margin: 0, color: "var(--ui-content-secondary)" }}>No reviews yet.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {[...reviews].reverse().map((row) => {
@@ -37,28 +37,28 @@ export function ReviewLog({ history }: { history: HistoryRow[] }) {
               <li
                 key={row.id}
                 style={{
-                  borderBottom: "1px solid var(--wb-border-default)",
-                  padding: "var(--wb-space-8) 0",
+                  borderBottom: "1px solid var(--ui-border-default)",
+                  padding: "var(--ui-space-8) 0",
                 }}
               >
                 <span style={{ fontWeight: 600 }}>
                   {DISPOSITION_WORDS[disposition] ?? disposition}
                 </span>{" "}
-                <span style={{ color: "var(--wb-content-secondary)" }}>
+                <span style={{ color: "var(--ui-content-secondary)" }}>
                   {row.actor} · {formatDateTime(row.ts)}
                 </span>
                 {payload?.comment ? (
-                  <p style={{ margin: "var(--wb-space-4) 0 0" }}>{payload.comment}</p>
+                  <p style={{ margin: "var(--ui-space-4) 0 0" }}>{payload.comment}</p>
                 ) : row.note && row.note !== payload?.comment ? (
-                  <p style={{ margin: "var(--wb-space-4) 0 0" }}>{row.note}</p>
+                  <p style={{ margin: "var(--ui-space-4) 0 0" }}>{row.note}</p>
                 ) : null}
                 {payload?.state_sha256 ? (
                   <p
                     className="mono"
                     style={{
-                      margin: "var(--wb-space-4) 0 0",
-                      color: "var(--wb-content-secondary)",
-                      fontSize: "var(--wb-font-size-xs)",
+                      margin: "var(--ui-space-4) 0 0",
+                      color: "var(--ui-content-secondary)",
+                      fontSize: "var(--ui-font-size-xs)",
                     }}
                   >
                     state {formatShortHash(payload.state_sha256)}
@@ -77,26 +77,26 @@ export function HistoryList({ history }: { history: HistoryRow[] }) {
   return (
     <Card title="History">
       {history.length === 0 ? (
-        <p style={{ margin: 0, color: "var(--wb-content-secondary)" }}>No history recorded.</p>
+        <p style={{ margin: 0, color: "var(--ui-content-secondary)" }}>No history recorded.</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
           {[...history].reverse().map((row) => (
             <li
               key={row.id}
               style={{
-                borderBottom: "1px solid var(--wb-border-default)",
-                padding: "var(--wb-space-8) 0",
-                fontSize: "var(--wb-font-size-sm)",
+                borderBottom: "1px solid var(--ui-border-default)",
+                padding: "var(--ui-space-8) 0",
+                fontSize: "var(--ui-font-size-sm)",
               }}
             >
               <span style={{ fontWeight: 600 }}>{row.verb}</span>
               {row.field ? (
-                <span className="mono" style={{ color: "var(--wb-content-secondary)" }}>
+                <span className="mono" style={{ color: "var(--ui-content-secondary)" }}>
                   {" "}
                   {row.field}
                 </span>
               ) : null}{" "}
-              <span style={{ color: "var(--wb-content-secondary)" }}>
+              <span style={{ color: "var(--ui-content-secondary)" }}>
                 {row.actor} · {formatDateTime(row.ts)}
               </span>
               {row.old != null || row.new != null ? (
@@ -104,8 +104,8 @@ export function HistoryList({ history }: { history: HistoryRow[] }) {
                   className="mono"
                   style={{
                     display: "block",
-                    color: "var(--wb-content-secondary)",
-                    fontSize: "var(--wb-font-size-xs)",
+                    color: "var(--ui-content-secondary)",
+                    fontSize: "var(--ui-font-size-xs)",
                     overflowWrap: "anywhere",
                   }}
                 >
@@ -113,7 +113,7 @@ export function HistoryList({ history }: { history: HistoryRow[] }) {
                 </span>
               ) : null}
               {row.note ? (
-                <span style={{ display: "block", color: "var(--wb-content-secondary)" }}>
+                <span style={{ display: "block", color: "var(--ui-content-secondary)" }}>
                   {row.note}
                 </span>
               ) : null}

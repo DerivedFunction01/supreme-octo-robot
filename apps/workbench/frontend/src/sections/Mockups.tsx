@@ -48,9 +48,9 @@ export function PickChip({
       onClick={onPress}
       className="max-w-full shrink-0 truncate rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap"
       style={{
-        backgroundColor: on ? "var(--wb-accent)" : "var(--wb-surface-2)",
-        border: `1px solid ${on ? "var(--wb-accent)" : "var(--wb-border-strong)"}`,
-        color: on ? "var(--wb-on-accent)" : "var(--wb-content-secondary)",
+        backgroundColor: on ? "var(--ui-accent)" : "var(--ui-surface-2)",
+        border: `1px solid ${on ? "var(--ui-accent)" : "var(--ui-border-strong)"}`,
+        color: on ? "var(--ui-on-accent)" : "var(--ui-content-secondary)",
       }}
     >
       {label}
@@ -69,7 +69,7 @@ function Specimen({ entry, mode }: { entry: Entry; mode: "Light" | "Dark" }) {
     <div
       data-mode={dark ? "dark" : "light"}
       className="h-full w-full p-3"
-      style={{ backgroundColor: dark ? "#22251a" : "var(--wb-surface-sunken)", borderRadius: "var(--wb-radius-md)" }}
+      style={{ backgroundColor: dark ? "#22251a" : "var(--ui-surface-sunken)", borderRadius: "var(--ui-radius-md)" }}
     >
       <div className="mb-2 h-3.5 rounded" style={{ width: `${34 + (seed % 20)}%`, backgroundColor: bar }} />
       <div className="mb-[7px] h-[9px] rounded" style={{ width: "86%", backgroundColor: line, opacity: 0.9 }} />
@@ -150,9 +150,9 @@ function EntryPageStage({ entry }: { entry: Entry }) {
       <div
         className="block h-full w-full overflow-y-auto px-5 py-4"
         style={{
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
-          backgroundColor: "var(--wb-surface-1)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
+          backgroundColor: "var(--ui-surface-1)",
         }}
       >
         <SegmentBlocks blocks={segments} />
@@ -161,14 +161,14 @@ function EntryPageStage({ entry }: { entry: Entry }) {
   }
   if (page === null) {
     return (
-      <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+      <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
         Loading page…
       </p>
     );
   }
   if (!page.ok) {
     return (
-      <p role="alert" className="text-sm" style={{ color: "var(--wb-danger)" }}>
+      <p role="alert" className="text-sm" style={{ color: "var(--ui-danger)" }}>
         {page.reason}
       </p>
     );
@@ -180,9 +180,9 @@ function EntryPageStage({ entry }: { entry: Entry }) {
       srcDoc={page.body}
       className="block h-full w-full"
       style={{
-        border: "1px solid var(--wb-border-default)",
-        borderRadius: "var(--wb-radius-md)",
-        backgroundColor: "var(--wb-surface-1)",
+        border: "1px solid var(--ui-border-default)",
+        borderRadius: "var(--ui-radius-md)",
+        backgroundColor: "var(--ui-surface-1)",
       }}
     />
   );
@@ -202,7 +202,7 @@ function entryFooter(e: Entry) {
       {e.staleNote ? <ReviewBadge kind="stale" text={e.staleNote} /> : null}
       <span
         className="inline-flex rounded-full px-2.5 py-[2.5px] text-xs font-semibold"
-        style={{ backgroundColor: "var(--wb-surface-sunken)", color: "var(--wb-content-secondary)" }}
+        style={{ backgroundColor: "var(--ui-surface-sunken)", color: "var(--ui-content-secondary)" }}
       >
         {e.viewport} · {e.mode}
       </span>
@@ -274,7 +274,7 @@ export function Mockups() {
         ))}
       </div>
       {shown.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-secondary)" }}>
           No mockups match this filter.
         </p>
       ) : null}
@@ -292,8 +292,8 @@ const RULED_STATUSES: RuledStatus[] = [
 ];
 
 const detailInputStyle: React.CSSProperties = {
-  backgroundColor: "var(--wb-surface-sunken)",
-  color: "var(--wb-content-primary)",
+  backgroundColor: "var(--ui-surface-sunken)",
+  color: "var(--ui-content-primary)",
   borderRadius: 9,
   padding: "6px 10px",
   fontSize: 13.5,
@@ -335,7 +335,7 @@ export function MockupDetail({ entryId }: { entryId: string }) {
         type="button"
         onClick={() => navigate({ section: "mockups" })}
         className="mb-3 text-sm font-semibold"
-        style={{ color: "var(--wb-accent)" }}
+        style={{ color: "var(--ui-accent)" }}
       >
         ‹ Mockups
       </button>
@@ -578,9 +578,9 @@ export function MockupDetail({ entryId }: { entryId: string }) {
       <div
         className="p-3.5"
         style={{
-          backgroundColor: "var(--wb-surface-2)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-lg)",
+          backgroundColor: "var(--ui-surface-2)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-lg)",
         }}
       >
         <textarea
@@ -593,7 +593,7 @@ export function MockupDetail({ entryId }: { entryId: string }) {
           placeholder="No state document served — write one to create it."
         />
         {stateError ? (
-          <p role="alert" className="mt-2 mb-0 text-sm" style={{ color: "var(--wb-danger)" }}>
+          <p role="alert" className="mt-2 mb-0 text-sm" style={{ color: "var(--ui-danger)" }}>
             {stateError}
           </p>
         ) : null}
@@ -698,11 +698,11 @@ export function MockupDetail({ entryId }: { entryId: string }) {
         }
       >
         {fileNote ? (
-          <p role="alert" className="mb-3 text-sm" style={{ color: "var(--wb-content-secondary)" }}>
+          <p role="alert" className="mb-3 text-sm" style={{ color: "var(--ui-content-secondary)" }}>
             {fileNote}
           </p>
         ) : null}
-        <p className="mb-2 text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+        <p className="mb-2 text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
           Opened at sha <span className="font-mono">{fileSha || "…"}</span> — the save refuses if
           the file moved since.
         </p>

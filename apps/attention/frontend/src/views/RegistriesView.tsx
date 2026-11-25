@@ -37,7 +37,7 @@ function AddForm({
             <p
               className="text-sm"
               role="alert"
-              style={{ color: "var(--wb-status-hard-gate-text)" }}
+              style={{ color: "var(--ui-status-hard-gate-text)" }}
             >
               {error}
             </p>

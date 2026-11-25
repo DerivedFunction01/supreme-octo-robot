@@ -31,7 +31,7 @@ const INDENT_OPTIONS: { value: IndentUnit; label: string }[] = [
   { value: "tab", label: "Tab" },
 ];
 
-const INDENT_STORAGE_KEY = "wb-viewer.editor-indent";
+const INDENT_STORAGE_KEY = "ui-viewer.editor-indent";
 
 function indentString(unit: IndentUnit): string {
   return unit === "4 spaces" ? "    " : unit === "tab" ? "\t" : "  ";
@@ -48,10 +48,10 @@ function loadIndentUnit(): IndentUnit {
 }
 
 const layerStyle: React.CSSProperties = {
-  fontFamily: "var(--wb-font-mono)",
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
-  padding: "var(--wb-space-12)",
+  fontFamily: "var(--ui-font-mono)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
+  padding: "var(--ui-space-12)",
   whiteSpace: "pre",
   tabSize: 4,
 };
@@ -282,20 +282,20 @@ export function RepoEditor({
         zIndex: 40,
         display: "flex",
         flexDirection: "column",
-        background: "var(--wb-surface-canvas)",
-        color: "var(--wb-content-primary)",
-        fontFamily: "var(--wb-font-ui)",
+        background: "var(--ui-surface-canvas)",
+        color: "var(--ui-content-primary)",
+        fontFamily: "var(--ui-font-ui)",
       }}
     >
       <header
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "var(--wb-space-12)",
+          gap: "var(--ui-space-12)",
           flexWrap: "wrap",
-          padding: "var(--wb-space-12) var(--wb-space-16)",
-          borderBottom: "1px solid var(--wb-border-default)",
-          background: "var(--wb-surface-1)",
+          padding: "var(--ui-space-12) var(--ui-space-16)",
+          borderBottom: "1px solid var(--ui-border-default)",
+          background: "var(--ui-surface-1)",
         }}
       >
         <Button variant="ghost" onClick={requestClose}>
@@ -303,15 +303,15 @@ export function RepoEditor({
         </Button>
         <span
           className="mono"
-          style={{ fontSize: "var(--wb-font-size-sm)", fontWeight: 600, overflowWrap: "anywhere" }}
+          style={{ fontSize: "var(--ui-font-size-sm)", fontWeight: 600, overflowWrap: "anywhere" }}
         >
           {path}
         </span>
         <span
           className="mono"
           style={{
-            fontSize: "var(--wb-font-size-xs)",
-            color: "var(--wb-content-muted)",
+            fontSize: "var(--ui-font-size-xs)",
+            color: "var(--ui-content-muted)",
           }}
         >
           {projectId} · base sha {formatShortHash(base.sha256)}
@@ -319,8 +319,8 @@ export function RepoEditor({
         <span
           role="status"
           style={{
-            fontSize: "var(--wb-font-size-xs)",
-            color: dirty ? "var(--wb-status-stale-text)" : "var(--wb-content-muted)",
+            fontSize: "var(--ui-font-size-xs)",
+            color: dirty ? "var(--ui-status-stale-text)" : "var(--ui-content-muted)",
           }}
         >
           {dirty ? "Unsaved changes" : "No changes"}
@@ -329,7 +329,7 @@ export function RepoEditor({
           style={{
             marginLeft: "auto",
             display: "inline-flex",
-            gap: "var(--wb-space-12)",
+            gap: "var(--ui-space-12)",
             alignItems: "center",
             flexWrap: "wrap",
           }}
@@ -367,15 +367,15 @@ export function RepoEditor({
           role="alert"
           style={{
             display: "flex",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             alignItems: "center",
             flexWrap: "wrap",
-            padding: "var(--wb-space-8) var(--wb-space-16)",
-            background: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-            borderBottom: "1px solid var(--wb-status-stale)",
+            padding: "var(--ui-space-8) var(--ui-space-16)",
+            background: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+            borderBottom: "1px solid var(--ui-status-stale)",
           }}
         >
-          <span style={{ fontSize: "var(--wb-font-size-sm)" }}>
+          <span style={{ fontSize: "var(--ui-font-size-sm)" }}>
             You have unsaved changes in {path}. Discard them and close?
           </span>
           <Button variant="danger" onClick={() => onClose(savedOnce)}>
@@ -392,15 +392,15 @@ export function RepoEditor({
           role="alert"
           style={{
             display: "flex",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             alignItems: "center",
             flexWrap: "wrap",
-            padding: "var(--wb-space-8) var(--wb-space-16)",
-            background: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-            borderBottom: "1px solid var(--wb-status-stale)",
+            padding: "var(--ui-space-8) var(--ui-space-16)",
+            background: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+            borderBottom: "1px solid var(--ui-status-stale)",
           }}
         >
-          <span style={{ fontSize: "var(--wb-font-size-sm)" }}>
+          <span style={{ fontSize: "var(--ui-font-size-sm)" }}>
             {path} is secret-shaped. Saving writes its real content to disk — confirm only if that
             is what you intend.
           </span>
@@ -422,15 +422,15 @@ export function RepoEditor({
           role="alert"
           style={{
             display: "flex",
-            gap: "var(--wb-space-8)",
+            gap: "var(--ui-space-8)",
             alignItems: "center",
             flexWrap: "wrap",
-            padding: "var(--wb-space-8) var(--wb-space-16)",
-            background: "color-mix(in srgb, var(--wb-status-stale) 14%, transparent)",
-            borderBottom: "1px solid var(--wb-status-stale)",
+            padding: "var(--ui-space-8) var(--ui-space-16)",
+            background: "color-mix(in srgb, var(--ui-status-stale) 14%, transparent)",
+            borderBottom: "1px solid var(--ui-status-stale)",
           }}
         >
-          <span style={{ fontSize: "var(--wb-font-size-sm)", flex: 1, minWidth: "200px" }}>
+          <span style={{ fontSize: "var(--ui-font-size-sm)", flex: 1, minWidth: "200px" }}>
             Conflict: {conflict}
           </span>
           <Button variant="secondary" onClick={() => void reloadCurrent()}>
@@ -445,7 +445,7 @@ export function RepoEditor({
       {error ? (
         <p
           role="alert"
-          style={{ color: "var(--wb-danger)", margin: "var(--wb-space-8) var(--wb-space-16)" }}
+          style={{ color: "var(--ui-danger)", margin: "var(--ui-space-8) var(--ui-space-16)" }}
         >
           {error}
         </p>
@@ -454,8 +454,8 @@ export function RepoEditor({
         <p
           role="status"
           style={{
-            color: "var(--wb-content-secondary)",
-            margin: "var(--wb-space-8) var(--wb-space-16)",
+            color: "var(--ui-content-secondary)",
+            margin: "var(--ui-space-8) var(--ui-space-16)",
           }}
         >
           {notice}
@@ -467,7 +467,7 @@ export function RepoEditor({
           position: "relative",
           flex: 1,
           minHeight: 0,
-          background: "var(--wb-surface-sunken)",
+          background: "var(--ui-surface-sunken)",
         }}
       >
         <pre
@@ -480,7 +480,7 @@ export function RepoEditor({
             overflow: "hidden",
             margin: 0,
             pointerEvents: "none",
-            color: "var(--wb-content-primary)",
+            color: "var(--ui-content-primary)",
           }}
         >
           {html != null ? (
@@ -514,7 +514,7 @@ export function RepoEditor({
             border: "none",
             outline: "none",
             color: "transparent",
-            caretColor: "var(--wb-content-primary)",
+            caretColor: "var(--ui-content-primary)",
             WebkitTextFillColor: "transparent",
           }}
         />

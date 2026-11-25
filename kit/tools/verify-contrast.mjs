@@ -7,15 +7,15 @@
 // + border) are graphical and are NOT text-verified — the
 // shipped set establishes exactly this split (e.g. stale's
 // orange hue sits at ~2.3:1 on white while its text variant
-// holds 5.3:1+). Alias texts (var(--wb-status-<other>-text))
+// holds 5.3:1+). Alias texts (var(--ui-status-<other>-text))
 // resolve to their target before checking.
 //
 // Part 2 (scanner rule 1 of the entries critic
-// pass): the CONTENT tokens join the net. --wb-content-
-// primary and --wb-content-secondary are the essential-
+// pass): the CONTENT tokens join the net. --ui-content-
+// primary and --ui-content-secondary are the essential-
 // content voices and must hold >= 4.5:1 against every
 // surface token, both palettes x both modes — that bar is
-// FATAL. --wb-content-muted is the META voice (slugs,
+// FATAL. --ui-content-muted is the META voice (slugs,
 // timestamps, counts, card meta lines): the
 // superapp critic pass (finding B-2) measured it at
 // 2.91–3.71:1 across the surface set and filed it as a

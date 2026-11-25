@@ -153,11 +153,11 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-[var(--wb-radius-sm)] px-2.5 py-2 text-sm"
+            className="w-full rounded-[var(--ui-radius-sm)] px-2.5 py-2 text-sm"
             style={{
-              backgroundColor: "var(--wb-surface-1)",
-              border: "1px solid var(--wb-border-default)",
-              color: "var(--wb-content-primary)",
+              backgroundColor: "var(--ui-surface-1)",
+              border: "1px solid var(--ui-border-default)",
+              color: "var(--ui-content-primary)",
             }}
           />
           )}
@@ -196,12 +196,12 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
                       style={{
                         backgroundColor:
                           cls?.derivation?.verdict === "stalled"
-                            ? "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)"
-                            : "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
+                            ? "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)"
+                            : "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
                         color:
                           cls?.derivation?.verdict === "stalled"
-                            ? "var(--wb-status-hard-gate-text)"
-                            : "var(--wb-status-implemented-text)",
+                            ? "var(--ui-status-hard-gate-text)"
+                            : "var(--ui-status-implemented-text)",
                       }}
                     >
                       {cls?.derivation?.verdict === "stalled" ? "Stalled · 2 missed intervals" : "On track"}
@@ -212,7 +212,7 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
                   <button
                     type="button"
                     className="inline-flex min-h-[36px] items-center text-[13px] font-semibold"
-                    style={{ color: "var(--wb-accent)" }}
+                    style={{ color: "var(--ui-accent)" }}
                     onClick={() => setShowRow((v) => !v)}
                   >
                     {showRow ? "Hide" : "Show"} the armed row + entry, as written
@@ -221,7 +221,7 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
               </>
             ) : (
               <Row last>
-                <span className="text-[13px]" style={{ color: "var(--wb-content-secondary)" }}>
+                <span className="text-[13px]" style={{ color: "var(--ui-content-secondary)" }}>
                   {todo.status === "doing" && cls?.optOut
                     ? "Opted out (progress_check: off) — no projections are written."
                     : todo.status === "doing"
@@ -235,9 +235,9 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
             <pre
               className="mt-2 overflow-x-auto p-3 font-mono text-[11.5px] leading-[1.6]"
               style={{
-                backgroundColor: "var(--wb-surface-1)",
-                border: "1px solid var(--wb-border-default)",
-                borderRadius: "var(--wb-radius-md)",
+                backgroundColor: "var(--ui-surface-1)",
+                border: "1px solid var(--ui-border-default)",
+                borderRadius: "var(--ui-radius-md)",
               }}
             >
               {JSON.stringify(renderArmedRow(todo), null, 2)}
@@ -266,11 +266,11 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
                   onChange={(e) => setCheckpoint(e.target.value)}
                   placeholder="Add a checkpoint…"
                   aria-label="Checkpoint text"
-                  className="min-w-0 flex-1 rounded-[var(--wb-radius-sm)] px-2.5 py-1.5 text-sm"
+                  className="min-w-0 flex-1 rounded-[var(--ui-radius-sm)] px-2.5 py-1.5 text-sm"
                   style={{
-                    backgroundColor: "var(--wb-surface-1)",
-                    border: "1px solid var(--wb-border-default)",
-                    color: "var(--wb-content-primary)",
+                    backgroundColor: "var(--ui-surface-1)",
+                    border: "1px solid var(--ui-border-default)",
+                    color: "var(--ui-content-primary)",
                   }}
                 />
                 <Button
@@ -293,11 +293,11 @@ export function TodoDetail({ todo, onClose }: { todo: FileTodo; onClose: () => v
         </div>
 
         {error ? (
-          <p className="text-[13px]" style={{ color: "var(--wb-danger)" }}>
+          <p className="text-[13px]" style={{ color: "var(--ui-danger)" }}>
             {error}
           </p>
         ) : null}
-        <p className="font-mono text-[11.5px]" style={{ color: "var(--wb-content-muted)" }}>
+        <p className="font-mono text-[11.5px]" style={{ color: "var(--ui-content-muted)" }}>
           {todo.id} · bundle {todo.bundle}
           {Object.keys(todo.extra).length > 0
             ? ` · extra front matter preserved: ${Object.entries(todo.extra).map(([k, v]) => `${k}: ${v}`).join(", ")}`
@@ -412,12 +412,12 @@ export function Todos() {
                   style={{
                     backgroundColor:
                       c.derivation!.verdict === "stalled"
-                        ? "color-mix(in srgb, var(--wb-okabe-vermilion) 12%, transparent)"
-                        : "color-mix(in srgb, var(--wb-okabe-bluish-green) 14%, transparent)",
+                        ? "color-mix(in srgb, var(--ui-okabe-vermilion) 12%, transparent)"
+                        : "color-mix(in srgb, var(--ui-okabe-bluish-green) 14%, transparent)",
                     color:
                       c.derivation!.verdict === "stalled"
-                        ? "var(--wb-status-hard-gate-text)"
-                        : "var(--wb-status-implemented-text)",
+                        ? "var(--ui-status-hard-gate-text)"
+                        : "var(--ui-status-implemented-text)",
                   }}
                 >
                   {c.derivation!.verdict === "stalled" ? "Stalled" : "On track"}
@@ -431,7 +431,7 @@ export function Todos() {
       <Group>
         <Row>
           <span className="flex w-full items-center gap-2">
-            <Plus size={15} style={{ color: "var(--wb-content-muted)" }} />
+            <Plus size={15} style={{ color: "var(--ui-content-muted)" }} />
             <input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
@@ -452,7 +452,7 @@ export function Todos() {
               placeholder="Add a todo…"
               aria-label="Add a todo"
               className="min-w-0 flex-1 bg-transparent text-[14.5px] outline-none"
-              style={{ color: "var(--wb-content-primary)" }}
+              style={{ color: "var(--ui-content-primary)" }}
             />
             <Button
               variant="secondary"
@@ -476,7 +476,7 @@ export function Todos() {
         {active.map((t, i) => rowFor(t, i === active.length - 1 && completed.length === 0))}
       </Group>
       {addError ? (
-        <p className="mt-2 text-[13px]" style={{ color: "var(--wb-danger)" }}>
+        <p className="mt-2 text-[13px]" style={{ color: "var(--ui-danger)" }}>
           {addError}
         </p>
       ) : null}
@@ -489,7 +489,7 @@ export function Todos() {
             <ChevronRight
               size={15}
               style={{
-                color: "var(--wb-content-muted)",
+                color: "var(--ui-content-muted)",
                 transform: showDone ? "rotate(90deg)" : undefined,
               }}
             />

@@ -40,7 +40,7 @@ function SpecRow({
         {spec.descriptor} · {spec.rateLabel}
       </RowValue>
       {selected ? (
-        <Check size={17} aria-hidden style={{ color: "var(--wb-accent)", flex: "0 0 auto" }} />
+        <Check size={17} aria-hidden style={{ color: "var(--ui-accent)", flex: "0 0 auto" }} />
       ) : null}
     </Row>
   );

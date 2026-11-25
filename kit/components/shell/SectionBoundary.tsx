@@ -39,20 +39,20 @@ export class SectionBoundary extends Component<{ children: ReactNode }, SectionB
         data-anchor="section/error"
         role="alert"
         style={{
-          background: "var(--wb-surface-1)",
-          border: "1px solid var(--wb-border-default)",
-          borderRadius: "var(--wb-radius-md)",
-          padding: "var(--wb-space-16)",
+          background: "var(--ui-surface-1)",
+          border: "1px solid var(--ui-border-default)",
+          borderRadius: "var(--ui-radius-md)",
+          padding: "var(--ui-space-16)",
           display: "flex",
           flexDirection: "column",
-          gap: "var(--wb-space-8)",
+          gap: "var(--ui-space-8)",
         }}
       >
         <h2
           style={{
             margin: 0,
-            fontSize: "var(--wb-font-size-base)",
-            lineHeight: "var(--wb-line-height-base)",
+            fontSize: "var(--ui-font-size-base)",
+            lineHeight: "var(--ui-line-height-base)",
             fontWeight: 700,
           }}
         >
@@ -62,9 +62,9 @@ export class SectionBoundary extends Component<{ children: ReactNode }, SectionB
           className="mono"
           style={{
             margin: 0,
-            fontSize: "var(--wb-font-size-sm)",
-            lineHeight: "var(--wb-line-height-sm)",
-            color: "var(--wb-content-secondary)",
+            fontSize: "var(--ui-font-size-sm)",
+            lineHeight: "var(--ui-line-height-sm)",
+            color: "var(--ui-content-secondary)",
             overflowWrap: "anywhere",
           }}
         >
@@ -73,9 +73,9 @@ export class SectionBoundary extends Component<{ children: ReactNode }, SectionB
         <p
           style={{
             margin: 0,
-            fontSize: "var(--wb-font-size-sm)",
-            lineHeight: "var(--wb-line-height-sm)",
-            color: "var(--wb-content-secondary)",
+            fontSize: "var(--ui-font-size-sm)",
+            lineHeight: "var(--ui-line-height-sm)",
+            color: "var(--ui-content-secondary)",
           }}
         >
           The rest of the viewer is unaffected — pick another section or tab to keep going.

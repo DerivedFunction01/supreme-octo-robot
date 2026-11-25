@@ -77,13 +77,13 @@ export function AttentionProvider({
           role="status"
           className="fixed right-4 bottom-4 left-4 z-50 mx-auto max-w-[420px] px-4 py-3 text-center text-sm font-medium"
           style={{
-            backgroundColor: "var(--wb-surface-3)",
-            color: "var(--wb-content-primary)",
-            borderColor: "var(--wb-border-strong)",
+            backgroundColor: "var(--ui-surface-3)",
+            color: "var(--ui-content-primary)",
+            borderColor: "var(--ui-border-strong)",
             borderStyle: "solid",
             borderWidth: 1,
-            borderRadius: "var(--wb-radius-md)",
-            boxShadow: "var(--wb-shadow-overlay)",
+            borderRadius: "var(--ui-radius-md)",
+            boxShadow: "var(--ui-shadow-overlay)",
           }}
         >
           {note}
@@ -111,7 +111,7 @@ export function AttentionProvider({
           </>
         }
       >
-        <p className="text-sm" style={{ color: "var(--wb-content-primary)" }}>
+        <p className="text-sm" style={{ color: "var(--ui-content-primary)" }}>
           {confirmState?.text}
         </p>
       </Sheet>
@@ -140,7 +140,7 @@ export function ViewTitle({ children }: { children: ReactNode }) {
   return (
     <div
       className="text-[28px] font-bold tracking-[-0.01em]"
-      style={{ color: "var(--wb-content-primary)", margin: "0 0 4px" }}
+      style={{ color: "var(--ui-content-primary)", margin: "0 0 4px" }}
     >
       {children}
     </div>
@@ -151,7 +151,7 @@ export function ViewTitle({ children }: { children: ReactNode }) {
  *  .scope-line): secondary, small, carries the stale tag. */
 export function ScopeLine({ children }: { children: ReactNode }) {
   return (
-    <p className="text-sm" style={{ color: "var(--wb-content-secondary)", margin: "0 0 16px" }}>
+    <p className="text-sm" style={{ color: "var(--ui-content-secondary)", margin: "0 0 16px" }}>
       {children}
     </p>
   );
@@ -163,11 +163,11 @@ export function BandHead({ label, count }: { label: string; count?: number }) {
   return (
     <h2
       className="text-[17px] font-semibold"
-      style={{ color: "var(--wb-content-primary)", margin: "22px 0 8px" }}
+      style={{ color: "var(--ui-content-primary)", margin: "22px 0 8px" }}
     >
       {label}
       {count !== undefined ? (
-        <span style={{ color: "var(--wb-content-muted)", fontWeight: 500 }}> {count}</span>
+        <span style={{ color: "var(--ui-content-muted)", fontWeight: 500 }}> {count}</span>
       ) : null}
     </h2>
   );

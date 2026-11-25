@@ -1040,7 +1040,7 @@ ruling; the product name remains the working name
   theme is a selectable token-set variant over the same
   semantic roles (§11.2): it changes the accent and surface
   family as one coherent set. **Olive is the default
-  palette** (`--wb-accent` `#4b5320` light / `#9db45c`
+  palette** (`--ui-accent` `#4b5320` light / `#9db45c`
   dark), not the only one; further palettes (e.g. a teal in
   the git viewer's family) are added as theme files under
   the same contract. Switching palettes is a UI preference,
@@ -1056,7 +1056,7 @@ ruling; the product name remains the working name
 
 ### 11.2 Tokens + themes-folder organization
 
-- Tokens are `--wb-<category>-<role>` CSS custom
+- Tokens are `--ui-<category>-<role>` CSS custom
   properties in three tiers (primitive → semantic →
   component); source of truth is a DTCG-format
   `tokens/tokens.json`; Style Dictionary is not adopted.
@@ -1505,7 +1505,7 @@ hand / parameterized / work-tracking. Classification is
 descriptive, not activating: an unclassified manifest
 discovers and behaves exactly as before.
 
-Entries the harness generates (the wb-progress family)
+Entries the harness generates (the ui-progress family)
 carry the classification layer on the entry itself: a
 `catalog` block (origin machine, generality
 deployment-specific — the writer owns their lifecycle
@@ -1572,7 +1572,7 @@ SPEC. The staging project and its graduation model are
   standalone repo's layout), never a re-render.
 - **Datasets are read-only DuckDB views** over
   registered files — never a second store. Peek-time
-  highlight markers (`[[wb-hl:...]]`) ride the same
+  highlight markers (`[[ui-hl:...]]`) ride the same
   read path.
 
 ## 21. Consolidation — one Project, Git as its Code facet (2026-11-20)

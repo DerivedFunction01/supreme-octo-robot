@@ -35,27 +35,27 @@ const TODO_LANES = ["todo", "doing", "blocked", "done"] as const;
 type TodoLane = (typeof TODO_LANES)[number];
 
 const cardStyle: React.CSSProperties = {
-  background: "var(--wb-surface-2)",
-  border: "1px solid var(--wb-border-default)",
-  borderRadius: "var(--wb-radius-md)",
-  padding: "var(--wb-space-12)",
+  background: "var(--ui-surface-2)",
+  border: "1px solid var(--ui-border-default)",
+  borderRadius: "var(--ui-radius-md)",
+  padding: "var(--ui-space-12)",
   width: "264px",
   maxWidth: "100%",
   boxSizing: "border-box",
-  color: "var(--wb-content-primary)",
+  color: "var(--ui-content-primary)",
   textAlign: "left",
 };
 
 const tagStyle: React.CSSProperties = {
-  color: "var(--wb-content-muted)",
-  fontSize: "var(--wb-font-size-xs)",
-  lineHeight: "var(--wb-line-height-xs)",
+  color: "var(--ui-content-muted)",
+  fontSize: "var(--ui-font-size-xs)",
+  lineHeight: "var(--ui-line-height-xs)",
 };
 
 const titleStyle: React.CSSProperties = {
   fontWeight: 600,
-  fontSize: "var(--wb-font-size-sm)",
-  lineHeight: "var(--wb-line-height-sm)",
+  fontSize: "var(--ui-font-size-sm)",
+  lineHeight: "var(--ui-line-height-sm)",
   // The storyboard Board frame wraps card titles in
   // full — no line clamp (critic m-4: titles truncated
   // mid-word at tablet width). Long unbroken tokens
@@ -86,7 +86,7 @@ function CardShell({
 }) {
   const inner = (
     <>
-      <div style={{ display: "flex", gap: "var(--wb-space-8)", alignItems: "baseline" }}>
+      <div style={{ display: "flex", gap: "var(--ui-space-8)", alignItems: "baseline" }}>
         <span aria-hidden="true">{glyph}</span>
         <span style={{ flex: 1, minWidth: 0, overflowWrap: "anywhere", ...tagStyle }}>
           {projectName}
@@ -98,7 +98,7 @@ function CardShell({
         ) : null}
       </div>
       <div style={titleStyle}>{title}</div>
-      <div style={{ ...tagStyle, marginTop: "var(--wb-space-8)", overflowWrap: "anywhere" }}>
+      <div style={{ ...tagStyle, marginTop: "var(--ui-space-8)", overflowWrap: "anywhere" }}>
         {footer}
       </div>
     </>
@@ -398,24 +398,24 @@ export function BoardSection({
         style={{
           display: "flex",
           alignItems: "baseline",
-          gap: "var(--wb-space-12)",
-          marginBottom: "var(--wb-space-16)",
+          gap: "var(--ui-space-12)",
+          marginBottom: "var(--ui-space-16)",
         }}
       >
         <UpdatedAgo capturedAt={capturedAt} />
       </div>
       {mutation.isError ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           The move was refused — the card&rsquo;s file was not changed.
         </p>
       ) : null}
       {pendingCount > 0 ? (
-        <p style={{ color: "var(--wb-content-muted)" }}>
+        <p style={{ color: "var(--ui-content-muted)" }}>
           Loading {pendingCount} project{pendingCount === 1 ? "" : "s"}…
         </p>
       ) : null}
       {failedNames.length > 0 ? (
-        <p role="alert" style={{ color: "var(--wb-danger)" }}>
+        <p role="alert" style={{ color: "var(--ui-danger)" }}>
           Could not load {failedNames.join(", ")} — the rest of the board is shown.
         </p>
       ) : null}
@@ -428,16 +428,16 @@ export function BoardSection({
             display: "flex",
             flexDirection: isPhone ? "column" : "row",
             flexWrap: isPhone ? "nowrap" : "wrap",
-            gap: "var(--wb-space-16)",
+            gap: "var(--ui-space-16)",
             alignItems: isPhone ? "stretch" : "flex-start",
             overflowX: "visible",
-            paddingBottom: "var(--wb-space-8)",
+            paddingBottom: "var(--ui-space-8)",
           }}
         >
           <div style={laneWrapStyle}>
             <Lane title="Review queue" count={reviewTotal} accent>
               {review.length === 0 ? (
-                <p style={{ color: "var(--wb-content-muted)", margin: 0 }}>
+                <p style={{ color: "var(--ui-content-muted)", margin: 0 }}>
                   Nothing awaiting review
                 </p>
               ) : (
@@ -492,7 +492,7 @@ export function BoardSection({
                         </Button>
                       ) : null}
                       {count === 0 ? (
-                        <p style={{ color: "var(--wb-content-muted)", margin: 0 }}>
+                        <p style={{ color: "var(--ui-content-muted)", margin: 0 }}>
                           {dragOver === lane ? "Drop to move here" : "No cards"}
                         </p>
                       ) : null}
