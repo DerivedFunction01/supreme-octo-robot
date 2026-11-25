@@ -84,10 +84,34 @@ def test_refresh_is_inert_without_forwarder_fields(repo, tmp_path):
     assert lv.refresh_pin(target, env={"HTTPS_PROXY": CAND}) is False
 
 
-def test_kill_forwarders_is_inert_without_a_destination(repo):
+def test_listen_inodes_picks_only_the_listen_entry_on_the_port(repo):
     lv = lease.local_venue
-    target = {"host": "127.0.0.1", "port": 2222, "user": "agent", "fwd_pin": "/nonexistent/pin.env"}
+    text = (
+        "  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n"
+        "   0: 0100007F:08AE 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000   0 424242 1 0000000000000000 100 0 0 10 0\n"
+        "   1: 0100007F:08AE 00000000:0000 01 00000000:00000000 00:00000000 00000000  1000   0 515151 1 0000000000000000 100 0 0 10 0\n"
+        "   2: 0100007F:1F90 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000   0 636363 1 0000000000000000 100 0 0 10 0\n"
+    )
+    assert lv._listen_inodes(2222, text) == {"424242"}
+
+
+def test_kill_forwarders_terms_only_the_marked_listener(repo, monkeypatch):
+    lv = lease.local_venue
+    target = {"host": "127.0.0.1", "port": 2222, "user": "agent"}
+    killed = []
+    monkeypatch.setattr(lv, "_listener_pid", lambda t: 777)
+    monkeypatch.setattr(lv.os, "kill", lambda pid, sig: killed.append(pid))
+    monkeypatch.setattr(lv, "_proc_cmdline", lambda pid: b"python3 local_compute_fwd.py 10.0.0.9 22")
+    assert lv._kill_forwarders(target) == 1
+    assert killed == [777]
+    # A listener that is not the forwarder is never killed.
+    monkeypatch.setattr(lv, "_proc_cmdline", lambda pid: b"sshd: listener")
     assert lv._kill_forwarders(target) == 0
+    # No listener at all: nothing to kill.
+    monkeypatch.setattr(lv, "_listener_pid", lambda t: None)
+    monkeypatch.setattr(lv, "_proc_cmdline", lambda pid: b"python3 local_compute_fwd.py 10.0.0.9 22")
+    assert lv._kill_forwarders(target) == 0
+    assert killed == [777]
 
 
 def test_ensure_revives_a_stale_forwarder(repo, tmp_path, monkeypatch):

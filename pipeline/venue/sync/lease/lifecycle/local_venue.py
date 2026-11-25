@@ -286,35 +286,86 @@ def _tunnel_banner_ok(target: dict) -> bool:
         return False
 
 
-def _kill_forwarders(target: dict) -> int:
-    """SIGTERM the target's own running forwarder (matched by
-    the adapter script's name and the target's destination in
-    its cmdline; never this process, never another target's
-    forwarder — a second tunneled machine's transport is not
-    this target's revival to take). The stale half of a
-    revival: a forwarder whose credential died cannot heal in
-    place when every candidate it holds is dead, so it makes
-    room for the relaunch."""
-    dest = _fwd_dest(target)
-    if dest is None:
-        return 0
-    killed = 0
+def _listen_inodes(port: int, net_tcp: str) -> set[str]:
+    """The socket inodes bound in LISTEN on a port, parsed from
+    /proc/net/tcp-format text."""
+    inodes = set()
+    for line in net_tcp.splitlines()[1:]:
+        parts = line.split()
+        if len(parts) > 9 and parts[3] == "0A":
+            try:
+                if int(parts[1].split(":")[1], 16) == port:
+                    inodes.add(parts[9])
+            except (IndexError, ValueError):
+                continue
+    return inodes
+
+
+def _listener_pid(target: dict) -> int | None:
+    """The pid actually listening on the target's port, found
+    by matching the listen socket's inode against /proc/*/fd:
+    the one process a revival may ever kill, since it alone
+    holds the port the target's clients dial."""
+    port = int(target.get("port") or 22)
+    inodes: set[str] = set()
+    for name in ("tcp", "tcp6"):
+        try:
+            inodes |= _listen_inodes(port, Path(f"/proc/net/{name}").read_text())
+        except OSError:
+            continue
+    if not inodes:
+        return None
     try:
-        entries = list(Path("/proc").glob("[0-9]*/cmdline"))
+        procs = list(Path("/proc").glob("[0-9]*"))
+    except OSError:
+        return None
+    for proc in procs:
+        try:
+            fds = list((proc / "fd").iterdir())
+        except OSError:
+            continue
+        for fd in fds:
+            try:
+                link = os.readlink(fd)
+            except OSError:
+                continue
+            if link.startswith("socket:[") and link[8:-1] in inodes:
+                try:
+                    return int(proc.name)
+                except ValueError:
+                    return None
+    return None
+
+
+def _proc_cmdline(pid: int) -> bytes:
+    try:
+        return Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return b""
+
+
+def _kill_forwarders(target: dict) -> int:
+    """SIGTERM the target's own forwarder: the process
+    listening on the target's port, confirmed by the adapter
+    script's name in its cmdline. Listener-scoped, never
+    pattern-scoped — a caller whose command text merely
+    mentions the forwarder path is not the forwarder (an
+    earlier pattern match killed exactly such a caller
+    mid-activation), and another target's forwarder listens
+    on another port and is never this target's to take. The
+    stale half of a revival: a forwarder whose credential
+    died cannot heal in place when every candidate it holds
+    is dead, so it makes room for the relaunch."""
+    pid = _listener_pid(target)
+    if pid is None or pid == os.getpid():
+        return 0
+    if _FORWARDER_MARK.encode() not in _proc_cmdline(pid):
+        return 0
+    try:
+        os.kill(pid, 15)
+        return 1
     except OSError:
         return 0
-    for entry in entries:
-        try:
-            pid = int(entry.parent.name)
-            if pid == os.getpid():
-                continue
-            cmdline = entry.read_bytes()
-            if _FORWARDER_MARK.encode() in cmdline and dest[0].encode() in cmdline:
-                os.kill(pid, 15)
-                killed += 1
-        except (OSError, ValueError):
-            continue
-    return killed
 
 
 def ensure_transport(target: dict | None) -> bool:
