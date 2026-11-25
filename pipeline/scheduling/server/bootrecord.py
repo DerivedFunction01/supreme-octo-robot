@@ -3,10 +3,10 @@ serve startup, in the scheduler's state home
 (`<home>/state/serve-boots.json`, the stateio JSON form
 every scheduler store uses — no second store).
 
-Why this exists (the 2026-11-24 outage class):
-workhorse.service was found down with ExecMainStatus=0
-three times in a day, and nothing the serve itself wrote
-could say when it had started, from what code, how long
+Why this exists (the silent-death class):
+workhorse.service found down with ExecMainStatus=0
+leaves nothing the serve itself wrote that can say
+when it had started, from what code, how long
 startup took, or that it had ever become ready — the
 serve's log carries startup banners only and the journal
 keeps only the current boot. Each boot now leaves its own

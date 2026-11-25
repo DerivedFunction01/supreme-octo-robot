@@ -36,7 +36,7 @@ The firing layer ledgers a run_started event at fire time,
 carrying the entry's timeout budget, and a run event at
 completion; a started fire with neither a completion nor a
 mark is a record in a non-terminal state — the shape a serve
-death mid-run leaves behind (the 2026-11-24 specimen: a
+death mid-run leaves behind (the specimen shape: a
 fired daily job frozen at running across a VM replacement,
 unreconciled for hours). The same two legs judge it: its
 start predates a changed boot (restart leg), or it stands

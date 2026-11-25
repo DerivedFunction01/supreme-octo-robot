@@ -55,8 +55,8 @@ def _parse_stamp(text) -> datetime | None:
     datetime the store's decoder restores a persisted
     stamp to on load. A prior snapshot's entries
     arrive in the second shape; a parser that only
-    takes text dies on them (the capacity freeze of
-    2026-11-24: this parser, fed a decoded prior
+    takes text dies on them (the capacity-freeze
+    specimen: this parser, fed a decoded prior
     claim, raised TypeError inside the pass)."""
     if isinstance(text, datetime):
         return text if text.tzinfo else text.replace(tzinfo=UTC)

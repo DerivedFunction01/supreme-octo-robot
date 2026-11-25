@@ -105,7 +105,7 @@ class LedgerConsultCase(unittest.TestCase):
                                                    db_path=db))
 
     def test_sched_exec_gate_repro_is_not_covered(self):
-        # The 2026-11-24 miss, pinned: a check.py gate routed
+        # The swallowed-gate miss, pinned: a check.py gate routed
         # through sched exec (bash -c wrapper, the verbatim
         # command as the op target, a programme-slug caller)
         # matched the old consult on every token and was

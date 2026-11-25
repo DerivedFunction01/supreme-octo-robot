@@ -181,11 +181,11 @@ class TestPrincipalBranches(Fixture):
 
 
 class TestDeclaredPrincipals(Fixture):
-    """Declared principals (2026-11-24 cure): steampowernj's
+    """Declared principals: steampowernj's
     shape — the base and the remote's default both resolve
     to main, while the programme lands through dev, its
     standing integration branch. No derivation sees dev,
-    so the 2026-11-24 hourly pass cap-archived origin dev
+    so an hourly pass cap-archived origin dev
     at 00fb3e09 and deleted the ref. The deployment
     declares dev in repos.conf's 4th field; the declared
     branch is then principal in every phase — sweep, cap

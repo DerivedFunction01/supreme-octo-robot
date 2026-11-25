@@ -140,7 +140,7 @@ class ParseStampCase(unittest.TestCase):
 
 
 class FailedReadRecoveryCase(unittest.TestCase):
-    """The capacity freeze of 2026-11-24: a programme
+    """The capacity-freeze case: a programme
     whose workbench read fails keeps its prior claims
     — the recovery loop re-parses each prior entry's
     claimed_at, which the store's decoder has already

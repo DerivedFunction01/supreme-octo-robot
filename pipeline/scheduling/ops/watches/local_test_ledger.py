@@ -34,8 +34,8 @@ repo identities — venue, edgar-sec, workhorse, a programme
 slug), so an op's mere existence proves only that the work
 was ledgered, never that it was sanctioned machinery. An
 agent's ad-hoc command routed through sched exec — a
-check.py gate is the standing specimen (2026-11-24: two
-monitor gates swallowed whole, no disposition, no item) —
+check.py gate is the standing specimen: two monitor
+gates swallowed whole, no disposition, no item —
 never auto-covers; it takes the defect path, and a human
 clears it with the disposition verb's --ledger-op citation
 when the run was in fact legitimate. The match is
