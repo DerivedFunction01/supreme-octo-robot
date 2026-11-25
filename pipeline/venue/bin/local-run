@@ -26,6 +26,13 @@ reader, a finished run finalizes from its exit file (state
 from the code, completion time from the file's mtime), and
 even a terminal record face is re-derived when the exit
 file contradicts it — the record never outranks the run dir.
+
+Launch transport warmup is the dispatch's own discipline
+(Step 3): an SSH step that times out — the signature of a
+managed transport still coming up, the venue healthy
+minutes later — retries with bounded backoff inside the
+same fire, and a refusal after the bound names the warmup,
+never the venue.
 """
 
 import importlib.util
@@ -67,25 +74,83 @@ def _ssh(target: dict, remote: str, input_bytes: bytes | None = None, timeout: i
         input=input_bytes, capture_output=True, timeout=timeout)
 
 
+# Launch warmup discipline (launch-path plan, Step 3): the
+# five recorded specimens timed out on an SSH launch step
+# with the path healthy minutes later, and the record folded
+# FAILED "venue unreachable" over runs that had in fact
+# landed or would have on a retry — a launch timeout is the
+# warmup signature of a managed transport still coming up
+# (ensure_transport starts it, but its tunnel can take
+# longer than one step's bound to carry SSH), not a verdict
+# on the venue. Each step retries on a timeout with bounded
+# backoff inside the same fire; only a step that times out
+# on every attempt refuses, and its refusal names the
+# warmup. An OSError — the ssh client itself could not
+# run — is a different face and keeps the unreachable name.
+LAUNCH_ATTEMPTS = 3
+LAUNCH_BACKOFF_S = (10, 30)
+
+
+def _launch_step(step) -> tuple[str | None, bool]:
+    """Run one launch step under the warmup discipline.
+    Returns (error, timed_out): error is the step's own
+    refusal for an answered failure; timed_out marks a step
+    that timed out on every attempt. OSError propagates —
+    it is not the warmup signature."""
+    for attempt in range(LAUNCH_ATTEMPTS):
+        try:
+            return step(), False
+        except subprocess.TimeoutExpired:
+            if attempt + 1 < LAUNCH_ATTEMPTS:
+                time.sleep(LAUNCH_BACKOFF_S[min(attempt, len(LAUNCH_BACKOFF_S) - 1)])
+    return None, True
+
+
 def _launch(rec: dict, script: bytes, target: dict) -> str | None:
     """Ship the script and launch it detached on the venue.
-    Returns an error string, or None on a confirmed launch."""
+    Returns an error string, or None on a confirmed launch.
+    Each step rides the warmup discipline (_launch_step): a
+    step that answered is never repeated, so a retry resumes
+    the sequence where the timeout fell."""
     base = f"runs/{rec['run_id']}"
-    try:
+
+    def mkdir() -> str | None:
         r = _ssh(target, f"mkdir -p ~/{base}", timeout=90)
         if r.returncode != 0:
             return f"venue mkdir failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
+        return None
+
+    def upload() -> str | None:
         r = _ssh(target, f"cat > ~/{base}/run.sh", input_bytes=script, timeout=90)
         if r.returncode != 0:
             return f"script upload failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
-        launch = (
-            f"cd ~/{base} && nohup bash -c 'bash run.sh > output.log 2>&1; echo $? > exit' "
-            ">/dev/null 2>&1 & echo launched")
-        r = _ssh(target, launch, timeout=90)
+        return None
+
+    def launch() -> str | None:
+        # Marker-guarded on the venue: an attempt that timed
+        # out client-side may still have started the job, and
+        # the retry must confirm that launch — the guard
+        # answers "launched" without starting a second copy.
+        cmd = (
+            f"cd ~/{base} && if [ ! -f .launched ]; then touch .launched; "
+            f"nohup bash -c 'bash run.sh > output.log 2>&1; echo $? > exit' "
+            ">/dev/null 2>&1 & fi; echo launched")
+        r = _ssh(target, cmd, timeout=90)
         if r.returncode != 0 or b"launched" not in r.stdout:
             return f"launch failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        return f"venue unreachable: {exc}"
+        return None
+
+    for step in (mkdir, upload, launch):
+        try:
+            err, timed_out = _launch_step(step)
+        except OSError as exc:
+            return f"venue unreachable: {exc}"
+        if timed_out:
+            return (f"venue warmup: launch timed out on all {LAUNCH_ATTEMPTS} attempts; "
+                    "the transport was still warming and the venue was not reached — "
+                    "the dispatch may be retried")
+        if err is not None:
+            return err
     return None
 
 
