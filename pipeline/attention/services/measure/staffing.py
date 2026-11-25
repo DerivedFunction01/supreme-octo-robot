@@ -10,14 +10,13 @@ from datetime import UTC, datetime, timedelta
 from attention.infra import panel_client, run_records
 from attention.services import programmes
 from attention.services.dispatch import dispatch as dispatch_mod
-from attention.services.measure.staffing_rows import (
+from attention.services.measure.staffing_rows import (  # noqa: F401
     _armed_rows,
     _as_dt,
     _blocked_rows,
     _family_rows,
     _frontier_rows,
     _lane_rows,
-    lane_blocks,
     _orphan_rows,
     _overdue_rows,
     _owner_waiting_rows,
@@ -28,6 +27,7 @@ from attention.services.measure.staffing_rows import (
     _unlanded_rows,
     _unrouted_rows,
     _worktree_rows,
+    lane_blocks,
 )
 from attention.services.reads import digest as digest_mod
 from attention.services.reads import model
