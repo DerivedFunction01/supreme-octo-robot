@@ -28,6 +28,12 @@
 #                         instance at mode 600 and planted by the
 #                         entrypoint on every start (preserved on
 #                         re-runs, like the auth key)
+#   --vercel-auth-file F  Vercel CLI auth.json (the login state);
+#                         copied into the instance at mode 600
+#                         as vercel-auth.json and planted by the
+#                         entrypoint on every start, on the
+#                         --github-key-file pattern (preserved
+#                         on re-runs)
 #   --skip-mount          do not create/mount the workspace image
 #   --skip-docker         generate files only; do not build or start
 #   --yes                 never prompt (missing authkey is an error)
@@ -39,7 +45,7 @@ TARGET="${HOME}/agent-workspace"
 VENUE_NAME="${TS_HOSTNAME:-}"
 AUTHKEY="${TS_AUTHKEY:-}"
 CPUS=4; MEM=8g; WORKSPACE_GB=96; TOTAL_GB=128
-AUTH_KEY_LINE=""; GH_KEY_FILE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
+AUTH_KEY_LINE=""; GH_KEY_FILE=""; VERCEL_AUTH_FILE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -52,6 +58,7 @@ while [ $# -gt 0 ]; do
     --total-gb) TOTAL_GB="$2"; shift 2 ;;
     --authorized-key) AUTH_KEY_LINE="$2"; shift 2 ;;
     --github-key-file) GH_KEY_FILE="$2"; shift 2 ;;
+    --vercel-auth-file) VERCEL_AUTH_FILE="$2"; shift 2 ;;
     --skip-mount) SKIP_MOUNT=1; shift ;;
     --skip-docker) SKIP_DOCKER=1; shift ;;
     --yes) ASSUME_YES=1; shift ;;
@@ -109,6 +116,13 @@ chmod 600 "$TARGET/.env"
 if [ -n "$GH_KEY_FILE" ]; then
   cp "$GH_KEY_FILE" "$TARGET/id_github"
   chmod 600 "$TARGET/id_github"
+fi
+# The Vercel auth copy is instance state the same way: given
+# once via --vercel-auth-file, preserved on re-runs, planted
+# into the container by the entrypoint on every start.
+if [ -n "$VERCEL_AUTH_FILE" ]; then
+  cp "$VERCEL_AUTH_FILE" "$TARGET/vercel-auth.json"
+  chmod 600 "$TARGET/vercel-auth.json"
 fi
 
 # Workspace hard cap: fixed-size ext4 image, loop-mounted.

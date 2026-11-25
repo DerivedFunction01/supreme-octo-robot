@@ -23,6 +23,20 @@ if [ -s /run/secrets/id_github ] && [ -f /run/secrets/known_hosts_github ]; then
   sudo -u agent git config --global url."git@github.com:".insteadOf "https://github.com/"
   sudo -u agent git config --global core.sshCommand "ssh -i $AGENT_HOME/.ssh/id_github -o UserKnownHostsFile=$AGENT_HOME/.ssh/known_hosts_github -o StrictHostKeyChecking=yes"
 fi
+# The Vercel login is planted state on the same pattern: the
+# instance's host-side auth copy is mounted read-only at
+# /run/secrets/vercel-auth.json (setup.sh --vercel-auth-file
+# places it in the instance folder) and planted into the CLI's
+# data dir on every start, so a rebuild restores the login the
+# copy carries. The CLI binary itself is image provisioning
+# (the Dockerfile's pinned global install), never planted.
+if [ -s /run/secrets/vercel-auth.json ]; then
+  AGENT_HOME="$(getent passwd agent | cut -d: -f6)"
+  mkdir -p "$AGENT_HOME/.local/share/com.vercel.cli"
+  cp /run/secrets/vercel-auth.json "$AGENT_HOME/.local/share/com.vercel.cli/auth.json"
+  chmod 600 "$AGENT_HOME/.local/share/com.vercel.cli/auth.json"
+  chown -R agent:agent "$AGENT_HOME/.local"
+fi
 # Persist SSH host keys in the ssh-host-keys volume so a container
 # recreate does not change the host key and break known_hosts.
 mkdir -p /var/run/sshd /workspace /etc/ssh/host-keys-store

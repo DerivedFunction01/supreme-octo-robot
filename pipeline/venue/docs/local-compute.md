@@ -202,12 +202,24 @@ docker compose down             # stop and remove the containers and network
 A rebuild (setup re-run, image rebuild, container recreate) is
 invisible to jobs by construction:
 
-- **Restored by provisioning:** the toolchain and the Chromium OS
-  libraries (the image), the SSH authorized keys and the GitHub
-  clone plant — key, pinned host keys, git config (the entrypoint,
+- **Restored by provisioning:** the toolchain — node and the
+  pinned Vercel CLI among it — and the Chromium OS libraries
+  (the image), the SSH authorized keys and the GitHub clone
+  plant — key, pinned host keys, git config (the entrypoint,
   from the instance folder, on every start), the SSH host keys
   (their volume), the tailnet identity (the tailscale-state
   volume), and the workspace (its disk image).
+- **The Vercel login, stated exactly:** the CLI is provisioning
+  (above); the login is not guaranteed by provisioning alone
+  while a rebuild wipes the container home. The guarantee is
+  one of two forms: a host-side auth copy in the instance
+  folder (`setup.sh --vercel-auth-file`, on the
+  `--github-key-file` pattern) that the entrypoint re-plants
+  at every container start — the login restored is the one
+  the copy carries, so a copy taken before a token rotation
+  restores a stale login — or a fresh device login per
+  rebuild. There is no third form: an auth file that exists
+  only inside the container is lost with the home.
 - **Lost, by accepted disposition:** the rest of the container
   filesystem — including the agent home's `runs` directory with
   any run outputs not yet collected, and anything installed by
@@ -242,7 +254,7 @@ invisible to jobs by construction:
 8. Smoke the toolchain in the container — every line must print a
    version, and a miss here is a template defect under the standing
    maintenance rule, fixed in the `Dockerfile`, not in the container:
-   `docker exec agent-workspace bash -lc 'python3 --version; node --version; uv --version; git --version; rg --version | head -1; fd --version; sqlite3 --version; sshd -h 2>&1 | head -1 || true'`
+   `docker exec agent-workspace bash -lc 'python3 --version; node --version; vercel --version; uv --version; git --version; rg --version | head -1; fd --version; sqlite3 --version; sshd -h 2>&1 | head -1 || true'`
 
 ## Containment — disk budget (per-instance total)
 
