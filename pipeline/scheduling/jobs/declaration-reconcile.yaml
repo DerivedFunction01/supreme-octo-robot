@@ -1,0 +1,17 @@
+id: declaration-reconcile
+title: Declaration reconcile — supervision registry declarations held to ground truth
+kind: agent
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: goal:workhorse-superapp-build-supreme-octo-robot
+body: bodies/declaration-reconcile.md
+timeout_secs: 1800
+state_paths:
+  - ${REPO}/bodies/restart-reconcile-owners.yaml
+  - ${REPO}/bodies/bridge-wake-owners.yaml
+  - ${REPO}/../venue/config/lease.json
+classification: 'agent by capability, not by judgment: the pass compares the supervision declarations against named ground-truth sources (the restart-reconcile owners file for seat truth, the live chat census for lanes and binding liveness, the venue lease config and run records for the fleet), cures the one data-class drift it owns (a handler thread binding, through the attention service own register call), and forms the code-class drift (the registry seed) as a branch for its owning seat to gate and land. Every comparison and cure is enumerable in advance in the body; a drift with no truth source is named unresolved and reported, never guessed. The body is the mechanism the 2026-11-25 supervision defect commissioned: a declaration that froze at seed time (lane count 20 against a 31-family census, every lane on an expired Colab session, a coordinator route bound to a pre-roll chat) is detected and cured on this cadence without an owner reminder.'
+lifetime: permanent
