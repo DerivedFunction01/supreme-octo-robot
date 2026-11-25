@@ -209,8 +209,9 @@ invisible to jobs by construction:
   (their volume), the tailnet identity (the tailscale-state
   volume), and the workspace (its disk image).
 - **Lost, by accepted disposition:** the rest of the container
-  filesystem — including `~/runs` with any run outputs not yet
-  collected, and anything installed by hand inside the container.
+  filesystem — including the agent home's `runs` directory with
+  any run outputs not yet collected, and anything installed by
+  hand inside the container.
   Host-side run records survive a rebuild; work whose outputs
   were not collected is re-fired by its owning lane from those
   records. Run outputs are regenerable, so they are not carried
