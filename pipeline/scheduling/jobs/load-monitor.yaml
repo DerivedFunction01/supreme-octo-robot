@@ -1,0 +1,40 @@
+id: load-monitor
+title: Load monitor — on CPU overload, name the heaviest jobs and the live venues
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1m
+timezone: America/New_York
+owner: none
+owner_reason: Venue-discipline instrumentation ordered by the owner 2026-11-15, rebuilt 2026-11-24 after the suspended load-venue-watch was found to have caught nothing in nine days (two load-22 episodes included). Findings serve every project on the machine, so no single goal owns the entry. Steady state is silent.
+run:
+  argv:
+    - python3
+    - ${REPO}/ops/watches/load_venue_watch.py
+timeout_secs: 60
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${REPO}/state/load-venue-watch.json
+  - ${REPO}/state/load-monitor-snapshot.json
+classification: 'fixed command (one Python script): every cycle samples /proc twice a few seconds apart, derives per-process CPU from the delta, ranks processes, resolves each to its repo and owning thread via the local-test watch routes file, and writes the bounded snapshot store (state/load-monitor-snapshot.json) the workbench Task Manager section serves. Outcomes branch on enumerable output alone: silence while the 1-minute load average is at or below the threshold (the load_factor config knob times the CPU count; declared value 2.0, pending the owner ruling on the threshold question); on the first over-threshold sample an episode opens and exactly one LOAD-MONITOR finding prints, naming the top five processes (pid, CPU percent, repo, thread, argv summary) and every live venue (the MSI local venue when its transport probe answers, plus the Colab High-RAM sessions named from the registry colab-liveness entries as the predecessor watch extracted them); while the episode persists it re-speaks at most every 15 minutes; it closes on a below-threshold sample, and a later rise speaks again as a new episode; a stale state file never suppresses a finding (a stuck-open episode whose last spoke is older than the re-speak interval speaks); exit 3 when /proc cannot be read. Speaking is fully determined by those branches; the watch reports facts and judges nothing beyond the mechanical threshold.'
+lifetime: permanent
+config:
+  version: 1
+  knobs:
+    load_factor:
+      label: Episode threshold — 1-minute load above this factor times the CPU count
+      type: number
+      unit: x CPUs
+      value: 2
+      min: 1
+      max: 10
+      env: LOAD_MONITOR_FACTOR
+catalog:
+  origin: hand
+  generality: deployment-specific
+  use_case: fleet-health
