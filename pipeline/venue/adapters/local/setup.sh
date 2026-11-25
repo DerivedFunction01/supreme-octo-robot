@@ -112,6 +112,36 @@ else
   echo "warning: no crontab available; disk-guard cron not installed" >&2
 fi
 
+# The build pulls public images only, and a credential-store
+# entry naming a helper that cannot execute in this distro —
+# Docker Desktop's .exe, planted in the docker config by its
+# WSL integration — breaks every pull. Drop desktop-helper
+# store references; a working in-distro helper is untouched,
+# and no pull here needs credentials.
+DOCKER_CFG="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
+if [ -f "$DOCKER_CFG" ] && grep -q 'desktop' "$DOCKER_CFG" && command -v python3 >/dev/null 2>&1; then
+  python3 -c '
+import json, sys
+p = sys.argv[1]
+try:
+    with open(p) as fh:
+        d = json.load(fh)
+except Exception:
+    sys.exit(0)
+changed = False
+if "desktop" in str(d.get("credsStore", "")):
+    d.pop("credsStore"); changed = True
+helpers = d.get("credHelpers")
+if isinstance(helpers, dict):
+    for reg in [k for k, v in helpers.items() if "desktop" in str(v)]:
+        helpers.pop(reg); changed = True
+if changed:
+    with open(p, "w") as fh:
+        json.dump(d, fh, indent=2)
+    print("==> removed Docker Desktop credential-store entries (public pulls need none)")
+' "$DOCKER_CFG"
+fi
+
 if [ "$SKIP_DOCKER" = 1 ]; then
   echo "==> files generated (--skip-docker); start with: (cd $TARGET && docker compose up -d --build)"
   exit 0
