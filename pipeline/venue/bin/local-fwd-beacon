@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Local forwarder beacon: the tunnel's standing keeper.
+
+Usage: local-fwd-beacon [--venue-root PATH]
+
+The runtime proxy issues a fresh credential per shell and
+issued credentials die at unpredictable times, so a local
+forwarder target's pin rots between dispatches and the
+forwarder itself can be left holding only dead credentials.
+This beacon is the between-dispatch half of the cure (the
+dispatch half is local_venue.ensure_transport's refresh and
+revival): run from a shell that carries its own credential —
+a scheduler agent job's shell, never the scheduler server's
+own empty-environment route — it restocks each forwarder
+target's pin from that credential (local_venue.refresh_pin:
+only a CONNECT-verified value ever lands) and then takes the
+standing live reading, local_venue.probe, whose verdict is
+cached where the runner's state reads it. One JSON verdict
+per target goes to stdout; the exit code is 0 only when every
+forwarder target probes healthy after the pass.
+"""
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _load  # noqa: E402
+
+lease = _load._exec_package("lease", _load.REPO / "sync" / "lease")
+local_venue = lease.local_venue
+
+
+def main(argv: list[str]) -> int:
+    repo = _load.REPO
+    if "--venue-root" in argv:
+        repo = Path(argv[argv.index("--venue-root") + 1]).resolve()
+    targets = {
+        tid: t
+        for tid, t in local_venue.local_targets(repo).items()
+        if local_venue._fwd_pin_path(t) is not None and local_venue._fwd_dest(t) is not None
+    }
+    if not targets:
+        print(json.dumps({"targets": {}, "note": "no forwarder targets configured"}))
+        return 0
+    verdicts = {}
+    healthy = True
+    for tid, target in targets.items():
+        refreshed = local_venue.refresh_pin(target)
+        ok = local_venue.probe(repo, target_id=tid)
+        verdicts[tid] = {"pin_refreshed": refreshed, "probe": ok}
+        healthy = healthy and ok is True
+    print(json.dumps({"targets": verdicts}))
+    return 0 if healthy else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
