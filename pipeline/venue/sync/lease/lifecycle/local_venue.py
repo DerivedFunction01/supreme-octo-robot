@@ -264,12 +264,9 @@ def refresh_pin(target: dict, env: dict | None = None) -> bool:
     except OSError:
         lines = []
     lines.append(f"HTTPS_PROXY={candidate}")
-    staged = pin.with_name(pin.name + f".tmp-{os.getpid()}")
     try:
-        staged.write_text("\n".join(lines) + "\n")
-        os.chmod(staged, 0o600)
-        os.replace(staged, pin)
-    except OSError:
+        foundation.staged_write(pin, ("\n".join(lines) + "\n").encode(), mode=0o600)
+    except Exception:
         return False
     return True
 
