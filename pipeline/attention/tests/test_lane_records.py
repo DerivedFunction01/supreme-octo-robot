@@ -74,17 +74,19 @@ def write_record(path: Path, text: str, mtime: datetime) -> None:
 class SeedDeclaration(unittest.TestCase):
     def test_edgar_seed_carries_the_declaration(self):
         count, entries = registry.lane_declarations_for("edgar-greenfield")
-        self.assertEqual(count, 20)
-        self.assertEqual(len(entries), 20)
-        self.assertEqual(len({e["key"] for e in entries}), 20)
+        self.assertEqual(count, 11)
+        self.assertEqual(len(entries), 11)
+        self.assertEqual(len({e["key"] for e in entries}), 11)
         for entry in entries:
             # The venue field is always present.
             self.assertTrue(entry["venue"], entry["key"])
             self.assertTrue(entry["termination_condition"], entry["key"])
+        # The current declaration states no per-lane
+        # estimates: every entry's estimate is unstated.
         unstated = {
             e["key"] for e in entries if e["estimate_minutes"] is None
         }
-        self.assertEqual(unstated, {"decomposition-analysis", "w-year-1-micro-cure"})
+        self.assertEqual(unstated, {e["key"] for e in entries})
 
 
 class RecordGrammar(unittest.TestCase):
@@ -315,7 +317,7 @@ class CollectorLifecycle(unittest.TestCase):
 
     def test_record_block_supersedes_the_seed(self):
         text = block(
-            "ci-gold-trace-pricing",
+            "restructuring",
             venue="storm-mosaic-17",
             state="running",
             declared_at=iso(NOW - timedelta(minutes=30)),
@@ -331,10 +333,10 @@ class CollectorLifecycle(unittest.TestCase):
         }
         lanes.collect(state, NOW)
         entry = state["lane_snapshot"]["edgar-greenfield"]
-        self.assertEqual(entry["declared"], 20)
+        self.assertEqual(entry["declared"], 11)
         lane = [
             lane for lane in entry["lanes"]
-            if lane["key"] == "ci-gold-trace-pricing"
+            if lane["key"] == "restructuring"
         ][0]
         self.assertEqual(lane["source"], "record")
         self.assertEqual(lane["state"], "running")
