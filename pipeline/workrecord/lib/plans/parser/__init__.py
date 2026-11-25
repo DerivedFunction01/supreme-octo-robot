@@ -42,6 +42,11 @@ __init__ re-exports the existing public surface so
 keep working unchanged.
 """
 
-from .grammar import declared_status, status_bucket
+from .document import (extract_step_blocks,
+                       first_duration_minutes,
+                       names_long_duration_class)
+from .grammar import (ESTIMATE_OVERRUN_MINUTES,
+                      LONG_DURATION_CLASSES,
+                      declared_status, status_bucket)
 from .plans import (apply_answers, list_plans, load_plan,
                     parse_plan, reconstruct)

@@ -71,3 +71,72 @@ _QUESTION_TYPES = ("choice", "toggle", "text")
 _QUESTION_FIELDS = {"id", "type", "options", "labels",
                     "recommended", "answer"}
 _NUMBERED_ITEM_RE = re.compile(r"^(\d+)[.)]\s+(.*)$")
+_STEP_BLOCK_RE = re.compile(r"<!--\s*wb-step\b(.*?)-->", re.DOTALL)
+_DURATION_TOKEN_RE = re.compile(
+    r"(\d+(?:\.\d+)?)\s*(hours?|hrs?|h|minutes?|mins?|m)\b")
+
+# The estimate discipline's overrun threshold and its
+# closed set of long-duration classes: the synced mirror
+# of the starter estimate scanner's data (its
+# OVERRUN_MINUTES and LONG_DURATION_CLASSES), carried
+# here as the plan grammar's own data — one home per
+# repo, kept identical by the spec sync. Past the
+# threshold, an estimate's justification is valid only
+# when it names one of these classes. Each entry pairs
+# the class's canonical name with the phrases that name
+# it; matching is on whole words after normalization, so
+# hyphen, slash, and case variation is tolerated.
+ESTIMATE_OVERRUN_MINUTES = 30
+LONG_DURATION_CLASSES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    (
+        "irreducible serial dependency",
+        ("serial dependency", "serial dependencies",
+         "serial by construction"),
+    ),
+    ("cpu-bound at full worker count",
+     ("cpu-bound", "cpu-saturated")),
+    ("memory-bandwidth or i/o-bound",
+     ("memory-bandwidth", "i/o-bound")),
+    (
+        "limited compute or capacity queueing",
+        ("capacity queueing", "capacity queuing",
+         "limited compute"),
+    ),
+    ("network-held", ("network-held", "network-bound")),
+    (
+        "coordination and fan-in",
+        ("coordination", "fan-in", "tail latency"),
+    ),
+    (
+        "hard language-model or algorithmic complexity floor",
+        ("algorithmic complexity", "complexity floor",
+         "hard nlp"),
+    ),
+    (
+        "critic and verification runs",
+        ("critic", "verification run", "verification runs"),
+    ),
+    ("browser work", ("browser work",)),
+    ("debugging", ("debugging",)),
+    (
+        "real-time observation window",
+        ("observation window", "observation windows",
+         "real-time observation"),
+    ),
+)
+
+
+def _normalize_words(text: str) -> str:
+    """Lowercase words of the text, punctuation as
+    separators. A slash is dropped first, so "i/o-bound"
+    and "io-bound" normalize to the same words."""
+    return " ".join(
+        re.sub(r"[^a-z0-9]+", " ",
+               text.lower().replace("/", "")).split())
+
+
+_CLASS_PHRASES: tuple[str, ...] = tuple(
+    _normalize_words(phrase)
+    for _name, phrases in LONG_DURATION_CLASSES
+    for phrase in phrases
+)

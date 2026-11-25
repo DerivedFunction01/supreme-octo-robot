@@ -23,7 +23,8 @@ contract's delegate rule holds by construction.
 
 The frontier comparison reads each armed bundle's
 plan step blocks (the wb-step comments the plan
-grammar declares: todos, requires, fanout|serial)
+grammar declares: todos, requires, est,
+fanout|serial)
 against the workbench's todo statuses: a step is
 frontier-eligible when every required todo is done
 and its own todos are not all done; the expected
@@ -500,8 +501,12 @@ def parse_step_blocks(text: str) -> list:
     """A plan's declared step blocks: the wb-step
     comments, one field per line — step, todos
     (|-separated), requires (|-separated prerequisite
-    todos, all of which must be done), and exactly one
-    of fanout / serial."""
+    todos, all of which must be done), est (the step's
+    declared estimate, the machine form of its closing
+    est: line, raw — None when the block declares none,
+    so the lane records carry the estimate half of the
+    estimate-vs-actual pair), and exactly one of
+    fanout / serial."""
     steps = []
     for match in _STEP_BLOCK_RE.finditer(text or ""):
         fields: dict[str, str] = {}
@@ -522,6 +527,7 @@ def parse_step_blocks(text: str) -> list:
                 "step": number,
                 "todos": todos,
                 "requires": requires,
+                "est": fields.get("est"),
                 "fanout": fields.get("fanout"),
                 "serial": fields.get("serial"),
             }

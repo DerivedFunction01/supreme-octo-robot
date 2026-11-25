@@ -250,6 +250,25 @@ class TestConformingFixture(unittest.TestCase):
         self.assertEqual(doc["fields"]["Branch"],
                          "build/plan-syntax")
 
+    def test_step_blocks_extract(self):
+        # The lib-side step-block reader: the wb-step
+        # sentinel's fields, estimate included, in the
+        # frontier reader's dict shape.
+        text = ("# P\n\n## Steps\n\n"
+                "### Step 1 — Only step\n\n"
+                "<!-- wb-step\nstep=1\ntodos=one|two\n"
+                "requires=\nest=45m\n"
+                "fanout=two lanes\n-->\n")
+        blocks = parser.extract_step_blocks(text)
+        self.assertEqual(len(blocks), 1)
+        self.assertEqual(blocks[0]["step"], 1)
+        self.assertEqual(blocks[0]["todos"], ["one", "two"])
+        self.assertEqual(blocks[0]["requires"], [])
+        self.assertEqual(blocks[0]["est"], "45m")
+        self.assertEqual(blocks[0]["fanout"], "two lanes")
+        self.assertIsNone(blocks[0]["serial"])
+        self.assertEqual(parser.extract_step_blocks(""), [])
+
     def test_steps_carry_all_labels(self):
         doc = self.doc
         self.assertEqual(doc["step_count"], 2)
