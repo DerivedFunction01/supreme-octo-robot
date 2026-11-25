@@ -286,12 +286,18 @@ def _tunnel_banner_ok(target: dict) -> bool:
         return False
 
 
-def _kill_forwarders() -> int:
-    """SIGTERM every running forwarder process (matched by the
-    adapter script's name in its cmdline; never this process).
-    The stale half of a revival: a forwarder whose credential
-    died cannot heal in place when every candidate it holds is
-    dead, so it makes room for the relaunch."""
+def _kill_forwarders(target: dict) -> int:
+    """SIGTERM the target's own running forwarder (matched by
+    the adapter script's name and the target's destination in
+    its cmdline; never this process, never another target's
+    forwarder — a second tunneled machine's transport is not
+    this target's revival to take). The stale half of a
+    revival: a forwarder whose credential died cannot heal in
+    place when every candidate it holds is dead, so it makes
+    room for the relaunch."""
+    dest = _fwd_dest(target)
+    if dest is None:
+        return 0
     killed = 0
     try:
         entries = list(Path("/proc").glob("[0-9]*/cmdline"))
@@ -302,7 +308,8 @@ def _kill_forwarders() -> int:
             pid = int(entry.parent.name)
             if pid == os.getpid():
                 continue
-            if _FORWARDER_MARK.encode() in entry.read_bytes():
+            cmdline = entry.read_bytes()
+            if _FORWARDER_MARK.encode() in cmdline and dest[0].encode() in cmdline:
                 os.kill(pid, 15)
                 killed += 1
         except (OSError, ValueError):
@@ -344,7 +351,7 @@ def ensure_transport(target: dict | None) -> bool:
             return True
         if not managed:
             return False
-        _kill_forwarders()
+        _kill_forwarders(target)
     elif not managed:
         return False
     if not _launch_start(target):

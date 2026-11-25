@@ -16,7 +16,10 @@ death. Only credential hashes (12 hex) are ever logged.
 The pin file's path comes from argv[3] when given, else the
 LOCAL_FWD_PIN env var, else a `.local-fwd.env` file in the
 user's home directory; the deployment's lease config names the
-real path in its `start` argv.
+real path in its `start` argv. The listen port is argv[4],
+default 2222 — one forwarder per target, so a second tunneled
+machine is a second instance on its own port, never a code
+change.
 """
 import base64
 import hashlib
@@ -163,11 +166,12 @@ def handle(client):
 
 
 def main():
+    listen_port = int(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4] else 2222
     srv = socket.socket()
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(("127.0.0.1", 2222))
+    srv.bind(("127.0.0.1", listen_port))
     srv.listen(128)
-    print("listening 127.0.0.1:2222 ->", TARGET, flush=True)
+    print(f"listening 127.0.0.1:{listen_port} ->", TARGET, flush=True)
     while True:
         c, _ = srv.accept()
         threading.Thread(target=handle, args=(c,), daemon=True).start()

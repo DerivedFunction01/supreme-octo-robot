@@ -84,6 +84,12 @@ def test_refresh_is_inert_without_forwarder_fields(repo, tmp_path):
     assert lv.refresh_pin(target, env={"HTTPS_PROXY": CAND}) is False
 
 
+def test_kill_forwarders_is_inert_without_a_destination(repo):
+    lv = lease.local_venue
+    target = {"host": "127.0.0.1", "port": 2222, "user": "agent", "fwd_pin": "/nonexistent/pin.env"}
+    assert lv._kill_forwarders(target) == 0
+
+
 def test_ensure_revives_a_stale_forwarder(repo, tmp_path, monkeypatch):
     lv = lease.local_venue
     target = _fwd_target(tmp_path / "pin.env")
@@ -92,10 +98,10 @@ def test_ensure_revives_a_stale_forwarder(repo, tmp_path, monkeypatch):
     banners = iter([False, False, True])
     monkeypatch.setattr(lv, "_tunnel_banner_ok", lambda t: next(banners))
     killed, launched = [], []
-    monkeypatch.setattr(lv, "_kill_forwarders", lambda: killed.append(1) or 1)
+    monkeypatch.setattr(lv, "_kill_forwarders", lambda t: killed.append(t) or 1)
     monkeypatch.setattr(lv, "_launch_start", lambda t: launched.append(t) or True)
     assert lv.ensure_transport(target) is True
-    assert killed == [1]
+    assert killed == [target]
     assert launched == [target]
 
 
@@ -106,7 +112,7 @@ def test_ensure_leaves_a_healthy_forwarder_alone(repo, tmp_path, monkeypatch):
     monkeypatch.setattr(lv, "_port_answers", lambda t: True)
     monkeypatch.setattr(lv, "_tunnel_banner_ok", lambda t: True)
 
-    def no_kill():
+    def no_kill(t):
         raise AssertionError("a healthy forwarder was killed")
 
     def no_launch(t):
