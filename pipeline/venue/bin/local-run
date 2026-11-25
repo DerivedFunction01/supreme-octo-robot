@@ -154,6 +154,37 @@ def _launch(rec: dict, script: bytes, target: dict) -> str | None:
     return None
 
 
+# Control-read warmup discipline (the read-side sibling of
+# the launch discipline above): a --poll fires right after
+# ensure_transport, whose success is the transport's port
+# answering — not SSH carrying over the tunnel, which can
+# lag the port by longer than one read (Step 3's recorded
+# warmup, on the launch steps). A single read in that
+# window comes back "unknown" and the call would serve
+# venue_unreachable over a healthy venue — the specimen
+# was a hand-diagnosed kex-reset window during the strip
+# staging, read as a venue failure. The poll therefore
+# retries an "unknown" reading inside the call, on a
+# bounded backoff; a resolved reading (exit / running /
+# absent) is served at once and never re-read, and an
+# "unknown" that survives every attempt is served as
+# before — a lost read is still never a verdict.
+READ_BACKOFF_S = (5, 15)
+
+
+def _read_state(rec: dict, target: dict) -> dict:
+    """The poll's container reading, through the warmup
+    retry: the first non-"unknown" reading, or the last
+    "unknown" when every attempt reads lost."""
+    reading = local_venue.read_run_state(REPO, rec, target=target)
+    for backoff in READ_BACKOFF_S:
+        if reading["reading"] != "unknown":
+            break
+        time.sleep(backoff)
+        reading = local_venue.read_run_state(REPO, rec, target=target)
+    return reading
+
+
 def _poll(rec: dict, target: dict) -> dict:
     """One poll of the run's container state, through the
     lease core's tri-state reader (local_venue.read_run_state):
@@ -163,7 +194,7 @@ def _poll(rec: dict, target: dict) -> dict:
     file yet is "running"; an unreadable container is
     "running" with the unreachable flag — a lost read is
     never a verdict."""
-    reading = local_venue.read_run_state(REPO, rec, target=target)
+    reading = _read_state(rec, target)
     if reading["reading"] == "exit":
         state = finalize_local_record(rec, reading)
         return {"state": state, "exit_code": reading["exit_code"]}

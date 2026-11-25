@@ -12,6 +12,11 @@ The entry point is loaded by path and its seams stubbed:
 the record store, the target resolution, the transport,
 the container reader, and the shared finalize (whose own
 pins live in test_local_record_truth.py).
+
+The warmup pins: a poll's "unknown" readings retry inside
+the call on the bounded backoff before the unreachable
+face is served — the read-side sibling of the launch
+path's Step 3 warmup retry (test_local_launch_warmup.py).
 """
 
 import json
@@ -27,8 +32,19 @@ TARGET = {"host": "machine.invalid", "user": "agent"}
 
 
 def load_local_run(monkeypatch, rec, reading):
+    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [reading])
+    return mod, finalized
+
+
+def load_local_run_seq(monkeypatch, rec, readings):
+    """The poll harness over a readings sequence: each
+    read_run_state call serves the next reading (the last
+    repeats), the calls are logged, and the module's sleep
+    is neutralized so the warmup backoff costs no wall
+    time. A single-reading load is the one-element form."""
     mod = load_module("local_run_poll_unit", REPO / "bin" / "local-run")
     finalized = []
+    reads = []
 
     def fake_finalize(r, rd):
         finalized.append((r["run_id"], rd["exit_code"]))
@@ -36,12 +52,17 @@ def load_local_run(monkeypatch, rec, reading):
         r.update(state=state, exit_code=rd["exit_code"], finished_at=rd.get("finished_at"))
         return state
 
+    def fake_read(repo, r, target=None):
+        reads.append(r["run_id"])
+        return readings[min(len(reads) - 1, len(readings) - 1)]
+
     monkeypatch.setattr(mod, "load_run_record", lambda run_id: rec)
     monkeypatch.setattr(mod, "_record_target", lambda r: TARGET)
     monkeypatch.setattr(mod, "finalize_local_record", fake_finalize)
     monkeypatch.setattr(mod.local_venue, "ensure_transport", lambda target: True)
-    monkeypatch.setattr(mod.local_venue, "read_run_state", lambda repo, r, target=None: reading)
-    return mod, finalized
+    monkeypatch.setattr(mod.local_venue, "read_run_state", fake_read)
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    return mod, finalized, reads
 
 
 def _poll(monkeypatch, mod, capsys):
@@ -100,6 +121,36 @@ def test_poll_finalizes_running_record_from_exit_file(tmp_path, monkeypatch, cap
     assert rc == 0
     assert out == {"run_id": RID, "state": "failed", "exit_code": 3}
     assert finalized == [(RID, 3)]
+
+
+def test_poll_retries_an_unknown_reading_through_warmup(tmp_path, monkeypatch, capsys):
+    """Warmup: the transport's port answers but SSH does
+    not yet carry — the first reads come back "unknown"
+    and the resolved reading behind them is the poll's
+    answer, served inside the one call (the read-side
+    sibling of the launch path's Step 3 retry)."""
+    rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
+    exit_reading = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "ok\n"}
+    mod, finalized, reads = load_local_run_seq(
+        monkeypatch, rec, [{"reading": "unknown"}, {"reading": "unknown"}, exit_reading])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 0
+    assert out == {"run_id": RID, "state": "complete", "exit_code": 0}
+    assert finalized == [(RID, 0)]
+    assert len(reads) == 3
+
+
+def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, capsys):
+    """A reading lost on every attempt is served as
+    before — running with the unreachable flag, nothing
+    finalized — and the retry is bounded: attempts are
+    the backoff count plus the first read, never more."""
+    rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
+    mod, finalized, reads = load_local_run_seq(monkeypatch, rec, [{"reading": "unknown"}])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 0 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
+    assert finalized == []
+    assert len(reads) == len(mod.READ_BACKOFF_S) + 1
 
 
 def test_poll_running_and_unreachable_readings(tmp_path, monkeypatch, capsys):
