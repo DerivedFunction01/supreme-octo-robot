@@ -123,6 +123,29 @@ body {
   vertical-align: -0.12em;
 }
 
+.ui-prose a {
+  color: var(--ui-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.ui-segmented-input:focus-visible + .ui-segmented-segment {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 1px;
+}
+
+.ui-toggle:focus-visible .ui-toggle-track {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 1px;
+  box-shadow: inset 0 0 0 2px var(--ui-on-accent);
+}
+
+.ui-checkbox:focus-visible {
+  outline: 2px solid var(--ui-focus-ring);
+  outline-offset: 1px;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
