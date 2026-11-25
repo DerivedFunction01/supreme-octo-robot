@@ -13,7 +13,10 @@
 # never pastes a heredoc.
 #
 # Options:
-#   --target DIR          install dir (default: $HOME/muse-compute)
+#   --target DIR          install dir (default: $HOME/agent-workspace)
+#   --name NAME           tailnet node name (default: agent-ubuntu;
+#                         name each machine, e.g. its branding —
+#                         never the tailnet's counter-suffixed name)
 #   --authkey KEY         Tailscale auth key (or env TS_AUTHKEY)
 #   --cpus N              workspace CPU cap      (default 4)
 #   --mem SIZE            workspace memory cap   (default 8g)
@@ -27,7 +30,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE="$HERE/template"
-TARGET="${HOME}/muse-compute"
+TARGET="${HOME}/agent-workspace"
+VENUE_NAME="${TS_HOSTNAME:-}"
 AUTHKEY="${TS_AUTHKEY:-}"
 CPUS=4; MEM=8g; WORKSPACE_GB=96; TOTAL_GB=128
 AUTH_KEY_LINE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
@@ -35,6 +39,7 @@ AUTH_KEY_LINE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --target) TARGET="$2"; shift 2 ;;
+    --name) VENUE_NAME="$2"; shift 2 ;;
     --authkey) AUTHKEY="$2"; shift 2 ;;
     --cpus) CPUS="$2"; shift 2 ;;
     --mem) MEM="$2"; shift 2 ;;
@@ -60,6 +65,12 @@ prompt() { # prompt VAR "label" [silent]
 if [ -z "$AUTHKEY" ] && [ -f "$TARGET/.env" ]; then
   AUTHKEY=$(grep -oP '^TS_AUTHKEY=\K.+' "$TARGET/.env" || true)
 fi
+# Same preservation for the node name: a re-run keeps the name the
+# instance registered with; renaming is an explicit --name.
+if [ -z "$VENUE_NAME" ] && [ -f "$TARGET/.env" ]; then
+  VENUE_NAME=$(grep -oP '^TS_HOSTNAME=\K.+' "$TARGET/.env" || true)
+fi
+[ -n "$VENUE_NAME" ] || VENUE_NAME=agent-ubuntu
 prompt AUTHKEY "Tailscale auth key (from the tailnet that will use this venue)" silent
 [ -n "$AUTHKEY" ] || { echo "no auth key given" >&2; exit 2; }
 case "$AUTHKEY" in tskey-*) : ;; *) echo "warning: auth key does not start with tskey-" >&2 ;; esac
@@ -67,7 +78,7 @@ if [ -z "$AUTH_KEY_LINE" ] && [ ! -f "$TARGET/authorized_keys" ]; then
   prompt AUTH_KEY_LINE "SSH public key for the connecting agent (ssh-ed25519 ...)"
 fi
 
-echo "==> target $TARGET (cpus=$CPUS mem=$MEM workspace=${WORKSPACE_GB}G total=${TOTAL_GB}G)"
+echo "==> target $TARGET (name=$VENUE_NAME cpus=$CPUS mem=$MEM workspace=${WORKSPACE_GB}G total=${TOTAL_GB}G)"
 mkdir -p "$TARGET/workspace"
 for f in Dockerfile docker-compose.yml entrypoint.sh disk-guard.sh .dockerignore .gitignore crontab.example; do
   cp "$TEMPLATE/$f" "$TARGET/$f"
@@ -77,6 +88,7 @@ chmod +x "$TARGET/entrypoint.sh" "$TARGET/disk-guard.sh"
 # Instance files: .env is the only place the key and limits live.
 {
   echo "TS_AUTHKEY=$AUTHKEY"
+  echo "TS_HOSTNAME=$VENUE_NAME"
   echo "COMPUTE_MEM=$MEM"
   echo "COMPUTE_CPUS=$CPUS"
   echo "DISK_WARN_GB=$((TOTAL_GB - 8))"
@@ -153,4 +165,4 @@ echo "==> tailscale status (must list the venue's other nodes as peers)"
 docker exec agent-tailscale tailscale status || true
 echo "==> toolchain smoke"
 docker exec agent-workspace bash -lc 'python3 --version; node --version; uv --version; git --version; fd --version; sqlite3 --version; df -h /workspace /tmp | grep -v Filesystem; cat /sys/fs/cgroup/cpu.max; cat /sys/fs/cgroup/memory.max'
-echo "==> done: venue is up at agent-ubuntu on the tailnet"
+echo "==> done: venue is up at $VENUE_NAME on the tailnet"

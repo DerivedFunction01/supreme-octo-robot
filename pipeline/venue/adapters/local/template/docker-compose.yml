@@ -2,10 +2,10 @@ services:
   tailscale:
     image: tailscale/tailscale:latest
     container_name: agent-tailscale
-    hostname: agent-ubuntu
+    hostname: ${TS_HOSTNAME:-agent-ubuntu}
     environment:
       - TS_AUTHKEY=${TS_AUTHKEY:?set TS_AUTHKEY in .env}
-      - TS_HOSTNAME=agent-ubuntu
+      - TS_HOSTNAME=${TS_HOSTNAME:-agent-ubuntu}
       - TS_STATE_DIR=/var/lib/tailscale
       # No --ssh here: Tailscale SSH terminates in the tailscale container,
       # which has no workspace or tools. Plain SSH (below) terminates in the

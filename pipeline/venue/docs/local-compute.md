@@ -6,13 +6,13 @@ disk, temp files, CPU and memory are capped there, and the host
 filesystem outside one mounted workspace folder is not visible.
 
 Template: `../adapters/local/template/` — copy the whole folder to the
-host (e.g. `$HOME/muse-compute/` in WSL), fill it in, `docker compose up -d`.
+host (e.g. `$HOME/agent-workspace/` in WSL), fill it in, `docker compose up -d`.
 
 ## Architecture
 
 - Two services, one network namespace: `tailscale` (sidecar, owns the
-  tailnet identity `agent-ubuntu`) and `ubuntu` (workspace,
-  `network_mode: service:tailscale`).
+  venue's tailnet identity — its name, set at setup) and `ubuntu`
+  (workspace, `network_mode: service:tailscale`).
 - SSH terminates in the `ubuntu` service. Do not use Tailscale SSH
   (`TS_EXTRA_ARGS=--ssh`): it terminates in the sidecar container,
   which has no workspace, tools, or mounted code.
@@ -90,7 +90,7 @@ invites for the tailnet.
      not in chat, not in a commit, not in a log. A key that has
      appeared anywhere is revoked here and replaced.
 2. **MagicDNS** — DNS page: enable MagicDNS so the node is reachable
-   as `agent-ubuntu`, not only by its `100.x` address. Either form
+   by its node name, not only by its `100.x` address. Either form
    works; the agent side must keep using one form consistently,
    because its tunnel approval is per exact address.
 3. **Device approval** — Settings > General > Device approval: if on,
@@ -98,14 +98,19 @@ invites for the tailnet.
    with an approval action. A node that built and started but never
    appears in the connecting peer's `tailscale status` is pending
    here until approved — check this before debugging Docker.
-4. **Key expiry for the node** — Machines > `agent-ubuntu` > Disable
+4. **Key expiry for the node** — Machines > the node > Disable
    key expiry. Server-like nodes get expiry disabled, or the node
    will silently drop off the tailnet at its key-expiry date and need
    a console re-enable.
-5. **Hostname** — the compose sets `TS_HOSTNAME=agent-ubuntu`; a
-   rename in the console (Machines > ... > Edit machine name) changes
-   the MagicDNS name and must be mirrored in the compose, or the two
-   drift.
+5. **Hostname** — the node's name is chosen at setup (`--name`,
+   e.g. the machine's branding) and carried in the instance `.env`
+   as `TS_HOSTNAME`, which the compose reads. Name every machine:
+   an unnamed install takes the template default `agent-ubuntu`,
+   and the tailnet counter-suffixes a duplicate (`agent-ubuntu-1`)
+   instead of refusing it. A rename in the console (Machines > ...
+   > Edit machine name) changes the MagicDNS name and must be
+   mirrored in `.env` (then `docker compose up -d tailscale`), or
+   the two drift.
 6. **What is not used** — no exit node, no subnet routes, no
    Tailscale SSH (see Architecture), no funnel/serve. An ACL or tag
    (`tag:compute`) is optional hardening; adding a tag requires the
@@ -140,10 +145,11 @@ Plan of what the script does:
 1. Prompts (or takes flags / env) for the Tailscale auth key and
    the connecting agent's SSH public key; limits are flags with
    defaults: `--cpus`, `--mem`, `--workspace-gb`, `--total-gb`,
-   `--target` (default `$HOME/muse-compute`). Fully non-interactive
-   form, with example values: `setup.sh --authkey ... 
-   --authorized-key '...' --cpus 4 --mem 8g --workspace-gb 96
-   --total-gb 128 --yes`.
+   `--target` (default `$HOME/agent-workspace`), `--name` (the
+   tailnet node name; default `agent-ubuntu` — name each machine).
+   Fully non-interactive form, with example values:
+   `setup.sh --authkey ... --authorized-key '...' --name hp-envy
+   --cpus 4 --mem 8g --workspace-gb 96 --total-gb 128 --yes`.
 2. Copies `template/` into the target and writes the instance
    `.env` (key + limits + derived guard thresholds) at mode 600
    and `authorized_keys`. A re-run preserves an existing `.env`
@@ -161,6 +167,30 @@ The generate half is testable without Docker: `--skip-docker
 --skip-mount` writes every file and stops. Verified that way
 against the tracked template (files complete, `.env` 600, compose
 parses).
+
+## Operate — start, stop, status
+
+Every command runs on the host, in WSL, from the instance folder
+(the `--target` chosen at setup; default `~/agent-workspace`):
+
+```bash
+cd ~/agent-workspace
+docker compose up -d            # start both services
+docker compose up -d --build    # start, rebuilding after a template change
+docker compose ps               # status: both containers
+docker exec agent-tailscale tailscale status   # tailnet status: own 100.x, peers
+docker compose restart          # restart both services in place
+docker compose stop             # stop both (state kept; the node goes offline)
+docker compose down             # stop and remove the containers and network
+```
+
+- `down` keeps the `tailscale-state` volume and `./workspace`, so
+  the next `up -d` rejoins with the same node identity and name.
+- Stop only the tailnet side with `docker compose stop tailscale`:
+  the node leaves the tailnet while the workspace container keeps
+  running (unreachable, but its state is untouched).
+- Reset all scratch: `docker compose down && docker compose up -d`
+  (what survives is listed under Containment).
 
 ## Setup (host, in WSL) — manual fallback, what the script does
 
@@ -181,7 +211,7 @@ parses).
    If the node does not appear in the tailnet, check Admin > Machines
    for a pending device approval — that is the usual cause.
 7. Verify from the agent side: SSH through the proxy to
-   `agent@<agent-ubuntu tailnet IP>` and read back
+   `agent@<node tailnet IP>` and read back
    `hostname && df -h /tmp /workspace && nproc && free -h`.
 8. Smoke the toolchain in the container — every line must print a
    version, and a miss here is a template defect under the standing
