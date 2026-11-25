@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Strip re-measure: provisioned denylist scan over the composed
 # strip tree (formation/strip-composed @ 5e551f1e), canary first.
-# Payloads are staged at ~/strip-remeasure-stage by the seat's
-# staging driver over the runner's SSH channel (the denylist is
-# untracked provisioned material; it never rides a tracked file).
+# Payloads are staged in the venue-side strip-remeasure-stage
+# directory by the seat's staging driver over the runner's SSH
+# channel (the denylist is untracked provisioned material; it
+# never rides a tracked file).
 # The literal itself is never printed: the scanner reports rule,
 # path and line only, and the canary plants the list's first
 # literal by file surgery, never by echo.
