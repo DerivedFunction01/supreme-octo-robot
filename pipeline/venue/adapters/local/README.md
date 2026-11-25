@@ -23,6 +23,17 @@ Layers, kept separate:
   files.
 - **Job manifests** — `jobs/` in this folder: the local
   venue's job manifests (`job.json` + `run.sh`) that
-  `bin/local-run` ships to the container.
+  `bin/local-run` ships to the container. A manifest may
+  also declare `uploads`: files relative to the venue root
+  that ship beside the script into the run dir under their
+  basenames before launch (the local form of the Colab
+  job's uploads). The standing consumer is the code drop —
+  `jobs/mfa-drop` (per local target): the relay stages the
+  code at `var/mfa-code.txt`, fires the job, and the script
+  delivers it atomically into the venue checkout's
+  `var/state/code-files/mol.txt` and shreds the staged
+  copy, the Colab `mfa-drop` job's semantics in the local
+  form; the checkout path is the head variable of each
+  job's `run.sh`.
 
 - Venue kind name for records, when used: `local`.

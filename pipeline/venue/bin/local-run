@@ -4,9 +4,20 @@
 Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]
 
 A job is a manifest at adapters/local/jobs/<name>/job.json:
-{"script": "run.sh", "caller"?, "shape"?, "timeout_s"?} — the
-script beside the manifest ships to the venue over SSH and runs
-detached in the container under ~/runs/<run_id>/, so a dropped
+{"script": "run.sh", "caller"?, "shape"?, "timeout_s"?,
+"uploads"?} — the script beside the manifest ships to the
+venue over SSH and runs detached in the container under
+~/runs/<run_id>/. The optional "uploads" list names files
+relative to the venue root (the Colab manifest convention,
+e.g. "var/mfa-code.txt") that ship beside the script into
+the run dir under their basenames before launch — the local
+form of the Colab job's uploads, for payloads whose input
+is a staged file rather than the script itself (the code
+drop is the standing consumer). A declared upload that is
+absent at dispatch refuses the fire, naming the file: a
+drop fired without its code must fail here, never land as
+a silent no-op in the container. The run record carries
+the upload basenames, never their contents. So a dropped
 connection never kills the job. Detached launch here is the
 dispatcher's drop-safety form, not a channel constraint: the
 local venue's sshd admits concurrent connections (the
@@ -110,12 +121,15 @@ def _launch_step(step) -> tuple[str | None, bool]:
     return None, True
 
 
-def _launch(rec: dict, script: bytes, target: dict) -> str | None:
+def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
     """Ship the script and launch it detached on the venue.
     Returns an error string, or None on a confirmed launch.
     Each step rides the warmup discipline (_launch_step): a
     step that answered is never repeated, so a retry resumes
-    the sequence where the timeout fell."""
+    the sequence where the timeout fell. The manifest's
+    uploads ride the same discipline as their own steps,
+    between the script upload and the launch, each staged
+    under its basename in the run dir."""
     base = f"runs/{rec['run_id']}"
 
     def mkdir() -> str | None:
@@ -129,6 +143,15 @@ def _launch(rec: dict, script: bytes, target: dict) -> str | None:
         if r.returncode != 0:
             return f"script upload failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
         return None
+
+    def make_upload(name: str, data: bytes):
+        def step() -> str | None:
+            r = _ssh(target, f"cat > ~/{base}/{name}", input_bytes=data, timeout=90)
+            if r.returncode != 0:
+                return f"upload {name} failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
+            return None
+
+        return step
 
     def launch() -> str | None:
         # Marker-guarded on the venue: an attempt that timed
@@ -144,7 +167,10 @@ def _launch(rec: dict, script: bytes, target: dict) -> str | None:
             return f"launch failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
         return None
 
-    for step in (mkdir, upload, launch):
+    steps = [mkdir, upload]
+    steps += [make_upload(name, data) for name, data in uploads]
+    steps.append(launch)
+    for step in steps:
         try:
             err, timed_out = _launch_step(step)
         except OSError as exc:
@@ -308,6 +334,18 @@ def main() -> int:
     script_path = manifest_path.parent / script_name
     if not script_path.exists():
         return _fail(f"job {job_name}: script {script_name} not found beside the manifest")
+    uploads = []
+    seen = {script_name}
+    for rel in job.get("uploads") or []:
+        rel_path = Path(rel)
+        name = rel_path.name
+        if rel_path.is_absolute() or ".." in rel_path.parts or not name or name in seen:
+            return _fail(f"job {job_name}: upload {rel!r} does not stage under a fresh basename inside the venue root")
+        src = REPO / rel
+        if not src.is_file():
+            return _fail(f"job {job_name}: declared upload {rel} not found at {src}")
+        seen.add(name)
+        uploads.append((name, src.read_bytes()))
     caller_flag = None
     if "--caller" in args:
         try:
@@ -333,8 +371,10 @@ def main() -> int:
            **({"target": acquired["record"]["target"]} if acquired["record"].get("target") else {}),
            "caller": caller, "venue": "local", "state": "starting", "started_at": now(),
            "timeout_s": int(job.get("timeout_s") or 18000)}
+    if uploads:
+        rec["uploads"] = [name for name, _data in uploads]
     save_record(rec)
-    err = _launch(rec, script_path.read_bytes(), target)
+    err = _launch(rec, script_path.read_bytes(), target, uploads)
     if err is not None:
         mark_terminal(rec, "failed", error=err, finished_at=now())
         print(json.dumps({"run_id": run_id, "state": "failed", "error": err}, indent=2))
