@@ -124,6 +124,26 @@ def test_load_manifest_unparseable_raises_named(tmp_path):
             raise AssertionError("expected ManifestUnreadable")
 
 
+def test_spawn_daemon_refuses_a_shape_invalid_manifest_before_claiming(tmp_path):
+    runs = tmp_path / "runs"
+    claims = load_claims(runs)
+    path = tmp_path / "job.json"
+    path.write_text(json.dumps({"name": "job", "uploads": [{"path": "var/x.sh", "dest": "x.sh"}]}))
+    try:
+        claims.spawn_daemon("job", ["job"], path)
+    except ValueError as exc:
+        # The refusal names the field and the offending entry,
+        # in the attached flow's own words.
+        assert "manifest uploads entry is not a string" in str(exc)
+        assert "'dest': 'x.sh'" in str(exc)
+    else:
+        raise AssertionError("expected the shape refusal")
+    # As with the unreadable case: no claim, no record — the
+    # refusal precedes the claim, so nothing stands to read
+    # as a launched-then-lost run.
+    assert not runs.exists() or list(runs.glob("*.json")) == []
+
+
 def test_spawn_daemon_refuses_an_unreadable_manifest_before_claiming(tmp_path):
     runs = tmp_path / "runs"
     claims = load_claims(runs)

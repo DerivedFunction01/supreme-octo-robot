@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 from .foundation import REPO, colab, json_object_from_output, lease, transfer
+from .manifest_shape import parse_transport, transport_error
 
 # Pre-launch uploads above this size move through the chunked
 # transfer (which verifies the whole-file hash) instead of the
@@ -274,54 +275,6 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
         return None
     lease.append_launch_outcome(REPO, session, "probe", False, stall_detail)
     return stall_error
-
-
-_FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
-
-
-def transport_error(job) -> "str | None":
-    """A loud-refusal verdict for the manifest's transport
-    declaration (branch transport plan): the
-    manifest declares the tree's form and the runner holds
-    the preference — a committed, pushed tree names
-    transport {kind: branch, repo, branch, sha}; an
-    uncommitted tree names no transport and takes the
-    snapshot-bundle path. Branch is the only declared kind:
-    kind branch requires a repos-registry key, a branch
-    name, and a full expected SHA, and a missing or
-    malformed field refuses here, at load, naming the
-    field — never mid-launch. Returns an error string, or
-    None when the declaration is the contract's (or absent)."""
-    declared = job.get("transport")
-    if declared is None:
-        return None
-    if not isinstance(declared, dict):
-        return f"manifest transport must be an object, got {type(declared).__name__}"
-    kind = declared.get("kind")
-    if kind is None:
-        return "manifest transport is missing its kind field"
-    if kind != "branch":
-        return f"manifest transport kind {kind!r} is not a declared transport (only 'branch' is)"
-    for field in ("repo", "branch", "sha"):
-        value = declared.get(field)
-        if value is None:
-            return f"manifest transport (kind branch) is missing its {field} field"
-        if not isinstance(value, str) or not value:
-            return f"manifest transport {field} must be a non-empty string, got {value!r}"
-    if not _FULL_SHA.match(declared["sha"]):
-        return f"manifest transport sha must be a full 40-hex commit SHA, got {declared['sha']!r}"
-    return None
-
-
-def parse_transport(job) -> "dict | None":
-    """The manifest's validated branch-transport declaration
-    as a plain dict, or None when the job names no transport
-    (the bundle path). Call only after transport_error has
-    cleared the manifest."""
-    declared = job.get("transport")
-    if not isinstance(declared, dict) or declared.get("kind") != "branch":
-        return None
-    return {"kind": "branch", "repo": declared["repo"], "branch": declared["branch"], "sha": declared["sha"]}
 
 
 # The plant probe's budget: one bounded ssh greeting plus

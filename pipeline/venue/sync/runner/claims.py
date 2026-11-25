@@ -34,6 +34,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from .foundation import REPO, RUNS, epoch, now
+from .manifest_shape import manifest_shape_error, transport_error
 from .records import claim_first_save, load_run_record, save_record
 
 CLAIM_DEADLINE_S = 180
@@ -196,11 +197,21 @@ def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     return (claimed_id, log_path). A failed pre-claim raises —
     the parent then spawns nothing, so no execution ever
     exists without its record already on disk. The manifest
-    is validated through load_manifest BEFORE the claim: a
-    manifest that cannot be read dooms the child at its own
-    load, so refusing here — named, with no record written —
-    is the honest fire-time form of that death."""
-    load_manifest(manifest_path)
+    is validated BEFORE the claim, through the same verdicts
+    the attached flow runs at its load point: load_manifest
+    for readability, then the manifest_shape verdicts (field
+    shapes, the transport declaration). A manifest that
+    cannot be read dooms the child at its own load, and a
+    shape-invalid one dooms it at the child's shape check —
+    either death, claimed first, leaves a record reading
+    launch-lost over a run that never launched (the
+    steampower-criticjd-gate specimen: a dict-form uploads
+    entry). Refusing here — named, with no record written —
+    is the honest fire-time form of both deaths."""
+    job = load_manifest(manifest_path)
+    shape_err = manifest_shape_error(job) or transport_error(job)
+    if shape_err:
+        raise ValueError(f"job manifest {manifest_path}: {shape_err}")
     minted = f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
     rec = pre_claim(job_name, minted, None, None)
     claimed = rec["run_id"]

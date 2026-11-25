@@ -16,7 +16,8 @@ from .claims import ManifestUnreadable, adopt, attach_verdict, load_manifest, op
 from .execute import execute
 from .foundation import JOBS, REPO, RUNS, TOKEN, colab, lease, mirror, now
 from .launch import build_seed_ctx, orphan_notes, transport_error, transport_setup
-from .pull import manifest_shape_error, normalize_manifest_outputs
+from .manifest_shape import manifest_shape_error
+from .pull import normalize_manifest_outputs
 from .records import claim_first_save, load_run_record, save_record
 from .replace import acquire_session, record_pin
 
