@@ -244,10 +244,15 @@ def _wait(rec: dict, target: dict, max_s: int, timeout_s: int) -> int:
 def _record_target(rec):
     """The SSH target a run record belongs to: the target the
     record itself carries, else its shape's binding, else the
-    venue's only target."""
+    venue's only target. A carried id that no longer resolves
+    — a record written before its target was renamed — falls
+    through to the same legs rather than ending the chain:
+    the record's shape binding names the machine it ran on."""
     tid = rec.get("target")
     if isinstance(tid, str) and tid:
-        return local_venue.venue_target(REPO, tid)
+        target = local_venue.venue_target(REPO, tid)
+        if target is not None:
+            return target
     _shape, _tid, target = local_venue.shape_target(REPO, rec.get("shape") or "")
     return target or local_venue.venue_target(REPO)
 
