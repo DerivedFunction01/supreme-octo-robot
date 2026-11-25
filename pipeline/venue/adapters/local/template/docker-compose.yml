@@ -51,6 +51,12 @@ services:
     # hard cap on images + container writable layers.
     tmpfs:
       - /tmp:size=2G,mode=1777
+    # Shared memory is raised from the 64M Docker default: native
+    # writers that mmap shared segments (DuckDB's COPY under
+    # parallel test workers is the measured case — a union gate
+    # died in bus errors at that ceiling) need the room, and the
+    # default is a silent trap nothing else names.
+    shm_size: 2gb
     # Legacy mem_limit/cpus keys are ignored by Compose v2 (verified
     # live: the container saw all host CPUs/RAM). deploy.resources is
     # the form Compose v2 applies.

@@ -294,6 +294,10 @@ and the container overlay the host's.
   running; it does not bound disk.
 - `/tmp` in the workspace container is a 2G tmpfs (inside the Docker
   cap): temp files cannot fill the host disk and vanish on removal.
+- `/dev/shm` is 2G (`shm_size` in compose), not the 64M Docker
+  default: native writers that mmap shared segments under parallel
+  load (DuckDB's COPY under parallel test workers is the measured
+  case) bus-error at the default ceiling.
 - Container logs capped (10m x 3, both services).
 - CPU/memory/pids are capped via `deploy.resources.limits` in
   compose (`COMPUTE_MEM` / `COMPUTE_CPUS` in `.env`). A specific
