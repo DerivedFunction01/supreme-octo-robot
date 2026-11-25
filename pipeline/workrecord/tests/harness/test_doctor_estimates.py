@@ -76,21 +76,32 @@ class TestPlanEstimateChecks(unittest.TestCase):
         self.assertEqual(self.findings(), [])
 
     def test_estimate_step_without_est(self):
+        # Both of the step's estimate surfaces go:
+        # the block's est= and the closing est: line
+        # are the same estimate stated twice, and a
+        # step is estimateless only when neither
+        # survives.
         write(self.plans / "2026-01-23-nostep.md",
               self.ESTIMATE_PLAN.replace(
-                  "est=45m\n", ""))
+                  "est=45m\n", "").replace(
+                  "est: 45m\n", ""))
         self.assertEqual(
             self.estimate_checks(),
             [("plan-estimate",
               "2026-01-23-nostep.md step 2")])
 
     def test_estimate_step_without_block(self):
+        # The block goes, and the step's closing
+        # est: line with it — the line alone is an
+        # estimate surface, so a blockless step
+        # still carrying it is not estimateless.
         write(self.plans / "2026-01-23-noblock.md",
               self.ESTIMATE_PLAN.replace(
                   "<!-- wb-step\nstep=1\n"
                   "todos=small-edit\nrequires=\n"
                   "est=15m\n"
-                  "fanout=single lane\n-->\n", ""))
+                  "fanout=single lane\n-->\n", "").replace(
+                  "est: 15m\n", ""))
         self.assertEqual(
             self.estimate_checks(),
             [("plan-estimate",
@@ -142,9 +153,13 @@ class TestPlanEstimateChecks(unittest.TestCase):
                       found[0]["detail"])
 
     def test_estimate_unparseable_value(self):
+        # Both surfaces carry the vague value: with
+        # either one left parseable, the step's
+        # estimate parses and no refusal fires.
         write(self.plans / "2026-01-23-vague.md",
               self.ESTIMATE_PLAN.replace(
-                  "est=15m", "est=soon"))
+                  "est=15m", "est=soon").replace(
+                  "est: 15m", "est: soon"))
         found = [f for f in self.findings()
                  if f["check"] == "plan-estimate"]
         self.assertEqual(len(found), 1)
