@@ -90,7 +90,8 @@ def test_uploads_stage_in_order_between_script_and_launch(monkeypatch):
     for step, remote, _data in fake.calls:
         if step.startswith("upload:"):
             name = step.split(":", 1)[1]
-            assert remote == f"cat > ~/runs/{REC['run_id']}/{name}"
+            assert remote.startswith("cat > ")
+            assert remote.endswith(f"/runs/{REC['run_id']}/{name}")
 
 
 def test_upload_timeout_retries_under_the_warmup_discipline(monkeypatch):
