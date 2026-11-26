@@ -23,7 +23,7 @@ mechanical edits (generation plus tool round-trips).
 Cannot anchor: debugging, venue-bound execution.
 
 **One-hour edit cap (migration-class edit phases).**
-Basis: internal — the 2026-11-26 argument-parser
+Basis: internal — the argument-parser
 re-cut: a ~140-entry inventoried surface at
 minutes-per-item prices a 15–20-item lane at or under
 45 minutes of wall-clock, so a one-hour cap binds only
@@ -55,6 +55,44 @@ the owner's standing threshold. No measured basis is
 recorded for the value itself; it is marked unbacked
 here rather than given an invented one.
 
+## Categories and their bases
+
+**Inventoried mechanical edit — minutes per item.**
+Basis: the minutes-per-edit anchor above (internal
+actuals; whole-issue agent runtimes as the outer bound).
+
+**Deterministic design and build — tens of minutes.**
+Basis: internal actuals — this programme's landed
+single-module builds with their tests (a scanner module
+with its test file, a plan-check module) complete in
+tens of minutes including gate cycles; the whole-issue
+agent runtimes above bound the class from outside.
+Covers design whose shape follows a pattern of record
+with enumerable edge cases; it is the category the
+argument-parser plan's declaration format belongs to.
+
+**Proof run — minutes, set by the corpus and the
+venue.** Basis: internal actuals — measured gate runs
+(docs-scoped 7–15 s; a 282-test leg in 143 s on 2
+workers; venue gates in minutes). Dummy testing and
+verification runs price here.
+
+**Coordination and fan-in — minutes to tens of
+minutes.** Basis: internal actuals — union formation
+and landing cycles in the programme's run records.
+
+**Generation- or reading-bound — computed.** Basis:
+the served-rate anchor above; the duration is the
+volume divided by the rate, stated with the volume.
+
+**Slow register (benchmark class) — no typical
+duration; marked unbacked.** METR's horizons measure
+what agents can complete at a reliability level, not a
+typical duration for a step, and no internal actual
+prices this class typically: its prices are argued per
+step at the boundary test. The absence of a number here
+is the register's honest state, not an omission.
+
 ## Sources
 
 - METR, Task-Completion Time Horizons of Frontier AI
@@ -64,16 +102,16 @@ here rather than given an invented one.
   (Claude 3.7 Sonnet) to ~110 min (o3), human-expert
   task durations, 170-task suite.
 - SWE-bench Verified agent runtimes: myide benchmark
-  (all 500 tasks, official harness, Oct 2026): median
+  (all 500 tasks, official harness): median
   agent time 66 s per task. MiniMax-M2.5 eval (vendor):
   mean end-to-end runtime 22.8 min per task at ~100
   tokens/s served output, ~3.5M tokens per task.
-- DeepSWE (Datacurve; AgentField harness comparison,
-  Nov 2026): mean agent wall time 16–94 min per
+- DeepSWE (Datacurve; AgentField harness comparison):
+  mean agent wall time 16–94 min per
   long-horizon task across ten harnesses on one model —
   harness and task mix dominate the spread, which is why
   per-edit anchors rest on internal actuals first.
 - Internal actuals: the programme's gate and edit
-  records, 2026-11-25/26 (starter gate: 282 tests in
+  records (starter gate: 282 tests in
   143 s on 2 workers; docs-scoped gates 7–15 s;
   single-module cure cycles in minutes).
