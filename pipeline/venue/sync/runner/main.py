@@ -80,8 +80,12 @@ def main() -> int:
     # records, --poll reconciles one launched run, --wait reads
     # the local record only. None of them may pay the launch
     # path's costs (mirror restore, catalog, acquire).
-    core_args = args[: args.index("--")] if "--" in args else list(args)
-    if not any(token in core_args for token in _ROUTER_TOKENS):
+    core_args = list(args)
+    for i, token in enumerate(args):
+        if token == "--":
+            core_args = args[:i]
+            break
+    if not set(_ROUTER_TOKENS) & set(core_args):
         return launch(args)
     try:
         parsed = platform_argv.parse(DECLARATION, core_args)

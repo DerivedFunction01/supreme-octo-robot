@@ -116,9 +116,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
-# The unified argv contract home, loaded by location (the platform seam).
+# The unified argv contract home, loaded by location through the
+# platform paths module (the sanctioned bootstrap: the paths
+# module's own location is found by candidate search, every other
+# location derives from its constants).
+_here = os.path.dirname(os.path.abspath(__file__))
+_paths_spec = _importlib_util.spec_from_file_location(
+    "platform_paths",
+    next(_p for _p in (
+        os.path.join(os.path.dirname(
+            os.path.dirname(_here)), "paths.py"),
+        os.path.join(os.path.dirname(_here), "paths.py"),
+        os.path.join(_here, "paths.py"))
+        if os.path.isfile(_p)))
+_paths = _importlib_util.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(_paths)
 _argv_spec = _importlib_util.spec_from_file_location(
-    "pipeline_platform_argv", Path(__file__).resolve().parent.parent / "argv.py")
+    "pipeline_platform_argv", os.path.join(_paths.PACKAGE_DIR, "argv.py"))
 platform_argv = _importlib_util.module_from_spec(_argv_spec)
 _argv_spec.loader.exec_module(platform_argv)
 
