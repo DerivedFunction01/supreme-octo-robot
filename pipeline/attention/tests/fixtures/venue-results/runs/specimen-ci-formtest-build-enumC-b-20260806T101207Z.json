@@ -1,0 +1,70 @@
+{
+  "run_id": "specimen-ci-formtest-build-enumC-b-20260806T101207Z",
+  "job": "specimen-ci-formtest-build-enumC-b",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T10:12:07.046480+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T10:14:48.496504+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-formtest-build-enumC-b-out-specimen-ci-formtest-build-enumC-b-20260806T101207Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T10:13:41.169389+00:00",
+  "launch_confirmed_at": "2026-08-06T10:14:05.241098+00:00",
+  "collector_at": "2026-08-06T10:15:16.377082+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T10:14:05.241098+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.83 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "formtest-build-enumC-b-log.txt",
+      "bytes": 816,
+      "sha256": "d7ac57576e73c0591201fc4d2744979db69548db4855545d467b44b032892f5e",
+      "route": "misplaced"
+    },
+    {
+      "path": "formtest-build-enumC-b-result.json",
+      "bytes": 30523,
+      "sha256": "5198c213ed5e669824dea00252a14e60b6f4391818991c05e4c2eca035eb989a",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "formtest-build-enumC-b-log.txt",
+      "path": "/content/formtest-build-enumC-b-log.txt",
+      "bytes": 816,
+      "mtime": 1786011235.3501525,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "formtest-build-enumC-b-result.json",
+      "path": "/content/formtest-build-enumC-b-result.json",
+      "bytes": 30523,
+      "mtime": 1786011235.3501525,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T10:15:44.486403+00:00",
+  "usage_after": "Current balance: 404.77 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T10:15:45.094303+00:00"
+}

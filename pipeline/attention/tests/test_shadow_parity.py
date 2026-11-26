@@ -62,20 +62,20 @@ from lib import drain as drain_mod  # noqa: E402
 FIXTURES = Path(__file__).resolve().parent / "fixtures" / "venue-results"
 CALM = "quiet-ridge-11"
 SCARLET = "amber-cliff-23"
-WINDOW_START = datetime(2026, 11, 19, 10, 0, tzinfo=UTC)
-WINDOW_END = datetime(2026, 11, 20, 0, 30, tzinfo=UTC)
+WINDOW_START = datetime(2026, 8, 6, 10, 0, tzinfo=UTC)
+WINDOW_END = datetime(2026, 8, 7, 0, 30, tzinfo=UTC)
 EVIDENCE_WINDOW_MINUTES = 30
 CADENCE_MINUTES = 15
 
-ZOMBIE = "specimen-ci-cobalt-price-20261119T115855Z"
+ZOMBIE = "specimen-ci-cobalt-price-20260806T115855Z"
 
 
 def at19(hour, minute=0, second=0):
-    return datetime(2026, 11, 19, hour, minute, second, tzinfo=UTC)
+    return datetime(2026, 8, 6, hour, minute, second, tzinfo=UTC)
 
 
 def at20(hour, minute=0, second=0):
-    return datetime(2026, 11, 20, hour, minute, second, tzinfo=UTC)
+    return datetime(2026, 8, 7, hour, minute, second, tzinfo=UTC)
 
 
 def settings():
@@ -105,7 +105,7 @@ def _parse(raw):
 # segments a job name carries after its table family.
 # A family is the job stem with those stripped from
 # the right; it agrees with the Step 2 pinned cases
-# (cocisep, corefin-coci, testform, is-setlevel).
+# (cobalt, ledger-cobalt, formtest, tier-level).
 _ONE_SEGMENT_ACTIONS = {
     "price", "price2", "gate", "probe", "diag", "diag2",
     "plain", "repro", "specimens", "trace", "fmt", "enum",
@@ -122,8 +122,8 @@ _TWO_SEGMENT_ACTIONS = {
 def cron_family(job):
     """The table family of a fixture job, by the
     action-vocabulary strip above."""
-    stem = job[len("greenfield-ci-"):] \
-        if job.startswith("greenfield-ci-") else job
+    stem = job[len("specimen-ci-"):] \
+        if job.startswith("specimen-ci-") else job
     parts = stem.split("-")
     while len(parts) > 1:
         if "-".join(parts[-2:]) in _TWO_SEGMENT_ACTIONS:
@@ -360,15 +360,15 @@ def staffing_sends(state):
 class CronFamilyDerivation(unittest.TestCase):
     def test_family_strip_agrees_with_step2_pins(self):
         cases = {
-            "specimen-ci-cobalt-gate": "cocisep",
-            "specimen-ci-cobalt-price": "cocisep",
-            "specimen-ci-ledger-cobalt-extract-b": "corefin-coci",
-            "specimen-ci-ledger-cobalt-price": "corefin-coci",
-            "specimen-ci-formtest-build-gateC": "testform",
-            "specimen-ci-tier-level-price": "is-setlevel",
-            "specimen-ci-rapids-g1-price": "cascade",
-            "specimen-ci-group3-cascade": "rcg3",
-            "specimen-ci-phase10-draw-b": "step10",
+            "specimen-ci-cobalt-gate": "cobalt",
+            "specimen-ci-cobalt-price": "cobalt",
+            "specimen-ci-ledger-cobalt-extract-b": "ledger-cobalt",
+            "specimen-ci-ledger-cobalt-price": "ledger-cobalt",
+            "specimen-ci-formtest-build-gateC": "formtest",
+            "specimen-ci-tier-level-price": "tier-level",
+            "specimen-ci-rapids-g1-price": "rapids",
+            "specimen-ci-group3-cascade": "group3",
+            "specimen-ci-phase10-draw-b": "phase10",
         }
         for job, family in cases.items():
             self.assertEqual(cron_family(job), family, job)
@@ -418,7 +418,7 @@ class StaffingParity(unittest.TestCase):
                     at19(15, 22)):
             defect, families, carrying = cron_serial(now)
             self.assertTrue(defect, f"cron side at {now}")
-            self.assertEqual(set(families), {"cocisep"},
+            self.assertEqual(set(families), {"cobalt"},
                              f"at {now}")
             self.assertEqual(carrying, {CALM}, f"at {now}")
             view = staffing.build_staffing(
@@ -428,7 +428,7 @@ class StaffingParity(unittest.TestCase):
             row = rows[0]
             self.assertEqual(
                 [f["name"] for f in row["families"]],
-                ["cocisep"], f"at {now}")
+                ["cobalt"], f"at {now}")
             self.assertEqual(row["sessions_used"], 1, f"at {now}")
             self.assertEqual(row["sessions_live"], 2, f"at {now}")
             self.assertIn(
@@ -441,13 +441,13 @@ class StaffingParity(unittest.TestCase):
 
 class StallParity(unittest.TestCase):
     def test_venue_staffing_measure_stall(self):
-        # Last checkpoint 2026-11-19T16:40:03Z. At
+        # Last checkpoint 2026-08-06T16:40:03Z. At
         # 17:05Z (25 minutes — inside two intervals)
         # neither side flags; at 17:15Z (35 minutes —
         # past both the IDLE and the stall bound) both
         # do, and the app's row maps to both sweep
         # classes.
-        checkpoint = datetime(2026, 11, 19, 16, 40, 3,
+        checkpoint = datetime(2026, 8, 6, 16, 40, 3,
                               tzinfo=UTC)
         self.assertLess(
             cron_stall_gap(checkpoint, at19(17, 5)), 30)
@@ -472,13 +472,13 @@ class StallParity(unittest.TestCase):
             {"idle", "stall"})
 
     def test_retire_status_codes_stall(self):
-        # Last checkpoint 2026-11-19T23:43:32Z. At
+        # Last checkpoint 2026-08-06T23:43:32Z. At
         # 00:05Z (about 21 minutes) neither side flags;
         # at 00:26Z — the instant the sweep's gap-closure
         # order was measured on the live fleet — both
         # do: the cron side reads a stall, the app side
         # a record gap for the lane.
-        checkpoint = datetime(2026, 11, 19, 23, 43, 32,
+        checkpoint = datetime(2026, 8, 6, 23, 43, 32,
                               tzinfo=UTC)
         self.assertLess(
             cron_stall_gap(checkpoint, at20(0, 5)), 30)
@@ -557,7 +557,7 @@ class SweepActuationParity(unittest.TestCase):
         # owning coordinator once, sent by wb, naming
         # the lane and its next act; a second pass on
         # the same tick mints no twin.
-        checkpoint = datetime(2026, 11, 19, 16, 40, 3,
+        checkpoint = datetime(2026, 8, 6, 16, 40, 3,
                               tzinfo=UTC)
         state = stall_state(at19(17, 15),
                             "venue-staffing-measure", checkpoint)
@@ -597,7 +597,7 @@ class SweepActuationParity(unittest.TestCase):
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 1)
         self.assertEqual(sends[0]["handle"], "@specimen-field")
-        self.assertIn("cocisep", sends[0]["text"])
+        self.assertIn("cobalt", sends[0]["text"])
         self.assertIn(SCARLET, sends[0]["text"])
 
 

@@ -1,0 +1,91 @@
+{
+  "run_id": "specimen-ci-fable-gate-20260806T114132Z",
+  "job": "specimen-ci-fable-gate",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T11:41:32.469184+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T11:42:28.854141+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-gate-out-specimen-ci-fable-gate-20260806T114132Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T11:42:05.656477+00:00",
+  "launch_confirmed_at": "2026-08-06T11:42:15.664208+00:00",
+  "collector_at": "2026-08-06T11:43:31.281537+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T11:42:15.664208+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.66 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "fable-gate-log.txt",
+      "bytes": 128723,
+      "sha256": "abb12d301549a8b2de95b19c1385da74af8e98ed8ed02d99c2782b5776004572",
+      "route": "misplaced"
+    },
+    {
+      "path": "fable-gate-result.json",
+      "bytes": 1567,
+      "sha256": "1c8316f1903dc6e72c490f9c07f2e40b2a5dd7819332ee3f35347a2a443db3ec",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "fable-gate-out.json",
+      "path": "/content/fable-gate-out.json",
+      "bytes": 1080,
+      "mtime": 1786013698.806938,
+      "fresh": false,
+      "collected": false
+    },
+    {
+      "name": "fable-gate-log.txt",
+      "path": "/content/fable-gate-log.txt",
+      "bytes": 128723,
+      "mtime": 1786016532.2543893,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-gate-result.json",
+      "path": "/content/fable-gate-result.json",
+      "bytes": 1567,
+      "mtime": 1786016532.2543893,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-gate-check.txt",
+      "path": "/content/fable-gate-check.txt",
+      "bytes": 386,
+      "mtime": 1786013698.806938,
+      "fresh": false,
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "fable-gate-out.json",
+    "fable-gate-check.txt"
+  ],
+  "finished_at": "2026-08-06T11:44:06.435594+00:00",
+  "error": "job payload exited 2",
+  "usage_after": "Current balance: 403.66 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-08-06T11:44:06.756917+00:00"
+}

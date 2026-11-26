@@ -1,0 +1,98 @@
+{
+  "run_id": "specimen-ci-cinder-gate-20260806T101558Z",
+  "job": "specimen-ci-cinder-gate",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T10:15:58.840482+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T10:21:30.563981+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-cinder-gate-out-specimen-ci-cinder-gate-20260806T101558Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T10:19:24.351823+00:00",
+  "launch_confirmed_at": "2026-08-06T10:19:45.032354+00:00",
+  "collector_at": "2026-08-06T10:21:57.532082+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T10:19:45.032354+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.77 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cinder-gate-out.json",
+      "bytes": 1146,
+      "sha256": "f7650d1b65457e3645783fb645c99377fdb7dd982c591e22c79659b36303dd0b",
+      "route": "misplaced"
+    },
+    {
+      "path": "cinder-gate-log.txt",
+      "bytes": 65639,
+      "sha256": "e1a3275a4b3eeb3e977c2600c5c0fd40858395beba448fde7a5b631c3e451fc5",
+      "route": "misplaced"
+    },
+    {
+      "path": "cinder-gate-result.json",
+      "bytes": 2861,
+      "sha256": "a61cd29763088fd0627328dcfd8ba59b025cb1c24a953fae9a26c081126d6e09",
+      "route": "misplaced"
+    },
+    {
+      "path": "cinder-gate-check.txt",
+      "bytes": 1617,
+      "sha256": "260a0a649de8c3a2b203c07efca4919dc4e77c4e57a94ace64e4cc80f3b37494",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cinder-gate-out.json",
+      "path": "/content/cinder-gate-out.json",
+      "bytes": 1146,
+      "mtime": 1786011635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cinder-gate-log.txt",
+      "path": "/content/cinder-gate-log.txt",
+      "bytes": 65639,
+      "mtime": 1786011635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cinder-gate-result.json",
+      "path": "/content/cinder-gate-result.json",
+      "bytes": 2861,
+      "mtime": 1786011635.7397926,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cinder-gate-check.txt",
+      "path": "/content/cinder-gate-check.txt",
+      "bytes": 1617,
+      "mtime": 1786011635.7387924,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T10:23:51.435247+00:00",
+  "usage_after": "Current balance: 404.70 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T10:23:51.635366+00:00"
+}

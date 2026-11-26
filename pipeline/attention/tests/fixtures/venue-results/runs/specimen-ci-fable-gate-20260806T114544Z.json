@@ -1,0 +1,99 @@
+{
+  "run_id": "specimen-ci-fable-gate-20260806T114544Z",
+  "job": "specimen-ci-fable-gate",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T11:45:44.997856+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T11:57:31.397079+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "amber-cliff-23",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-gate-out-specimen-ci-fable-gate-20260806T114544Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T11:54:44.305897+00:00",
+  "resumed_at": "2026-08-06T11:54:18.058728+00:00",
+  "launch_confirmed_at": "2026-08-06T11:54:58.737561+00:00",
+  "collector_at": "2026-08-06T11:57:39.159278+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T11:54:58.737561+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.53 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "fable-gate-out.json",
+      "bytes": 2650,
+      "sha256": "37268375c31655432e74ece047aecfdf8437cf3f347b4aa9b9179f081b1df06a",
+      "route": "misplaced"
+    },
+    {
+      "path": "fable-gate-log.txt",
+      "bytes": 13443,
+      "sha256": "2f226d43c9bb078cc4f9aae3939f99e94ba4e772cb46afe7fca5d8a2f79b66f2",
+      "route": "misplaced"
+    },
+    {
+      "path": "fable-gate-result.json",
+      "bytes": 4365,
+      "sha256": "aceeeca4efd1f9691498293d10d2d6153c1185d801a2146c830871e99a1b0f41",
+      "route": "misplaced"
+    },
+    {
+      "path": "fable-gate-check.txt",
+      "bytes": 1617,
+      "sha256": "9a0f720a7ed1471e57dbbc3647656c8ea31912fc543a98a32ea30198e8fd22d2",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "fable-gate-out.json",
+      "path": "/content/fable-gate-out.json",
+      "bytes": 2650,
+      "mtime": 1786017349.9355066,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-gate-log.txt",
+      "path": "/content/fable-gate-log.txt",
+      "bytes": 13443,
+      "mtime": 1786017349.9355066,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-gate-result.json",
+      "path": "/content/fable-gate-result.json",
+      "bytes": 4365,
+      "mtime": 1786017349.9355066,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-gate-check.txt",
+      "path": "/content/fable-gate-check.txt",
+      "bytes": 1617,
+      "mtime": 1786017349.9345067,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T11:58:09.182298+00:00",
+  "usage_after": "Current balance: 403.47 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T11:58:09.441515+00:00"
+}

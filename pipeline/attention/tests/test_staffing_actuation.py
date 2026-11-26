@@ -9,7 +9,7 @@ in the app. The hard-stop floor is structural: only
 the two measure kinds actuate, and a row naming a
 hard-stop class never does. The specimen state is
 the Step 2 recorded window: 14:00Z reads a serial
-defect (one family on calm, scarlet idle).
+defect (one family on one session, the other idle).
 """
 
 import copy
@@ -38,7 +38,7 @@ BUNDLE = "2026-11-19-superapp-supervision-reminders"
 
 
 def at(hour, minute=0):
-    return datetime(2026, 11, 19, hour, minute, tzinfo=UTC)
+    return datetime(2026, 8, 6, hour, minute, tzinfo=UTC)
 
 
 def settings():
@@ -57,8 +57,8 @@ def edgar_records(now):
 
 def defect_state(now, frontier=None):
     """The served-view state at a defect instant: the
-    14:00Z specimen (one family on calm, scarlet
-    idle) with the programme's open work armed."""
+    14:00Z specimen (one family on one session,
+    the other idle) with the programme's open work armed."""
     facts = venue.families_at(edgar_records(now), now, 30)
     armed = [
         {
@@ -174,7 +174,7 @@ class StaffingActuationTests(unittest.TestCase):
         send = sends[0]
         self.assertEqual(send["handle"], "@specimen-field")
         self.assertEqual(send["target"], "@specimen-field")
-        self.assertIn("cocisep", send["text"])
+        self.assertIn("cobalt", send["text"])
         self.assertIn("amber-cliff-23", send["text"])
         # A second pass on the same tick mints no twin.
         self.assertFalse(continuation.run_staffing_pass(state, settings(), at(14)))
@@ -477,7 +477,7 @@ class CommissionSteerTests(unittest.TestCase):
             "topic": None,
             "handle": "@specimen-field",
             "handler_label": "Specimen — field extractor",
-            "families": [{"name": "cocisep", "sessions": [CALM], "runs": 1}],
+            "families": [{"name": "cobalt", "sessions": [CALM], "runs": 1}],
             "idle_sessions": [{"name": SCARLET, "idle_minutes": 52}],
             "conditions": ["fewer_than_min_families_in_flight"],
         }

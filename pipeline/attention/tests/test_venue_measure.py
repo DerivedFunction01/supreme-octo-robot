@@ -3,10 +3,11 @@ supervision plan, Step 2): the family-concurrency
 measure and the plan-frontier comparison, proven on
 recorded specimens.
 
-The specimen records are the venue runs store's own
-records for the edgar fleet, copied
-verbatim into fixtures/venue-results/runs (historical
-and immutable — read, never written). The windows
+The specimen records are a synthesized set of venue
+run records in the live store's shape, standing in for
+one working day of a multi-family fleet
+(fixtures/venue-results/runs — synthetic, immutable:
+read, never written). The windows
 are the plan's, as measured: 10:00–12:25Z reads
 staffed (several families across sessions); from
 12:30Z the fleet narrows to one carrying session and
@@ -47,7 +48,7 @@ SCARLET = "amber-cliff-23"
 
 
 def at(hour, minute=0):
-    return datetime(2026, 11, 19, hour, minute, tzinfo=UTC)
+    return datetime(2026, 8, 6, hour, minute, tzinfo=UTC)
 
 
 def edgar_records(now):
@@ -157,7 +158,7 @@ class SpecimenWindows(unittest.TestCase):
             self.assertEqual(len(rows), 1, f"at {now}")
             row = rows[0]
             self.assertEqual(
-                [f["name"] for f in row["families"]], ["cocisep"], f"at {now}"
+                [f["name"] for f in row["families"]], ["cobalt"], f"at {now}"
             )
             self.assertEqual(row["sessions_used"], 1, f"at {now}")
             self.assertEqual(row["sessions_live"], 2, f"at {now}")
@@ -187,7 +188,7 @@ class SpecimenWindows(unittest.TestCase):
         self.assertFalse(contract["delegate_counts_toward_concurrency"])
         now = at(15, 22)
         facts = venue.families_at(edgar_records(now), now, 30)
-        self.assertEqual(list(facts["families"]), ["cocisep"])
+        self.assertEqual(list(facts["families"]), ["cobalt"])
         view = staffing.build_staffing(specimen_state(now), settings(), now)
         self.assertEqual(len(serial_rows(view)), 1)
 
@@ -195,16 +196,16 @@ class SpecimenWindows(unittest.TestCase):
 class FamilyDerivation(unittest.TestCase):
     def test_job_stems(self):
         prefix = venue.job_prefix(
-            ["specimen-ci-famsep-gate", "specimen-ci-famcisep-price"]
+            ["specimen-ci-fable-gate", "specimen-ci-cobalt-price"]
         )
         self.assertEqual(prefix, "specimen-ci-")
         cases = {
-            "specimen-ci-famcisep-gate": "famcisep",
-            "specimen-ci-famcisep-price": "famcisep",
-            "specimen-ci-corefam-coci-extract-b": "corefam-coci",
-            "specimen-ci-corefam-coci-price": "corefam-coci",
+            "specimen-ci-cobalt-gate": "cobalt",
+            "specimen-ci-cobalt-price": "cobalt",
+            "specimen-ci-ledger-cobalt-extract-b": "ledger-cobalt",
+            "specimen-ci-ledger-cobalt-price": "ledger-cobalt",
             "specimen-ci-formtest-build-gateC": "formtest",
-            "specimen-ci-is-setlevel-price": "is-setlevel",
+            "specimen-ci-tier-level-price": "tier-level",
         }
         for job, family in cases.items():
             self.assertEqual(venue.family_of(job, prefix), family, job)
@@ -213,7 +214,7 @@ class FamilyDerivation(unittest.TestCase):
         declarations = registry.active_declarations()
         self.assertEqual(
             venue.attribute_slug(
-                "edgar-specimen:specimen-followup", declarations
+                "edgar-specimen:specimen-lane", declarations
             ),
             "edgar-specimen",
         )
@@ -320,7 +321,7 @@ class QueueMeasure(unittest.TestCase):
     def test_due_item_named_gated_items_not_due(self):
         from unittest import mock
 
-        now, state, live, idle = queue_state({"cocisep": [CALM]})
+        now, state, live, idle = queue_state({"cobalt": [CALM]})
         # Under the specimen contract with the marker
         # unlanded, the queue's only work item (the
         # instrument build) is gated: nothing reads due.
@@ -352,7 +353,7 @@ class QueueMeasure(unittest.TestCase):
         fillers = {f"fam-{c}": [CALM] if i < 3 else [SCARLET]
                    for i, c in enumerate("abcdef")}
         now, state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET], **fillers}
+            {"cobalt": [CALM], "ledger-cobalt": [SCARLET], **fillers}
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_rows._family_rows(state, now, live, idle)
@@ -366,8 +367,8 @@ class QueueMeasure(unittest.TestCase):
                    for i, c in enumerate("abcde")}
         now, state, live, idle = queue_state(
             {
-                "cocisep": [CALM],
-                "corefin-coci": [SCARLET],
+                "cobalt": [CALM],
+                "ledger-cobalt": [SCARLET],
                 "specimenbuild": [CALM],
                 **fillers,
             }
@@ -383,8 +384,8 @@ class QueueMeasure(unittest.TestCase):
 
         now, state, live, idle = queue_state(
             {
-                "cocisep": [CALM],
-                "corefin-coci": [SCARLET],
+                "cobalt": [CALM],
+                "ledger-cobalt": [SCARLET],
                 "otherfam": [CALM],
             }
         )
