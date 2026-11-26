@@ -8,13 +8,10 @@ trees carried no configured git identity, so a session-side
 commit inherited a lane-local identity that reached GitHub
 and broke a downstream deploy gate. The identity is the
 source repo's OWN repo-local git config (user.name /
-user.email as `git config --local` reports them) — every
-local checkout here carries that pair, the email sometimes
-deliberately empty (the `DL <>` convention the per-command
--c flags on this machine's landings replicate). A complete
-pair is: user.name set and non-empty, and the user.email
-key present (empty allowed — set-but-empty is a configured
-value, distinct from unset). Anything less plants nothing.
+user.email as `git config --local` reports them). A
+complete pair is: user.name set and non-empty, and
+user.email set and non-empty. Anything less — an unset
+key, an empty name, an empty email — plants nothing.
 """
 
 from __future__ import annotations
@@ -46,7 +43,7 @@ def repo_identity(local_path) -> "dict | None":
         return r.stdout.rstrip("\n")
 
     name, email = _get("user.name"), _get("user.email")
-    if not name or email is None:
+    if not name or not email:
         return None
     return {"name": name, "email": email}
 

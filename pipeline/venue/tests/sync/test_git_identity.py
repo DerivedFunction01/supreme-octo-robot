@@ -37,11 +37,12 @@ def test_reader_returns_the_repo_local_pair(tmp_path):
     assert git_identity.repo_identity(src) == {"name": "DL", "email": "dev@example.com"}
 
 
-def test_reader_treats_a_set_empty_email_as_configured(tmp_path):
-    # The DL <> convention: the email key present with an
-    # empty value is a configured identity, not an absence.
+def test_reader_refuses_a_set_empty_email(tmp_path):
+    # A complete pair is a non-empty name AND a non-empty
+    # email: the email key present with an empty value is
+    # not a configured identity, and plants nothing.
     src = _repo(tmp_path, name="DL", email="")
-    assert git_identity.repo_identity(src) == {"name": "DL", "email": ""}
+    assert git_identity.repo_identity(src) is None
 
 
 def test_reader_refuses_a_partial_pair(tmp_path):

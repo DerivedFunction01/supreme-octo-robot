@@ -132,7 +132,7 @@ DECL = {
         "union": {"takes_value": True, "repeatable": True, "help": "union dispatch constituent as BRANCH=SHA (repeatable; at least two, with at least one --check-path)"},
         "check-path": {"takes_value": True, "repeatable": True, "help": "scoped check path for a union dispatch (repeatable)"},
         "max": {"takes_value": True, "help": "--wait bound in seconds (default 3600)"},
-        "evidence": {"takes_value": True, "help": "the flag report that classes a job for --seal"},
+        "evidence": {"takes_value": True, "help": "the flag class and count that class a job for --seal (function only)"},
     },
     "positionals": [{"name": "target"}],
     "mode_groups": [{"name": "mode", "flags": ["poll", "wait", "seal", "verify-sealed"]}],
@@ -462,6 +462,19 @@ def _union_payload(union_values, check_paths):
     return {"constituents": constituents, "check_paths": checked}, None
 
 
+def _clone_src() -> str:
+    """The dispatching checkout's own origin URL — the union
+    gate's clone source, read at dispatch time. Dispatch
+    material only: it rides the generated constituents file
+    into the run dir and is never a tracked literal."""
+    origin = subprocess.run(
+        ["git", "-C", str(REPO), "remote", "get-url", "origin"],
+        capture_output=True,
+        text=True,
+    )
+    return origin.stdout.strip() if origin.returncode == 0 else ""
+
+
 def _seal_job(job_name: str, evidence: str | None) -> int:
     """Seal one job's script files in place: every file
     beside the manifest except job.json and existing
@@ -474,7 +487,7 @@ def _seal_job(job_name: str, evidence: str | None) -> int:
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
     if not evidence:
-        return _fail("--seal needs --evidence \"<the flag report that classes this job>\"")
+        return _fail("--seal needs --evidence \"<the flag class and count that classes this job>\"")
     job_dir = manifest_path.parent
     candidates = sorted(
         p
@@ -568,7 +581,7 @@ def main() -> int:
     target_token = parsed["positionals"].get("target")
     if flags["seal"]:
         if target_token is None:
-            return _fail("usage: local-run --seal <job-name> --evidence \"<flag report>\"")
+            return _fail("usage: local-run --seal <job-name> --evidence \"<flag class and count>\"")
         return _seal_job(target_token, flags.get("evidence"))
     if flags["verify-sealed"]:
         if target_token is None:
@@ -718,10 +731,20 @@ def main() -> int:
         # upload already claiming its basename refuses.
         if "constituents.json" in seen:
             return _fail(f"job {job_name}: declared upload constituents.json collides with the generated union file")
+        # The clone source is dispatch material: the
+        # dispatching checkout's own origin, read at dispatch
+        # time — no tracked file names the account or the
+        # target repo. A checkout with no readable origin
+        # cannot form a union gate.
+        clone_src = _clone_src()
+        if not clone_src:
+            return _fail("union dispatch needs the dispatching checkout's origin remote as the clone source")
+        staged_payload = dict(union_payload)
+        staged_payload["clone_src"] = clone_src
         uploads.append(
             (
                 "constituents.json",
-                (json.dumps(union_payload, indent=1) + "\n").encode(),
+                (json.dumps(staged_payload, indent=1) + "\n").encode(),
             )
         )
     caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))

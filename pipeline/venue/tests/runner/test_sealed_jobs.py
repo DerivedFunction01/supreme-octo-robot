@@ -6,8 +6,10 @@ tampered ciphertext or tag refuses to open, a wrong
 key refuses to open, and a non-blob refuses to open.
 
 The register's enforcement pin — the venue gate leg
-the build stands on: for every job in
-adapters/local/sealed-register.json, no registered
+the build stands on: for every job in the register
+(the untracked var store's sealed-register.json, read
+where it lives; a tree with no register seals nothing
+and the pin is vacuous there), no registered
 plaintext stands in the tree, and every registered
 blob exists in sealed form (magic present, no script
 content markers). Planting a registered plaintext in
