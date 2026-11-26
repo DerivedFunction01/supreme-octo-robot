@@ -27,5 +27,41 @@ _spec = ilu.spec_from_file_location("venue_migrate", REPO / "sync" / "venue_migr
 venue_migrate = ilu.module_from_spec(_spec)
 _spec.loader.exec_module(venue_migrate)
 
+_argv_spec = ilu.spec_from_file_location(
+    "platform_argv", REPO.parent / "platform" / "argv.py")
+argv_mod = ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(argv_mod)
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): this
+# wrapper validates against the declaration (unknown or
+# missing flags refuse at exit 2 with generated help)
+# before the mechanism's own entry point runs.
+DECL = {
+    "name": "colab-venue-migrate",
+    "summary": "Stamp the legacy lease/run record stock with its venue key; quarantine the hygiene remainder with bytes preserved.",
+    "flags": {
+        "var": {"takes_value": True, "required": True, "help": "the store's var dir"},
+        "runs": {"takes_value": True, "required": True, "help": "the store's results/runs dir"},
+        "venue": {"takes_value": True, "default": "colab", "help": "venue key to stamp"},
+        "dry-run": {"safety": True, "help": "census only; stamp nothing"},
+    },
+}
+
+
+def main(argv=None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    try:
+        parsed = argv_mod.parse(DECL, argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    return venue_migrate.main(argv)
+
+
 if __name__ == "__main__":
-    raise SystemExit(venue_migrate.main(sys.argv[1:]))
+    raise SystemExit(main())

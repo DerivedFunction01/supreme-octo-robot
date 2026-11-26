@@ -60,7 +60,6 @@ Rules:
   the ProxyCommand, so the fix set here reaches the bridge.
 """
 
-import argparse
 import base64
 import json
 import os
@@ -72,11 +71,49 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _load
 
 REPO = _load.REPO
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): help is
+# generated from this declaration, and anything outside it
+# is a usage refusal at exit 2 — an unknown token is NEVER
+# forwarded as a remote shell argument (BT6). The three
+# modes are mutually exclusive (residue R1): a call is
+# synchronous, --detach, --poll, or --wait, never a blend.
+# The declaration format's mode groups admit boolean flags
+# only, and --poll/--wait carry the detached id, so the
+# group is enforced in main() at the parse refusal point,
+# with the parser's own message shape and exit. Everything
+# after `--` is the script's own positional args and is
+# split off before this declaration sees the argv.
+DECL = {
+    "name": "colab-sh",
+    "summary": "Bare-shell channel to a leased Colab session, over real SSH.",
+    "flags": {
+        "session": {"takes_value": True, "short": "s", "help": "session name (default: the active lease's)"},
+        "caller": {"takes_value": True, "help": "caller claim: the thread doing this work (or $COLAB_CALLER); journaled per attach"},
+        "detach": {"help": "launch the script detached in-session (nohup + log under /content/sync-detached) and return its id at once; the async path, open to all callers"},
+        "poll": {"takes_value": True, "help": "one short read of a detached launch's state + log tail; exits with the job's exit code once it is done"},
+        "wait": {"takes_value": True, "help": "bounded wait over the LOCAL detached record only (zero channel use): exit 0 complete, 1 failed, 3 still running at the --max bound"},
+        "max": {"takes_value": True, "help": "seconds to wait with --wait (default 60)"},
+        "long": {"help": "override the sync duration cap for this call: the hold is journaled on the claim with its bound and counts as claim evidence until its stated end"},
+        "file": {"takes_value": True, "short": "f", "help": "shell script file to run"},
+        "dir": {"takes_value": True, "default": "/content", "help": "remote working directory"},
+        "timeout": {"takes_value": True, "help": "seconds (default: the sync_claim max_sync_seconds cap, 300)"},
+        "env": {"takes_value": True, "repeatable": True, "help": "environment variable for the remote script, as K=V; repeatable"},
+    },
+    "positionals": [{"name": "command", "variadic": True}],
+    "verdict_codes": {
+        "124": "the synchronous call or an async connect timed out",
+        "3": "--wait bound reached with the detached run still running; a detached poll found the run exited unrecorded",
+    },
+}
 CLI_VENV_PYTHON = (
     Path.home() / ".local" / "share" / "uv" / "tools" / "google-colab-cli" / "bin" / "python"
 )
@@ -522,23 +559,58 @@ def read_script(args) -> str | None:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="colab-sh", description=__doc__.split("\n")[0])
-    ap.add_argument("-s", "--session", help="session name (default: the active lease's)")
-    ap.add_argument("--caller", help="caller claim: the thread doing this work (or $COLAB_CALLER); journaled per attach")
-    ap.add_argument("--detach", action="store_true", help="launch the script detached in-session (nohup + log under /content/sync-detached) and return its id at once; the async path, open to all callers")
-    ap.add_argument("--poll", metavar="ID", help="one short read of a detached launch's state + log tail; exits with the job's exit code once it is done")
-    ap.add_argument("--wait", metavar="ID", help="bounded wait over the LOCAL detached record only (zero channel use): exit 0 complete, 1 failed, 3 still running at the --max bound")
-    ap.add_argument("--max", type=float, default=60, dest="max_seconds", help="seconds to wait with --wait (default 60)")
-    ap.add_argument("--long", action="store_true", help="override the sync duration cap for this call: the hold is journaled on the claim with its bound and counts as claim evidence until its stated end")
-    ap.add_argument("-f", "--file", help="shell script file to run")
-    ap.add_argument("--dir", default="/content", help="remote working directory")
-    ap.add_argument("--timeout", type=float, default=None, help="seconds (default: the sync_claim max_sync_seconds cap, 300)")
-    ap.add_argument("--env", action="append", default=[], metavar="K=V",
-                    help="environment variable for the remote script; repeatable")
-    ap.add_argument("command", nargs="*", help="inline command (or after --, script args with -f)")
-    args, script_args = ap.parse_known_args(argv)
-    # argparse puts everything after `--` in script_args only when it
-    # follows the options; positionals before `--` are the command.
+    if argv is None:
+        argv = sys.argv[1:]
+    argv = list(argv)
+    # The `--` separator is this tool's own: everything after
+    # it becomes the script's positional args, so it is split
+    # off before the declaration parses the head — those args
+    # are the script's, never this wrapper's (BT6).
+    if "--" in argv:
+        cut = argv.index("--")
+        head, script_args = argv[:cut], argv[cut + 1:]
+    else:
+        head, script_args = argv, []
+    try:
+        parsed = argv_mod.parse(DECL, head)
+        # The mode group (R1), enforced here because the
+        # format's groups admit boolean flags only and
+        # --poll/--wait carry a value: at most one mode.
+        chosen = [n for n in ("detach", "poll", "wait") if n in parsed["present"]]
+        if len(chosen) > 1:
+            raise argv_mod.UsageError(
+                f"colab-sh: mode group 'mode' takes one of "
+                f"['detach', 'poll', 'wait']; got {chosen}")
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    try:
+        max_seconds = float(flags["max"]) if flags.get("max") is not None else 60.0
+        timeout = float(flags["timeout"]) if flags.get("timeout") is not None else None
+    except ValueError:
+        print("colab-sh: --max and --timeout take a number of seconds", file=sys.stderr)
+        return 2
+    args = SimpleNamespace(
+        session=flags.get("session"),
+        caller=flags.get("caller"),
+        detach=flags["detach"],
+        poll=flags.get("poll"),
+        wait=flags.get("wait"),
+        max_seconds=max_seconds,
+        long=flags["long"],
+        file=flags.get("file"),
+        dir=flags["dir"],
+        timeout=timeout,
+        env=list(flags.get("env") or []),
+        command=list(parsed["positionals"]["command"]),
+    )
+    # With -f, the bare tokens are the script's positional
+    # args, not a command (the standing reshuffle).
     if args.file and args.command:
         script_args = args.command + script_args
         args.command = []

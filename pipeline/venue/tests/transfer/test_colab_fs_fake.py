@@ -44,14 +44,22 @@ exit "${COLAB_FS_STUB_RC:-0}"
 
 
 def make_fake_repo(tmp_path: Path) -> Path:
-    (tmp_path / "bin").mkdir()
-    (tmp_path / "adapters" / "colab" / "snippets" / "channels").mkdir(parents=True)
-    shutil.copy(REPO / "bin" / "colab-fs", tmp_path / "bin" / "colab-fs")
-    stub = tmp_path / "bin" / "colab-sh"
+    # The fake mirrors the real pipeline layout — venue under
+    # pipeline/ beside platform/ — because the driver sources
+    # the unified argument parser from pipeline/platform/
+    # (argv.sh) by a path relative to its own bin/ home, the
+    # same relative shape the real tree carries.
+    venue = tmp_path / "pipeline" / "venue"
+    (venue / "bin").mkdir(parents=True)
+    (venue / "adapters" / "colab" / "snippets" / "channels").mkdir(parents=True)
+    (tmp_path / "pipeline" / "platform").mkdir(parents=True)
+    shutil.copy(REPO / "bin" / "colab-fs", venue / "bin" / "colab-fs")
+    shutil.copy(REPO.parent / "platform" / "argv.sh", tmp_path / "pipeline" / "platform" / "argv.sh")
+    stub = venue / "bin" / "colab-sh"
     stub.write_text(STUB)
     stub.chmod(0o755)
-    (tmp_path / "adapters" / "colab" / "snippets" / "channels" / "fs_ops.py").symlink_to(REPO / "adapters" / "colab" / "snippets" / "channels" / "fs_ops.py")
-    return tmp_path / "bin" / "colab-fs"
+    (venue / "adapters" / "colab" / "snippets" / "channels" / "fs_ops.py").symlink_to(REPO / "adapters" / "colab" / "snippets" / "channels" / "fs_ops.py")
+    return venue / "bin" / "colab-fs"
 
 
 def run_driver(driver: Path, tmp_path: Path, args: list, verdict: dict | None, rc: int = 0,
@@ -274,7 +282,7 @@ def test_channel_refusal_is_terminal_no_retry(tmp_path):
     the driver never retries a refusal into a second hold."""
     driver = make_fake_repo(tmp_path)
     count = tmp_path / "sh-calls.txt"
-    stub = tmp_path / "bin" / "colab-sh"
+    stub = driver.parent / "colab-sh"
     stub.write_text(
         "#!/usr/bin/env bash\n"
         f"echo x >> {count}\n"

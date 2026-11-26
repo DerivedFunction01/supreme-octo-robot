@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # Sessions, session status, and compute-unit usage. Usage: colab-status
 set -uo pipefail
+# No-argument tool (the unified argument parser's guard
+# form, bash adapter — pipeline/platform/argv.sh): the
+# declaration is empty, so any argument at all is a usage
+# refusal at exit 2.
+source "$(dirname "${BASH_SOURCE[0]}")/../../platform/argv.sh"
+argv_tool colab-status "Sessions, session status, and compute-unit usage."
+argv_parse "$@" || exit 2
+[ "${ARGV_HELP:-0}" = 1 ] && exit 0
 source "$(dirname "${BASH_SOURCE[0]}")/_wrap.sh"
 wrap_enter
 "$COLAB_BIN" --auth oauth2 sessions || true

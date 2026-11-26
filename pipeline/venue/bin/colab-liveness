@@ -57,6 +57,22 @@ import _load
 REPO = _load.REPO
 liveness_entry = _load.sync("liveness_entry", "colab_liveness_entry")
 writer = _load.platform_writer()
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): exactly one
+# session positional, or --sync alone; anything else is a
+# usage refusal at exit 2. The speech contract's exit 3 is
+# the declared verdict code.
+DECL = {
+    "name": "colab-liveness",
+    "summary": "Session liveness checker: reads only local files, never dials the session.",
+    "flags": {
+        "sync": {"help": "reconcile registry entries with the live records (janitor mode)"},
+    },
+    "positionals": [{"name": "session"}],
+    "verdict_codes": {"3": "something must be said (one LIVENESS line per item on stdout)"},
+}
 
 APPROVAL_ESCALATE_S = int(os.environ.get("COLAB_LIVENESS_APPROVAL_ESCALATE_S", "1800"))
 PULSE_STALE_S = int(os.environ.get("COLAB_LIVENESS_PULSE_STALE_S", "1800"))
@@ -203,14 +219,26 @@ def compute_findings(now, rec, state) -> dict:
 
 
 def main(argv) -> int:
-    if argv == ["--sync"]:
+    try:
+        parsed = argv_mod.parse(DECL, argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    session = parsed["positionals"].get("session")
+    if parsed["flags"]["sync"]:
+        if session is not None:
+            print("usage: colab-liveness <session> | --sync", file=sys.stderr)
+            return 2
         records = liveness_entry.load_records(REPO)
         print(json.dumps(liveness_entry.reconcile(REPO, records)))
         return 0
-    if len(argv) != 1:
+    if session is None:
         print("usage: colab-liveness <session> | --sync", file=sys.stderr)
         return 2
-    session = argv[0]
     now = datetime.now(timezone.utc)
     rec = find_record(session)
     state_path = liveness_entry.var_dir(REPO) / f"liveness-{session}.json"

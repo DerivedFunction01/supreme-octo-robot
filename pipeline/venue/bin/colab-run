@@ -42,7 +42,7 @@ only when something reconciles it — --poll (one bounded reconcile:
 reader exec + pull + record update; exit 0 complete, 1 failed or
 orphaned, 3 still running), a later launch's --resume, or --sweep.
 --wait polls the LOCAL record only (zero channel use) until the
-run is terminal or --max seconds pass (exit 0 complete, 1 failed
+run is terminal or --max seconds pass (default 120; exit 0 complete, 1 failed
 or orphaned, 3 still running at the bound). --sweep reconciles
 every non-terminal record against the live list. A launched run's
 terminal transition appends exactly one run-terminal event to

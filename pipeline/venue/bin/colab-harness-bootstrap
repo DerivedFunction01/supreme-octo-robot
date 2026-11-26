@@ -17,24 +17,44 @@ totals, and the smoke result (which names the consumer's
 attributed read). Exit 0 only when the smoke read succeeded.
 """
 
-import argparse
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _load  # noqa: E402
 
 harness = _load.sync("harness")
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): help is
+# generated from this declaration, and anything outside
+# it is a usage refusal at exit 2.
+DECL = {
+    "name": "colab-harness-bootstrap",
+    "summary": "Prepare a Colab session to consume the harness connector.",
+    "flags": {
+        "consumer": {"takes_value": True, "default": "sweeper-venue", "help": "consumer caller name"},
+        "scopes": {"takes_value": True, "default": "read,write-state,send", "help": "token scopes, comma-separated"},
+        "remint": {"help": "mint a fresh token even if one is staged (rotates the old one out)"},
+    },
+}
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(prog="colab-harness-bootstrap")
-    ap.add_argument("--consumer", default="sweeper-venue")
-    ap.add_argument("--scopes", default="read,write-state,send")
-    ap.add_argument("--remint", action="store_true",
-                    help="mint a fresh token even if one is staged (rotates the old one out)")
-    a = ap.parse_args()
+def main(argv=None) -> int:
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:] if argv is None else argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    a = SimpleNamespace(consumer=flags["consumer"], scopes=flags["scopes"], remint=flags["remint"])
     verdict = harness.bootstrap(
         _load.REPO, consumer=a.consumer, scopes=a.scopes, remint=a.remint)
     print(json.dumps(verdict, indent=2, sort_keys=True))

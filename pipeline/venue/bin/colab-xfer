@@ -42,13 +42,13 @@ three failed ember attempts read as successes from a
 tail-trimmed capture).
 """
 
-import argparse
 import json
 import os
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _load
@@ -59,6 +59,31 @@ XFERS = REPO / "results" / "xfers"
 lease = _load.sync("lease")
 transfer = _load.sync("transfer")
 writer = _load.platform_writer()
+argv_mod = _load.platform_argv()
+
+# The verb surface, declared once for the unified argument
+# parser (pipeline/platform/argv.py): help is generated
+# from this declaration, and anything outside it is a
+# usage refusal at exit 2. The status exit vocabulary is
+# the declared verdict set.
+_MOVE_FLAGS = {
+    "session": {"takes_value": True, "short": "s", "required": True, "help": "session name"},
+    "caller": {"takes_value": True, "help": "caller claim (default: $COLAB_CALLER)"},
+    "id": {"takes_value": True, "help": "transfer id (default: generated); reuse an id to continue its record"},
+}
+DECL = {
+    "name": "colab-xfer",
+    "summary": "Move one bulk file between this machine and a Colab session, in 32 MB parts.",
+    "verbs": {
+        "up": {"flags": dict(_MOVE_FLAGS), "positionals": [{"name": "local", "required": True}, {"name": "remote", "required": True}]},
+        "down": {"flags": dict(_MOVE_FLAGS), "positionals": [{"name": "remote", "required": True}, {"name": "local", "required": True}]},
+        "status": {"positionals": [{"name": "xfer_id", "required": True}]},
+    },
+    "verdict_codes": {
+        "1": "a move failed (the record carries the stage), or a status read found a failed record",
+        "3": "status only: the record is still in flight (starting/running)",
+    },
+}
 
 
 def now() -> str:
@@ -188,18 +213,26 @@ def run_status(args) -> int:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(prog="colab-xfer", description="Chunked bulk transfer to/from a Colab session.")
-    sub = ap.add_subparsers(dest="op", required=True)
-    for op, first, second in (("up", "local", "remote"), ("down", "remote", "local")):
-        p = sub.add_parser(op, help=f"{'upload' if op == 'up' else 'download'} one file in 32 MB parts")
-        p.add_argument("-s", "--session", required=True)
-        p.add_argument(first)
-        p.add_argument(second)
-        p.add_argument("--caller", help="caller claim (default: $COLAB_CALLER)")
-        p.add_argument("--id", dest="id", help="transfer id (default: generated); reuse an id to continue its record")
-    p = sub.add_parser("status", help="print a transfer record; never touches a session")
-    p.add_argument("xfer_id")
-    args = ap.parse_args(argv)
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:] if argv is None else argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    pos = parsed["positionals"]
+    args = SimpleNamespace(
+        op=parsed["verb"],
+        session=flags.get("session"),
+        caller=flags.get("caller"),
+        id=flags.get("id"),
+        local=pos.get("local"),
+        remote=pos.get("remote"),
+        xfer_id=pos.get("xfer_id"),
+    )
     if args.op == "status":
         return run_status(args)
     return run_move(args)

@@ -37,6 +37,57 @@ lease = importlib.util.module_from_spec(spec_l)
 sys.modules["lease"] = lease
 spec_l.loader.exec_module(lease)
 
+argv_mod = _load.platform_argv()
+
+# The verb surface, declared once for the unified argument
+# parser (pipeline/platform/argv.py): help is generated
+# from this declaration, and anything outside it — an
+# unknown flag, a surplus positional, a value flag with
+# no value — is a usage refusal at exit 2.
+_WAIT = {"wait": {"takes_value": True, "help": "seconds to wait for the terminal line"}}
+DECL = {
+    "name": "colab-bridge",
+    "summary": "Thin CLI over the standing bridge: plant a signed command file into the bridge queue and wait (bounded) for its terminal line.",
+    "verbs": {
+        "status": {},
+        "children": {},
+        "log": {"flags": {"tail": {"takes_value": True, "help": "log lines to print (default 50)"}}},
+        "ping": {"flags": dict(_WAIT)},
+        "cmd": {
+            "flags": {
+                "target": {"takes_value": True, "help": "bridge target (default: self)"},
+                "timeout": {"takes_value": True, "help": "the command's timeout in seconds"},
+                **_WAIT,
+            },
+            "positionals": [{"name": "shell", "variadic": True}],
+        },
+        "mint": {
+            "flags": {
+                "name": {"takes_value": True, "help": "child session name"},
+                **_WAIT,
+            },
+            "positionals": [{"name": "shape", "required": True}],
+        },
+        "stop": {
+            "flags": dict(_WAIT),
+            "positionals": [{"name": "name", "required": True}],
+        },
+    },
+}
+
+
+def _num(flags: dict, name: str) -> tuple[float | None, str | None]:
+    """A numeric flag's value as a float, with the standing
+    message. Returns (value, error)."""
+    raw = flags.get(name)
+    if raw is None:
+        return None, None
+    try:
+        return float(raw), None
+    except ValueError:
+        return None, f"--{name} needs a number"
+
+
 TERMINAL = ("result", "mint", "stop", "pong", "error", "duplicate")
 
 
@@ -96,30 +147,19 @@ def plant_and_wait(session: str, cmd: dict, wait_s: float) -> dict:
     return {"bridge": "wait-timeout", "id": cmd["id"]}
 
 
-def parse_opts(rest: list[str], flags: dict) -> tuple[dict, list[str], str | None]:
-    opts, out, i = {}, [], 0
-    while i < len(rest):
-        tok = rest[i]
-        if tok in flags:
-            if i + 1 >= len(rest):
-                return opts, out, f"{tok} needs a value"
-            try:
-                opts[flags[tok]] = float(rest[i + 1]) if flags[tok] in ("timeout_s", "wait_s", "tail") else rest[i + 1]
-            except ValueError:
-                return opts, out, f"{tok} needs a number"
-            i += 2
-        else:
-            out.append(tok)
-            i += 1
-    return opts, out, None
-
-
 def main() -> int:
-    args = sys.argv[1:]
-    if not args:
-        print(__doc__)
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:])
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
         return 2
-    cmd, rest = args[0], args[1:]
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    cmd = parsed["verb"]
+    flags = parsed["flags"]
+    pos = parsed["positionals"]
     session, _shape = standing_session()
 
     if cmd == "status":
@@ -128,11 +168,11 @@ def main() -> int:
         return 0 if block else 1
 
     if cmd == "log":
-        opts, _out, err = parse_opts(rest, {"--tail": "tail"})
+        tail_f, err = _num(flags, "tail")
         if err:
             print(f"colab-bridge: {err}", file=sys.stderr)
             return 2
-        tail = int(opts.get("tail", 50))
+        tail = int(tail_f) if tail_f is not None else 50
         lines: list[str] = []
         if session:
             status = lease.bridge_status_read(cr.colab, REPO, session)
@@ -168,46 +208,50 @@ def main() -> int:
         return 0
 
     if cmd == "ping":
-        opts, _out, err = parse_opts(rest, {"--wait": "wait_s"})
+        wait_s, err = _num(flags, "wait")
         if err:
             print(f"colab-bridge: {err}", file=sys.stderr)
             return 2
-        line = plant_and_wait(session, lease.bridge_command("ping"), opts.get("wait_s", 60.0))
+        line = plant_and_wait(session, lease.bridge_command("ping"), wait_s if wait_s is not None else 60.0)
         print(json.dumps(line, indent=1))
         return 0 if line.get("kind") == "pong" else 2
 
     if cmd == "cmd":
-        opts, out, err = parse_opts(rest, {"--target": "target", "--timeout": "timeout_s", "--wait": "wait_s"})
+        timeout_s, err = _num(flags, "timeout")
+        wait_s = None
+        if err is None:
+            wait_s, err = _num(flags, "wait")
+        out = pos["shell"]
         if err or not out:
             print(f"colab-bridge: {err or 'cmd needs a shell command'}", file=sys.stderr)
             return 2
-        fields = {"target": opts.get("target", "self"), "cmd": " ".join(out)}
-        if opts.get("timeout_s"):
-            fields["timeout_s"] = opts["timeout_s"]
-        line = plant_and_wait(session, lease.bridge_command("run", **fields), opts.get("wait_s", 180.0))
+        fields = {"target": flags.get("target") or "self", "cmd": " ".join(out)}
+        if timeout_s:
+            fields["timeout_s"] = timeout_s
+        line = plant_and_wait(session, lease.bridge_command("run", **fields), wait_s if wait_s is not None else 180.0)
         print(json.dumps(line, indent=1))
         if line.get("kind") == "result":
             return int(line["rc"]) if isinstance(line.get("rc"), int) else 1
         return 2
 
     if cmd == "mint":
-        opts, out, err = parse_opts(rest, {"--name": "name", "--wait": "wait_s"})
-        if err or not out:
-            print(f"colab-bridge: {err or 'mint needs a shape'}", file=sys.stderr)
+        wait_s, err = _num(flags, "wait")
+        if err:
+            print(f"colab-bridge: {err}", file=sys.stderr)
             return 2
-        fields = {"shape": out[0]}
-        if opts.get("name"):
-            fields["name"] = opts["name"]
-        line = plant_and_wait(session, lease.bridge_command("mint", **fields), opts.get("wait_s", 300.0))
+        fields = {"shape": pos["shape"]}
+        if flags.get("name"):
+            fields["name"] = flags["name"]
+        line = plant_and_wait(session, lease.bridge_command("mint", **fields), wait_s if wait_s is not None else 300.0)
         print(json.dumps(line, indent=1))
         return 0 if line.get("kind") == "mint" else 2
 
     if cmd == "stop":
-        opts, out, err = parse_opts(rest, {"--wait": "wait_s"})
-        if err or not out:
-            print(f"colab-bridge: {err or 'stop needs a child name'}", file=sys.stderr)
+        wait_s, err = _num(flags, "wait")
+        if err:
+            print(f"colab-bridge: {err}", file=sys.stderr)
             return 2
-        line = plant_and_wait(session, lease.bridge_command("stop", name=out[0]), opts.get("wait_s", 180.0))
+        line = plant_and_wait(session, lease.bridge_command("stop", name=pos["name"]), wait_s if wait_s is not None else 180.0)
         print(json.dumps(line, indent=1))
         return 0 if line.get("kind") == "stop" else 2
 

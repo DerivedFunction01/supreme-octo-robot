@@ -57,24 +57,69 @@ spec_r = importlib.util.spec_from_file_location("repo_registry", REPO / "sync" /
 registry_mod = importlib.util.module_from_spec(spec_r)
 spec_r.loader.exec_module(registry_mod)
 
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): help is
+# generated from this declaration, and anything outside it
+# — an unknown flag, a value flag with no value — is a
+# usage refusal at exit 2. The verdict declaration is the
+# propagation contract: the remote gate's own rc is this
+# tool's exit code, so a red remote gate is a non-zero
+# exit here, never a green 0.
+DECL = {
+    "name": "colab-check",
+    "summary": "Gate job: ship the selected repo's current tree by snapshot bundle and run check.py remotely with the probed worker count.",
+    "flags": {
+        "repo": {"takes_value": True, "help": "repo id from the local registry (default: its default_repo)"},
+        "variant": {"takes_value": True, "help": "variant name"},
+        "shape": {"takes_value": True, "help": "shape id (default: the config's default shape)"},
+        "caller": {"takes_value": True, "help": "caller tag"},
+    },
+    "positionals": [{"name": "paths", "required": True, "variadic": True}],
+    "verdict_codes": {
+        "0": "the remote gate ran green",
+        "1": "the gate failed before the remote check ran (bundle, lease, upload, apply), or the remote run reported no result",
+        "remote": "a red remote gate propagates the remote check's own rc verbatim",
+    },
+}
+
+
+def _remote_rc(stdout: str) -> int | None:
+    """The gate result's rc: the last JSON object line in
+    the remote exec's stdout that carries one (the gate
+    script prints its result JSON last; its substrate
+    refusals print a JSON carrying rc 2). None when the
+    remote run reported no result at all."""
+    for line in reversed(stdout.splitlines()):
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(obj, dict) and isinstance(obj.get("rc"), int):
+            return obj["rc"]
+    return None
+
 
 def main() -> int:
-    paths = [a for a in sys.argv[1:] if not a.startswith("--")]
-    # --repo/--variant/--shape take values; keep those values out of paths.
-    cleaned = []
-    skip_next = False
-    for a in sys.argv[1:]:
-        if skip_next:
-            skip_next = False
-            continue
-        if a in ("--repo", "--variant", "--shape", "--caller"):
-            skip_next = True
-            continue
-        if not a.startswith("--"):
-            cleaned.append(a)
-    paths = cleaned
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:])
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    paths = parsed["positionals"]["paths"]
     if not paths:
-        print("usage: colab-check <paths...> [--repo ID] [--variant NAME]", file=sys.stderr)
+        # A required variadic still parses empty; the gate
+        # needs at least one path, as before.
+        print("usage: colab-check <paths...> [--repo ID] [--variant NAME] [--shape SHAPE] [--caller TAG]", file=sys.stderr)
         return 2
     if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
         print("colab-check: STAGED — no colab login yet (see README).", file=sys.stderr)
@@ -82,14 +127,14 @@ def main() -> int:
     # Caller claim: flag over $COLAB_CALLER; a presented but
     # unregistered claim is refused at claim time, before anything
     # starts (the same helpers colab-run resolves through).
-    caller_flag = sys.argv[sys.argv.index("--caller") + 1] if "--caller" in sys.argv else None
+    caller_flag = flags.get("caller")
     claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("COLAB_CALLER"))
     if claim_err:
         print(f"colab-check: {claim_err}", file=sys.stderr)
         return 2
     caller = lease.resolve_caller(REPO, flag=caller_flag, env=os.environ.get("COLAB_CALLER"))
-    if "--shape" in sys.argv:
-        shape_id = sys.argv[sys.argv.index("--shape") + 1]
+    if flags.get("shape") is not None:
+        shape_id = flags["shape"]
     else:
         # The default shape comes only from the config; no shape
         # is hardcoded here.
@@ -101,8 +146,8 @@ def main() -> int:
     shape = shapes[shape_id]
 
     registry = registry_mod.load_local_registry(REPO)
-    repo_id = sys.argv[sys.argv.index("--repo") + 1] if "--repo" in sys.argv else None
-    variant = sys.argv[sys.argv.index("--variant") + 1] if "--variant" in sys.argv else None
+    repo_id = flags.get("repo")
+    variant = flags.get("variant")
     try:
         repo_id, entry = registry_mod.get_entry(registry, repo_id)
         dest = registry_mod.variant_dest(entry, variant)
@@ -226,7 +271,14 @@ def main() -> int:
         out = cr.colab("exec", "-s", session, "--timeout", str(shape.get("timeout", 18000)), "-f", str(gate), timeout=19000)
         print(out.stdout.strip()[-2000:])
         print(json.dumps({"gate": "remote", "repo": repo_id, "variant": variant, "paths": paths, "outer_seconds": round(time.time() - t0, 1)}))
-        return 0
+        # The verdict propagates (declared in DECL): the
+        # remote check's rc is this tool's exit code. A run
+        # that reported no result is a failure, not a green.
+        rc = _remote_rc(out.stdout)
+        if rc is None:
+            print(json.dumps({"gate": "no-result", "detail": "the remote gate run reported no result JSON; treating as failure"}))
+            return 1
+        return rc
     finally:
         if use_lease:
             lease.finish_job(REPO, lease_id)

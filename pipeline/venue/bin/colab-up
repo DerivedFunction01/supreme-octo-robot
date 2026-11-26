@@ -4,9 +4,18 @@
 # Adoption/reuse of a live lease is the lease core's job
 # (bin/colab-lease acquire); this wrapper is the bare creation path.
 set -euo pipefail
+# The operator surface, declared for the unified argument
+# parser's bash adapter (pipeline/platform/argv.sh): one
+# optional shape positional; anything else is a usage
+# refusal at exit 2.
+source "$(dirname "${BASH_SOURCE[0]}")/../../platform/argv.sh"
+argv_tool colab-up "Create a session at a shape, under a fresh generated name."
+argv_positional shape
+argv_parse "$@" || exit 2
+[ "${ARGV_HELP:-0}" = 1 ] && exit 0
 source "$(dirname "${BASH_SOURCE[0]}")/_wrap.sh"
 wrap_enter
-SHAPE="${1:-$(default_shape)}"
+SHAPE="${ARGV_POSITIONALS[shape]:-$(default_shape)}"
 # Session shape gate: this creation path bypasses the lease core,
 # so it consults the core's admission verdict first; a refusal
 # prints the verdict and fails the up before any CLI call.
