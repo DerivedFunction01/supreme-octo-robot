@@ -5,12 +5,14 @@ The S11 cutover consolidated the four original repos
 this mega repo. It was executed as a freeze: the
 originals halted, their state carried by the drivers
 in this directory, and the consolidated serving
-raised on the carried state. The drivers stand here
-as the cutover's kit, with `freeze_record.example.json`
-as the freeze record's shape and `preflight.py` as its
-reader. This file states the topology and state the
-cutover established — the standing facts the
-consolidated tree runs under.
+raised on the carried state. The migrations are
+complete, and the drivers are removed; this file is
+the standing record of the topology and state the
+cutover established — the facts the consolidated tree
+runs under. Two files remain in this directory
+because live platform ops ride them: `render_units.py`
+(the unit renderer `install-units.sh` runs) and
+`durable_write.py` (its staged-write helper).
 
 ## Topology
 

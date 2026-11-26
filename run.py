@@ -39,8 +39,7 @@ Subcommands (the link map):
                       colab-check, colab-extend-guard,
                       colab-harness-bootstrap,
                       colab-harness-relay, colab-liveness,
-                      colab-sh, colab-venue-migrate,
-                      colab-xfer) link in-process; the
+                      colab-sh, colab-xfer) link in-process; the
                       four bash bins (colab-down, colab-fs,
                       colab-status, colab-up) are shell
                       programs — run.py dispatches them as
@@ -156,7 +155,7 @@ _VENUE_PYTHON_BINS = {
     "colab-bridge", "colab-check", "colab-extend-guard",
     "colab-harness-bootstrap", "colab-harness-relay",
     "colab-lease", "colab-liveness", "colab-run", "colab-sh",
-    "colab-venue-migrate", "colab-xfer",
+    "colab-xfer",
 }
 _VENUE_BASH_BINS = {"colab-down", "colab-fs", "colab-status",
                     "colab-up"}

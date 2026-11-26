@@ -69,10 +69,8 @@ WRITER_NAME = "pipeline_platform_writer"
 # store re-homed from the registry package into the
 # attention package at commission 12, its seam now riding
 # the attention spine), the registry's
-# own stores, dispatch's state seams, the platform
-# package's own two stores, and the platform cutover's
-# config provisioning (commission 14's cure of the gate
-# leg's provision_config finding). The scheduler-keeper
+# own stores, dispatch's state seams, and the platform
+# package's own two stores. The scheduler-keeper
 # durable-write cure added two more scheduling seams —
 # the ops spine's own staged-write home and the ops
 # client's token store — both counted by the census.
@@ -82,9 +80,6 @@ SEAMS = (
      "pipeline/platform/paths.py", "WRITER"),
     ("platform backup",
      "pipeline/platform/backup.py",
-     "pipeline/platform/paths.py", "WRITER"),
-    ("platform cutover config provisioning",
-     "pipeline/platform/ops/cutover/provision_config.py",
      "pipeline/platform/paths.py", "WRITER"),
     ("registry store",
      "pipeline/registry/store.py",

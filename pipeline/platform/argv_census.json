@@ -152,57 +152,7 @@
    "migrated": true
   },
   {
-   "path": "pipeline/platform/ops/cutover/assemble_registry.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/export_ledger.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/migrate_venue.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/migrate_workrecord.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/mint_tokens.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/preflight.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/provision_config.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
    "path": "pipeline/platform/ops/cutover/render_units.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/verify_argv_targets.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/verify_endpoints.py",
-   "family": "cutover",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/platform/ops/cutover/verify_todo_slugs.py",
    "family": "cutover",
    "migrated": true
   },
@@ -512,11 +462,6 @@
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/colab-venue-migrate",
-   "family": "venue-bin",
-   "migrated": true
-  },
-  {
    "path": "pipeline/venue/bin/colab-xfer",
    "family": "venue-bin",
    "migrated": true
@@ -585,11 +530,6 @@
    "path": "pipeline/venue/sync/runner/main.py",
    "family": "venue",
    "migrated": true
-  },
-  {
-   "path": "pipeline/venue/sync/venue_migrate.py",
-   "family": "venue",
-   "migrated": false
   },
   {
    "path": "pipeline/venue/ui/deploy.sh",

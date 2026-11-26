@@ -2,9 +2,7 @@
 
 The extracted core's venue semantics, exercised against
 scratch stores: records gain the venue key at write time and
-never at read time; the §10.3 migration stamps the legacy
-stock once and quarantines the hygiene remainder without
-inventing a state; the funnel dispatch refuses an
+never at read time; the funnel dispatch refuses an
 unregistered venue; the served event split derives from the
 record alone. No network, no session is dialed.
 """
@@ -12,7 +10,6 @@ record alone. No network, no session is dialed.
 import importlib.util
 import json
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
@@ -29,7 +26,6 @@ def _load(rel, name):
     return mod
 
 
-venue_migrate = _load("sync/venue_migrate.py", "venue_migrate_s5")
 venue_events = _load("sync/venue_events.py", "venue_events_s5")
 cli = _load("sync/cli.py", "venue_cli_s5")
 
@@ -69,46 +65,6 @@ def test_no_read_time_venue_default(tmp_path):
     assert "venue" not in loaded
 
 
-def test_migration_stamps_once_and_quarantines(tmp_path):
-    repo = _scratch(tmp_path)
-    var, runs = repo / "var", repo / "results" / "runs"
-    (var / "lease-a-1.json").write_text(json.dumps(
-        {"session": "a-1", "deadline": "2026-11-13T22:00:00+00:00"}))
-    (var / "session-evidence-a-1.json").write_text(json.dumps(
-        {"deadline": "2026-11-13T22:00:00+00:00", "acquired_at": None,
-         "shape": "cpu", "spec": None, "caller": None}))
-    (runs / "r1.json").write_text(json.dumps(
-        {"run_id": "r1", "job": "smoke", "state": "complete"}))
-    (runs / "r2.json").write_text(json.dumps(
-        {"run_id": "r2", "job": "smoke", "state": "completed"}))
-    (runs / "r3.json").write_text("{not json")
-    now = datetime(2026, 11, 13, 21, 0, tzinfo=timezone.utc)
-    out = venue_migrate.migrate_store(var, runs, now_dt=now)
-    assert out["lease_stamped"] == 1 and out["evidence_stamped"] == 1
-    assert out["runs_stamped"] == 1
-    reasons = {q["file"]: q["reason"] for q in out["quarantined"]}
-    assert reasons == {"r2.json": "state 'completed' outside the contract vocabulary",
-                       "r3.json": "unparseable"}
-    assert not (runs / "r2.json").exists() and not (runs / "r3.json").exists()
-    assert (runs / "r3.json.unparseable-20261113T210000Z").exists()
-    # Re-runnable: a second pass stamps nothing and rewrites nothing.
-    out2 = venue_migrate.migrate_store(var, runs, now_dt=now)
-    assert out2["lease_stamped"] == 0 and out2["runs_stamped"] == 0
-    assert out2["lease_already"] == 1 and out2["runs_already"] == 1
-
-
-def test_migration_never_overwrites_an_existing_venue(tmp_path):
-    repo = _scratch(tmp_path)
-    var, runs = repo / "var", repo / "results" / "runs"
-    (var / "lease-local-1.json").write_text(json.dumps(
-        {"session": "local-1", "venue": "local", "deadline": "2026-11-13T22:00:00+00:00"}))
-    now = datetime(2026, 11, 13, 21, 0, tzinfo=timezone.utc)
-    out = venue_migrate.migrate_store(var, runs, now_dt=now)
-    # A record written under another venue keeps its stamp: the
-    # migration fills the unstamped legacy population only.
-    assert out["lease_stamped"] == 0
-    rec = json.loads((var / "lease-local-1.json").read_text())
-    assert rec["venue"] == "local"
 
 
 def test_funnel_dispatch_refuses_unregistered_venue():
