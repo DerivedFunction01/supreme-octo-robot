@@ -119,7 +119,7 @@
   {
    "path": "pipeline/attention/register_caller.py",
    "family": "attention",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/dateuniqueness.py",

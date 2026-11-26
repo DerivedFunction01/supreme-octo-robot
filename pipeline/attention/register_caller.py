@@ -19,18 +19,50 @@ _spec = importlib.util.spec_from_file_location(
 _paths = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_paths)
 
+_argv_spec = importlib.util.spec_from_file_location(
+    "platform_argv", Path(_paths.PIPELINE_ROOT) / "platform" / "argv.py"
+)
+_argv = importlib.util.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(_argv)
+
 ROOT = _paths.ATTENTION_HOME
 RECORD = ROOT / "var" / "connector" / "caller.json"
 SLUG = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
+DECL = {
+    "name": "register_caller.py",
+    "summary": "Record this venue's caller name in untracked local state.",
+    "flags": {},
+    "positionals": [
+        {
+            "name": "caller-name",
+            "required": True,
+            "help": "a slug from the host's caller registry",
+        }
+    ],
+}
+
+_USAGE = (
+    "usage: register_caller.py <caller-name>\n"
+    "the name is a slug from the host's caller registry"
+)
+
 
 def main(argv: list[str]) -> int:
     """Record the caller name, or refuse with the reason."""
-    if len(argv) != 2 or not SLUG.match(argv[1]):
-        print("usage: register_caller.py <caller-name>")
-        print("the name is a slug from the host's caller registry")
+    try:
+        parsed = _argv.parse(DECL, argv[1:])
+    except _argv.UsageError as err:
+        print(err)
+        print(_USAGE)
         return 2
-    name = argv[1]
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    name = parsed["positionals"]["caller-name"]
+    if not SLUG.match(name):
+        print(_USAGE)
+        return 2
     if RECORD.is_file():
         current = json.loads(RECORD.read_text(encoding="utf-8"))
         if current.get("caller") != name:
