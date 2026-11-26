@@ -1,0 +1,23 @@
+id: venue-trim-hourly
+title: Venue trim (hourly) — the same trim system run on both local venues: ops/venue_trim_dispatch.sh dispatches the venue-trim runner job to msi-hx18 and hp-envy, where ops/worktree_trim_venue.sh caps the venue's run trees, clones, and bundles under the identical rules as the controller-side trim (caps bind the whole population, dirty clones auto-commit in place before ranking, bundles cut past their grace, no state exempts a surface), and prints each venue's before/after counts as this entry's report
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: goal:workhorse-superapp-build-supreme-octo-robot
+run:
+  argv:
+    - bash
+    - ${REPO}/ops/venue_trim_dispatch.sh
+timeout_secs: 1800
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+    - 3
+state_paths:
+  - ${WS}/supreme-octo-robot/pipeline/venue/results
+classification: 'fixed command sequence (one bash dispatcher, ops/venue_trim_dispatch.sh, which dispatches two declared runner jobs and reads back their report files; on each venue one bash script, ops/worktree_trim_venue.sh, cloned fresh from the repo it governs); every outcome branches on enumerable git/filesystem state or exit codes (run-tree and clone census counts against their caps ranked by filesystem activity stamps, dirty status, auto-commit success or failure (a detached clone''s deterministic trim branch, the clone''s configured identity — its absence is the named no-identity failure), bundle mtimes against the grace, ssh read success or failure, each venue pass''s exit code); speech is fully determined by those branches — silent when nothing was cut, auto-committed, or failed on either venue, otherwise the venues'' own structured act lines (RUN-TREE-CUT, CLONE-CUT, AUTOCOMMIT, AUTOCOMMIT-FAILED, BUNDLE-CUT, the per-surface before/after counts, and a CAP-OVER line naming any surface still over its cap) under a per-venue header naming the venue and run id, plus a dispatcher line naming any venue that could not be reached or did not report'
+lifetime: permanent
