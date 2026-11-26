@@ -566,11 +566,11 @@ def main(argv=None) -> int:
     # it becomes the script's positional args, so it is split
     # off before the declaration parses the head — those args
     # are the script's, never this wrapper's (BT6).
-    if "--" in argv:
-        cut = argv.index("--")
-        head, script_args = argv[:cut], argv[cut + 1:]
-    else:
-        head, script_args = argv, []
+    head, script_args = argv, []
+    for cut, token in enumerate(argv):
+        if token == "--":
+            head, script_args = argv[:cut], argv[cut + 1:]
+            break
     try:
         parsed = argv_mod.parse(DECL, head)
         # The mode group (R1), enforced here because the
