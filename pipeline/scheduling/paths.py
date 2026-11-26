@@ -46,5 +46,6 @@ OPS_DIR = os.path.join(PACKAGE_ROOT, "ops")
 
 # The by-path loads the scheduling tree performs.
 PLATFORM_WRITER = os.path.join(PIPELINE_ROOT, "platform", "writer.py")
+PLATFORM_ARGV = os.path.join(PIPELINE_ROOT, "platform", "argv.py")
 PLATFORM_SERVING = os.path.join(PIPELINE_ROOT, "platform", "serving.py")
 GATE_PORTABILITY = os.path.join(PIPELINE_ROOT, "gate", "portability.py")

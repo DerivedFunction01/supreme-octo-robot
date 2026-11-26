@@ -50,7 +50,6 @@ Step 1 of the plan records the per-class evidence.
 Stdlib only; no imports from server/ (ops scripts stand alone).
 Paths derive from this file's location.
 """
-import argparse
 import json
 import os
 import sqlite3
@@ -397,15 +396,35 @@ def sweep(root, ops, now):
         pass
 
 
+DECL = {
+    "name": "flap_probe",
+    "summary": "The write-denial flap probe: per-mechanism "
+               "write trials against a scratch tree, verdict "
+               "recorded to the state file.",
+    "flags": {
+        "root": {"takes_value": True,
+                 "default": os.path.join(paths.STATE_DIR, "flap-probe"),
+                 "help": "scratch tree (default: state/flap-probe)"},
+        "state": {"takes_value": True,
+                  "default": os.path.join(paths.STATE_DIR,
+                                          "flap-state.json"),
+                  "help": "state file (default: state/flap-state.json)"},
+    },
+}
+
+
+class _Args:
+    """The parsed surface in attribute form (root, state)."""
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", default=os.path.join(paths.STATE_DIR,
-                                                       "flap-probe"),
-                        help="scratch tree (default: state/flap-probe)")
-    parser.add_argument("--state", default=os.path.join(paths.STATE_DIR,
-                                                        "flap-state.json"),
-                        help="state file (default: state/flap-state.json)")
-    args = parser.parse_args(argv)
+    result, code = paths.parse_argv(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if result is None:
+        return code
+    args = _Args()
+    args.root = result["flags"]["root"]
+    args.state = result["flags"]["state"]
     ops = RealOps()
     try:
         os.makedirs(args.root, exist_ok=True)

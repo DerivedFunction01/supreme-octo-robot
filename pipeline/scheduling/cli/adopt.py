@@ -9,28 +9,32 @@ from server.entries import catalog as catalog_mod
 from server import registry
 
 from cli.common import JOBS_DIR, ROOT, _load
-from cli.ops_client import _ops_caller, _ops_do, _take_flag
+from cli.ops_client import CALLER_FLAG, _ops_do, caller_of, parse_decl
+
+ADOPT_DECL = {
+    "name": "sched adopt",
+    "summary": "adopt a catalog entry into the live overlay",
+    "flags": {"caller": CALLER_FLAG,
+              "dry-run": {"safety": True,
+                          "help": "print the rendered entry and its "
+                                  "setup plan; perform nothing"},
+              "param": {"takes_value": True, "repeatable": True,
+                        "help": "parameter substitution k=v"}},
+    "positionals": [{"name": "example-id", "required": True}],
+}
 
 
 def cmd_adopt(argv):
-    caller = _ops_caller(argv)
-    _c, argv = _take_flag(argv, "--caller")
-    dry_run = "--dry-run" in argv
-    argv = [a for a in argv if a != "--dry-run"]
-    params, positional = {}, []
-    i = 0
-    while i < len(argv):
-        if argv[i] == "--param" and i + 1 < len(argv):
-            key, _, value = argv[i + 1].partition("=")
-            params[key] = value
-            i += 2
-        else:
-            positional.append(argv[i])
-            i += 1
-    if len(positional) != 1:
-        print("usage: sched adopt <example-id> [--param k=v]... [--dry-run]")
-        return 2
-    example_id = positional[0]
+    result, code = parse_decl(ADOPT_DECL, argv)
+    if result is None:
+        return code
+    caller = caller_of(result)
+    dry_run = result["flags"]["dry-run"]
+    params = {}
+    for pair in result["flags"]["param"]:
+        key, _, value = pair.partition("=")
+        params[key] = value
+    example_id = result["positionals"]["example-id"]
     catalog, errors = catalog_mod.load_catalog(ROOT)
     if errors:
         for err in errors:

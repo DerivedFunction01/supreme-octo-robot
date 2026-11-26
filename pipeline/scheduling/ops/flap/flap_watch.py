@@ -184,7 +184,16 @@ def render_report(changed, current, at):
     return "\n".join(lines)
 
 
-def main():
+DECL = {"name": "flap_watch",
+        "summary": "The scripted flap watcher: the canary run "
+                   "from two spawning origins per cycle. "
+                   "Takes no arguments."}
+
+
+def main(argv=()):
+    _result, code = paths.parse_argv(DECL, argv)
+    if _result is None:
+        return code
     at = now()
     current = {}
     for arm, runner in (("control", run_control), ("cgroup", run_cgroup)):
@@ -212,4 +221,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

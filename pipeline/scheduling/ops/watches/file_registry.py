@@ -469,14 +469,25 @@ def run(manifest_path, boot_file, report_always=False, at=None):
     return 0, report
 
 
-def main():
-    report_always = "--report-always" in sys.argv[1:]
+DECL = {
+    "name": "file_registry",
+    "summary": "The file-registry watch: declared generated "
+               "files verified against their generators.",
+    "flags": {"report-always": {"help": "print the report even "
+                                        "when nothing changed"}},
+}
+
+
+def main(argv=()):
+    result, code = paths.parse_argv(DECL, argv)
+    if result is None:
+        return code
     code, report = run(MANIFEST, BOOT_ID_FILE,
-                       report_always=report_always)
+                       report_always=result["flags"]["report-always"])
     if report:
         print(report)
     return code
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

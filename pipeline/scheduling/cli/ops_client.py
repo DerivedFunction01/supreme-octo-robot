@@ -1,7 +1,8 @@
 """The /ops client core shared by every command that rides
 the server endpoint (adopt, write, patch, exec,
 connector-token): caller resolution, token resolution, the
-POST, the report, and flag taking. Exit 4 means no
+POST, the report, and the unified-argv parse seam every
+ops verb's declaration rides. Exit 4 means no
 CONFIRMED performance, in two named faces: the server was
 unreachable before the request was sent (connection
 refused or unresolvable — nothing was performed), or the
@@ -34,10 +35,56 @@ from server import config as config_mod
 TOKEN_DIR_ENV = "SCHED_OPS_TOKEN_DIR"
 
 
-def _ops_caller(argv):
-    if "--caller" in argv:
-        return argv[argv.index("--caller") + 1]
-    return os.environ.get("SCHED_CALLER") or "sched-cli"
+_argv_module = None
+
+
+def load_argv():
+    """The platform unified argv module (the contract
+    home), loaded by path — the writer seam's form —
+    and cached for the process."""
+    global _argv_module
+    if _argv_module is None:
+        spec = importlib.util.spec_from_file_location(
+            "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _argv_module = module
+    return _argv_module
+
+
+# The one caller-flag spec every ops verb's declaration
+# carries: the acting caller, named identically across
+# the family.
+CALLER_FLAG = {"takes_value": True,
+               "help": "acting caller name "
+                       "(default: $SCHED_CALLER or sched-cli)"}
+
+
+def parse_decl(decl, argv):
+    """Parse argv against a verb's unified declaration:
+    (result, None) on a real parse; (None, exit_code)
+    when the invocation settles at the parse layer — the
+    generated help printed (0) or the refusal printed
+    with the generated usage (2)."""
+    uargv = load_argv()
+    try:
+        result = uargv.parse(decl, list(argv))
+    except uargv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.stderr.write(uargv.help_text(decl))
+        return None, 2
+    if "help" in result:
+        sys.stdout.write(result["help"])
+        return None, 0
+    return result, None
+
+
+def caller_of(result):
+    """The acting caller from a parsed ops invocation:
+    the --caller flag (either value form), else
+    $SCHED_CALLER, else the standing default."""
+    return (result["flags"].get("caller")
+            or os.environ.get("SCHED_CALLER") or "sched-cli")
 
 
 def token_dir(env=None):
@@ -157,11 +204,3 @@ def _ops_report(op, payload):
 def _ops_do(req, op, http_timeout=30):
     payload = _ops_post(req, http_timeout)
     return _ops_report(op, payload), payload
-
-
-def _take_flag(argv, name):
-    if name in argv:
-        idx = argv.index(name)
-        value = argv[idx + 1]
-        return value, argv[:idx] + argv[idx + 2:]
-    return None, argv

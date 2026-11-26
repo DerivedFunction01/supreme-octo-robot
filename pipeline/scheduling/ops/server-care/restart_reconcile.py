@@ -74,7 +74,6 @@ overrides (SCHEDULER_RECONCILE_RUNS_DIR,
 SCHEDULER_RECONCILE_STALE_SECS, SCHEDULER_VM_BOOT_ID_FILE,
 SCHEDULER_RECONCILE_LEDGER_DB) for tests and proof runs.
 """
-import argparse
 import json
 import os
 import sqlite3
@@ -491,9 +490,15 @@ def run(runs_dir=RUNS_DIR, state_path=STATE_PATH,
     return lines
 
 
+DECL = {"name": "restart_reconcile",
+        "summary": "Reconcile scheduler-server restarts "
+                   "against standing runs. Takes no arguments."}
+
+
 def main(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    _result, code = paths.parse_argv(DECL, argv)
+    if _result is None:
+        return code
     try:
         lines = run()
     except OSError as exc:

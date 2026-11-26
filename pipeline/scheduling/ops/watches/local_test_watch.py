@@ -673,24 +673,56 @@ def run(proc_root, workspace, procs=None, load=None, at=None,
     return 0, lines
 
 
-def disposition_main(argv):
+DECL = {
+    "name": "local_test_watch",
+    "summary": "The local test watch: samples running "
+               "processes each cycle and classifies test "
+               "work. No verb runs the watch.",
+    "verbs": {
+        "disposition": {
+            "summary": "record a disposition closing a defect "
+                       "episode",
+            "flags": {
+                "reason": {"takes_value": True, "required": True},
+                "actor": {"takes_value": True, "required": True},
+                "ledger-op": {"takes_value": True,
+                              "help": "scheduler ledger op id "
+                                      "cited as clearance "
+                                      "evidence; stored with "
+                                      "the disposition"},
+            },
+            "positionals": [{"name": "signature", "required": True}],
+        },
+    },
+}
+
+
+class _Args:
+    """The parsed disposition surface in attribute form
+    (signature, reason, actor, ledger_op)."""
+
+
+def disposition_main(result):
     """The disposition verb: `disposition <sig> --reason
     <text> --actor <handle>` — the one act that closes a
     defect episode, writing the reason into the record
     and marking the attention item done when the store
     seam is configured. Exit 0 = recorded; 2 = refused
     (unknown signature, empty reason or actor)."""
-    import argparse
-
-    parser = argparse.ArgumentParser(prog="local_test_watch disposition")
-    parser.add_argument("signature")
-    parser.add_argument("--reason", required=True)
-    parser.add_argument("--actor", required=True)
-    parser.add_argument("--ledger-op", type=int, default=None,
-                        help="scheduler ledger op id cited as "
-                             "clearance evidence; stored with "
-                             "the disposition")
-    args = parser.parse_args(argv)
+    args = _Args()
+    args.signature = result["positionals"]["signature"]
+    args.reason = result["flags"]["reason"]
+    args.actor = result["flags"]["actor"]
+    raw_op = result["flags"]["ledger-op"]
+    if raw_op is None:
+        args.ledger_op = None
+    else:
+        try:
+            args.ledger_op = int(raw_op)
+        except ValueError:
+            print("DISPOSITION REFUSED: --ledger-op must be "
+                  f"an int: {raw_op}")
+            return 2
     at = now()
     citation = None
     if args.ledger_op is not None:
@@ -722,8 +754,14 @@ def disposition_main(argv):
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    if argv[:1] == ["disposition"]:
-        return disposition_main(argv[1:])
+    if argv:
+        # Any token at all must name the one verb: the
+        # watch itself takes no arguments, and a mistyped
+        # verb is a refusal — never the full watch run.
+        result, code = paths.parse_argv(DECL, argv)
+        if result is None:
+            return code
+        return disposition_main(result)
     sender = default_sender()
     code, lines = run(
         PROC_ROOT, WORKSPACE, sender=sender,

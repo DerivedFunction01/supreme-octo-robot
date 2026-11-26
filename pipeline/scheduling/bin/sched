@@ -122,45 +122,61 @@ from cli.registry_cmds import cmd_census, cmd_drift, cmd_validate  # noqa: E402
 from cli.state_cmds import cmd_ack, cmd_logs  # noqa: E402
 
 
+# The head's verb table: the dispatch is validated here,
+# before any verb module runs — an unknown verb or a
+# flag-shaped verb is a usage refusal, the argument-free
+# verbs refuse trailing tokens, and the one-positional
+# verbs refuse a surplus. Each verb's own surface is a
+# unified-argv declaration in its module.
+_VERBS = ("validate", "census", "drift", "ack", "adopt",
+          "catalog-drift", "logs", "flap", "write", "patch",
+          "exec", "connector-token", "config-init")
+_ARGUMENT_FREE = ("validate", "census", "catalog-drift",
+                  "flap", "config-init")
+_ONE_POSITIONAL = {"drift": "sched drift <cron-list.json | ->",
+                   "ack": "sched ack <ping-id>"}
+
+
 def main(argv):
     if len(argv) < 2:
         print(__doc__)
         return 2
     cmd = argv[1]
-    if cmd == "validate":
-        return cmd_validate()
-    if cmd == "census":
-        return cmd_census()
-    if cmd == "drift":
-        if len(argv) < 3:
-            print("usage: sched drift <cron-list.json | ->")
+    if cmd.startswith("-") or cmd not in _VERBS:
+        print(f"unknown command: {cmd}")
+        return 2
+    rest = argv[2:]
+    if cmd in _ARGUMENT_FREE:
+        if rest:
+            print(f"usage: sched {cmd} takes no arguments")
             return 2
-        return cmd_drift(argv[2])
-    if cmd == "ack":
-        if len(argv) < 3:
-            print("usage: sched ack <ping-id>")
+        if cmd == "validate":
+            return cmd_validate()
+        if cmd == "census":
+            return cmd_census()
+        if cmd == "catalog-drift":
+            return cmd_catalog_drift()
+        if cmd == "flap":
+            return cmd_flap()
+        return cmd_config_init(rest)
+    if cmd in _ONE_POSITIONAL:
+        if len(rest) != 1:
+            print(f"usage: {_ONE_POSITIONAL[cmd]}")
             return 2
-        return cmd_ack(argv[2])
+        if cmd == "drift":
+            return cmd_drift(rest[0])
+        return cmd_ack(rest[0])
     if cmd == "adopt":
-        return cmd_adopt(argv[2:])
-    if cmd == "catalog-drift":
-        return cmd_catalog_drift()
+        return cmd_adopt(rest)
     if cmd == "logs":
-        return cmd_logs(argv[2:])
-    if cmd == "flap":
-        return cmd_flap()
+        return cmd_logs(rest)
     if cmd == "write":
-        return cmd_write(argv[2:])
+        return cmd_write(rest)
     if cmd == "patch":
-        return cmd_patch(argv[2:])
+        return cmd_patch(rest)
     if cmd == "exec":
-        return cmd_exec(argv[2:])
-    if cmd == "connector-token":
-        return cmd_connector_token(argv[2:])
-    if cmd == "config-init":
-        return cmd_config_init(argv[2:])
-    print(f"unknown command: {cmd}")
-    return 2
+        return cmd_exec(rest)
+    return cmd_connector_token(rest)
 
 
 if __name__ == "__main__":

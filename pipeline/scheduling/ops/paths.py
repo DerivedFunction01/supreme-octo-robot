@@ -72,6 +72,57 @@ BODIES_DIR = os.path.join(REPO_ROOT, "bodies")
 PLATFORM_WRITER = os.path.join(
     os.path.dirname(REPO_ROOT), "platform", "writer.py")
 
+# The pipeline platform's unified argument parser (the
+# unified-argv contract home), derived the same way. In a
+# standalone copy of the ops tree the file is absent and
+# _load_argv returns None; consumers then refuse at the
+# parse layer (parse_argv below) rather than re-deriving a
+# local parse — argument parsing has one home, and a
+# standalone copy carries no second implementation of it.
+PLATFORM_ARGV = os.path.join(
+    os.path.dirname(REPO_ROOT), "platform", "argv.py")
+
+
+def _load_argv():
+    """The pipeline's unified argv module (the contract
+    home), loaded by path from PLATFORM_ARGV — the writer
+    seam's pattern. None when the ops tree runs standalone,
+    outside the mega repo."""
+    if not os.path.isfile(PLATFORM_ARGV):
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", PLATFORM_ARGV)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def parse_argv(decl, argv):
+    """Parse argv against a unified-argv declaration:
+    (result, None) on a real parse; (None, exit_code) when
+    the invocation settles at the parse layer — the
+    generated help printed (0) or the refusal printed with
+    the generated usage (2). The one parse entry every ops
+    script consumes."""
+    import sys
+    module = _load_argv()
+    if module is None:
+        print("the unified argv module is absent (standalone "
+              "ops copy); this entry point requires the "
+              "pipeline tree", file=sys.stderr)
+        return None, 2
+    try:
+        result = module.parse(decl, list(argv))
+    except module.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        sys.stderr.write(module.help_text(decl))
+        return None, 2
+    if "help" in result:
+        sys.stdout.write(result["help"])
+        return None, 0
+    return result, None
+
 
 class _Spine:
     """This module as the ops tree's paths spine, for its
