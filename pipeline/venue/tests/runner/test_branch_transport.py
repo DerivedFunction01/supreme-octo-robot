@@ -45,7 +45,7 @@ from module_loader import load_module  # noqa: E402
 SHA = "0123456789abcdef0123456789abcdef01234567"
 OTHER = "fedcba9876543210fedcba9876543210fedcba98"
 BRANCH = {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/x-20261123", "sha": SHA}
-PLANT_OK = json.dumps({"failed": [], "greeting": "Hi redacted! You've successfully authenticated, but GitHub does not provide shell access."}) + "\n"
+PLANT_OK = json.dumps({"failed": [], "greeting": "Hi ExampleUser! You've successfully authenticated, but GitHub does not provide shell access."}) + "\n"
 PLANT_SPLIT = json.dumps({"failed": ["hosts", "greeting"], "greeting": "Host key verification failed."}) + "\n"
 
 
@@ -94,6 +94,7 @@ def load_launch(tmp_path, colab):
     sys.modules["runner_branch_unit"] = package
     foundation = types.ModuleType("runner_branch_unit.foundation")
     foundation.REPO = tmp_path
+    foundation.PLATFORM_ARGV = tmp_path / "argv.py"
     foundation.colab = colab
     foundation.json_object_from_output = _json_object_from_output
     journal = []
@@ -356,7 +357,7 @@ def test_plant_script_plants_both_halves_to_the_sshcommand_paths():
 
 # --- the probe's rewrite contract, executed ---
 
-GREETING = "Hi redacted! You've successfully authenticated, but GitHub does not provide shell access."
+GREETING = "Hi ExampleUser! You've successfully authenticated, but GitHub does not provide shell access."
 
 
 def _fake_ssh_bin(tmp_path):

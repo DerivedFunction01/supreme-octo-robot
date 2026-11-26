@@ -47,6 +47,10 @@
 # Probe payloads and scratch
 /probes/results/*.bin
 /var/
+# The sealed-job register is untracked working state in the
+# var store; its former tracked path stays ignored so a stray
+# copy never re-tracks.
+/adapters/local/sealed-register.json
 *.bundle
 __pycache__/
 .pytest_cache/

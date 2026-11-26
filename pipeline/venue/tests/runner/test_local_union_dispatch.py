@@ -129,6 +129,7 @@ def test_union_dispatch_stamps_record_and_stages_constituents(
         return None
 
     monkeypatch.setattr(mod, "JOBS", jobs)
+    monkeypatch.setattr(mod, "_clone_src", lambda: "git@example.invalid:example/repo.git")
     monkeypatch.setattr(mod.sealed, "load_register", lambda repo: {})
     monkeypatch.setattr(mod.sealed, "entry_for", lambda register, job: None)
     monkeypatch.setattr(mod.lease, "caller_claim_error", lambda repo, flag, env: None)
@@ -179,4 +180,5 @@ def test_union_dispatch_stamps_record_and_stages_constituents(
     assert staged == {
         "constituents": expected,
         "check_paths": ["pipeline/venue/tests"],
+        "clone_src": "git@example.invalid:example/repo.git",
     }
