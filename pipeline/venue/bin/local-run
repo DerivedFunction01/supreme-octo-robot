@@ -1,7 +1,19 @@
 #!/usr/bin/env python3
 """Job dispatch to the local venue, over SSH.
 
-Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]
+Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
+
+A job named in adapters/local/sealed-register.json is
+sealed: its script files stand in the tree only as
+<name>.sealed blobs under the runner's server-side key
+(var/sealed.key), because their read trips an
+execution-risk flag. Dispatch opens the script blob in
+memory and ships the bytes; no verb ever emits script
+content, and a plaintext reappearing beside a sealed
+job's manifest refuses dispatch (the gate defect
+state). --seal classes a newly flagged job in the same
+movement as the flag report, which the register entry
+carries as its evidence.
 
 A job is a manifest at adapters/local/jobs/<name>/job.json:
 {"script": "run.sh", "caller"?, "shape"?, "timeout_s"?,
@@ -74,6 +86,7 @@ lease = importlib.util.module_from_spec(_spec_l)
 sys.modules["lease"] = lease
 _spec_l.loader.exec_module(lease)
 local_venue = lease.local_venue
+sealed = _load.sync("sealed")
 JOBS = REPO / "adapters" / "local" / "jobs"
 POLL_S = 5
 
@@ -283,10 +296,118 @@ def _record_target(rec):
     return target or local_venue.venue_target(REPO)
 
 
+def _seal_job(job_name: str, args: list) -> int:
+    """Seal one job's script files in place: every file
+    beside the manifest except job.json and existing
+    blobs is encrypted to <name>.sealed under the
+    runner's server-side key, its plaintext is deleted,
+    and the register entry is written with each file's
+    SHA-256 and the flag evidence. Content is never
+    printed — the output names files and hashes only."""
+    manifest_path = JOBS / job_name / "job.json"
+    if not manifest_path.exists():
+        return _fail(f"no job manifest at {manifest_path}")
+    evidence = None
+    if "--evidence" in args:
+        try:
+            evidence = args[args.index("--evidence") + 1]
+        except IndexError:
+            return _fail("--evidence needs a value")
+    if not evidence:
+        return _fail("--seal needs --evidence \"<the flag report that classes this job>\"")
+    job_dir = manifest_path.parent
+    candidates = sorted(
+        p
+        for p in job_dir.iterdir()
+        if p.is_file() and p.name != "job.json" and not p.name.endswith(".sealed")
+    )
+    if not candidates:
+        return _fail(f"job {job_name}: no unsealed script files beside the manifest")
+    key_path = sealed.ensure_key(REPO)
+    key = sealed.load_key(REPO)
+    files = []
+    for path in candidates:
+        data = path.read_bytes()
+        files.append(
+            {"name": path.name, "sha256": sealed.sha256_hex(data), "bytes": len(data)}
+        )
+        blob_path = path.with_name(path.name + ".sealed")
+        blob_tmp = path.with_name(path.name + ".sealed.tmp")
+        blob_tmp.write_bytes(sealed.seal_bytes(key, data))
+        os.replace(blob_tmp, blob_path)
+        path.unlink()
+    register = sealed.load_register(REPO)
+    entry = {
+        "job": job_name,
+        "sealed_at": now(),
+        "evidence": evidence,
+        "files": files,
+    }
+    register["jobs"] = [
+        e for e in register.get("jobs", []) if e.get("job") != job_name
+    ] + [entry]
+    sealed.save_register(REPO, register)
+    print(
+        json.dumps(
+            {
+                "job": job_name,
+                "sealed": [f["name"] for f in files],
+                "sha256": {f["name"]: f["sha256"] for f in files},
+                "register": str(sealed.register_path(REPO)),
+                "key": str(key_path),
+            },
+            indent=2,
+        )
+    )
+    return 0
+
+
+def _verify_sealed(job_name: str) -> int:
+    """Open each of a sealed job's blobs in memory and
+    compare against the register's hashes. Prints file
+    names and match facts only — never content."""
+    register = sealed.load_register(REPO)
+    entry = sealed.entry_for(register, job_name)
+    if entry is None:
+        return _fail(f"job {job_name} is not in the sealed register")
+    job_dir = JOBS / job_name
+    try:
+        key = sealed.load_key(REPO)
+    except sealed.SealError as exc:
+        return _fail(str(exc))
+    ok = True
+    results = {}
+    for f in entry["files"]:
+        blob_path = job_dir / (f["name"] + ".sealed")
+        if not blob_path.exists():
+            results[f["name"]] = "blob missing"
+            ok = False
+            continue
+        try:
+            data = sealed.open_bytes(key, blob_path.read_bytes())
+        except sealed.SealError as exc:
+            results[f["name"]] = f"open failed: {exc}"
+            ok = False
+            continue
+        match = sealed.sha256_hex(data) == f["sha256"]
+        results[f["name"]] = "match" if match else "HASH MISMATCH"
+        ok = ok and match
+    print(json.dumps({"job": job_name, "files": results}, indent=2))
+    return 0 if ok else 1
+
+
 def main() -> int:
     args = sys.argv[1:]
     if not args:
-        return _fail("usage: local-run <job-name> [--caller TAG] [--detach] | --poll RUN_ID | --wait RUN_ID [--max SECONDS]")
+        return _fail("usage: local-run <job-name> [--caller TAG] [--detach] | --poll RUN_ID | --wait RUN_ID [--max SECONDS] | --seal <job-name> --evidence TEXT | --verify-sealed <job-name>")
+    if args[0] == "--seal":
+        if len(args) < 2:
+            return _fail("usage: local-run --seal <job-name> --evidence \"<flag report>\"")
+        return _seal_job(args[1], args)
+    if args[0] == "--verify-sealed":
+        if len(args) < 2:
+            return _fail("usage: local-run --verify-sealed <job-name>")
+        return _verify_sealed(args[1])
     if args[0] in ("--poll", "--wait"):
         rec = load_run_record(args[1]) if len(args) > 1 else None
         if rec is None:
@@ -332,7 +453,34 @@ def main() -> int:
         return _fail(f"job {job_name}: venue {job.get('venue')!r} is not the local venue — dispatch it on its own venue's runner")
     script_name = job.get("script") or "run.sh"
     script_path = manifest_path.parent / script_name
-    if not script_path.exists():
+    script_bytes = None
+    seal_entry = sealed.entry_for(sealed.load_register(REPO), job_name)
+    if seal_entry is not None:
+        # A sealed job dispatches from its blob, opened in
+        # memory under the runner's server-side key; the
+        # plaintext is never written locally. A plaintext
+        # standing beside the manifest is the gate defect
+        # state — refuse it, never dispatch it.
+        for f in seal_entry["files"]:
+            if (manifest_path.parent / f["name"]).exists():
+                return _fail(
+                    f"job {job_name} is sealed (sealed-register.json) but plaintext "
+                    f"{f['name']} stands beside the manifest — remove the plaintext; "
+                    "a sealed job is never dispatched from plaintext"
+                )
+        blob_path = manifest_path.parent / (script_name + ".sealed")
+        if not blob_path.exists():
+            return _fail(f"job {job_name} is sealed but {blob_path.name} is missing beside the manifest")
+        try:
+            script_bytes = sealed.open_bytes(sealed.load_key(REPO), blob_path.read_bytes())
+        except sealed.SealError as exc:
+            return _fail(f"job {job_name}: {exc}")
+        registered = next(
+            (f["sha256"] for f in seal_entry["files"] if f["name"] == script_name), None
+        )
+        if registered is None or sealed.sha256_hex(script_bytes) != registered:
+            return _fail(f"job {job_name}: the opened script does not match the register's hash — refusing to dispatch")
+    elif not script_path.exists():
         return _fail(f"job {job_name}: script {script_name} not found beside the manifest")
     uploads = []
     seen = {script_name}
@@ -373,8 +521,12 @@ def main() -> int:
            "timeout_s": int(job.get("timeout_s") or 18000)}
     if uploads:
         rec["uploads"] = [name for name, _data in uploads]
+    if seal_entry is not None:
+        rec["sealed"] = True
     save_record(rec)
-    err = _launch(rec, script_path.read_bytes(), target, uploads)
+    if script_bytes is None:
+        script_bytes = script_path.read_bytes()
+    err = _launch(rec, script_bytes, target, uploads)
     if err is not None:
         mark_terminal(rec, "failed", error=err, finished_at=now())
         print(json.dumps({"run_id": run_id, "state": "failed", "error": err}, indent=2))
