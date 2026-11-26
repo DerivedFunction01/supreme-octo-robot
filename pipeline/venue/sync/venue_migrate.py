@@ -22,11 +22,19 @@ for a record whose own state is not in the vocabulary.
 
 All writes ride the unified writer's staged protocol through
 the lease core's foundation seam (plan §4.15).
+
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py), under the same
+declaration the bin/colab-venue-migrate wrapper
+validates against: --dry-run is a safety flag, a
+missing --var/--runs is a usage refusal (exit 2), and
+an unknown or malformed token is a usage refusal.
 """
 
 import importlib.util as _ilu
 import json
 import os
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -48,6 +56,30 @@ def _load_foundation():
 
 
 foundation = _load_foundation()
+
+# The unified argv contract home, loaded by location
+# through the paths spine.
+_argv_spec = _ilu.spec_from_file_location(
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+platform_argv = _ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "colab-venue-migrate",
+    "summary": "Stamp the legacy lease/run record stock "
+               "with its venue key; quarantine the hygiene "
+               "remainder with bytes preserved.",
+    "flags": {
+        "var": {"takes_value": True, "required": True,
+                "help": "the store's var dir"},
+        "runs": {"takes_value": True, "required": True,
+                 "help": "the store's results/runs dir"},
+        "venue": {"takes_value": True, "default": "colab",
+                  "help": "venue key to stamp"},
+        "dry-run": {"safety": True,
+                    "help": "census only; stamp nothing"},
+    },
+}
 
 TERMINAL_STATES = ("complete", "failed", "orphaned")
 NONTERMINAL_STATES = ("starting", "running", "polling")
@@ -159,16 +191,21 @@ def migrate_store(var_dir: Path, runs_dir: Path, venue: str = "colab",
 
 
 def main(argv=None) -> int:
-    import argparse
-
-    ap = argparse.ArgumentParser(prog="colab-venue-migrate")
-    ap.add_argument("--var", required=True, help="the store's var dir")
-    ap.add_argument("--runs", required=True, help="the store's results/runs dir")
-    ap.add_argument("--venue", default="colab")
-    ap.add_argument("--dry-run", action="store_true")
-    args = ap.parse_args(argv)
-    report = migrate_store(Path(args.var), Path(args.runs), venue=args.venue,
-                           dry_run=args.dry_run)
+    try:
+        parsed = platform_argv.parse(
+            DECLARATION, sys.argv[1:] if argv is None else argv)
+    except platform_argv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    flags = parsed["flags"]
+    report = migrate_store(Path(flags["var"]), Path(flags["runs"]),
+                           venue=flags["venue"],
+                           dry_run=flags["dry-run"])
     print(json.dumps(report, indent=2))
     return 0
 

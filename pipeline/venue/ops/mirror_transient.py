@@ -6,9 +6,13 @@ paths resolve against $HOME, or $COLAB_RUNNER_HOME when set; under
 that override the mirror resolves under the same root, so a
 sandboxed run (the test suite) never touches the real mirror.
 Reports carry only existence, size, mtime, and action taken.
+
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py): the op is a verb,
+an unknown verb or flag is a usage refusal (exit 2),
+and --help prints the generated help.
 """
 
-import argparse
 import importlib.util as _ilu
 import json
 import os
@@ -26,6 +30,32 @@ _paths_spec.loader.exec_module(_paths)
 
 REPO = _paths.REPO_RESOLVED
 REGISTRY = _paths.TRANSIENT_REGISTRY
+
+# The unified argv contract home, loaded by location
+# through the paths spine.
+_argv_spec = _ilu.spec_from_file_location(
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+platform_argv = _ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "mirror_transient",
+    "summary": "capture/restore transient files between "
+               "canonical homes and the repo mirror",
+    "flags": {
+        "item": {"takes_value": True,
+                 "help": "only this registry id"},
+        "json": {"help": "machine-readable report"},
+    },
+    "verbs": {
+        "capture": {"summary": "copy canonical files into "
+                               "the repo mirror"},
+        "restore": {"summary": "copy mirror files back to "
+                               "their canonical homes"},
+        "status": {"summary": "report existence, size and "
+                              "mtime on both sides"},
+    },
+}
 
 
 def home() -> Path:
@@ -199,25 +229,32 @@ OPS = {"capture": capture, "restore": restore}
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("op", choices=["capture", "restore", "status"])
-    ap.add_argument("--item", help="only this registry id")
-    ap.add_argument("--json", action="store_true", help="machine-readable report")
-    args = ap.parse_args()
+    try:
+        parsed = platform_argv.parse(DECLARATION, sys.argv[1:])
+    except platform_argv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    op = parsed["verb"]
+    flags = parsed["flags"]
 
-    items = [i for i in load_registry() if not args.item or i["id"] == args.item]
+    items = [i for i in load_registry() if not flags["item"] or i["id"] == flags["item"]]
     if not items:
-        print(f"no registry item matches {args.item!r}", file=sys.stderr)
+        print(f"no registry item matches {flags['item']!r}", file=sys.stderr)
         return 2
     results, failed = [], False
     for item in items:
-        if args.op == "status":
+        if op == "status":
             results.append(file_report(item) if item["kind"] == "file" else {"id": item["id"], "kind": item["kind"]})
             continue
-        action = OPS[args.op](item)
+        action = OPS[op](item)
         failed |= action == "verify-failed"
-        results.append({"id": item["id"], args.op: action})
-    if args.json:
+        results.append({"id": item["id"], op: action})
+    if flags["json"]:
         print(json.dumps(results, indent=2))
     else:
         for r in results:

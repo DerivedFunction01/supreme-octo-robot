@@ -15,13 +15,20 @@ SEC bytes and baselines are pulled back.
 
 Default exclusions (AGENTS contract): .venv, cache, caches, transient,
 run-logs move only when explicitly named via --include.
+
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py): --include is a
+repeatable flag accumulating in order, --bps converts
+after the parse (a non-number is a usage refusal,
+exit 2), and an unknown or malformed token is a usage
+refusal.
 """
 
-import argparse
 import hashlib
 import importlib.util as _ilu
 import json
 import os
+import sys
 from pathlib import Path
 
 # The paths spine (paths.py at the package root) owns the
@@ -30,6 +37,13 @@ _paths_spec = _ilu.spec_from_file_location(
     "venue_paths", Path(__file__).resolve().parent.parent / "paths.py")
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
+
+# The unified argv contract home, loaded by location
+# through the paths spine.
+_argv_spec = _ilu.spec_from_file_location(
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+platform_argv = _ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
 
 DEFAULT_BPS = 2_418_283  # P0 baseline
 RATE_RPS = 8.0
@@ -48,6 +62,26 @@ CLASSES = {
     "caches": ("disposable", None, 0, "none"),
 }
 EXCLUDED_BY_DEFAULT = {"cache", "caches", "transient", "run-logs"}
+
+DECLARATION = {
+    "name": "data_manifest",
+    "summary": "price the .artifacts data routes for a job "
+               "and choose per class",
+    "flags": {
+        "artifacts": {"takes_value": True,
+                      "help": "artifacts root (default: the registry "
+                              "default_repo's local checkout "
+                              "+ /.artifacts)"},
+        "bps": {"takes_value": True, "default": DEFAULT_BPS,
+                "help": "measured transfer rate, bytes/sec"},
+        "include": {"takes_value": True, "repeatable": True,
+                    "help": "explicitly include a "
+                            "default-excluded class"},
+        "out": {"takes_value": True,
+                "help": "write the manifest to this path "
+                        "as well as stdout"},
+    },
+}
 
 
 def dir_bytes(p: Path) -> int:
@@ -68,15 +102,34 @@ def latest_snapshot(p: Path) -> Path | None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--artifacts", default=None,
-                    help="artifacts root (default: the registry default_repo's local checkout + /.artifacts)")
-    ap.add_argument("--bps", type=float, default=DEFAULT_BPS)
-    ap.add_argument("--include", action="append", default=[], help="explicitly include a default-excluded class")
-    ap.add_argument("--out")
-    args = ap.parse_args()
+    try:
+        parsed = platform_argv.parse(DECLARATION, sys.argv[1:])
+    except platform_argv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    flags = parsed["flags"]
+    artifacts = flags["artifacts"]
+    include = flags["include"]
+    out = flags["out"]
+    bps = flags["bps"]
+    if isinstance(bps, str):
+        # A given --bps converts (argparse's type=float);
+        # the absent default rides as declared (the int
+        # baseline), so the manifest's recorded rate keeps
+        # its historical shape on both paths.
+        try:
+            bps = float(bps)
+        except ValueError:
+            print("data_manifest: --bps takes a number",
+                  file=sys.stderr)
+            return platform_argv.USAGE_EXIT
 
-    if args.artifacts is None:
+    if artifacts is None:
         # Repo-agnostic default: the local registry's default repo's
         # checkout. No repo is named here; with no registry entry the
         # caller must pass --artifacts explicitly.
@@ -88,25 +141,25 @@ def main() -> int:
         spec.loader.exec_module(rr)
         try:
             _, entry = rr.get_entry(rr.load_local_registry(_paths.REPO_RESOLVED))
-            args.artifacts = str(Path(os.path.expanduser(entry["local_path"])) / ".artifacts")
+            artifacts = str(Path(os.path.expanduser(entry["local_path"])) / ".artifacts")
         except ValueError as exc:
             print(f"data_manifest: --artifacts not given and no registry default ({exc})")
             return 2
-    root = Path(args.artifacts)
+    root = Path(artifacts)
     entries = []
     present = {d.name: d for d in root.iterdir() if d.is_dir()} if root.exists() else {}
     sizes = {name: dir_bytes(d) for name, d in present.items()}
 
     for name, d in sorted(present.items()):
         generator, driver_name, net_requests, return_mode = CLASSES.get(name, ("unknown", None, None, "pull"))
-        excluded = name in EXCLUDED_BY_DEFAULT and name not in args.include
-        routes: dict = {"transfer_self": {"seconds": round(sizes[name] / args.bps, 1), "bytes": sizes[name]}}
+        excluded = name in EXCLUDED_BY_DEFAULT and name not in include
+        routes: dict = {"transfer_self": {"seconds": round(sizes[name] / bps, 1), "bytes": sizes[name]}}
         driver = None
         if driver_name and driver_name in present:
             drv_path = latest_snapshot(present[driver_name]) or present[driver_name]
             drv_bytes = dir_bytes(drv_path)
             driver = {"class": driver_name, "path": str(drv_path), "bytes": drv_bytes, "listing_fingerprint": listing_fingerprint(drv_path)}
-            routes["transfer_driver_regen"] = {"seconds": round(drv_bytes / args.bps, 1), "bytes": drv_bytes, "plus_remote_compute": "unpriced until P2 hybrid calibration"}
+            routes["transfer_driver_regen"] = {"seconds": round(drv_bytes / bps, 1), "bytes": drv_bytes, "plus_remote_compute": "unpriced until P2 hybrid calibration"}
         if net_requests is not None:
             routes["network_regen"] = {"seconds": round(net_requests / RATE_RPS, 1) if net_requests else 0.0, "requests": net_requests, "identity_preserving": name != "metadata"}
         else:
@@ -128,10 +181,10 @@ def main() -> int:
             "return": return_mode,
         })
 
-    manifest = {"artifacts_root": str(root), "bps": args.bps, "rate_rps": RATE_RPS, "classes": entries}
+    manifest = {"artifacts_root": str(root), "bps": bps, "rate_rps": RATE_RPS, "classes": entries}
     text = json.dumps(manifest, indent=2)
-    if args.out:
-        Path(args.out).write_text(text)
+    if out:
+        Path(out).write_text(text)
     print(text)
     return 0
 

@@ -77,11 +77,17 @@ floors, and anything outside the classes above. The prune
 stops as soon as the free-space target is met. --dry-run
 reports the plan without deleting. Every execution appends
 its report to var/prune-log.jsonl.
+
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py): --dry-run is a
+safety flag (a boolean given a value refuses), the
+numeric flags convert after the parse (a non-number is
+a usage refusal, exit 2), and an unknown or malformed
+token is a usage refusal, never a live prune.
 """
 
 from __future__ import annotations
 
-import argparse
 import importlib.util as _ilu
 import json
 import os
@@ -102,6 +108,28 @@ _paths_spec.loader.exec_module(_paths)
 
 _env_home = os.environ.get("COLAB_RUNNER_HOME")
 REPO = Path(_env_home) if _env_home else _paths.REPO_RESOLVED
+
+# The unified argv contract home, loaded by location
+# through the paths spine.
+_argv_spec = _ilu.spec_from_file_location(
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+platform_argv = _ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "store_prune",
+    "summary": "prune the runner store to a free-space target",
+    "flags": {
+        "target-free-gb": {"takes_value": True, "default": 60.0,
+                           "help": "free-space target in GB"},
+        "if-below-gb": {"takes_value": True,
+                        "help": "standing mode: exit 0 doing nothing "
+                                "unless free space is below this"},
+        "dry-run": {"safety": True,
+                    "help": "report the plan without deleting"},
+    },
+}
+
 VAR = REPO / "var"
 RESULTS = REPO / "results"
 TMP_GATE = REPO.parent / "tmp-gate"
@@ -466,21 +494,36 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--target-free-gb", type=float, default=60.0)
-    ap.add_argument("--if-below-gb", type=float, default=None, help="standing mode: exit 0 doing nothing unless free space is below this")
-    ap.add_argument("--dry-run", action="store_true")
-    args = ap.parse_args()
+    try:
+        parsed = platform_argv.parse(DECLARATION, sys.argv[1:])
+    except platform_argv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    flags = parsed["flags"]
+    try:
+        target_free_gb = float(flags["target-free-gb"])
+        if_below_gb = (float(flags["if-below-gb"])
+                       if flags["if-below-gb"] is not None else None)
+    except ValueError:
+        print("store_prune: --target-free-gb and --if-below-gb "
+              "take numbers", file=sys.stderr)
+        return platform_argv.USAGE_EXIT
+    dry_run = flags["dry-run"]
 
     free_now = shutil.disk_usage(REPO).free
-    if args.if_below_gb is not None and free_now >= args.if_below_gb * GB:
+    if if_below_gb is not None and free_now >= if_below_gb * GB:
         # Standing mode stays silent above the threshold:
         # the scheduler entry reports on output, so a pass
         # that prunes nothing must print nothing.
         return 0
-    chosen, report = plan(args.target_free_gb)
+    chosen, report = plan(target_free_gb)
     reclaimed = 0
-    if not args.dry_run:
+    if not dry_run:
         for _o, path, size, _cls in chosen:
             try:
                 if path.is_dir():
@@ -492,17 +535,17 @@ def main() -> int:
                 continue
     report.update(
         {
-            "pruned": not args.dry_run and bool(chosen),
-            "dry_run": args.dry_run,
+            "pruned": not dry_run and bool(chosen),
+            "dry_run": dry_run,
             "files": len(chosen),
-            "reclaimed_bytes": reclaimed if not args.dry_run else 0,
+            "reclaimed_bytes": reclaimed if not dry_run else 0,
             "free_after": shutil.disk_usage(REPO).free,
-            "target_free_gb": args.target_free_gb,
+            "target_free_gb": target_free_gb,
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         }
     )
     print(json.dumps(report, indent=2))
-    if not args.dry_run and chosen:
+    if not dry_run and chosen:
         with (VAR / "prune-log.jsonl").open("a") as fh:
             fh.write(json.dumps(report) + "\n")
     return 0
