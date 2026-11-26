@@ -37,6 +37,12 @@ def _fwd_target(pin):
     }
 
 
+def _tailnet_target(pin):
+    target = _fwd_target(pin)
+    target["fwd_dest"] = ["100.64.0.9", 22]
+    return target
+
+
 def test_refresh_writes_a_verified_candidate_and_keeps_other_lines(repo, tmp_path, monkeypatch):
     lv = lease.local_venue
     pin = tmp_path / "pin.env"
@@ -86,6 +92,35 @@ def test_refresh_stocks_an_inconclusive_candidate(repo, tmp_path, monkeypatch):
     monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: "inconclusive")
     assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": CAND}) is True
     assert pin.read_text() == f"HTTPS_PROXY={CAND}\n"
+
+
+def test_refresh_transforms_a_tailnet_candidate_to_the_route_port(repo, tmp_path, monkeypatch):
+    """A tailnet target offered the caller's verbatim
+    general-egress value stocks the tailnet route port: the
+    credential is the caller's, the port is the route's, and
+    the verdict judges the transformed value."""
+    lv = lease.local_venue
+    pin = tmp_path / "pin.env"
+    pin.write_text(f"HTTPS_PROXY={STALE}\n")
+    offered = "http://new:new@proxy.invalid:3128"
+    routed = "http://new:new@proxy.invalid:3130"
+    seen = []
+    monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: seen.append(url) or "established")
+    assert lv.refresh_pin(_tailnet_target(pin), env={"HTTPS_PROXY": offered}) is True
+    assert seen == [routed]
+    assert pin.read_text() == f"HTTPS_PROXY={routed}\n"
+
+
+def test_refresh_stocks_a_public_route_candidate_verbatim(repo, tmp_path, monkeypatch):
+    """A non-tailnet destination has no route transform: the
+    caller's value, port included, stocks as offered."""
+    lv = lease.local_venue
+    pin = tmp_path / "pin.env"
+    pin.write_text(f"HTTPS_PROXY={STALE}\n")
+    offered = "http://new:new@proxy.invalid:3128"
+    monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: "established")
+    assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": offered}) is True
+    assert pin.read_text() == f"HTTPS_PROXY={offered}\n"
 
 
 def test_refresh_noops_when_the_pin_already_holds_the_candidate(repo, tmp_path, monkeypatch):
