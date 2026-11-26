@@ -139,17 +139,17 @@ def _est_agrees(block_est, line_est):
 # "each row its own worktree".
 _FORMATION_DECL_RES = (
     (re.compile(
-        r"\b(?:worktree|branch)\s+per\s+[\w-]+"
+        r"\b(?:worktrees?|branch(?:es)?)\s+per\s+[\w-]+"
         r"|\bper[-\s](?:row|item|lane|family)[-\s]"
-        r"(?:worktree|branch)\b"
+        r"(?:worktrees?|branch(?:es)?)\b"
         r"|\b(?:one|a|an|each|every)\s+(?:worktree|branch)"
         r"\s+(?:per|for\s+each|for\s+every)\b"
         r"|\beach\s+(?:row|item|lane)\s+(?:gets|has)\s+"
         r"(?:its\s+own|a\s+separate)\s+(?:worktree|branch)\b"),
      "formation"),
     (re.compile(
-        r"\bgate\s+per\s+[\w-]+"
-        r"|\bper[-\s](?:row|item)[-\s]gate\b"
+        r"\bgates?\s+per\s+[\w-]+"
+        r"|\bper[-\s](?:row|item)[-\s]gates?\b"
         r"|\b(?:one|a|an|each|every)\s+gate\s+"
         r"(?:per|for\s+each|for\s+every)\b"),
      "gate"),
