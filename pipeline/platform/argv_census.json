@@ -484,7 +484,7 @@
   {
    "path": "pipeline/venue/sync/apply_bundle_remote.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/sync/base_clone.sh",

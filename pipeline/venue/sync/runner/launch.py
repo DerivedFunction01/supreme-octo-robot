@@ -12,7 +12,14 @@ import subprocess
 import time
 from pathlib import Path
 
-from .foundation import REPO, colab, json_object_from_output, lease, transfer
+from .foundation import (
+    PLATFORM_ARGV,
+    REPO,
+    colab,
+    json_object_from_output,
+    lease,
+    transfer,
+)
 from .manifest_shape import parse_transport, transport_error
 
 # Pre-launch uploads above this size move through the chunked
@@ -497,8 +504,9 @@ def drive_branch_window(session, rec, transport, branch_ctx, run_id) -> "str | N
 
 def upload_seed_files(session, seed_ctx, run_id) -> "str | None":
     """The seed's uploads: the bundle (chunked — it can
-    exceed the single-file ceiling), its manifest, and the
-    apply script land in the run's own directory. The apply
+    exceed the single-file ceiling), its manifest, the
+    apply script, and the argv module the apply loads land
+    in the run's own directory. The apply
     (in main) writes the run's own seed dest under the same
     directory, so no seed state is shared with another run.
     Returns an error string, or None."""
@@ -509,6 +517,12 @@ def upload_seed_files(session, seed_ctx, run_id) -> "str | None":
     err = upload_one(session, Path(str(seed_ctx["bundle_path"]) + ".manifest.json"), seed_ctx["bundle_path"].name + ".manifest.json", run_id, remote_dir=rd)
     if err is None:
         err = upload_one(session, REPO / "sync" / "apply_bundle_remote.py", "apply_bundle_remote.py", run_id, remote_dir=rd)
+    if err is None:
+        # The apply payload loads the unified argv module from
+        # beside itself — no venue tree exists at the payload
+        # home — so the module uploads beside it under its
+        # bare name.
+        err = upload_one(session, PLATFORM_ARGV, "argv.py", run_id, remote_dir=rd)
     if err is not None:
         return f"bundle seed: {err}"
     return None

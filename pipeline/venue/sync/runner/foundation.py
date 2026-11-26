@@ -31,6 +31,7 @@ _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
 REPO = _paths.REPO
+PLATFORM_ARGV = _paths.PLATFORM_ARGV
 RUNS = _paths.RUNS_DIR
 # The venue adapter's job manifests (plan §7 V3): adapter
 # material under adapters/<venue>/jobs, never core tree.
