@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Job dispatch to the local venue, over SSH.
 
-Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
+Usage: local-run <job-name> [--caller TAG] [--detach]|local-run <job-name> --union BRANCH=SHA --union BRANCH=SHA [--check-path PATH ...] [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
 --poll exits 0 complete, 1 failed, 3 still running; --wait the
 same at its bound (--max default 3600) — the still-running
 exit the two run twins share.
+
+A union dispatch names at least two gate-ready constituents
+and at least one scoped check path. The dispatcher stages a
+generated constituents.json beside the job's script and stamps
+the constituents, in the order given, on the run record.
 
 --poll and --wait ATTACH to an existing run and never
 dispatch, wherever the flag sits: the attach target is a
@@ -107,7 +112,10 @@ argv_mod = _load.platform_argv()
 # with no value — is a usage refusal at exit 2, never
 # silently ignored or forwarded (BT5). The four modes are
 # one mutually exclusive mode group; --detach and --caller
-# ride the dispatch mode, --max bounds the --wait mode.
+# ride the dispatch mode, --max bounds the --wait mode,
+# and --union/--check-path ride the dispatch mode as
+# repeatable value flags whose occurrences the parse
+# collects in order for the union validator.
 # Declared verdict code: 3 is the still-running exit the
 # two run twins share (a --poll, or a bounded --wait, that
 # finds the run still running).
@@ -121,6 +129,8 @@ DECL = {
         "verify-sealed": {"help": "verify a sealed job's blobs against the register"},
         "detach": {"help": "dispatch and return at once (dispatch is detached on the venue either way)"},
         "caller": {"takes_value": True, "help": "caller tag"},
+        "union": {"takes_value": True, "repeatable": True, "help": "union dispatch constituent as BRANCH=SHA (repeatable; at least two, with at least one --check-path)"},
+        "check-path": {"takes_value": True, "repeatable": True, "help": "scoped check path for a union dispatch (repeatable)"},
         "max": {"takes_value": True, "help": "--wait bound in seconds (default 3600)"},
         "evidence": {"takes_value": True, "help": "the flag report that classes a job for --seal"},
     },
@@ -387,6 +397,51 @@ def _newest_record_for_job(job_name: str) -> dict | None:
     return best
 
 
+def _union_payload(union_values, check_paths):
+    """Validate a union dispatch's parsed flag lists.
+
+    Returns None when the invocation carries no union
+    flags, (payload, None) for a valid union dispatch, or
+    (None, error) when the union form is defective. The
+    payload preserves the constituents and check paths in
+    the order given. The input seam is the unified parse's
+    repeatable-flag lists — this validator never sees raw
+    argv — and it is consulted only on the dispatch path:
+    attach and seal invocations return before it. Every
+    defect refuses before any dispatch work."""
+    if not union_values and not check_paths:
+        return None
+    constituents = []
+    for value in union_values:
+        branch, sep, sha = value.rpartition("=")
+        if (
+            not sep
+            or not branch
+            or branch.startswith(("-", "/"))
+            or branch.endswith(("/", ".lock"))
+            or ".." in branch
+            or any(ch.isspace() for ch in branch)
+            or len(sha) != 40
+            or any(ch not in "0123456789abcdefABCDEF" for ch in sha)
+        ):
+            return None, (
+                f"--union {value!r} must name BRANCH=SHA "
+                "with a full 40-hex SHA"
+            )
+        constituents.append({"branch": branch, "sha": sha})
+    checked = []
+    for value in check_paths:
+        path = Path(value)
+        if path.is_absolute() or ".." in path.parts or not value:
+            return None, f"--check-path {value!r} must be a repo-relative path"
+        checked.append(value)
+    if len(constituents) < 2:
+        return None, "union dispatch needs at least two --union BRANCH=SHA constituents"
+    if not checked:
+        return None, "union dispatch needs at least one --check-path PATH"
+    return {"constituents": constituents, "check_paths": checked}, None
+
+
 def _seal_job(job_name: str, evidence: str | None) -> int:
     """Seal one job's script files in place: every file
     beside the manifest except job.json and existing
@@ -553,6 +608,16 @@ def main() -> int:
         print(argv_mod.help_text(DECL), file=sys.stderr)
         return 2
     job_name = target_token
+    # The union form validates here, off the parse's
+    # repeatable-flag lists, before the manifest load or
+    # any other dispatch work: a defective constituent
+    # list refuses in seconds, naming itself.
+    union = _union_payload(flags["union"], flags["check-path"])
+    union_payload = None
+    if union is not None:
+        union_payload, union_error = union
+        if union_error is not None:
+            return _fail(union_error)
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
@@ -626,6 +691,19 @@ def main() -> int:
         src = REPO / rel
         seen.add(name)
         uploads.append((name, src.read_bytes()))
+    if union_payload is not None:
+        # The generated union file rides the launch uploads
+        # seam as its last staged file, after the preflight
+        # pass and the manifest's own uploads; a manifest
+        # upload already claiming its basename refuses.
+        if "constituents.json" in seen:
+            return _fail(f"job {job_name}: declared upload constituents.json collides with the generated union file")
+        uploads.append(
+            (
+                "constituents.json",
+                (json.dumps(union_payload, indent=1) + "\n").encode(),
+            )
+        )
     caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
     shape_id = job.get("shape") or "local"
     acquired = lease.acquire_local(REPO, shape_id, caller=caller, hours=job.get("hours"))
@@ -645,6 +723,8 @@ def main() -> int:
         rec["uploads"] = [name for name, _data in uploads]
     if seal_entry is not None:
         rec["sealed"] = True
+    if union_payload is not None:
+        rec["constituents"] = union_payload["constituents"]
     save_record(rec)
     if script_bytes is None:
         script_bytes = script_path.read_bytes()
