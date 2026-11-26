@@ -566,12 +566,7 @@ def main() -> int:
     script_path = manifest_path.parent / script_name
     script_bytes = None
     seal_entry = sealed.entry_for(sealed.load_register(REPO), job_name)
-    caller_flag = None
-    if "--caller" in args:
-        try:
-            caller_flag = args[args.index("--caller") + 1]
-        except IndexError:
-            return _fail("--caller needs a value")
+    caller_flag = flags.get("caller")
     claim_raw = caller_flag if caller_flag is not None else job.get("caller")
     # Pre-dispatch validation (wall-clock plan, step 2): the
     # one pass the Colab entries consume (manifest_shape.
