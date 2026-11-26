@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import foldercensus, importisolation, linecap, staticlegs
-from . import writeruniqueness
+from . import argvidioms, foldercensus, importisolation, linecap
+from . import staticlegs, writeruniqueness
 from .runner import LegOutcome, Package, census_config, load_families
 
 
@@ -70,6 +70,25 @@ def run_repo_writeruniqueness(repo_root: Path,
         print(line)
     return LegOutcome(
         name="repo writer uniqueness", ok=not failures,
+        code=0 if not failures else 1)
+
+
+def run_repo_argvidioms(repo_root: Path,
+                        packages: list[Package]) -> LegOutcome:
+    """The repo-scoped argv-idioms leg: the shared
+    component over every tracked source in the tree, by
+    default; fails on a hand-rolled argument-parsing
+    idiom outside the unified argv implementations, the
+    census's unmigrated entries, and the recorded
+    exceptions, or on a stale recorded exception."""
+    exceptions = repo_leg_config(
+        packages, "repoargvidioms").get("exceptions", [])
+    rows, failures, scanned = argvidioms.scan(
+        repo_root, repo_root, exceptions, tracked=True)
+    for line in argvidioms.render(rows, failures, scanned):
+        print(line)
+    return LegOutcome(
+        name="repo argv idioms", ok=not failures,
         code=0 if not failures else 1)
 
 

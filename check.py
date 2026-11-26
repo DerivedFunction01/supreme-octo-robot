@@ -49,13 +49,16 @@ suppresses it. Beside them, three more repo-scoped rows
 run by default (the default-on reversal):
 repo-writeruniqueness (the writer-uniqueness component
 over every tracked Python source in the tree),
-repo-importisolation (the import-isolation component run
-for every composed pipeline package automatically), and
-repo-scanners (every pipeline package carrying a
-scanners.py runner module, discovered from the tree).
+repo-argvidioms (the argv-idioms component over every
+tracked source in the tree), repo-importisolation (the
+import-isolation component run for every composed
+pipeline package automatically), and repo-scanners
+(every pipeline package carrying a scanners.py runner
+module, discovered from the tree).
 Each enters the summary under its own row; a --legs
 filter that does not name repowriteruniqueness,
-repoimportisolation, or reposcanners suppresses that row.
+repoargvidioms, repoimportisolation, or reposcanners
+suppresses that row.
 Opt-out from any of them exists only as a recorded
 exception in the gate package's repo leg declaration.
 
@@ -292,6 +295,11 @@ def main() -> int:
         print("\n##### repo (writer uniqueness)")
         outcome = runner.run_repo_writeruniqueness(REPO_ROOT, packages)
         verdicts["repo-writeruniqueness"] = outcome.ok
+
+    if not args.legs or "repoargvidioms" in args.legs.split(","):
+        print("\n##### repo (argv idioms)")
+        outcome = runner.run_repo_argvidioms(REPO_ROOT, packages)
+        verdicts["repo-argvidioms"] = outcome.ok
 
     if not args.legs or "repoimportisolation" in args.legs.split(","):
         print("\n##### repo (import isolation)")

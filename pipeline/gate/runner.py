@@ -86,6 +86,16 @@ its targeting layout, and its legs in order. Leg kinds:
                  run_package skips it (recorded as skipped).
                  The per-package writeruniqueness kind is
                  retired.
+- repoargvidioms — the argv-idioms component in its
+                 repo form (gate.argvidioms): repo-scoped
+                 like the census. The gate package's
+                 declaration carries the recorded
+                 exceptions as data; the root check
+                 executes it once per run over every
+                 tracked source in the tree — coverage is
+                 by default, never declared per package,
+                 so run_package skips it (recorded as
+                 skipped).
 - repoimportisolation — the import-isolation component
                  in its repo form (gate.importisolation):
                  the invariant is per-package by nature, so
@@ -301,8 +311,9 @@ def run_root_portability(repo_root: Path,
 
 from .repolegs import (  # noqa: F401 — re-exported for check.py
     linecap_config, repo_leg_config, run_folder_census,
-    run_repo_importisolation, run_repo_linecap,
-    run_repo_scanners, run_repo_writeruniqueness)
+    run_repo_argvidioms, run_repo_importisolation,
+    run_repo_linecap, run_repo_scanners,
+    run_repo_writeruniqueness)
 
 
 def _run_argv(argv: list[str], cwd: Path) -> int:
