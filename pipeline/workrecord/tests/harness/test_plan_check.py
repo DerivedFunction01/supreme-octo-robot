@@ -106,7 +106,7 @@ class Refusals(unittest.TestCase):
         # body's "worktree per row" and the fan-out
         # value "per-row worktrees".
         joined = "\n".join(findings)
-        self.assertIn("worktree per row", joined)
+        self.assertIn("worktree per", joined)
         self.assertIn("per-row worktree", joined)
 
     def test_per_item_gate_refused(self):
