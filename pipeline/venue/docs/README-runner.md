@@ -15,6 +15,36 @@ Gate dispatches ride pre-authorized routes: the scheduler ops route (`bin/sched 
 
 The anti-form is a bare agent-shell exec of a dispatch. Each such fire mints a runtime approval card, and an unanswered card kills the fire with no run performed — the dispatch dies before launch and leaves nothing to reconcile. Twenty cards timed out unanswered in one day of the wall-clock measurement, ≈7h44m of card-pending time, inside dispatch windows that produced no runs at all. A fire that needs a route it does not have stops and names the route; it never falls back to a bare-shell dispatch.
 
+## Envelope launches (local venue)
+
+An envelope groups jobs pending on the same local venue into ONE launch with one thread budget for the whole envelope, divided among the grouped jobs — instead of N independent trees each spawning uncapped pools against the venue's pid ceiling (the starvation class: one test worker bursting to ~710 threads and holding the ceiling). The grouped jobs run concurrently inside the envelope, each at its divided share; grouping never serializes. Dispatch: `bin/local-run --envelope <name> [--caller TAG] [--detach]`.
+
+The declaration stands at `adapters/local/jobs/<name>/envelope.json`:
+
+```json
+{"shape": "local-hp", "jobs": ["gate-a", {"name": "gate-b", "connections": 5, "threads_per_connection": 39}], "fraction": 0.75, "burst_per_worker": 860, "caller": "workhorse"}
+```
+
+`shape` and `jobs` (in order) are required; `fraction`, `burst_per_worker`, `caller`, and `timeout_s` are optional. A job entry is a plain job name, or a mapping declaring the job's connection pool. The envelope takes one run record (constituents recorded in order, with their stamps), one run dir per job under the envelope's run dir, and per-job exit files; the envelope's exit is the first non-zero job exit in order, or 0. `--poll <envelope run id>` attaches through the standing poll form, and the envelope settles when its last job settles. A sealed job never rides an envelope — it dispatches solo from its blob.
+
+The arithmetic (the pure leaf is `sync/runner/envelope.py`; declared capacities: `local` 16 cores / 1024 pids, `local-hp` 8 cores / 1024 pids): the envelope budget is `fraction` (default 0.75) of the shape's pid ceiling, divided as a per-job thread share (the division remainder goes one each to the first jobs in order). Per job, the launch environment carries the stamps:
+
+| Stamp | Value |
+| --- | --- |
+| `GATE_WORKERS` | the job's worker count (below) |
+| `ENVELOPE_THREADS` | the job's thread share |
+| `ENVELOPE_JOB_INDEX` / `ENVELOPE_JOB_COUNT` | the job's position in the envelope |
+| `OMP_THREAD_LIMIT`, `OPENBLAS_NUM_THREADS`, `MKL_NUM_THREADS`, `NUMEXPR_NUM_THREADS` | the job's pool cap: `thread_share ÷ workers` |
+
+Two pool classes stand behind the pricing, and they are not priced alike:
+
+- **The connection pool (the DuckDB class)** — a per-connection thread pool (measured +39 threads per connection at 8 cores) that honours NO env cap: the thread delta is identical capped and uncapped. It is priced by workers × connections only. A job that holds connections declares `connections` and `threads_per_connection`; its per-worker worst case is `connections × threads_per_connection + 150`.
+- **The import pool (the numeric-stack class)** — the pools the stamped env caps bind. The pool-cap stamps are advisory: they bind the libraries that honour them.
+
+The binding cap is the **worker count**: `workers = max(1, min(cores ÷ jobs, thread_share ÷ per-worker worst case))`, where the worst case is the job's declared connection figure, or `burst_per_worker` (default 860 — the observed ~710 burst plus ~150 of controller/subprocess overhead) for a job that declares none. With the default, a thread share of 384 prices 1 worker — a worker priced so that even a full burst stays inside its share.
+
+A job form needs no change to ride an envelope: it reads `GATE_WORKERS` as it already does (the stamp replaces its `$(nproc)` derivation), and the pool caps ride the environment. A solo job's envelope (one job) divides the full budget to that job.
+
 ## Job manifests: transport
 
 The manifest declares the tree's form; the runner holds the preference. Every run record stamps the transport used (`transport` on `results/runs/<run_id>.json`), the bytes the runner moved, and the claim→launch span, so adoption is measured from records — `ops/transport_report.py` reads the records back as per-programme branch / bundle / never-launched counts over a day or a rolling window.
