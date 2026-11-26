@@ -56,9 +56,9 @@ PY
 # shellcheck disable=SC1091
 . ./constituents.sh
 
-# The clone rides the container's planted GitHub key, the
+# The clone rides the container's planted git config
+# (the plant script's insteadOf + core.sshCommand), the
 # form every in-container clone of this repo takes.
-export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_github -o UserKnownHostsFile=~/.ssh/known_hosts_github -o IdentitiesOnly=yes"
 git clone -q git@github.com:redacted/supreme-octo-robot.git src || exit 2
 cd src || exit 2
 git config user.name "DL"
@@ -101,7 +101,7 @@ done
 
 HEAD=$(git rev-parse HEAD)
 echo "union head: $HEAD"
-export TMPDIR="/home/agent/tg-$RUN_ID"
+export TMPDIR="$PWD/../tmp-$RUN_ID"
 mkdir -p "$TMPDIR"
 python3 init_venv.py || exit 2
 GATE_WORKERS=$(nproc) python3 check.py "${CHECK_PATHS[@]}" > "../check-output-$RUN_ID.txt" 2>&1
