@@ -45,6 +45,7 @@ import {
 } from "./model";
 import { Button } from "@workhorse/kit/components/controls/Button";
 import { Field, Input } from "@workhorse/kit/components/controls/Fields";
+import { Sheet } from "@workhorse/kit/components/shell/Sheet";
 import {
   customExpiryDate,
   customExpiryFields,
@@ -298,8 +299,32 @@ export function PresenceSection({
           onSelect={openCustom}
         />
           </GroupedList>
-      {customOpen ? (
-        <div className="mt-2">
+      <Sheet
+        open={customOpen}
+        title="Custom expiry"
+        onClose={() => setCustomOpen(false)}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setCustomOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={!customExpiryDate(customDate, customTime)}
+              onClick={() => {
+                const at = customExpiryDate(customDate, customTime);
+                if (!at) return;
+                if (!delegated) setLocalExpiry("custom");
+                setCustomOpen(false);
+                void post(value, "custom", at);
+              }}
+            >
+              Set expiry
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
           <div className="flex flex-wrap gap-1.5">
             {[2, 4, 8, 24].map((hours) => (
               <Button
@@ -325,21 +350,8 @@ export function PresenceSection({
               <Input id={id} type="time" value={customTime} onChange={(e) => setCustomTime(e.target.value)} />
             )}
           </Field>
-          <Button
-            variant="primary"
-            disabled={!customExpiryDate(customDate, customTime)}
-            onClick={() => {
-              const at = customExpiryDate(customDate, customTime);
-              if (!at) return;
-              if (!delegated) setLocalExpiry("custom");
-              setCustomOpen(false);
-              void post(value, "custom", at);
-            }}
-          >
-            Set expiry
-          </Button>
         </div>
-      ) : null}
+      </Sheet>
         </>
       )}
       {served?.expires_at ? (
@@ -374,6 +386,7 @@ export function DigestSection() {
   // editor has not been touched; the fields then follow
   // the served times.
   const [editedTimes, setEditedTimes] = useState<string[] | null>(null);
+  const [timesOpen, setTimesOpen] = useState(false);
   const d = digest.data;
 
   async function post(body: Record<string, unknown>) {
@@ -428,40 +441,81 @@ export function DigestSection() {
         <StatRow label="Next window">{nextLabel}</StatRow>
       </GroupedList>
       <GroupLabel>Window times</GroupLabel>
-      <div>
-        {(editedTimes ?? times).map((time, i) => (
-          <Field key={i} label={windowName(times, i) || `Window ${i + 1}`}>
-            {(id) => (
-              <Input
-                id={id}
-                type="time"
-                value={time}
-                onChange={(e) => {
-                  const next = [...(editedTimes ?? times)];
-                  next[i] = e.target.value;
-                  setEditedTimes(next);
-                }}
-              />
-            )}
-          </Field>
+      <GroupedList>
+        {times.map((time, i) => (
+          <StatRow key={i} label={windowName(times, i) || `Window ${i + 1}`}>
+            {windowClock(time)}
+          </StatRow>
         ))}
-        <Button
-          variant="primary"
-          disabled={
-            editedTimes == null ||
-            editedTimes.some((t) => !/^([01]\d|2[0-3]):[0-5]\d$/.test(t))
-          }
-          onClick={() => {
-            if (!editedTimes) return;
-            void post({
-              window_times: editedTimes,
-              window_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            }).then(() => setEditedTimes(null));
-          }}
-        >
-          Set window times
-        </Button>
-      </div>
+      </GroupedList>
+      <Button
+        variant="secondary"
+        onClick={() => {
+          setEditedTimes([...times]);
+          setTimesOpen(true);
+        }}
+      >
+        Edit window times
+      </Button>
+      <Sheet
+        open={timesOpen}
+        title="Window times"
+        onClose={() => {
+          setTimesOpen(false);
+          setEditedTimes(null);
+        }}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setTimesOpen(false);
+                setEditedTimes(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              disabled={
+                editedTimes == null ||
+                editedTimes.some((t) => !/^([01]\d|2[0-3]):[0-5]\d$/.test(t))
+              }
+              onClick={() => {
+                if (!editedTimes) return;
+                void post({
+                  window_times: editedTimes,
+                  window_tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                }).then(() => {
+                  setEditedTimes(null);
+                  setTimesOpen(false);
+                });
+              }}
+            >
+              Set window times
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          {(editedTimes ?? times).map((time, i) => (
+            <Field key={i} label={windowName(times, i) || `Window ${i + 1}`}>
+              {(id) => (
+                <Input
+                  id={id}
+                  type="time"
+                  value={time}
+                  onChange={(e) => {
+                    const next = [...(editedTimes ?? times)];
+                    next[i] = e.target.value;
+                    setEditedTimes(next);
+                  }}
+                />
+              )}
+            </Field>
+          ))}
+        </div>
+      </Sheet>
       <GroupLabel>Include</GroupLabel>
       <GroupedList>
         {INCLUDE_ROWS.map((row) => (
