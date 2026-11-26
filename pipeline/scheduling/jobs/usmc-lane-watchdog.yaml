@@ -12,7 +12,7 @@ owner: goal:usmc-pay-monitor-v2
 run:
   argv:
     - bash
-    - ${REPO}/ops/usmc_lane_watchdog.sh
+    - ${REPO}/ops/lane_watchdog.sh
 timeout_secs: 5400
 report:
   when: on_failure
@@ -21,5 +21,5 @@ report:
 escalate_body: bodies/usmc-lane-watchdog.md
 state_paths:
   - ${WS}/usmc-pay-monitor-v2/var/state/runtime/lane-watchdog-episode.json
-classification: fixed command (the lane watchdog ladder via ops/usmc_lane_watchdog.sh); checks run in a fixed order over durable records (unit files byte-equal to the current render, units active, keeper checkpoint pull fresh inside 900s, ferried holder evidence fresh inside 900s) and every action branches on those enumerable verdicts — reinstall and start the units, start an inactive unit, restart the keeper unit, or the rollover chain (env-build, preflight pass line, keeper restart, resident restarts) — behind an episode marker that allows one attempt per episode; exit 0 is a healthy lane before or after the ladder, exit 1 an unhealthy lane whose episode is spent, exit 2 missing wiring; speech is fully determined by the exit code, no content judgment.
+classification: fixed command (the lane watchdog ladder via ops/lane_watchdog.sh); checks run in a fixed order over durable records (unit files byte-equal to the current render, units active, keeper checkpoint pull fresh inside 900s, ferried holder evidence fresh inside 900s) and every action branches on those enumerable verdicts — reinstall and start the units, start an inactive unit, restart the keeper unit, or the rollover chain (env-build, preflight pass line, keeper restart, resident restarts) — behind an episode marker that allows one attempt per episode; exit 0 is a healthy lane before or after the ladder, exit 1 an unhealthy lane whose episode is spent, exit 2 missing wiring; speech is fully determined by the exit code, no content judgment.
 lifetime: permanent

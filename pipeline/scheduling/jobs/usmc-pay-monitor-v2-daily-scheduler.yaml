@@ -19,7 +19,7 @@ owner: goal:usmc-pay-monitor-v2
 run:
   argv:
     - bash
-    - ${REPO}/ops/usmc_daily_scheduler.sh
+    - ${REPO}/ops/lane_daily_scheduler.sh
 timeout_secs: 14400
 report:
   when: always
@@ -28,5 +28,5 @@ report:
 state_paths:
   - ${WS}/usmc-pay-monitor-v2/var/state/scheduler
   - ${WS}/usmc-pay-monitor-v2/var/exports/live-model.json
-classification: fixed command (the scheduler run-day host via ops/usmc_daily_scheduler.sh); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.
+classification: fixed command (the scheduler run-day host via ops/lane_daily_scheduler.sh); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.
 lifetime: permanent

@@ -19,7 +19,7 @@ owner: goal:usmc-pay-monitor-v2
 run:
   argv:
     - bash
-    - ${REPO}/ops/usmc_deferral_retries.sh
+    - ${REPO}/ops/lane_deferral_retries.sh
 timeout_secs: 3600
 report:
   when: on_output
@@ -29,5 +29,5 @@ report:
     - nothing due
 state_paths:
   - ${WS}/usmc-pay-monitor-v2/var
-classification: fixed command (the scheduler run-due host via ops/usmc_deferral_retries.sh); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.
+classification: fixed command (the scheduler run-due host via ops/lane_deferral_retries.sh); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.
 lifetime: permanent
