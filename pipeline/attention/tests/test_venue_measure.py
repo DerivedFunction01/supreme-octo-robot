@@ -274,15 +274,11 @@ def queue_state(families):
 _REAL_CONTRACT_FOR = registry.staffing_contract_for
 
 
-# The recorded specimen queue entry: the Round 4
-# instrument build as it stood in the queue before
-# its discharge pruned it from the live contract
-# (its deliverable of record is register-fresh-
-# verdict-4.md). The packet fixtures below rebuild
-# the specimen contract — live queue plus this
-# entry — so the queue-semantics pins exercise the
-# gated-item form without the live queue carrying
-# discharged work.
+# The recorded specimen queue entry: the Round 4 instrument build
+# as it stood before its discharge pruned it from the live contract
+# (deliverable: register-fresh-verdict-4.md). The packet fixtures
+# rebuild the specimen contract from it, so the queue pins exercise
+# the gated-item form without the live queue carrying it.
 _SPECIMEN_WORK_ITEM = {
     "key": "round4-instrument-build",
     "label": "Round 4 instrument build",
@@ -291,33 +287,26 @@ _SPECIMEN_WORK_ITEM = {
 }
 
 
-def packet_landed(slug):
-    """The specimen contract with the segment
-    packet marker flipped landed: the specimen
-    queue's gated work item (the Round 4 build)
-    becomes due-eligible."""
+def _specimen_contract(slug, landed):
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
         contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract["staffable_queue"]:
             if entry["key"] == "segment-packet-landing":
-                entry["landed"] = True
+                entry["landed"] = landed
     return contract
+
+
+def packet_landed(slug):
+    """The specimen contract, packet marker landed:
+    the specimen's gated Round 4 item is due-eligible."""
+    return _specimen_contract(slug, True)
 
 
 def packet_unlanded(slug):
-    """The specimen contract with the segment
-    packet marker unlanded: the queue as it stood
-    in the recorded specimen windows, before the
-    packet landing flipped the marker by
-    amendment."""
-    contract = _REAL_CONTRACT_FOR(slug)
-    if contract:
-        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
-        for entry in contract.get("staffable_queue") or []:
-            if entry["key"] == "segment-packet-landing":
-                entry["landed"] = False
-    return contract
+    """The specimen contract, packet marker unlanded:
+    the queue as it stood in the specimen windows."""
+    return _specimen_contract(slug, False)
 
 
 class QueueMeasure(unittest.TestCase):
@@ -330,29 +319,21 @@ class QueueMeasure(unittest.TestCase):
         from unittest import mock
 
         now, state, live, idle = queue_state({"cocisep": [CALM]})
-        # Under the contract as it stood before the
-        # packet landing — the marker unlanded — the
-        # queue's only work item (the Round 4 build)
-        # is gated, so nothing reads due: the row
-        # stands on the count conditions alone.
+        # Under the specimen contract with the marker
+        # unlanded, the queue's only work item (the
+        # Round 4 build) is gated: nothing reads due.
         with mock.patch.object(registry, "staffing_contract_for", packet_unlanded):
             rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
         self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
         self.assertEqual(row["queue_unstaffed"], [])
-        # The live contract carries the discharge:
-        # the Round 4 build stands pruned from the
-        # queue by its deliverable of record, so the
-        # live queue holds no work item and nothing
-        # reads due on it either — the row stands on
-        # the count conditions alone, as under the
-        # unlanded specimen.
-        live_contract = registry.staffing_contract_for("edgar-greenfield")
-        self.assertNotIn(
-            "round4-instrument-build",
-            [e["key"] for e in live_contract["staffable_queue"]],
-        )
+        # The live contract carries the discharge: the
+        # Round 4 build stands pruned, so the live queue
+        # holds no work item and nothing reads due on it.
+        live = registry.staffing_contract_for("edgar-greenfield")
+        live_keys = [e["key"] for e in live["staffable_queue"]]
+        self.assertNotIn("round4-instrument-build", live_keys)
         rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
