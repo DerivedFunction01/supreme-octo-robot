@@ -1,7 +1,12 @@
-"""The service's own dispatch consumer (§1.12): claims
-the ledger's sends on the tick, delivers through the
-bridge, acks only on the fulfillment's submission
-reference; failures are recorded, never acknowledged.
+"""RETIRED (attention fold, 2026-11-26): the service's
+own dispatch consumer. The tick no longer runs it —
+sends are born settled retired in the waits engine and
+nothing is claimable or enqueueable — and this module
+stays in tree only as the record of the retired §1.12
+consumer: it claimed the ledger's sends on the tick,
+delivered through the bridge, acked only on the
+fulfillment's submission reference; failures were
+recorded, never acknowledged.
 """
 
 from __future__ import annotations

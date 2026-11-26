@@ -15,6 +15,39 @@ from attention.errors import Validation
 from attention.services.waits import facts as facts_mod
 from attention.settings import REPO_ROOT, Settings
 
+DISPATCH_RETIRED_REASON = (
+    "dispatch retired 2026-11-26 — supervision folded to wb + "
+    "gap-closure; owner items surface in the digest"
+)
+"""The retirement every post-fold send is born with, and
+the backfill settles the standing ledger with (attention
+fold plan, 2026-11-26, step 1)."""
+
+
+def settle_retired(send: dict, now: datetime) -> dict:
+    """Settle one send as retired at birth: the ledger
+    keeps the record (history + the sends read view), but
+    the send is never claimable and never enqueued — its
+    dispatch is suppressed with the retirement reason and
+    its outcome is "retired". Shadow sends are already
+    not dispatchable and keep their shape."""
+    if send.get("mode") == "shadow" or send.get("outcome") == "shadow":
+        return send
+    send["outcome"] = "retired"
+    dispatch = send.setdefault("dispatch", {})
+    dispatch.update(
+        consumer=None,
+        claimed_at=None,
+        claim_expires_at=None,
+        delivered_at=None,
+        delivery_ref=None,
+        bridge_request_id=None,
+        envelope_id=None,
+        suppressed_at=now,
+        suppressed_reason=DISPATCH_RETIRED_REASON,
+    )
+    return send
+
 
 def fact_hash(wait: dict) -> str:
     """The facts a dedupe decision keys on: what the wait
@@ -177,7 +210,7 @@ def _record_post(state, rule, wait, values, now, shadow: bool):
             "attempts": 0,
         },
     }
-    state["sends"].append(send)
+    state["sends"].append(settle_retired(send, now))
     return send
 
 
@@ -231,7 +264,7 @@ def record_send(
             "attempts": 0,
         },
     }
-    state["sends"].append(send)
+    state["sends"].append(settle_retired(send, now))
     return send
 
 

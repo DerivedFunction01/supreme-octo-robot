@@ -36,11 +36,28 @@ def _send_state(item: dict, state: dict, decision: dict, now: datetime) -> str:
     current = dispatch.state_of(send, now)
     if current == "delivered":
         return "fulfilled"
+    if current == "not_dispatchable":
+        # Terminal on the ledger — suppressed (the
+        # dispatch retirement settles every standing send
+        # this way): the decision stands as recorded. Its
+        # dispatch-era failures are history, not a failed
+        # fulfillment that returns the item to the queue.
+        return "recorded"
     if failures:
         return "failed"
-    if current == "not_dispatchable":
-        return "recorded"
     return "sent" if current == "claimed" else "queued"
+
+
+def _send_retired(state: dict, decision: dict) -> bool:
+    """The decision's send was settled at the dispatch
+    retirement (attention fold, 2026-11-26): there is no
+    fulfillment left to await or stall on — the decision
+    stands as recorded, terminally."""
+    send = next(
+        (s for s in state.get("sends", []) if s["id"] == decision.get("send_id")),
+        None,
+    )
+    return bool(send) and send.get("outcome") == "retired"
 
 
 def derive(
@@ -80,7 +97,7 @@ def derive(
     else:
         current = _send_state(item, state, decision, now)
         label = LABELS[current]
-        if current in OPEN_STATES:
+        if current in OPEN_STATES and not _send_retired(state, decision):
             age = (now - decision["at"]).total_seconds() / 60
             if age > settings.fulfillment_stall_minutes:
                 current, label = "stalled", LABELS["stalled"]

@@ -220,6 +220,11 @@ def resolve_item(state: dict, item_id: str, payload: dict) -> dict:
                     [{"field": "resolution", "message": "must be done or withdrawn"}],
                 )
             item["triage"] = "done"
+            # The zombie cure (attention fold, step 3):
+            # closing an item clears its presentation in
+            # the same write.
+            item["status_code"] = None
+            item["due_at"] = None
             return item
     raise NotFound("No such item.")
 
@@ -239,9 +244,15 @@ def _owner_tail(state: dict, entry: dict) -> bool:
 
 
 def promote_tail_items(state: dict, now: datetime) -> bool:
-    """Owner-waiting status tail entries become queue items,
-    so the queue and the counts read the same store the
-    digest reads; a dropped entry clears its item."""
+    """RETIRED (attention fold, 2026-11-26): the tick no
+    longer calls this — handler-status tails are a frozen
+    legacy source, and items copied from wb-owned records
+    are not minted here anymore (wb is the record of
+    truth; the fold backfill settled the standing copies).
+    Kept for its clearing leg's pins. Was: owner-waiting
+    status tail entries become queue items, so the queue
+    and the counts read the same store the digest reads;
+    a dropped entry clears its item."""
     changed = False
     live: set = set()
     for handle, record in state.get("handler_status", {}).items():
@@ -321,8 +332,14 @@ def _ping_since(ping: dict, now: datetime) -> datetime:
 
 
 def ingest_report_pings(state: dict, pings: list, now: datetime) -> bool:
-    """Scheduler report-class pings become agent-clearable
-    items on the workhorse handle, keyed by ping id
+    """RETIRED (attention fold, 2026-11-26): the tick no
+    longer calls this — scheduler report pings are the
+    scheduler's own record, and attention items copied
+    from them are not minted here anymore (the fold
+    backfill settled the standing copies). Kept for its
+    clearing leg's pins. Was: scheduler report-class
+    pings become agent-clearable items on the workhorse
+    handle, keyed by ping id
     (S-5): a ping still pending keeps its item open (its
     title refreshes as the ping coalesces new output);
     a ping that leaves the pending set — acked or voided

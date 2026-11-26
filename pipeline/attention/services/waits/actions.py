@@ -109,6 +109,22 @@ def _record(
     return entry
 
 
+def _verdict_handle(state, item) -> str:
+    """The handle a verdict is recorded on (attention
+    fold, step 2): the item's own handler when it is
+    registered and live; an unregistered or retired
+    handler's verdict falls back to `main`, so it lands
+    on the main handler's digest items — never
+    unsent-invisible in a dead chat."""
+    handler = next(
+        (h for h in state.get("handlers", []) if h["handle"] == item["handle"]),
+        None,
+    )
+    if handler is None or handler.get("retired"):
+        return "main"
+    return item["handle"]
+
+
 def _send_verdict(state, item, verb, note, now, template="verdict"):
     slots = {"summary": item["title"], "verb": dom.VERB_LABELS.get(verb, verb)}
     if template == "verdict":
@@ -118,7 +134,7 @@ def _send_verdict(state, item, verb, note, now, template="verdict"):
     return engine.record_send(
         state,
         template,
-        item["handle"],
+        _verdict_handle(state, item),
         slots,
         now,
         rule_id=f"owner:{verb}",
@@ -309,6 +325,27 @@ def apply_item_action(
         )
         if prior is not None:
             return item
+    # Repeat-tap dedupe (attention fold, step 3): an
+    # identical owner action — same item, verb, note,
+    # and picked set — inside a short window is one act,
+    # however many times the surface re-sends it. The
+    # Meta Power Plan shape (9 taps in ~30 s on an item
+    # that would not disappear) records one owner_action,
+    # not nine; a changed pick is a different act and
+    # always lands.
+    note_probe = payload.get("note") or ""
+    picks_probe = set(_payload_picks(payload))
+    for entry in state.get("owner_actions", []):
+        at = entry.get("at")
+        if (
+            entry.get("item_id") == item_id
+            and entry.get("verb") == verb
+            and (entry.get("note") or "") == note_probe
+            and set(_recorded_picks(entry)) == picks_probe
+            and isinstance(at, datetime)
+            and 0 <= (now - at).total_seconds() <= 60
+        ):
+            return item
     prior_view = None
     if item.get("decision"):
         fact = None
@@ -430,6 +467,14 @@ def apply_item_action(
     send = _apply_effects(
         state, item, wait, verb_effective, option_id, picks, note, payload, now
     )
+    if item.get("triage") == "done":
+        # The zombie cure (attention fold, step 3): an
+        # action that closes the item clears its
+        # presentation — status_code and due_at — in the
+        # same write, so glance and the digest stop
+        # presenting it on the next assembly.
+        item["status_code"] = None
+        item["due_at"] = None
     if verb_effective in DECISION_VERBS:
         if item.get("decision"):
             item.setdefault("decision_history", []).append(
@@ -510,7 +555,7 @@ def _apply_effects(state, item, wait, verb, option_id, picks, note, payload, now
         _send_verdict(state, item, verb, note, now, template="reply")
     elif verb == "reply":
         _send_verdict(state, item, verb, note, now, template="reply")
-        if item["handle"] != "main":
+        if _verdict_handle(state, item) != "main":
             # Decision 1: replies route direct to the
             # owning thread; main is copied on each.
             label = next(
@@ -615,6 +660,10 @@ def apply_handler_action(
     status = state.get("handler_status", {}).get(handle) or {}
     summary = status.get("summary") or handle
     handler = next(h for h in state["handlers"] if h["handle"] == handle)
+    # The main fallback (attention fold, step 2): a
+    # retired handler's sends are recorded on `main`,
+    # never addressed to its dead chat.
+    send_handle = "main" if handler.get("retired") else handle
     if verb == "status_ping":
         pings = state.setdefault("pings", {})
         mine = pings.setdefault(handle, {"count": 0, "last_at": None})
@@ -629,7 +678,12 @@ def apply_handler_action(
         mine["last_at"] = now
         kind = "status-ping" if mine["count"] == 1 else "status-ping-urgent"
         engine.record_send(
-            state, kind, handle, {"summary": summary}, now, rule_id="owner:status_ping"
+            state,
+            kind,
+            send_handle,
+            {"summary": summary},
+            now,
+            rule_id="owner:status_ping",
         )
     elif verb == "parallelize":
         from attention.services.reads.digest import topic_of
@@ -641,7 +695,7 @@ def apply_handler_action(
         engine.record_send(
             state,
             "parallelize",
-            handle,
+            send_handle,
             {"summary": summary},
             now,
             rule_id="owner:parallelize",
@@ -671,7 +725,7 @@ def apply_handler_action(
         engine.record_send(
             state,
             "commission",
-            handle,
+            send_handle,
             {"summary": item["title"]},
             now,
             rule_id=f"owner:{verb}",
