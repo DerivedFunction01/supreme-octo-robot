@@ -41,6 +41,23 @@ recommended field. A question with no sentinel is
 not a finding — agent-settleable questions carry
 none, per the skill.
 
+The formation class (wall-clock discipline): a step
+or the plan's Rulings section declaring a worktree
+or branch per row, item, or lane (a fan-out whose
+lanes are rows of one surface, each with its own
+formation), or a gate fire per item where the queue
+trigger applies, is refused, the finding naming the
+bound it breaks — worktrees are bounded per
+formation group, and several items waiting for
+tests merge into one union gated once. The class
+reads only declarations: the step bodies, the
+fan-out values, and the Rulings section. A sentence
+carrying a negation or prohibition (never, not, no,
+banned, refused, prohibited, avoid) declares the
+bound, not the anti-pattern, and makes no finding —
+the corpus's own rulings state the bound in those
+words.
+
 The headline rule (supervision rules, estimates
 passage): a plan's duration is its wall-clock — the
 critical path through its steps under their
@@ -112,6 +129,54 @@ def _est_agrees(block_est, line_est):
     if (block_minutes is None) != (line_minutes is None):
         return False
     return (block_est or "").strip() == (line_est or "").strip()
+
+
+# The formation class's declaration shapes: a
+# formation noun (worktree / branch) or a gate bound
+# to a per-unit construction. Both directions of the
+# construction are shapes: "worktree per row" and
+# "per-row worktree", "one gate per item" and
+# "each row its own worktree".
+_FORMATION_DECL_RES = (
+    (re.compile(
+        r"\b(?:worktree|branch)\s+per\s+[\w-]+"
+        r"|\bper[-\s](?:row|item|lane|family)[-\s]"
+        r"(?:worktree|branch)\b"
+        r"|\b(?:one|a|an|each|every)\s+(?:worktree|branch)"
+        r"\s+(?:per|for\s+each|for\s+every)\b"
+        r"|\beach\s+(?:row|item|lane)\s+(?:gets|has)\s+"
+        r"(?:its\s+own|a\s+separate)\s+(?:worktree|branch)\b"),
+     "formation"),
+    (re.compile(
+        r"\bgate\s+per\s+[\w-]+"
+        r"|\bper[-\s](?:row|item)[-\s]gate\b"
+        r"|\b(?:one|a|an|each|every)\s+gate\s+"
+        r"(?:per|for\s+each|for\s+every)\b"),
+     "gate"),
+)
+
+_NEGATION_RE = re.compile(
+    r"\b(?:never|not|no|banned|refused|prohibited|"
+    r"avoid|forbidden)\b")
+
+
+def _formation_findings(text):
+    """The formation-class declarations in one text
+    (a step body, a fan-out value, the Rulings
+    section): [(kind, matched text)], one per
+    sentence carrying a declaration shape and no
+    negation. Sentences split on terminal punctuation
+    and newlines; a declaration inside a prohibition
+    states the bound and is skipped."""
+    found = []
+    for sentence in re.split(r"[.!?\n]+", text):
+        if _NEGATION_RE.search(sentence.lower()):
+            continue
+        for pattern, kind in _FORMATION_DECL_RES:
+            m = pattern.search(sentence.lower())
+            if m:
+                found.append((kind, m.group(0)))
+    return found
 
 
 def format_minutes(minutes):
@@ -427,6 +492,49 @@ def check_plan(text, *, name="", plans_dir=None,
     if cycle is not None:
         findings.append(
             "requires cycle: " + " -> ".join(cycle))
+
+    for step in steps:
+        declared = _formation_findings(step["raw"])
+        group = blocks_by_step.get(step["n"], [])
+        if len(group) == 1 and group[0]["fanout"]:
+            declared += _formation_findings(
+                group[0]["fanout"])
+        for kind, matched in declared:
+            if kind == "formation":
+                findings.append(
+                    f"step {step['n']} ({step['title']}): "
+                    f"per-row formation declared "
+                    f"({matched!r}) — worktrees are "
+                    f"bounded per formation group, never "
+                    f"per row; grouped changes share one "
+                    f"worktree and branch")
+            else:
+                findings.append(
+                    f"step {step['n']} ({step['title']}): "
+                    f"per-item gate declared "
+                    f"({matched!r}) — the queue trigger "
+                    f"applies: several items waiting for "
+                    f"tests merge into one union gated "
+                    f"once")
+    for section in doc["sections"]:
+        if section["heading"].strip().lower() != "rulings":
+            continue
+        for kind, matched in _formation_findings(
+                section["raw"]):
+            if kind == "formation":
+                findings.append(
+                    f"rulings: per-row formation "
+                    f"declared ({matched!r}) — worktrees "
+                    f"are bounded per formation group, "
+                    f"never per row; grouped changes "
+                    f"share one worktree and branch")
+            else:
+                findings.append(
+                    f"rulings: per-item gate declared "
+                    f"({matched!r}) — the queue trigger "
+                    f"applies: several items waiting for "
+                    f"tests merge into one union gated "
+                    f"once")
 
     critical = None
     if cycle is None:

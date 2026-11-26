@@ -11,6 +11,10 @@ extension: a stated plan total over the computed
 critical path refuses (the serial-sum-with-fanout
 plan is the specimen), a stated total at or under
 it passes, and a pass prints the critical path.
+The formation fixtures pin the wall-clock class: a
+declared worktree or branch per row and a gate per
+item refuse, while the same bound stated as a
+prohibition in the Rulings passes.
 Fixtures are the tests' own — no live plan file is
 ever an input.
 """
@@ -183,6 +187,28 @@ class Headline(unittest.TestCase):
     at or under it, and no stated total at all, pass.
     The critical path itself is computed and reported
     either way."""
+
+    def test_per_row_formation_refused(self):
+        findings = self.assert_refused(
+            "per-row-formation.md", "per-row formation",
+            "per formation group")
+        # Both declaration surfaces convict: the step
+        # body's "worktree per row" and the fan-out
+        # value "per-row worktrees".
+        joined = "\n".join(findings)
+        self.assertIn("worktree per row", joined)
+        self.assertIn("per-row worktree", joined)
+
+    def test_per_item_gate_refused(self):
+        self.assert_refused("per-item-gate.md",
+                            "per-item gate",
+                            "queue trigger")
+
+    def test_bound_stated_in_rulings_passes(self):
+        # The bound stated as a prohibition, and a
+        # per-family fan-out, make no finding.
+        self.assertEqual(
+            [], findings_of("bound-stated-in-rulings.md"))
 
     def test_stated_total_over_critical_path_refused(self):
         findings = findings_of("stated-total-over.md")
