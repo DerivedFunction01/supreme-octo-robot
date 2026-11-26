@@ -644,7 +644,7 @@
   {
    "path": "pipeline/workrecord/wb",
    "family": "workrecord",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/workrecord/wbcli/parser.py",
