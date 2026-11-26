@@ -106,13 +106,38 @@ backends; the only writes are the report and the bridge
 request files.
 """
 
-import argparse
+import importlib.util as _importlib_util
 import json
 import os
 import sys
 import time
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
+from types import SimpleNamespace
+
+# The unified argv contract home, loaded by location (the platform seam).
+_argv_spec = _importlib_util.spec_from_file_location(
+    "pipeline_platform_argv", Path(__file__).resolve().parent.parent / "argv.py")
+platform_argv = _importlib_util.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "publish_proof",
+    "flags": {
+        "slug": {"takes_value": True, "required": True},
+        "version": {"takes_value": True, "required": True},
+        "channel": {"takes_value": True, "required": True,
+                    "choices": ["http", "bridge", "static"]},
+        "base-url": {"takes_value": True},
+        "bridge-dir": {"takes_value": True},
+        "mirror": {"takes_value": True},
+        "apps": {"takes_value": True,
+                 "default": "workbench,scheduler,runner,attention"},
+        "leg": {"takes_value": True, "choices": ["dead-port"]},
+        "report": {"takes_value": True, "required": True},
+    },
+}
 
 # ------------------------------------------------------------------
 # Seed markers (assertion 4) — data, harvested from the apps'
@@ -675,23 +700,24 @@ def leg_dead_port(channel):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--slug", required=True)
-    ap.add_argument("--version", required=True,
-                    help="the artifact_version the report carries "
-                         "(the publish's version label)")
-    ap.add_argument("--channel", required=True,
-                    choices=["http", "bridge", "static"])
-    ap.add_argument("--base-url", help="http channel: the served base URL")
-    ap.add_argument("--bridge-dir", help="bridge channel: request/result dir")
-    ap.add_argument("--mirror", help="static channel: the artifact mirror dir")
-    ap.add_argument("--apps", default="workbench,scheduler,runner,attention",
-                    help="comma-separated app legs to run")
-    ap.add_argument("--leg", choices=["dead-port"],
-                    help="run a named acceptance leg instead of the "
-                         "per-publish proof")
-    ap.add_argument("--report", required=True)
-    args = ap.parse_args(argv)
+    try:
+        parsed = platform_argv.parse(DECLARATION,
+                                     sys.argv[1:] if argv is None else argv)
+    except platform_argv.UsageError as exc:
+        print(f"publish_proof: {exc}", file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION), file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    _f = parsed["flags"]
+    apps = [a.strip() for a in _f["apps"].split(",") if a.strip()]
+    if not apps or (_f["channel"] != "static" and any(a not in LEGS for a in apps)):
+        # BT10: an empty or unknown --apps refuses, never zero legs and a pass.
+        print("publish_proof: --apps names no known app leg", file=sys.stderr)
+        return platform_argv.USAGE_EXIT
+    # The body's argument attributes are the flag names, dash as underscore.
+    args = SimpleNamespace(**{k.replace("-", "_"): v for k, v in _f.items()})
 
     if args.channel == "http":
         if not args.base_url:

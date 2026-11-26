@@ -39,6 +39,13 @@ listed or a removal failed (loud, the watches' convention).
 --dry-run lists what a real run WOULD reap and removes
 nothing; the job entry ships in that form until admission.
 
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py): --dry-run is a
+safety flag, honoured in either form (--dry-run,
+--dry-run=<value> refuses — a boolean takes no value),
+and an unknown or malformed token is a usage refusal
+(exit 2), never a live sweep.
+
 Stdlib only; paths derive from this file's location via
 ops/paths.py. Tests inject fixture roots, a fixed now, and
 fake probe results (or a fake proc root / results dir);
@@ -62,6 +69,30 @@ _paths_spec = _importlib_util.spec_from_file_location(
          if os.path.isfile(_p)))
 paths = _importlib_util.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(paths)
+
+# The unified argv contract home (pipeline/platform/argv.py),
+# loaded by location under a private name — the tree's
+# standing seam for platform modules (the stdlib owns the
+# bare name `platform`). The path derives exactly as the
+# paths spine derives PLATFORM_WRITER.
+_argv_spec = _importlib_util.spec_from_file_location(
+    "pipeline_platform_argv",
+    os.path.join(os.path.dirname(paths.REPO_ROOT),
+                 "platform", "argv.py"))
+platform_argv = _importlib_util.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "clone-sweep",
+    "summary": "reap formation clones past the "
+               "reconciliation window",
+    "flags": {
+        "dry-run": {"safety": True,
+                    "help": "list what a real run would reap; "
+                            "remove nothing"},
+    },
+    "verdict_codes": {"sweep-failed": 3},
+}
 
 WINDOW_SECS = int(os.environ.get("CLONE_SWEEP_WINDOW_SECS", "3600"))
 PROC_ROOT = os.environ.get("CLONE_SWEEP_PROC", "/proc")
@@ -239,10 +270,19 @@ def run(roots, at, dry_run=False, window_secs=WINDOW_SECS,
 
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
-    dry_run = "--dry-run" in argv
+    try:
+        parsed = platform_argv.parse(DECLARATION, argv)
+    except platform_argv.UsageError as exc:
+        print(f"clone-sweep: {exc}", file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
     code, lines = run(default_roots(),
                       datetime.now(timezone.utc),
-                      dry_run=dry_run)
+                      dry_run=bool(parsed["flags"]["dry-run"]))
     for line in lines:
         print(line)
     return code

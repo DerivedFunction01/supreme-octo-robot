@@ -234,7 +234,7 @@
   {
    "path": "pipeline/platform/ops/publish_proof.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/publish_sync.py",
@@ -384,7 +384,7 @@
   {
    "path": "pipeline/scheduling/ops/watches/clone_sweep.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/watches/file_registry.py",
@@ -404,7 +404,7 @@
   {
    "path": "pipeline/scheduling/ops/worktree_archive_clean.sh",
    "family": "shell",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/worktree_restore.sh",
@@ -419,7 +419,7 @@
   {
    "path": "pipeline/scheduling/server/main.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/tools/portability_scan.py",
@@ -584,7 +584,7 @@
   {
    "path": "pipeline/venue/sync/runner/main.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/sync/venue_migrate.py",
@@ -654,7 +654,7 @@
   {
    "path": "run.py",
    "family": "root",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "tools/e2e-shard.mjs",

@@ -3,15 +3,75 @@
 plant-git-identity never pay the launch path's costs and
 dispatch here; everything else is a launch and hands off to
 dispatch.launch, whose window is execute.execute.
+
+The router's own surface parses through the unified argv
+contract (pipeline/platform/argv.py): an invocation
+carrying a router verb validates in full against the
+declaration below — an unrecognised token is a usage
+refusal (exit 2), never a fall-through to a full launch,
+and two verb forms in one invocation refuse rather than
+one silently winning. An invocation with no router verb
+is a launch and reaches dispatch.launch untouched.
 """
 
+import importlib.util
 import json
 import os
 import sys
+from pathlib import Path
 
 from .dispatch import launch
 from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
+
+# The unified argv contract home, loaded by location under
+# a private name — the tree's standing seam for platform
+# modules (the stdlib owns the bare name `platform`).
+_argv_spec = importlib.util.spec_from_file_location(
+    "pipeline_platform_argv",
+    Path(__file__).resolve().parents[3] / "platform" / "argv.py")
+platform_argv = importlib.util.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "colab-run",
+    "summary": "run a named job on Colab, or work a router verb",
+    "flags": {
+        "sweep": {"help": "reconcile run records against "
+                          "live sessions"},
+        "collect-stale": {"help": "collect stale detached runs"},
+        "poll": {"takes_value": True,
+                 "help": "reconcile one launched run"},
+        "wait": {"takes_value": True,
+                 "help": "read one run's local record only"},
+        "max": {"takes_value": True,
+                "help": "--wait bound, in seconds (default 120)"},
+        "session": {"takes_value": True,
+                    "help": "plant-git-identity: the session name"},
+        "repo": {"takes_value": True,
+                 "help": "plant-git-identity: the repo id or path"},
+        "tree": {"takes_value": True,
+                 "help": "plant-git-identity: the session tree"},
+        "caller": {"takes_value": True,
+                   "help": "caller attribution tag"},
+    },
+    "positionals": [{"name": "command"}],
+}
+
+# The tokens that make an invocation a router invocation.
+# --session / --caller are also launch flags, so they never
+# trigger the router parse on their own.
+_ROUTER_TOKENS = ("--sweep", "--collect-stale", "--poll",
+                  "--wait", "plant-git-identity")
+
+_VERB_FLAGS = ("sweep", "collect-stale", "poll", "wait")
+
+
+def _usage_refusal(message):
+    print(f"colab-run: {message}", file=sys.stderr)
+    print(platform_argv.help_text(DECLARATION),
+          file=sys.stderr, end="")
+    return platform_argv.USAGE_EXIT
 
 
 def main() -> int:
@@ -21,11 +81,32 @@ def main() -> int:
     # the local record only. None of them may pay the launch
     # path's costs (mirror restore, catalog, acquire).
     core_args = args[: args.index("--")] if "--" in args else list(args)
-    if "--sweep" in core_args:
+    if not any(token in core_args for token in _ROUTER_TOKENS):
+        return launch(args)
+    try:
+        parsed = platform_argv.parse(DECLARATION, core_args)
+    except platform_argv.UsageError as exc:
+        return _usage_refusal(str(exc))
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    flags = parsed["flags"]
+    present = set(parsed["present"])
+    command = parsed["positionals"]["command"]
+    verb_forms = [name for name in _VERB_FLAGS if name in present]
+    if command is not None:
+        verb_forms.append(command)
+    if len(verb_forms) != 1 or verb_forms[0] not in (
+            *_VERB_FLAGS, "plant-git-identity"):
+        return _usage_refusal(
+            "one router verb per invocation "
+            f"({'|'.join([*_VERB_FLAGS, 'plant-git-identity'])}); "
+            f"got {verb_forms}")
+    if "sweep" in present:
         findings, live_ok = orphan_sweep()
         print(json.dumps({"findings": findings, "live_list_unreadable": not live_ok}, indent=2))
         return 0
-    if "--collect-stale" in core_args:
+    if "collect-stale" in present:
         # The reap command's collector ride passes its remaining
         # command budget through the env; a direct call keeps the
         # pass's own default budget.
@@ -39,36 +120,21 @@ def main() -> int:
         summary = collect_stale_detached(budget_s=budget_s) if budget_s is not None else collect_stale_detached()
         print(json.dumps(summary, indent=2))
         return 0
-    if "--poll" in core_args:
-        idx = core_args.index("--poll")
-        if idx + 1 >= len(core_args):
-            print("usage: colab-run --poll RUN_ID", file=sys.stderr)
-            return 2
-        return poll_run(core_args[idx + 1])
-    if "--wait" in core_args:
-        idx = core_args.index("--wait")
-        if idx + 1 >= len(core_args):
-            print("usage: colab-run --wait RUN_ID [--max SECONDS]", file=sys.stderr)
-            return 2
+    if "poll" in present:
+        return poll_run(flags["poll"])
+    if "wait" in present:
         max_seconds = 120
-        if "--max" in core_args:
-            midx = core_args.index("--max")
-            if midx + 1 >= len(core_args):
-                print("usage: colab-run --wait RUN_ID [--max SECONDS]", file=sys.stderr)
-                return 2
+        if "max" in present:
             try:
-                max_seconds = int(core_args[midx + 1])
+                max_seconds = int(flags["max"])
             except ValueError:
                 print("colab-run --wait: --max must be an integer number of seconds", file=sys.stderr)
                 return 2
-        return wait_run(core_args[idx + 1], max_seconds)
-    if "plant-git-identity" in core_args:
-        def _flag(name: str) -> "str | None":
-            return core_args[core_args.index(name) + 1] if name in core_args and core_args.index(name) + 1 < len(core_args) else None
-
-        _session, _repo, _tree = _flag("--session"), _flag("--repo"), _flag("--tree")
-        if not (_session and _repo and _tree):
-            print("usage: colab-run plant-git-identity --session NAME --repo ID_OR_PATH --tree SESSION_TREE [--caller TAG]", file=sys.stderr)
-            return 2
-        return plant_git_identity(_session, _repo, _tree, _flag("--caller") or os.environ.get("COLAB_CALLER"))
-    return launch(args)
+        return wait_run(flags["wait"], max_seconds)
+    # plant-git-identity
+    session, repo, tree = flags["session"], flags["repo"], flags["tree"]
+    if not (session and repo and tree):
+        return _usage_refusal(
+            "plant-git-identity needs --session NAME "
+            "--repo ID_OR_PATH --tree SESSION_TREE [--caller TAG]")
+    return plant_git_identity(session, repo, tree, flags["caller"] or os.environ.get("COLAB_CALLER"))

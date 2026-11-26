@@ -252,12 +252,34 @@ def _stamp_boot_ready(values, boot):
               f"failed: {exc!r}", file=sys.stderr)
 
 
+_SERVE_DECLARATION = {
+    "name": "run.py serve",
+    "summary": "the coupled serving process "
+               "(scheduling + attention)",
+    "flags": {
+        "config": {"takes_value": True,
+                   "help": "the scheduler live config to boot "
+                           "under (--config P and --config=P "
+                           "are the same flag)"},
+    },
+}
+
+
 def cmd_serve(argv):
     serving = _serving_core()
-
-    config_path = None
-    if "--config" in argv:
-        config_path = argv[argv.index("--config") + 1]
+    platform_argv = _load("platform_argv",
+                          PIPELINE / "platform" / "argv.py")
+    try:
+        parsed = platform_argv.parse(_SERVE_DECLARATION, argv)
+    except platform_argv.UsageError as exc:
+        print(f"run.py serve: {exc}", file=sys.stderr)
+        print(platform_argv.help_text(_SERVE_DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    config_path = parsed["flags"]["config"]
 
     # -- scheduling engine + config (the tick's home) ----
     sys.path.insert(0, str(PIPELINE / "scheduling"))
