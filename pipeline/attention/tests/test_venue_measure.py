@@ -274,14 +274,31 @@ def queue_state(families):
 _REAL_CONTRACT_FOR = registry.staffing_contract_for
 
 
+# The recorded specimen queue entry: the Round 4
+# instrument build as it stood in the queue before
+# its discharge pruned it from the live contract
+# (its deliverable of record is register-fresh-
+# verdict-4.md). The packet fixtures below rebuild
+# the specimen contract — live queue plus this
+# entry — so the queue-semantics pins exercise the
+# gated-item form without the live queue carrying
+# discharged work.
+_SPECIMEN_WORK_ITEM = {
+    "key": "round4-instrument-build",
+    "label": "Round 4 instrument build",
+    "family": "round4",
+    "staffable_when": "segment-packet-landing",
+}
+
+
 def packet_landed(slug):
-    """The registry contract with the segment
-    packet marker flipped landed, as the amendment
-    will record it when the packet landing lands:
-    the queue's one remaining work item (the Round
-    4 build) becomes due-eligible."""
+    """The specimen contract with the segment
+    packet marker flipped landed: the specimen
+    queue's gated work item (the Round 4 build)
+    becomes due-eligible."""
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
+        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract["staffable_queue"]:
             if entry["key"] == "segment-packet-landing":
                 entry["landed"] = True
@@ -289,13 +306,14 @@ def packet_landed(slug):
 
 
 def packet_unlanded(slug):
-    """The registry contract with the segment
-    packet marker unlanded: the contract as it
-    stood in the recorded specimen windows, before
-    the packet landing flipped the marker by
-    amendment; the live seed now carries the flip."""
+    """The specimen contract with the segment
+    packet marker unlanded: the queue as it stood
+    in the recorded specimen windows, before the
+    packet landing flipped the marker by
+    amendment."""
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
+        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract.get("staffable_queue") or []:
             if entry["key"] == "segment-packet-landing":
                 entry["landed"] = False
@@ -323,19 +341,23 @@ class QueueMeasure(unittest.TestCase):
         row = rows[0]
         self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
         self.assertEqual(row["queue_unstaffed"], [])
-        # The live contract carries the flip: the
-        # packet marker stands landed by amendment,
-        # so the gated item reads due, named on the
-        # row.
+        # The live contract carries the discharge:
+        # the Round 4 build stands pruned from the
+        # queue by its deliverable of record, so the
+        # live queue holds no work item and nothing
+        # reads due on it either — the row stands on
+        # the count conditions alone, as under the
+        # unlanded specimen.
+        live_contract = registry.staffing_contract_for("edgar-greenfield")
+        self.assertNotIn(
+            "round4-instrument-build",
+            [e["key"] for e in live_contract["staffable_queue"]],
+        )
         rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
-        self.assertIn("prerequisite_due_family_unstaffed", row["conditions"])
-        self.assertEqual(
-            [e["key"] for e in row["queue_unstaffed"]],
-            ["round4-instrument-build"],
-        )
-        self.assertIn("Round 4 instrument build", row["detail"])
+        self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
+        self.assertEqual(row["queue_unstaffed"], [])
 
     def test_bands_met_but_queue_due_still_raises(self):
         from unittest import mock
@@ -386,9 +408,9 @@ class QueueMeasure(unittest.TestCase):
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
-        # The Round 4 item reads due once its gate
-        # resolves; it is the queue's only remaining
-        # work item.
+        # The specimen's Round 4 item reads due
+        # once its gate resolves; it is the
+        # specimen queue's only work item.
         self.assertEqual(
             [e["key"] for e in rows[0]["queue_unstaffed"]],
             ["round4-instrument-build"],

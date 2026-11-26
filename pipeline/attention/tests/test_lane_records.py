@@ -402,9 +402,25 @@ def counted_lane(key: str, family: str) -> dict:
 _REAL_CONTRACT_FOR = registry.staffing_contract_for
 
 
+# The recorded specimen queue entry: the Round 4
+# instrument build as it stood in the queue before
+# its discharge pruned it from the live contract.
+# The fixture rebuilds the specimen contract —
+# live queue plus this entry — so the
+# reconciliation pins exercise the gated-item form
+# without the live queue carrying discharged work.
+_SPECIMEN_WORK_ITEM = {
+    "key": "round4-instrument-build",
+    "label": "Round 4 instrument build",
+    "family": "round4",
+    "staffable_when": "segment-packet-landing",
+}
+
+
 def packet_landed(slug):
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
+        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract["staffable_queue"]:
             if entry["key"] == "segment-packet-landing":
                 entry["landed"] = True

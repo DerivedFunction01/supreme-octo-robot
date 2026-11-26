@@ -98,7 +98,14 @@ EDGAR_STAFFING_CONTRACT = {
     # when the precondition resolves. Family keys
     # are the venue measure's workstream stems: the
     # job name minus the fleet's shared prefix and
-    # its trailing run-kind segments.
+    # its trailing run-kind segments. Landed work
+    # is pruned by amendment: the Round 4
+    # instrument build stood discharged by its
+    # deliverable of record (register-fresh-
+    # verdict-4.md, board sha256 31a1d67d) and is
+    # pruned here — "round4" named the measurement
+    # round, not a scored family, so the pruning
+    # moves no family count.
     "staffable_queue": [
         {
             "key": "segment-register-close",
@@ -111,12 +118,6 @@ EDGAR_STAFFING_CONTRACT = {
             "label": "Segment packet landing (composed tree settles)",
             "marker": True,
             "landed": True,
-        },
-        {
-            "key": "round4-instrument-build",
-            "label": "Round 4 instrument build",
-            "family": "round4",
-            "staffable_when": "segment-packet-landing",
         },
     ],
 }

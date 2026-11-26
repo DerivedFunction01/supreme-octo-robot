@@ -189,12 +189,15 @@ class StaffableQueue(unittest.TestCase):
     def test_seeded_queue_loads_in_order(self):
         contract = registry.staffing_contract_for("edgar-greenfield")
         queue = contract["staffable_queue"]
+        # The queue as discharged: the Round 4
+        # instrument build stood discharged by its
+        # deliverable of record and is pruned; the
+        # two markers remain.
         self.assertEqual(
             [entry["key"] for entry in queue],
             [
                 "segment-register-close",
                 "segment-packet-landing",
-                "round4-instrument-build",
             ],
         )
         markers = {e["key"]: e["landed"] for e in queue if e.get("marker")}
