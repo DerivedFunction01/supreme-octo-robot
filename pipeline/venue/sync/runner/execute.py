@@ -218,9 +218,17 @@ def execute(ctx: dict) -> int:
         # extra args after -- are the operator's own argv and pass verbatim.
         job_args = "".join(f",'{a}'" for a in rewrite_upload_args(job.get("args", []), {Path(u).name for u in job.get("uploads", [])}, run_id) + (["--skip-clone"] if seeded else []) + extra_args)
         stamp = build_launch_stamp(remote_script, remote_out, job_args, run_id)
+        # The spawn's pid is the job tree's root on the
+        # session (nohup execs the stamp wrapper under the
+        # same pid, in its own session): the launcher prints
+        # it as root_pid= for the record stamp below
+        # (venue-state plan, step 2). A handle with no pid
+        # to print — the fake venue's synchronous Popen —
+        # prints an empty value and stamps nothing.
         launch = (
-            f"import subprocess; subprocess.Popen(['nohup','python3','-c',{stamp!r}],"
-            f" stdout=open('{remote_out}.log','w'), stderr=subprocess.STDOUT, start_new_session=True)"
+            f"import subprocess; _root = subprocess.Popen(['nohup','python3','-c',{stamp!r}],"
+            f" stdout=open('{remote_out}.log','w'), stderr=subprocess.STDOUT, start_new_session=True); "
+            f"print('root_pid=' + str(getattr(_root, 'pid', '') or ''))"
         )
         launcher = REPO / "var" / f"launch-{run_id}.py"
         launcher.parent.mkdir(parents=True, exist_ok=True)
@@ -246,6 +254,20 @@ def execute(ctx: dict) -> int:
                 launch_error = f"launch exec rc {lr.returncode}: {(lr.stderr or lr.stdout).strip()[-200:]}"
         except subprocess.TimeoutExpired:
             launch_error = "launch exec timed out"
+        if launch_error is None:
+            # The root_pid the launcher printed (above) rides
+            # the record from here: every save below carries
+            # it. An exec that failed or timed out read no
+            # pid back, and an empty printed value stamps
+            # nothing — root_pid is present only when read.
+            for _line in lr.stdout.splitlines():
+                _line = _line.strip()
+                if _line.startswith("root_pid="):
+                    try:
+                        rec["root_pid"] = int(_line.partition("=")[2])
+                    except ValueError:
+                        pass
+                    break
         lease.append_launch_outcome(REPO, session, "launch", launch_error is None, launch_error or run_id)
         reader = write_reader(run_id, remote_out, job.get("outputs", []))
         # The confirmation is a reader pass and shares the poll
