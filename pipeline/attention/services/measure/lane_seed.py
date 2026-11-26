@@ -29,7 +29,7 @@ def edgar_lane_declarations() -> list[dict]:
 
     Current transcription: coordinator successor
     III's declaration as posted at the owner's
-    thread close-out, 2026-11-25 — eleven lanes in
+    thread close-out — eleven lanes in
     flight (ten family lanes, one formation lane).
     The lanes closed at that close-out (21 family
     lanes archived on bar or on exhaustion-grade

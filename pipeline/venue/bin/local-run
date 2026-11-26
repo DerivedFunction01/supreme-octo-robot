@@ -332,9 +332,7 @@ def _seal_job(job_name: str, args: list) -> int:
             {"name": path.name, "sha256": sealed.sha256_hex(data), "bytes": len(data)}
         )
         blob_path = path.with_name(path.name + ".sealed")
-        blob_tmp = path.with_name(path.name + ".sealed.tmp")
-        blob_tmp.write_bytes(sealed.seal_bytes(key, data))
-        os.replace(blob_tmp, blob_path)
+        sealed.staged_write(blob_path, sealed.seal_bytes(key, data))
         path.unlink()
     register = sealed.load_register(REPO)
     entry = {

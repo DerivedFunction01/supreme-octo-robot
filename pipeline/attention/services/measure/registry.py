@@ -475,7 +475,7 @@ _SEED = (
         # commit with the contract, as the staffable
         # queue does. Transcribed from coordinator
         # successor III's declaration as posted at
-        # the owner's thread close-out, 2026-11-25:
+        # the owner's thread close-out:
         # expected count 11 — ten family lanes and
         # one formation lane in flight; the 21 family
         # lanes closed at that close-out and the
