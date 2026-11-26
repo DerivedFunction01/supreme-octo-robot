@@ -10,6 +10,7 @@ from datetime import UTC, datetime, timedelta
 from attention.infra import panel_client, run_records
 from attention.services import programmes
 from attention.services.dispatch import dispatch as dispatch_mod
+from attention.services.measure import landings as landings_mod
 from attention.services.measure.staffing_rows import (  # noqa: F401
     _armed_rows,
     _as_dt,
@@ -129,7 +130,13 @@ def collect_capacity(state: dict, settings: Settings, now: datetime) -> bool:
     return True
 
 
-def _unavailable(state: dict, snapshot, reason: str, rows: list | None = None) -> dict:
+def _unavailable(
+    state: dict,
+    snapshot,
+    reason: str,
+    rows: list | None = None,
+    landings: dict | None = None,
+) -> dict:
     return {
         "available": False,
         "reason": reason,
@@ -138,6 +145,7 @@ def _unavailable(state: dict, snapshot, reason: str, rows: list | None = None) -
         "idle_minutes_total": 0,
         "sessions": [],
         "rows": rows or [],
+        "landings": landings,
     }
 
 
@@ -238,6 +246,9 @@ def build_staffing(
     cadence_of = lambda handle: programmes.cadence_for(  # noqa: E731
         state, handle, settings.checkpoint_cadence_minutes
     )
+    landing_summary = landings_mod.summarize(
+        settings.run_records_dir.parent / "landings", now
+    )
     wb_topics = wb_topics or {}
     phantom = _phantom_rows(state, now)
     unrouted = _unrouted_rows(state)
@@ -269,11 +280,12 @@ def build_staffing(
             None,
             state.get("capacity_error") or "Capacity not collected yet.",
             rows=prefix + owait,
+            landings=landing_summary,
         )
     age_minutes = (now - snapshot["at"]).total_seconds() / 60
     if age_minutes > settings.capacity_stale_minutes:
         return _unavailable(
-            state, snapshot, "Capacity snapshot is stale.", rows=prefix + owait
+            state, snapshot, "Capacity snapshot is stale.", rows=prefix + owait, landings=landing_summary
         )
     sessions = snapshot.get("sessions") or []
     live = [s["session"] for s in sessions]
@@ -286,6 +298,7 @@ def build_staffing(
         "idle_minutes_total": 0,
         "sessions": [{"name": name, "running": 0} for name in live],
         "rows": [],
+        "landings": landing_summary,
     }
     if len(live) < 2:
         base["rows"] = sorted(
@@ -295,7 +308,7 @@ def build_staffing(
     try:
         recent = run_records.read_recent(settings.run_records_dir, now)
     except run_records.RunRecordsUnavailable as err:
-        return _unavailable(state, snapshot, str(err), rows=prefix + owait)
+        return _unavailable(state, snapshot, str(err), rows=prefix + owait, landings=landing_summary)
     running = [r for r in recent if r["state"] == "running" and not r["finished_at"]]
     live_runs = {name: 0 for name in live}
     for run in running:

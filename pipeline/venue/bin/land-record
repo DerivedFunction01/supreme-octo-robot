@@ -1,0 +1,158 @@
+#!/usr/bin/env python3
+"""Write a landing record at the moment a change lands.
+
+Usage: land-record --sha SHA --gate-run RUN_ID [--gate-run RUN_ID ...]
+                   [--formation-at ISO] [--change LABEL]
+       land-record --sha SHA --no-gate [--formation-at ISO]
+
+The record prices the landing per phase from data the
+landing act already touches: formation opened (the
+earliest gate run's started_at, or --formation-at when
+the formation predates its first fire), gate-green (the
+verdict run's finished_at — the last gate run that
+completed with exit 0), and landed (this invocation).
+Gate fires and their venue-minutes are counted onto the
+record, and a union fire's constituents (the run
+record's `constituents` list, when the dispatch stamps
+one) count as the changes the landing carries.
+
+Records land in results/landings/ beside results/runs/;
+the supervision measure reads them back as the
+gates-per-landing and phase-wall-clock rows. A landing
+with gate runs but no green verdict run is refused:
+the record is written for a landed, gated change, and
+a red or never-ran gate is a different fact.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+
+def _parse_stamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=UTC)
+    return stamp
+
+
+def _minutes(start: datetime | None, end: datetime | None) -> float | None:
+    if start is None or end is None:
+        return None
+    return round((end - start).total_seconds() / 60, 1)
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="land-record")
+    parser.add_argument("--sha", required=True)
+    parser.add_argument("--gate-run", action="append", default=[])
+    parser.add_argument("--no-gate", action="store_true")
+    parser.add_argument("--formation-at")
+    parser.add_argument("--change")
+    parser.add_argument("--results-dir", type=Path)
+    parser.add_argument("--now")
+    args = parser.parse_args(argv)
+
+    if args.no_gate and args.gate_run:
+        print("land-record: --no-gate with --gate-run names both", file=sys.stderr)
+        return 2
+    if not args.no_gate and not args.gate_run:
+        print(
+            "land-record: name the gate run(s) the landing rode, or --no-gate",
+            file=sys.stderr,
+        )
+        return 2
+
+    results = args.results_dir or Path(__file__).resolve().parent.parent / "results"
+    landed_at = _parse_stamp(args.now) or datetime.now(UTC)
+
+    runs = []
+    for run_id in args.gate_run:
+        path = results / "runs" / f"{run_id}.json"
+        if not path.is_file():
+            print(f"land-record: no run record {run_id}", file=sys.stderr)
+            return 2
+        runs.append(json.loads(path.read_text(encoding="utf-8")))
+
+    verdict = None
+    for record in runs:
+        if record.get("state") == "complete" and record.get("exit_code") == 0:
+            verdict = record
+    gate_green_at = _parse_stamp(verdict.get("finished_at")) if verdict else None
+    if runs and gate_green_at is None:
+        print(
+            "land-record: no gate run completed green — a landing record "
+            "is written for a landed, gated change",
+            file=sys.stderr,
+        )
+        return 2
+
+    formation_opened = _parse_stamp(args.formation_at)
+    if formation_opened is None and runs:
+        starts = [
+            stamp
+            for stamp in (_parse_stamp(r.get("started_at")) for r in runs)
+            if stamp is not None
+        ]
+        formation_opened = min(starts) if starts else None
+    if formation_opened is None:
+        formation_opened = landed_at
+
+    venue_minutes = 0.0
+    for record in runs:
+        span = _minutes(
+            _parse_stamp(record.get("started_at")),
+            _parse_stamp(record.get("finished_at")),
+        )
+        if span is not None:
+            venue_minutes += span
+
+    constituents = sum(
+        len(record["constituents"])
+        for record in runs
+        if isinstance(record.get("constituents"), list)
+    )
+
+    record = {
+        "landed_sha": args.sha,
+        "change": args.change,
+        "landed_at": landed_at.isoformat(),
+        "formation_opened_at": formation_opened.isoformat(),
+        "gate_green_at": gate_green_at.isoformat() if gate_green_at else None,
+        "gate_runs": list(args.gate_run),
+        "fires": len(runs),
+        "venue_minutes": round(venue_minutes, 1),
+        "constituent_count": constituents if constituents else 1,
+        "phases_minutes": {
+            "formation_to_gate": _minutes(formation_opened, gate_green_at),
+            "gate_to_landed": _minutes(gate_green_at, landed_at),
+            "formation_to_landed": _minutes(formation_opened, landed_at),
+        },
+    }
+
+    out_dir = results / "landings"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    stamp = landed_at.strftime("%Y%m%dT%H%M%SZ")
+    out = out_dir / f"{args.sha[:12]}-{stamp}.json"
+    out.write_text(json.dumps(record, indent=1) + "\n", encoding="utf-8")
+    phases = record["phases_minutes"]
+    print(
+        f"landing record: {out} — fires {record['fires']}, "
+        f"venue-minutes {record['venue_minutes']}, "
+        f"formation→gate {phases['formation_to_gate']}m, "
+        f"gate→landed {phases['gate_to_landed']}m"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
