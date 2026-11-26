@@ -34,9 +34,8 @@ PACKAGE_INITS = ("attention", "workrecord")
 _DECL = {
     "name": "init_venv",
     "summary": "Create the mega repo's root driver "
-               "virtualenv and build the package venvs.",
-    "flags": {"recreate": {"help": "rebuild the venv "
-                                   "from scratch"}},
+    "virtualenv and build the package venvs.",
+    "flags": {"recreate": {"help": "rebuild the venv from scratch"}},
 }
 
 
@@ -47,8 +46,8 @@ def _load_uargv():
     import importlib.util
 
     spec = importlib.util.spec_from_file_location(
-        "pipeline_platform_argv",
-        _PIPELINE_ROOT / "platform" / "argv.py")
+        "pipeline_platform_argv", _PIPELINE_ROOT / "platform" / "argv.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

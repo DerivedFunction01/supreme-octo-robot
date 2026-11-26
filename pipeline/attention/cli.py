@@ -170,13 +170,14 @@ def _dispatch_suppress(args) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="attn", description="Post to the owner-attention surface.",
+        prog="attn",
+        description="Post to the owner-attention surface.",
         allow_abbrev=False,
     )
     verbs = parser.add_subparsers(dest="verb", required=True)
-    post = verbs.add_parser(
-        "post", allow_abbrev=False).add_subparsers(
-        dest="noun", required=True)
+    post = verbs.add_parser("post", allow_abbrev=False).add_subparsers(
+        dest="noun", required=True
+    )
     item = post.add_parser("item", allow_abbrev=False)
     item.add_argument("--source-ref", required=True)
     item.add_argument("--kind", required=True)
@@ -219,30 +220,30 @@ def build_parser() -> argparse.ArgumentParser:
     wait.add_argument("--only-blocker", action="store_true")
     wait.add_argument("--handle", help="post on this lane's behalf (producers)")
     wait.set_defaults(run=_post_wait)
-    verify = verbs.add_parser(
-        "verify", allow_abbrev=False).add_subparsers(
-        dest="noun", required=True)
+    verify = verbs.add_parser("verify", allow_abbrev=False).add_subparsers(
+        dest="noun", required=True
+    )
     verify_status = verify.add_parser("status", allow_abbrev=False)
     verify_status.add_argument("--handle", required=True)
     verify_status.add_argument("--verdict", choices=("verified", "void"), required=True)
     verify_status.add_argument("--note")
     verify_status.set_defaults(run=_verify_status)
-    poll = verbs.add_parser(
-        "poll", allow_abbrev=False).add_subparsers(
-        dest="noun", required=True)
+    poll = verbs.add_parser("poll", allow_abbrev=False).add_subparsers(
+        dest="noun", required=True
+    )
     poll_wait = poll.add_parser("wait", allow_abbrev=False)
     poll_wait.add_argument("wait_id")
     poll_wait.set_defaults(run=_poll_wait)
-    resolve = verbs.add_parser(
-        "resolve", allow_abbrev=False).add_subparsers(
-        dest="noun", required=True)
+    resolve = verbs.add_parser("resolve", allow_abbrev=False).add_subparsers(
+        dest="noun", required=True
+    )
     res_item = resolve.add_parser("item", allow_abbrev=False)
     res_item.add_argument("item_id")
     res_item.add_argument("--resolution", choices=("done", "withdrawn"), required=True)
     res_item.set_defaults(run=_resolve_item)
-    dispatch = verbs.add_parser(
-        "dispatch", allow_abbrev=False).add_subparsers(
-        dest="noun", required=True)
+    dispatch = verbs.add_parser("dispatch", allow_abbrev=False).add_subparsers(
+        dest="noun", required=True
+    )
     dispatch_list = dispatch.add_parser("list", allow_abbrev=False)
     dispatch_list.set_defaults(run=_dispatch_list)
     dispatch_claim = dispatch.add_parser("claim", allow_abbrev=False)

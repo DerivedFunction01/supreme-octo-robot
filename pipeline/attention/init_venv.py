@@ -37,10 +37,8 @@ from gate.venvbuild import VenvConfig, build_venv  # noqa: E402
 
 _DECL = {
     "name": "init_venv",
-    "summary": "Create this package's virtualenv and "
-               "install its pinned toolchain.",
-    "flags": {"recreate": {"help": "rebuild the venv "
-                                   "from scratch"}},
+    "summary": "Create this package's virtualenv and install its pinned toolchain.",
+    "flags": {"recreate": {"help": "rebuild the venv from scratch"}},
 }
 
 
@@ -49,8 +47,8 @@ def _load_uargv():
     argv.py), loaded by path — the tree's cross-package
     form for the platform home."""
     spec = importlib.util.spec_from_file_location(
-        "pipeline_platform_argv",
-        _PIPELINE_ROOT / "platform" / "argv.py")
+        "pipeline_platform_argv", _PIPELINE_ROOT / "platform" / "argv.py"
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
