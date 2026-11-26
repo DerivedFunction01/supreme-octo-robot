@@ -16,7 +16,6 @@ when a SampleStore needs its default root or its write seam.
 """
 
 import json
-import os
 from pathlib import Path
 
 # Declared pid budgets by venue shape id, used only when the
@@ -271,19 +270,19 @@ class SampleStore:
 
     Appends ride the foundation seam's staged_write (read the
     current bytes, stage the combined write) — the same writer
-    the run records ride; the fallback is the same read + stage
-    + replace spelled locally, for the by-path loads (the unit
-    tests) where the package context is absent. Either way a
-    reader never sees a partial line.
+    the run records ride — so a reader never sees a partial
+    line. A load context without the package (the by-path unit
+    tests) passes its own writer= callable; there is no local
+    write idiom in this module.
     """
 
-    def __init__(self, root=None):
+    def __init__(self, root=None, writer=None):
         if root is not None:
             self._root = Path(root)
         else:
             self._root = self._default_root()
-        self._writer = None
-        self._writer_tried = False
+        self._writer = writer
+        self._writer_tried = writer is not None
 
     @staticmethod
     def _foundation():
@@ -306,12 +305,14 @@ class SampleStore:
 
     def _staged_write(self, path, data: bytes):
         staged = self._platform_staged_write()
-        if staged is not None:
-            staged(path, data)
-            return
-        tmp = path.with_name(path.name + ".tmp")
-        tmp.write_bytes(data)
-        os.replace(tmp, path)
+        if staged is None:
+            raise RuntimeError(
+                "SampleStore has no writer: the foundation seam is "
+                "unavailable in this load context — pass writer= "
+                "(the bin and the package context resolve it from "
+                ".foundation)"
+            )
+        staged(path, data)
 
     def path_for(self, target: str) -> Path:
         return self._root / f"venue-samples-{target}.jsonl"

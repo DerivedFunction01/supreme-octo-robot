@@ -9,6 +9,7 @@ hand-built stat maps — no /proc, no venue, no network.
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -177,8 +178,17 @@ def test_probe_command_shape():
     assert "PIDS" in command and "JOB" in command and "ERR" in command
 
 
+def _stub_writer(path, data):
+    """The test's own staged writer (stage + replace), passed
+    to SampleStore as writer= — the by-path load has no package
+    context for the foundation seam."""
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_bytes(data)
+    os.replace(tmp, path)
+
+
 def test_store_append_and_last_two(tmp_path):
-    store = vs.SampleStore(root=tmp_path)
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
     first = vs.parse_sample(FIXTURE_ADVANCING, "msi-hx18", AT)
     second = vs.parse_sample(FIXTURE_VANISHED, "msi-hx18", AT)
     third = vs.parse_sample(FIXTURE_UNLIMITED, "msi-hx18", AT)
@@ -193,7 +203,7 @@ def test_store_append_and_last_two(tmp_path):
 
 
 def test_store_last_two_missing_and_single(tmp_path):
-    store = vs.SampleStore(root=tmp_path)
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
     assert store.last_two("hp-envy") == []
     only = vs.parse_sample(FIXTURE_VANISHED, "hp-envy", AT)
     store.append(only)
@@ -201,7 +211,7 @@ def test_store_last_two_missing_and_single(tmp_path):
 
 
 def test_store_files_are_per_venue(tmp_path):
-    store = vs.SampleStore(root=tmp_path)
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
     store.append(vs.parse_sample(FIXTURE_ADVANCING, "msi-hx18", AT))
     store.append(vs.parse_sample(FIXTURE_VANISHED, "hp-envy", AT))
     assert store.last_two("msi-hx18")[0]["pids_current"] == 812
