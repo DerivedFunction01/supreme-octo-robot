@@ -47,6 +47,15 @@ pulse-failing it explains, and a recently established
 tunnel in that record is positive evidence the route is
 alive, clearing the pulse finding the tunnel's health
 contradicts.
+The venue-state surface is consumed here too (venue-state
+mechanism, step 5): a fresh state file for the record's
+venue (var/venue-state-<venue>.json — the sampler writes
+the local targets', the reap pass writes the Colab
+sessions' and the fleet's) reading "saturated" stands as
+saturated-standing, a fresh "idle" as idle-capacity, and a
+job whose run record carries the actuator's reap stamp as
+wedged-killed — the owning lane's notification on this
+escalation surface, in this speech contract's form.
 Runner-side work facts (runs in flight on the session, a
 pending demand) are recorded in the state file for the
 escalation body's context; judging whether the owning
@@ -92,6 +101,11 @@ PULSE_STALE_S = int(os.environ.get("COLAB_LIVENESS_PULSE_STALE_S", "1800"))
 # as recent route evidence for the same span.
 FWD_EXHAUSTION_S = int(os.environ.get("COLAB_LIVENESS_FWD_EXHAUSTION_S", "600"))
 SESSION_GRACE_S = int(os.environ.get("COLAB_LIVENESS_SESSION_GRACE_S", "900"))
+# The venue-state surface's freshness bound for findings:
+# the sampler writes every 120 s and the reap pass at its
+# own cadence, so a file older than this is a dark surface,
+# and a dark surface is no finding.
+VENUE_STATE_STALE_S = int(os.environ.get("COLAB_LIVENESS_VENUE_STATE_STALE_S", "900"))
 TERMINAL_RUN_STATES = {"complete", "failed", "orphaned"}
 
 
@@ -173,6 +187,107 @@ def local_target_present(rec) -> bool:
     target, not the CLI session binding: present when a target
     resolves for the record."""
     return local_target_for(rec) is not None
+
+
+def local_target_id(rec):
+    """The target id a local-venue record binds through —
+    the key local_target_for resolves to a target dict, by
+    the same legs (the record's own target id, else its
+    shape's `target` binding, else the venue's only target
+    or the "local" one). The venue-state file is keyed by
+    this id."""
+    cfg = _load(liveness_entry.var_dir(REPO).parent / "config" / "lease.json", {})
+    if not isinstance(cfg, dict):
+        return None
+    block = (cfg.get("venue_targets") or {}).get("local")
+    targets = {}
+    if isinstance(block, dict) and block.get("host") and block.get("user"):
+        targets = {"local": block}
+    elif isinstance(block, dict):
+        targets = {k: v for k, v in block.items() if isinstance(v, dict) and v.get("host") and v.get("user")}
+    if not targets:
+        return None
+    if rec.get("target") in targets:
+        return rec.get("target")
+    shapes = (cfg.get("venue_shapes") or {}).get("local") or []
+    for entry in shapes:
+        if isinstance(entry, dict) and entry.get("id") == rec.get("shape") and entry.get("target") in targets:
+            return entry.get("target")
+    if len(targets) == 1:
+        return next(iter(targets))
+    return "local" if "local" in targets else None
+
+
+def _run_record(run_id):
+    """One run record by id, from the runs store under the
+    var dir's parent — the same root derivation
+    local_target_for uses for the lease config, so the
+    checker's reads stay under the root the record lives
+    under."""
+    runs = liveness_entry.var_dir(REPO).parent / "results" / "runs"
+    rec = _load(runs / f"{run_id}.json", {})
+    return rec if isinstance(rec, dict) else {}
+
+
+def venue_state_findings(now, rec) -> dict:
+    """The venue-state surface's standing findings for this
+    record's venue (venue-state mechanism, step 5): the
+    state files in the var dir are the measures' read
+    surface and the checker is one of the measures. A fresh
+    file reading "saturated" stands as saturated-standing;
+    a fresh "idle" as idle-capacity; a job in the file whose
+    run record carries the actuator's `reaped` stamp stands
+    as wedged-killed:<run id> — the owning lane's
+    notification, routed by the escalation body on the
+    record's caller. A stale or absent file is no finding:
+    the surface's silence is not a verdict."""
+    findings = {}
+    venue = rec.get("venue") or "colab"
+    keys = []
+    if venue == "local":
+        target_id = local_target_id(rec)
+        if target_id:
+            keys.append(target_id)
+    elif venue == "colab":
+        keys.append("colab")
+        if rec.get("session"):
+            keys.append(rec["session"])
+    else:
+        return findings
+    var = liveness_entry.var_dir(REPO)
+    for key in keys:
+        state = _load(var / f"venue-state-{key}.json", {})
+        if not isinstance(state, dict) or not state:
+            continue
+        sampled = _dt(state.get("sampled_at"))
+        if sampled is None or _age_s(now, sampled) > VENUE_STATE_STALE_S or _age_s(now, sampled) < -60:
+            continue
+        if state.get("state") == "saturated":
+            findings["saturated-standing"] = (
+                f"venue {key} saturated: pids {state.get('pids_current')}/{state.get('pids_capacity')} "
+                f"at {state.get('sampled_at')} — dispatches refuse until the table drains"
+            )
+        elif state.get("state") == "idle":
+            findings["idle-capacity"] = (
+                f"venue {key} idle: no live job trees "
+                f"(pids {state.get('pids_current')}/{state.get('pids_capacity')}) — capacity available"
+            )
+        for job in state.get("jobs") or []:
+            if not isinstance(job, dict):
+                continue
+            run_id = job.get("run_id")
+            if not run_id:
+                continue
+            run = _run_record(run_id)
+            reaped = run.get("reaped")
+            if isinstance(reaped, dict):
+                findings[f"wedged-killed:{run_id}"] = (
+                    f"run {run_id} (caller {job.get('caller') or run.get('caller')}) "
+                    f"reaped {reaped.get('reason')}: cpu {job.get('cpu_s')}s, "
+                    f"delta {job.get('cpu_delta_s')}s, exit {reaped.get('exit_code')} — "
+                    "record settled with the samples as evidence"
+                )
+    return findings
 
 
 def forwarder_reading(now, rec):
@@ -353,6 +468,7 @@ def main(argv) -> int:
             f"CLI session-binding store damaged ({binding_state.get('detail') or 'unknown'}, "
             f"since {binding_state.get('at') or 'unknown'}) — session readings are "
             "unreliable until the funnel's heal restores it")
+    findings.update(venue_state_findings(now, rec))
 
     speak = []
     for code, detail in findings.items():

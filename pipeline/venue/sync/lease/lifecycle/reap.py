@@ -490,6 +490,26 @@ def _reap_pass(colab, repo: Path, now_dt: datetime | None = None, gate: GateScop
             records.save_record(repo, fresh_rec)
         except Exception:  # noqa: BLE001
             pass
+    # Colab venue-state parity (venue-state mechanism,
+    # step 6): classify the home sessions and the fleet
+    # aggregate from this pass's own reads — the shared
+    # snapshot's liveness per session and the records'
+    # live-jobs projections — into the same state-file
+    # shape the local sampler writes, through the same
+    # classifier. Guarded like the listener census: a
+    # parity failure never breaks the reap.
+    if budget.check("venue-state:colab"):
+        try:
+            from . import venue_state
+
+            live_by_session = {
+                rec["session"]: sessions.state_in_snapshot(snapshot, rec["session"]) == "alive"
+                for rec in recs
+                if (rec.get("venue") or foundation.VENUE) == foundation.VENUE
+            }
+            venue_state.pass_colab(repo, recs, live_by_session, now_dt.isoformat())
+        except Exception:  # noqa: BLE001
+            pass
     top = results[0] if len(results) == 1 else None
     if top is None:
         for action in _REAP_PRIORITY:

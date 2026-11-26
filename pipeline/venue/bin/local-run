@@ -156,6 +156,7 @@ lease = importlib.util.module_from_spec(_spec_l)
 sys.modules["lease"] = lease
 _spec_l.loader.exec_module(lease)
 local_venue = lease.local_venue
+venue_actuate = importlib.import_module("runner.venue_actuate")
 sealed = _load.sync("sealed")
 
 
@@ -265,9 +266,16 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
         # "launched", so the record carries root_pid from
         # this same SSH call; a stamp that never lands is
         # not a launch failure — the record carries none.
+        # The share stamp's run environment: GATE_WORKERS
+        # from the record's share, when the venue-state
+        # surface sized it at dispatch.
+        share = rec.get("share") or {}
+        env_prefix = ""
+        if share.get("basis") == "state" and share.get("workers"):
+            env_prefix = f"GATE_WORKERS={share['workers']} "
         cmd = (
             f"cd ~/{base} && if [ ! -f .launched ]; then touch .launched; "
-            f"nohup bash -c 'bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
+            f"nohup bash -c '{env_prefix}bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
             ">/dev/null 2>&1 & fi; "
             "for i in 1 2 3 4 5 6 7 8 9 10; do [ -s root.pid ] && break; sleep 1; done; "
             "echo launched; cat root.pid 2>/dev/null || true")
@@ -613,6 +621,22 @@ def main() -> int:
     )
     if preflight:
         return _fail(f"job {job_name}: {preflight}")
+    # Venue-state legs (venue-state mechanism, step 4): the
+    # shape's target names the venue, and its state file —
+    # read here, before the lease registration or any SSH
+    # step — carries the saturation verdict refused on below
+    # and the free fraction the share stamp sizes from. A
+    # stale or absent file refuses nothing: the surface's
+    # silence is not a verdict.
+    shape_id = job.get("shape") or "local"
+    shape_entry, target_id, _shape_target = local_venue.shape_target(REPO, shape_id)
+    venue_state = None
+    if target_id:
+        var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+        venue_state = venue_actuate.load_state(var_dir, target_id)
+        saturation = venue_actuate.saturation_refusal(venue_state, now_epoch=time.time())
+        if saturation:
+            return _fail(f"job {job_name}: {saturation}")
     if seal_entry is not None:
         # A sealed job dispatches from its blob, opened in
         # memory under the runner's server-side key; the
@@ -690,6 +714,15 @@ def main() -> int:
         rec["sealed"] = True
     if union_payload is not None:
         rec["constituents"] = union_payload["constituents"]
+    # The share stamp: the job's parallelism share (declared
+    # cores scaled by the venue's free pid fraction) rides
+    # the record, and into the run environment as
+    # GATE_WORKERS when the state file sized it, overriding
+    # the job form's $(nproc) default where the form reads it.
+    share = venue_actuate.share_for(
+        venue_state, (shape_entry or {}).get("cores"), now_epoch=time.time()
+    )
+    rec["share"] = share
     save_record(rec)
     if script_bytes is None:
         script_bytes = script_path.read_bytes()
