@@ -117,26 +117,30 @@ def serial_rows(view):
 
 
 class SpecimenWindows(unittest.TestCase):
-    def test_staffed_window_reads_staffed(self):
+    def test_staffed_window_reads_below_the_cured_floor(self):
         from unittest import mock
 
         # Inside 10:00–12:25Z the records show several
-        # families across both live sessions: the count
-        # bands read staffed and no serial row stands.
-        # The queue stands nothing here either, under
-        # the contract as it stood in the window: its
-        # staffable-now work was staffed and pruned by
-        # amendment, and the one remaining work item
-        # (the Round 4 build) was gated on the packet
-        # marker, which stood unlanded at these
-        # instants — the flip came later, by
-        # amendment, when the packet landed. The
-        # 13:30Z instant is not probed here — it is
-        # probed as defect below.
+        # families across both live sessions — five in
+        # flight at 11:00. Under the first-seeded floor
+        # (2) the bands read staffed; under the cured
+        # floor (8 distinct register families in active
+        # work at all times, owner order 2026-11-26)
+        # the same window reads as a defect on the
+        # floor condition alone. The queue stands
+        # nothing here either: its one remaining work
+        # item was gated on the packet marker, which
+        # stood unlanded at these instants. The 13:30Z
+        # instant is probed as defect below.
         with mock.patch.object(registry, "staffing_contract_for", packet_unlanded):
             for now in (at(11), at(12), at(12, 15)):
                 view = staffing.build_staffing(specimen_state(now), settings(), now)
-                self.assertEqual(serial_rows(view), [], f"at {now}")
+                rows = serial_rows(view)
+                self.assertEqual(len(rows), 1, f"at {now}")
+                self.assertEqual(
+                    rows[0]["conditions"],
+                    ["fewer_than_min_families_in_flight"],
+                    f"at {now}")
                 facts = venue.families_at(edgar_records(now), now, 30)
                 self.assertGreaterEqual(len(facts["families"]), 2, f"at {now}")
                 carrying = {
@@ -146,9 +150,7 @@ class SpecimenWindows(unittest.TestCase):
 
     def test_serial_window_reads_as_defect(self):
         # Inside 13:30–15:22Z the records narrow to one
-        # family on one session while the other live
-        # session carries none: a serial staffing defect.
-        # 13:30Z is the plan's defect-window start.
+        # family on one session: a serial staffing defect.
         for now in (at(13, 30), at(14), at(15), at(15, 22)):
             view = staffing.build_staffing(specimen_state(now), settings(), now)
             rows = serial_rows(view)
@@ -166,7 +168,7 @@ class SpecimenWindows(unittest.TestCase):
             staffing.build_staffing(specimen_state(at(15, 22)), settings(), at(15, 22))
         )[0]
         self.assertIn(
-            "all_compute_on_one_session_while_another_live_session_carries_none",
+            "one_deep_per_session_while_staffable_families_wait",
             row["conditions"],
         )
         self.assertEqual(
@@ -291,9 +293,7 @@ def packet_unlanded(slug):
     packet marker unlanded: the contract as it
     stood in the recorded specimen windows, before
     the packet landing flipped the marker by
-    amendment. Historical windows are measured
-    under the contract as it stood in the window;
-    the live seed now carries the flip."""
+    amendment; the live seed now carries the flip."""
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
         for entry in contract.get("staffable_queue") or []:
@@ -340,8 +340,14 @@ class QueueMeasure(unittest.TestCase):
     def test_bands_met_but_queue_due_still_raises(self):
         from unittest import mock
 
+        # Bands met under the cured floor: eight
+        # families in flight, stacked on the two
+        # sessions so the one-deep condition does not
+        # fire — the queue condition stands alone.
+        fillers = {f"fam-{c}": [CALM] if i < 3 else [SCARLET]
+                   for i, c in enumerate("abcdef")}
         now, state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+            {"cocisep": [CALM], "corefin-coci": [SCARLET], **fillers}
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_rows._family_rows(state, now, live, idle)
@@ -351,11 +357,14 @@ class QueueMeasure(unittest.TestCase):
     def test_in_flight_family_is_never_due(self):
         from unittest import mock
 
+        fillers = {f"fam-{c}": [CALM] if i < 2 else [SCARLET]
+                   for i, c in enumerate("abcde")}
         now, state, live, idle = queue_state(
             {
                 "cocisep": [CALM],
                 "corefin-coci": [SCARLET],
                 "round4": [CALM],
+                **fillers,
             }
         )
         # The packet marker landed makes the Round 4

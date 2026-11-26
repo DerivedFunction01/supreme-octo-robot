@@ -55,37 +55,32 @@ DEFAULT_DRAIN_TAIL = (
 )
 
 # The edgar staffing contract, verbatim as data from
-# the edgar-parallel-staffing reminder's measure
-# section (owner enforcement ruling): the
-# unit of staffing is the table family in flight, a
-# family counts on a run in flight or evidence
-# advancing within 30 minutes, fewer than 2 families
-# in flight while 2 or more High-RAM sessions are live
-# is a serial staffing defect (as are all compute on
-# one session while another live session carries none,
-# and a prerequisite-due family sitting unstaffed), a
-# research delegate does not count toward family
-# concurrency, a no-parallelizable-work claim is void
-# unless verified family by family, the defect closes
-# only on a later measure showing at least 2 families
-# in flight across at least 2 sessions, and a defect
-# surviving two consecutive runs names the
-# coordinator's non-response. Under the owner's
-# fleet ruling the fleet target is 3 standing
-# High-RAM sessions and all three must actually be
-# used, so the carrying floor is 3: family work
-# spread over only 2 sessions while a third stands
-# live and idle is the serial defect, priced by the
-# same condition.
+# the programme GOAL.md's class 2 in its cured form
+# (owner order, 2026-11-26): the staffing measure is
+# work-denominated, with a numeric floor — at least
+# 8 distinct register families in active work at all
+# times. The expected count is set by the register's
+# staffable families, never by the number of sessions
+# up; sessions are capacity, not the denominator,
+# and staffing that runs one-deep-per-session while
+# staffable families wait is a class-2 instance by
+# definition. The unit of staffing is the table
+# family in flight, a family counts on a run in
+# flight or evidence advancing within 30 minutes, a
+# prerequisite-due family sitting unstaffed is a
+# defect, a research delegate does not count toward
+# family concurrency, a no-parallelizable-work claim
+# is void unless verified family by family, the
+# defect closes only on a later measure showing the
+# floor met, and a defect surviving two consecutive
+# runs names the coordinator's non-response.
 EDGAR_STAFFING_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
-    "min_families_in_flight": 2,
-    "min_live_sessions": 2,
-    "min_sessions_carrying_work": 3,
+    "min_families_in_flight": 8,
     "defect_conditions": [
         "fewer_than_min_families_in_flight",
-        "all_compute_on_one_session_while_another_live_session_carries_none",
+        "one_deep_per_session_while_staffable_families_wait",
         "prerequisite_due_family_unstaffed",
     ],
     "delegate_counts_toward_concurrency": False,
@@ -148,8 +143,6 @@ _CONTRACT_FIELDS = (
     "unit",
     "evidence_window_minutes",
     "min_families_in_flight",
-    "min_live_sessions",
-    "min_sessions_carrying_work",
     "defect_conditions",
     "delegate_counts_toward_concurrency",
     "no_parallel_work_claim",
@@ -177,8 +170,6 @@ def _validate_contract(slug: str, contract, problems: list) -> None:
     for field in (
         "evidence_window_minutes",
         "min_families_in_flight",
-        "min_live_sessions",
-        "min_sessions_carrying_work",
         "non_response_after_consecutive_runs",
         "reminder_cadence_minutes",
     ):

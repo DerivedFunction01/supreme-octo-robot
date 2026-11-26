@@ -344,15 +344,19 @@ def lane_blocks(state: dict) -> dict:
 def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> list:
     """The family-concurrency measure (owner
     enforcement ruling, carried as the registry's
-    staffing contract): fewer families in
-    flight than the contract's minimum, or all
-    compute on one session while another live session
-    carries none, or prerequisite-due queue work
-    standing unstaffed, is a serial staffing defect
-    while open family work stands. Facts come from
-    the venue snapshot; the bands come from the
-    registry — no evaluator constants, no programme
-    names."""
+    staffing contract, cured work-denominated form,
+    2026-11-26): fewer families in flight than the
+    contract's floor, or one-deep-per-session
+    staffing while staffable families wait, or
+    prerequisite-due queue work standing unstaffed,
+    is a serial staffing defect while open family
+    work stands. The expected count is set by the
+    register's staffable families, never by the
+    number of sessions up — sessions are capacity,
+    named in the evidence as the carriers, never as
+    the denominator. Facts come from the venue
+    snapshot; the bands come from the registry — no
+    evaluator constants, no programme names."""
     snapshot = state.get("venue_snapshot") or {}
     if not snapshot:
         return []
@@ -366,8 +370,6 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
             continue
         facts = snapshot.get(slug)
         if not facts:
-            continue
-        if len(live) < contract["min_live_sessions"]:
             continue
         if not _programme_armed(state, declaration):
             continue
@@ -388,24 +390,38 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
         conditions = []
         if len(families) < contract["min_families_in_flight"]:
             conditions.append("fewer_than_min_families_in_flight")
-        if (
-            len(carrying_sessions) < contract["min_sessions_carrying_work"]
-            and idle_sessions
-            and families
-        ):
-            conditions.append(
-                "all_compute_on_one_session_while_another_live_session_carries_none"
-            )
         # The payload assembly is shared with the
         # digest's lane block (_lane_payload): the
         # row's queue_unstaffed and lane_records
         # evidence are the block's own fields.
         _block, lane_extra = _lane_payload(state, declaration, contract, families)
         due = _block["queue_unstaffed"]
-        if lane_extra is not None and lane_extra["actual"] < lane_extra["expected"]:
+        lane_shortfall = (
+            lane_extra is not None and lane_extra["actual"] < lane_extra["expected"]
+        )
+        if lane_shortfall:
             conditions.append("lane_shortfall")
         if due:
             conditions.append("prerequisite_due_family_unstaffed")
+        # One-deep-per-session while staffable
+        # families wait is a class-2 instance by
+        # definition (cured contract): every carrying
+        # session carries exactly one family, and
+        # staffable work stands unstaffed (a due
+        # queue item or a lane shortfall against the
+        # register's staffable set).
+        per_session: dict = {}
+        for entry in families.values():
+            for session in entry.get("sessions") or []:
+                if session in live:
+                    per_session[session] = per_session.get(session, 0) + 1
+        one_deep = (
+            bool(per_session)
+            and max(per_session.values()) == 1
+            and (bool(due) or lane_shortfall)
+        )
+        if one_deep:
+            conditions.append("one_deep_per_session_while_staffable_families_wait")
         if not conditions:
             continue
         handle = (declaration.get("handles") or [slug])[0]
@@ -420,13 +436,11 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
             f"run records over a {contract['evidence_window_minutes']}-"
             f"minute evidence window."
         ]
-        if idle_sessions:
-            idle_text = ", ".join(
-                f"{s['name']} idle {s['idle_minutes']}m" for s in idle_sessions
-            )
+        if one_deep:
             parts.append(
-                f"Live sessions carrying no work: {idle_text} — while "
-                f"open family work stands, that idleness is priced here."
+                "Every carrying session carries exactly one family "
+                "while staffable families wait — one-deep-per-session "
+                "staffing is a class-2 instance by definition."
             )
         if due:
             names = ", ".join(entry["label"] for entry in due)

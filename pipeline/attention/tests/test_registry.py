@@ -20,23 +20,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from attention.services.measure import registry  # noqa: E402
 
-# The edgar staffing contract as ruled (owner
-# enforcement ruling, in the
-# edgar-parallel-staffing reminder's measure section;
-# carrying floor amended to 3 under the owner's
-# fleet ruling: 3 standing sessions, all
-# three actually used): written out here from the
-# ruling, so the seed is checked against the source,
-# not against itself.
+# The edgar staffing contract as ruled in its
+# cured form (owner order, 2026-11-26, in the
+# programme GOAL.md's class 2: the numeric floor of
+# at least 8 distinct register families in active
+# work at all times; the measure work-denominated —
+# the expected count set by the register's staffable
+# families, sessions capacity and never the
+# denominator; one-deep-per-session while families
+# wait a class-2 instance by definition): written
+# out here from the ruling, so the seed is checked
+# against the source, not against itself.
 EXPECTED_EDGAR_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
-    "min_families_in_flight": 2,
-    "min_live_sessions": 2,
-    "min_sessions_carrying_work": 3,
+    "min_families_in_flight": 8,
     "defect_conditions": [
         "fewer_than_min_families_in_flight",
-        "all_compute_on_one_session_while_another_live_session_carries_none",
+        "one_deep_per_session_while_staffable_families_wait",
         "prerequisite_due_family_unstaffed",
     ],
     "delegate_counts_toward_concurrency": False,
@@ -169,7 +170,7 @@ class LoudRefusal(unittest.TestCase):
 
 
 class EdgarContract(unittest.TestCase):
-    def test_edgar_row_reproduces_the_2026_11_19_contract_verbatim(self):
+    def test_edgar_row_reproduces_the_cured_contract_verbatim(self):
         contract = registry.staffing_contract_for("edgar-greenfield")
         self.assertEqual(contract, EXPECTED_EDGAR_CONTRACT)
 

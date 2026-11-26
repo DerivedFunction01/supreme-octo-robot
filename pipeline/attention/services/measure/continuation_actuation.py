@@ -242,18 +242,17 @@ def _serial_steer(row: dict, slug: str | None, escalated: bool, bound) -> tuple:
         f"contract's evidence window."
     ]
     if idle:
-        parts.append(
-            f"Live sessions carrying no work: {idle_text} — that idleness "
-            f"is priced while open family work stands."
-        )
+        parts.append(f"Live sessions carrying no work: {idle_text}.")
     if row.get("conditions"):
         parts.append(f"Conditions met: {', '.join(row['conditions'])}.")
     queue_due = row.get("queue_unstaffed") or []
     if queue_due:
         parts.append(_commission_text(queue_due, contract))
     else:
+        floor = f" of {minimum}" if minimum else ""
         parts.append(
-            "Next act: staff a second family on a live session, or verify "
+            f"Next act: staff distinct register families up to the "
+            f"contract's floor{floor} in active work, or verify "
             "family by family that no parallelizable work stands."
         )
     if escalated:

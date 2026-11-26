@@ -161,14 +161,16 @@ def cron_in_flight(records, now):
 
 
 def cron_serial(now):
-    """The staffing reminder's serial defect at `now`:
-    (defect, families, carrying sessions). The live
-    sessions are the era's two; open family work
-    stands in every specimen (two edgar-sec todos
-    armed), so the defect conditions apply directly:
-    fewer than 2 families in flight while 2+ sessions
-    are live, or all compute on one session while
-    another live session carries none."""
+    """The staffing measure's serial defect at `now`:
+    (defect, families, carrying sessions), in the
+    cured work-denominated form (owner order,
+    2026-11-26): open family work stands in every
+    specimen (two edgar-sec todos armed), so the
+    defect condition applies directly — fewer
+    distinct register families in flight than the
+    contract's floor of 8. Sessions are capacity,
+    never the denominator: the carrying set is
+    returned as evidence, not as a condition."""
     flying = cron_in_flight(raw_records(), now)
     live = {CALM, SCARLET}
     families = {}
@@ -178,8 +180,7 @@ def cron_serial(now):
             .add(rec.get("session") or "")
         if rec.get("session") in live:
             carrying.add(rec["session"])
-    defect = (len(families) < 2 and len(live) >= 2) \
-        or (len(carrying) == 1 and bool(live - carrying))
+    defect = len(families) < 8
     return defect, families, carrying
 
 
@@ -376,23 +377,23 @@ class CronFamilyDerivation(unittest.TestCase):
 class StaffingParity(unittest.TestCase):
     def test_staffed_window_both_sides_agree(self):
         # Inside 10:00–12:25Z the records show several
-        # families across both live sessions: neither
-        # side raises a defect. The cron-side counts
-        # prove the specimen is non-vacuous. The app
-        # side stands no queue row in these windows
-        # either, measured under the contract as it
-        # stood in the window: the queue's
-        # staffable-now work was staffed and pruned
-        # by amendment, and its one remaining work
-        # item was gated on the packet marker, which
-        # stood unlanded at these instants — the
-        # flip came later, by amendment, when the
-        # packet landed — so parity holds on the
-        # whole serial row, not just the count
-        # conditions both sides measure.
+        # families across both live sessions — five in
+        # flight at 11:00. Under the contract as first
+        # seeded (floor 2) neither side raised a
+        # defect; under the cured floor (8 distinct
+        # register families in active work at all
+        # times, owner order 2026-11-26) both sides
+        # raise the same defect on the same count:
+        # parity is agreement, and the specimen now
+        # pins agreement at the cured band. The queue
+        # side stands as it stood in the window: the
+        # queue's one remaining work item was gated on
+        # the packet marker, which stood unlanded at
+        # these instants — so the row carries the
+        # floor condition alone.
         for now in (at19(11), at19(12), at19(12, 15)):
             defect, families, carrying = cron_serial(now)
-            self.assertFalse(defect, f"cron side at {now}")
+            self.assertTrue(defect, f"cron side at {now}")
             self.assertGreaterEqual(len(families), 2, f"at {now}")
             self.assertGreaterEqual(len(carrying), 2, f"at {now}")
             with mock.patch.object(
@@ -401,7 +402,11 @@ class StaffingParity(unittest.TestCase):
                 view = staffing.build_staffing(
                     specimen_state(now), settings(), now)
             rows = rows_of_kind(view, "serial_staffing")
-            self.assertEqual(rows, [], f"app side at {now}")
+            self.assertEqual(len(rows), 1, f"app side at {now}")
+            self.assertEqual(
+                rows[0]["conditions"],
+                ["fewer_than_min_families_in_flight"],
+                f"app side at {now}")
 
     def test_defect_window_both_sides_agree(self):
         # Inside 13:30–15:22Z the records narrow to one
@@ -430,7 +435,7 @@ class StaffingParity(unittest.TestCase):
                 "fewer_than_min_families_in_flight",
                 row["conditions"])
             self.assertIn(
-                "all_compute_on_one_session_while_another_live_session_carries_none",
+                "one_deep_per_session_while_staffable_families_wait",
                 row["conditions"])
 
 

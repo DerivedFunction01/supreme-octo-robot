@@ -201,19 +201,28 @@ class StaffingActuationTests(unittest.TestCase):
         continuation.run_staffing_pass(state, settings(), at(14))
         self.assertEqual(len(staffing_sends(state)), 1)
         # The 11:00Z specimen reads staffed on the
-        # count bands, and the queue stands nothing
-        # due there either, under the contract as it
-        # stood in the window — its staffable-now
-        # work was staffed and pruned by amendment,
-        # and the one remaining item was gated on
-        # the packet marker, which stood unlanded at
-        # that instant (the flip came later, by
-        # amendment, when the packet landed) — so
-        # the measure clears: the row is gone, the
-        # ledger entry leaves with it, and no
-        # further steer posts (the pass still
-        # reports the ledger clear as a change).
+        # count bands as first seeded, and the queue
+        # stands nothing due there either, under the
+        # contract as it stood in the window — its
+        # staffable-now work was staffed and pruned
+        # by amendment, and the one remaining item
+        # was gated on the packet marker, which stood
+        # unlanded at that instant (the flip came
+        # later, by amendment, when the packet
+        # landed). Under the cured floor (8 distinct
+        # register families in active work) the
+        # specimen's five families no longer clear
+        # the measure, so the clearing state tops the
+        # snapshot up to the floor with three further
+        # families in flight — the measure clears:
+        # the row is gone, the ledger entry leaves
+        # with it, and no further steer posts (the
+        # pass still reports the ledger clear as a
+        # change).
         staffed = defect_state(at(11))
+        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+        for name in ("fam-a", "fam-b", "fam-c"):
+            families[name] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
         state["venue_snapshot"] = staffed["venue_snapshot"]
         state["capacity_snapshot"] = staffed["capacity_snapshot"]
         with mock.patch.object(
@@ -448,6 +457,11 @@ class CommissionSteerTests(unittest.TestCase):
             staffed = defect_state(at(11))
             families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
             families["tracefam"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
+            # Topped up to the cured floor of 8: the
+            # specimen's five families plus tracefam
+            # read below the floor on their own.
+            for name in ("fam-a", "fam-b"):
+                families[name] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
             state["venue_snapshot"] = staffed["venue_snapshot"]
             state["capacity_snapshot"] = staffed["capacity_snapshot"]
             self.assertTrue(continuation.run_staffing_pass(state, settings(), at(11)))
@@ -469,9 +483,9 @@ class CommissionSteerTests(unittest.TestCase):
         }
         _summary, detail = continuation._serial_steer(row, None, False, None)
         self.assertIn(
-            "Next act: staff a second family on a live session, or "
-            "verify family by family that no parallelizable work "
-            "stands.",
+            "Next act: staff distinct register families up to the "
+            "contract's floor in active work, or verify family by "
+            "family that no parallelizable work stands.",
             detail,
         )
         self.assertNotIn("Staffing commission", detail)

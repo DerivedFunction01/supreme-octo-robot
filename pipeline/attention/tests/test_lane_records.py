@@ -411,10 +411,26 @@ def packet_landed(slug):
     return contract
 
 
+# Filler families carrying a fixture's venue
+# snapshot up to the cured floor (8 distinct
+# register families in active work), stacked on
+# the two sessions so no one-deep condition fires:
+# the lane premises below isolate the queue and
+# lane-record conditions from the count condition.
+FILLER_FAMILIES = {
+    "fam-c": [CALM],
+    "fam-d": [CALM],
+    "fam-e": [CALM],
+    "fam-f": [SCARLET],
+    "fam-g": [SCARLET],
+    "fam-h": [SCARLET],
+}
+
+
 class MeasureReconciliation(unittest.TestCase):
     def test_full_staffing_clears_the_row(self):
         state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+            {"cocisep": [CALM], "corefin-coci": [SCARLET], **FILLER_FAMILIES}
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_venue._family_rows(state, NOW, live, idle)
@@ -529,7 +545,7 @@ class LaneServeShape(unittest.TestCase):
 
     def test_full_staffing_serves_the_block_the_row_clears(self):
         state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+            {"cocisep": [CALM], "corefin-coci": [SCARLET], **FILLER_FAMILIES}
         )
         state["lane_snapshot"] = lane_snapshot_entry(
             [counted_lane("fama-lane", "fama"), counted_lane("famb-lane", "famb")]
@@ -570,7 +586,7 @@ class LaneServeShape(unittest.TestCase):
 
     def test_one_lane_short_block_names_the_unstaffed_item(self):
         state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET]}
+            {"cocisep": [CALM], "corefin-coci": [SCARLET], **FILLER_FAMILIES}
         )
         state["lane_snapshot"] = lane_snapshot_entry(
             [counted_lane("fama-lane", "fama")]
