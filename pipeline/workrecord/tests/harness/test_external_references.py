@@ -15,9 +15,12 @@ Two pattern sources:
   they name no person, project, or machine.
 - PERSONAL literals (a personal name, a hosting username,
   sibling project names, the published artifact's slug) live
-  ONLY in an untracked denylist: the repo's one home,
+  ONLY in an untracked denylist, in the layered form: the
+  ground at the repo's one home,
   `pipeline/platform/state/denylist.txt`, or the file the
-  STARTER_DENYLIST_FILE env var names.
+  STARTER_DENYLIST_FILE env var names, unioned with the
+  repo layer beside the ground (`denylist.repo.txt`) on
+  read when present.
   Matching is case-insensitive. A split construction is still
   a leak — anyone reading the code learns the literal — so no
   personal literal, whole or fragmented, belongs in a tracked
@@ -41,6 +44,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -54,39 +58,66 @@ GENERIC = [
 DENYLIST_ENV = "STARTER_DENYLIST_FILE"
 
 
-def _default_denylist():
-    """The repo's one denylist home, resolved from this
+def _default_denylists():
+    """The repo's denylist pair, resolved from this
     package's root upward to the repo root (the first
-    ancestor carrying a .git entry)."""
+    ancestor carrying a .git entry): the ground at the
+    one home, and the repo layer beside it."""
     here = ROOT
     while True:
         if (here / ".git").exists():
-            return here / "pipeline" / "platform" / "state" / "denylist.txt"
+            ground = here / "pipeline" / "platform" / "state" / "denylist.txt"
+            break
         if here.parent == here:
-            return ROOT / "state" / "denylist.txt"
+            ground = ROOT / "state" / "denylist.txt"
+            break
         here = here.parent
+    return ground, ground.parent / "denylist.repo.txt"
 
 
-DENYLIST_DEFAULT = _default_denylist()
+DENYLIST_DEFAULTS = _default_denylists()
 
 
-def load_denylist(path=None):
-    """Personal literals from the untracked denylist, or an
-    empty list when none is provisioned. One literal per
-    line; blank lines and #-comments are ignored."""
-    if path is None:
-        env = os.environ.get(DENYLIST_ENV)
-        path = Path(env) if env else DENYLIST_DEFAULT
-    try:
-        lines = Path(path).read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
+def _parse_lines(lines):
     out = []
     for line in lines:
         line = line.strip()
         if line and not line.startswith("#"):
             out.append(line)
     return out
+
+
+def _read_maybe(path):
+    """One list file's literals, or None when unreadable."""
+    try:
+        lines = Path(path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    return _parse_lines(lines)
+
+
+def load_denylist(path=None):
+    """Personal literals from the untracked denylist, or an
+    empty list when none is provisioned. One literal per
+    line; blank lines and #-comments are ignored. With no
+    explicit path, the ground (the STARTER_DENYLIST_FILE
+    env var, else the default of the _default_denylists
+    pair) unions with the repo layer beside it,
+    denylist.repo.txt, when present; an unreadable ground
+    provisions nothing, and an explicit path reads exactly
+    that one file."""
+    if path is not None:
+        return _read_maybe(path) or []
+    env = os.environ.get(DENYLIST_ENV)
+    if env:
+        ground = Path(env)
+        layer = ground.parent / "denylist.repo.txt"
+    else:
+        ground, layer = DENYLIST_DEFAULTS
+    literals = _read_maybe(ground)
+    if literals is None:
+        return []
+    return literals + (_read_maybe(layer) or [])
 
 
 def scan(texts, generic, personal):
@@ -151,6 +182,21 @@ class TestDenylistMechanism(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             self.assertEqual(
                 load_denylist(Path(td) / "absent.txt"), [])
+
+    def test_load_denylist_unions_layer_beside_ground(self):
+        # The layered form: with no explicit path, the
+        # env-named ground unions with the repo layer
+        # beside it (denylist.repo.txt) on read.
+        with tempfile.TemporaryDirectory() as td:
+            ground = Path(td) / "denylist.txt"
+            ground.write_text("foo-bar\n", encoding="utf-8")
+            (Path(td) / "denylist.repo.txt").write_text(
+                "quux-zzq-9\n", encoding="utf-8")
+            with mock.patch.dict(
+                    os.environ, {DENYLIST_ENV: str(ground)}):
+                self.assertEqual(
+                    sorted(load_denylist()),
+                    ["foo-bar", "quux-zzq-9"])
 
     def test_scan_flags_personal_case_insensitively(self):
         texts = {"a.txt": "has QUUX-ZZQ-9 inside"}
