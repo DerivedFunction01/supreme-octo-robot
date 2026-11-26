@@ -25,6 +25,20 @@ _paths = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_paths)
 
 _COMPONENT = Path(_paths.GATE_PORTABILITY)
+# The component's import of its denylist_match sibling has
+# two forms: the package-relative form (when the gate
+# package itself is imported) and the bare form for
+# standalone script use, which expects the component's own
+# directory on sys.path — as running the component directly
+# provides. This loader execs the source into its own
+# namespace, where neither holds unless the directory is
+# put on the path here; without it the load dies with
+# ModuleNotFoundError (the defect the argv lane's flag
+# named: this suite's scanner test erroring at load in the
+# gate runner's own unittest context).
+_COMPONENT_DIR = str(_COMPONENT.parent)
+if _COMPONENT_DIR not in sys.path:
+    sys.path.insert(0, _COMPONENT_DIR)
 _AS_SCRIPT = __name__ == "__main__"
 if _AS_SCRIPT:
     globals()["__name__"] = "portability_scan"
