@@ -256,6 +256,56 @@ class MigrationTests(unittest.TestCase):
         self.assertEqual(state["programmes"][0]["venue"], "local")
 
 
+class TerminalSendFulfillmentTests(unittest.TestCase):
+    def test_pre_retirement_suppressed_send_never_stalls(self):
+        # The live Meta Power Plan shape: decided 13 days
+        # ago; its send was suppressed before the fold
+        # (outcome recorded, dispatch failures on file).
+        # The decision stands as recorded — it must not
+        # re-enter the queue as stalled, however old it is.
+        decided_at = NOW - timedelta(days=13)
+        item = _meta_power_item(
+            triage="done",
+            status_code=None,
+            due_at=None,
+            decision={
+                "verb": "pick",
+                "at": decided_at,
+                "option_id": "keep",
+                "note": "",
+                "send_id": "s0001",
+            },
+        )
+        state = _state(item)
+        state["sends"].append(
+            {
+                "id": "s0001",
+                "handle": "main",
+                "mode": "live",
+                "outcome": "recorded",
+                "dispatch": {
+                    "consumer": None,
+                    "claimed_at": None,
+                    "claim_expires_at": None,
+                    "delivered_at": None,
+                    "delivery_ref": None,
+                    "attempts": 164,
+                    "suppressed_at": NOW - timedelta(hours=12),
+                    "suppressed_reason": "attempts exhausted",
+                },
+            }
+        )
+        state["dispatch_failures"].append(
+            {"send_id": "s0001", "at": NOW - timedelta(hours=12), "error": "x"}
+        )
+        from attention.services.waits import fulfillment
+
+        view = fulfillment.derive(item, state, NOW, SETTINGS)
+        self.assertEqual(view["state"], "recorded")
+        self.assertEqual(fulfillment.returned_items(state, NOW, SETTINGS), [])
+        self.assertEqual(_decision_count(state), 0)
+
+
 class MainFallbackTests(unittest.TestCase):
     def test_verdict_for_retired_handler_lands_on_main(self):
         state = _state()
