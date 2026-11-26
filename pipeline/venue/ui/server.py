@@ -89,6 +89,8 @@ route_surface = _load_by_location(
     "venue_route_surface", UI_DIR / "route_surface.py")
 writer = _load_by_location(
     "platform_writer", PIPELINE_ROOT / "platform" / "writer.py")
+uargv = _load_by_location(
+    "platform_argv", PIPELINE_ROOT / "platform" / "argv.py")
 
 CORE_TIMEOUT_S = 1800
 # The state-read bounds live with the state-read wiring
@@ -535,13 +537,41 @@ def build_mount():
     return mount, host, port
 
 
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+UI_DECL = {
+    "name": "venue-ui",
+    "flags": {
+        "host": {"takes_value": True},
+        "port": {"takes_value": True},
+    },
+}
+
+
 def main(argv: list[str]) -> int:
     host, port = load_ui_config()
-    for i, arg in enumerate(argv):
-        if arg == "--host" and i + 1 < len(argv):
-            host = argv[i + 1]
-        if arg == "--port" and i + 1 < len(argv):
-            port = int(argv[i + 1])
+    outcome = uargv.parse_only(UI_DECL, argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        return uargv.USAGE_EXIT
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        return 0
+    flags = outcome["result"]["flags"]
+    if flags["host"] is not None:
+        host = flags["host"]
+    if flags["port"] is not None:
+        try:
+            port = int(flags["port"])
+        except ValueError:
+            print("venue-ui: flag --port needs an integer",
+                  file=sys.stderr)
+            print(uargv.help_text(UI_DECL), file=sys.stderr)
+            return uargv.USAGE_EXIT
     mount, _host, _port = build_mount()
     listener = bounded_server.build_bounded_listener(
         serving, mount, host, port)

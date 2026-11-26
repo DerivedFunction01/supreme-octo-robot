@@ -26,6 +26,7 @@ REPO_ROOT = os.path.realpath(os.path.join(PACKAGE_DIR, "..", ".."))
 
 # This package's own files.
 WRITER = os.path.join(PACKAGE_DIR, "writer.py")
+ARGV = os.path.join(PACKAGE_DIR, "argv.py")
 STATE_DIR = os.path.join(PACKAGE_DIR, "state")
 
 

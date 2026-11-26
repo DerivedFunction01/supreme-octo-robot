@@ -21,7 +21,6 @@ written; the source state is the rollback's.
 Prints one SUMMARY line (JSON). Prints no event content.
 """
 
-import argparse
 import hashlib
 import json
 import os
@@ -60,16 +59,71 @@ def _state_dir(home):
     return os.path.join(home, "state")
 
 
+import importlib.util  # noqa: E402
+
+
+def _load_paths():
+    """The platform paths spine, loaded by path (the
+    package's standing bootstrap form)."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_paths",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "..", "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "export-ledger",
+    "flags": {
+        "source-home": {"takes_value": True, "required": True, "help": 'the original scheduling home (quiesced; read-only here)'},
+        "target-home": {"takes_value": True, "required": True, "help": 'the mega scheduling home'},
+        "work-dir": {"takes_value": True, "required": True, "help": 'where the export lands'},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--source-home", required=True,
-                    help="the original scheduling home "
-                    "(quiesced; read-only here)")
-    ap.add_argument("--target-home", required=True,
-                    help="the mega scheduling home")
-    ap.add_argument("--work-dir", required=True,
-                    help="where the export lands")
-    args = ap.parse_args(argv)
+    args = _parse(argv)
 
     source = os.path.abspath(args.source_home)
     target = os.path.abspath(args.target_home)

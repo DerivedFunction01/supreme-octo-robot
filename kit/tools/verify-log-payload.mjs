@@ -11,12 +11,30 @@
 // budget second; a payload equal to its clamp does not
 // overflow.
 
+import { parseOnly, USAGE_EXIT } from "../../tools/argv.mjs";
 import {
   LOG_PAYLOAD_MAX_CHARS,
   LOG_PAYLOAD_MAX_LINES,
   clampLogPayload,
   logPayloadOverflows,
 } from "../lib/log-payload.ts";
+
+// The unified argv guard (tools/argv.mjs): this tool
+// takes no arguments — any argument is a usage refusal
+// (exit 2) and --help prints the generated help, so an
+// invocation can never fall through to the full job on
+// a stray or mistyped flag.
+const _argvOutcome = parseOnly({ name: "verify-log-payload" }, process.argv.slice(2));
+if (!_argvOutcome.ok) {
+  console.error(_argvOutcome.error);
+  console.error(_argvOutcome.usage);
+  process.exit(USAGE_EXIT);
+}
+if ("help" in _argvOutcome) {
+  console.log(_argvOutcome.help);
+  process.exit(0);
+}
+
 
 let failures = 0;
 function pin(name, cond, detail) {

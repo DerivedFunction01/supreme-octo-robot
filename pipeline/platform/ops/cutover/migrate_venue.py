@@ -28,7 +28,6 @@ target state unless --force-with-backup. Prints one
 SUMMARY line (JSON).
 """
 
-import argparse
 import hashlib
 import importlib.util
 import json
@@ -78,22 +77,70 @@ def _load_migrate(venue_home):
     return module
 
 
+def _load_paths():
+    """The platform paths spine, loaded by path (the
+    package's standing bootstrap form)."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_paths",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "..", "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "migrate-venue",
+    "flags": {
+        "source-home": {"takes_value": True, "required": True, "help": 'the original venue home (var/, results/, config/; read-only)'},
+        "target-home": {"takes_value": True, "required": True, "help": 'the mega-side venue home to fill (a scratch or staging home in rehearsal; the mega venue home at the freeze)'},
+        "venue-home": {"takes_value": True, "help": 'the mega venue package dir (default: derived from this file)'},
+        "venue-name": {"takes_value": True, "default": 'colab'},
+        "force-with-backup": {},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--source-home", required=True,
-                    help="the original venue home (var/, "
-                    "results/, config/; read-only)")
-    ap.add_argument("--target-home", required=True,
-                    help="the mega-side venue home to fill "
-                    "(a scratch or staging home in "
-                    "rehearsal; the mega venue home at the "
-                    "freeze)")
-    ap.add_argument("--venue-home",
-                    help="the mega venue package dir "
-                    "(default: derived from this file)")
-    ap.add_argument("--venue-name", default="colab")
-    ap.add_argument("--force-with-backup", action="store_true")
-    args = ap.parse_args(argv)
+    args = _parse(argv)
 
     source = os.path.abspath(args.source_home)
     target = os.path.abspath(args.target_home)

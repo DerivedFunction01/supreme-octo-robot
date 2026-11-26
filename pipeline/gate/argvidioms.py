@@ -129,8 +129,10 @@ EXCEPTIONS = ()
 
 SHELL_DOLLAR1_RE = re.compile(
     r"\[\[?\s+\"?\$\{?1(?::[-?][^}\"]*)?\}?\"?\s+==?\s+\"--")
-JS_MEMBERSHIP_RE = re.compile(r"\bargv\.includes\(")
-JS_INDEX_RE = re.compile(r"\bargv\.indexOf\(")
+JS_MEMBERSHIP_RE = re.compile(
+    r"(?:process\.argv|(?<![\w.])argv)\.includes\(")
+JS_INDEX_RE = re.compile(
+    r"(?:process\.argv|(?<![\w.])argv)\.indexOf\(")
 
 
 def _mentions_argv(node):

@@ -29,10 +29,14 @@
  * is asynchronous — a single instantaneous probe races a
  * healthy shutdown and reads a mid-release port as a leak.
  * A port still bound when the grace expires is a teardown
- * failure, exit 97, and the failure line names the
+ * failure, and the failure line names the
  * occupant where the platform can read it). Its verdict
- * is Playwright's own exit code, conjoined with the
- * teardown leg.
+ * rides the unified exit vocabulary: 0 when Playwright
+ * passes and the port frees, 1 on any operational failure
+ * (partition, tree assertion, busy port, missing install,
+ * or failing specs), 2 on a usage refusal, and the
+ * declared teardown verdict 3 when the specs pass but
+ * the port stays bound.
  *
  * The partition is a PARTITION: every tests/e2e/*.spec.ts
  * on disk belongs to exactly one family, and this script
@@ -76,6 +80,7 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseOnly, USAGE_EXIT } from "./argv.mjs";
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -91,28 +96,49 @@ function fail(message, code) {
   process.exit(code);
 }
 
-const args = process.argv.slice(2);
-const shard = args[0];
-if (!Object.hasOwn(FAMILIES, shard ?? "")) {
-  fail(
-    "usage: e2e-shard.mjs <qa|app> [--sha <sha>] [--port <n>] [--workers <n>] [--only <substr>]",
-    64,
-  );
+// The declared surface, parsed by the unified argv
+// adapter (tools/argv.mjs): both value forms are one
+// flag, unknown flags and surplus positionals refuse at
+// exit 2, and help is generated from this declaration.
+const DECL = {
+  name: "e2e-shard",
+  summary: "the shard entry for the rendered legs (tests/e2e/)",
+  positionals: [
+    { name: "family", required: true,
+      help: "the shard family (qa|app)" },
+  ],
+  flags: {
+    sha: { takes_value: true,
+           help: "assert HEAD equals this commit and the tracked tree is clean before running" },
+    port: { takes_value: true,
+            help: "E2E_PORT (defaults: qa 3510, app 3520)" },
+    workers: { takes_value: true, default: "1",
+               help: "Playwright workers (default 1)" },
+    only: { takes_value: true,
+            help: "run only family files whose name contains the substring" },
+  },
+  verdict_codes: { "teardown-failure": 3 },
+};
+const TEARDOWN_EXIT = DECL.verdict_codes["teardown-failure"];
+
+const outcome = parseOnly(DECL, process.argv.slice(2));
+if (!outcome.ok) {
+  console.error(outcome.error);
+  console.error(outcome.usage);
+  process.exit(USAGE_EXIT);
 }
-let sha = null;
-let port = DEFAULT_PORTS[shard];
-let workers = "1";
-let only = null;
-for (let i = 1; i < args.length; i += 2) {
-  const flag = args[i];
-  const value = args[i + 1];
-  if (value === undefined) fail(`missing value for ${flag}`, 64);
-  if (flag === "--sha") sha = value;
-  else if (flag === "--port") port = value;
-  else if (flag === "--workers") workers = value;
-  else if (flag === "--only") only = value;
-  else fail(`unknown flag ${flag}`, 64);
+if ("help" in outcome) {
+  console.log(outcome.help);
+  process.exit(0);
 }
+const shard = outcome.result.positionals.family;
+if (!Object.hasOwn(FAMILIES, shard)) {
+  fail(`unknown family ${JSON.stringify(shard)} (qa|app)`, USAGE_EXIT);
+}
+const sha = outcome.result.flags.sha;
+const port = outcome.result.flags.port ?? DEFAULT_PORTS[shard];
+const workers = outcome.result.flags.workers;
+const only = outcome.result.flags.only;
 
 // The partition check: the families' claim over the suite
 // on disk must be exact — nothing unassigned, nothing
@@ -126,7 +152,7 @@ for (const [family, files] of Object.entries(FAMILIES)) {
     if (claimed.has(file)) {
       fail(
         `partition: ${file} is claimed by both ${claimed.get(file)} and ${family}`,
-        65,
+        1,
       );
     }
     claimed.set(file, family);
@@ -136,20 +162,20 @@ for (const file of onDisk) {
   if (!claimed.has(file)) {
     fail(
       `partition: ${file} is in no shard family — assign it in tools/e2e-shard.mjs`,
-      65,
+      1,
     );
   }
 }
 for (const file of claimed.keys()) {
   if (!onDisk.includes(file)) {
-    fail(`partition: ${file} is claimed by ${claimed.get(file)} but not on disk`, 65);
+    fail(`partition: ${file} is claimed by ${claimed.get(file)} but not on disk`, 1);
   }
 }
 
 let specs = FAMILIES[shard].map((file) => join("tests", "e2e", file));
 if (only !== null) {
   specs = specs.filter((path) => path.includes(only));
-  if (specs.length === 0) fail(`--only ${only} matches no file in shard ${shard}`, 64);
+  if (specs.length === 0) fail(`--only ${only} matches no file in shard ${shard}`, USAGE_EXIT);
 }
 if (specs.length === 0) {
   console.log(`e2e-shard ${shard}: family carries no specs yet — nothing to run`);
@@ -168,10 +194,10 @@ if (sha !== null) {
   });
   const actual = (head.stdout ?? "").trim();
   if (head.status !== 0 || actual !== sha) {
-    fail(`tree assertion: HEAD is ${actual || "(unreadable)"}, expected ${sha}`, 66);
+    fail(`tree assertion: HEAD is ${actual || "(unreadable)"}, expected ${sha}`, 1);
   }
   if ((dirty.stdout ?? "").trim() !== "") {
-    fail("tree assertion: tracked tree is dirty", 66);
+    fail("tree assertion: tracked tree is dirty", 1);
   }
   console.log(`e2e-shard ${shard}: tree asserted at ${sha} (tracked clean)`);
 }
@@ -219,7 +245,7 @@ function portOccupant(candidate) {
 }
 
 if (!(await portFree(port))) {
-  fail(`port ${port} is busy before the run — another suite owns it; pass --port`, 69);
+  fail(`port ${port} is busy before the run — another suite owns it; pass --port`, 1);
 }
 
 // The Playwright CLI, from the root install the caller ran.
@@ -227,7 +253,7 @@ const playwrightBin = join(repoRoot, "node_modules", ".bin", "playwright");
 if (!existsSync(playwrightBin)) {
   fail(
     "playwright is not installed at the repo root — run `npm install` there first (the shard does not own the install)",
-    69,
+    1,
   );
 }
 
@@ -237,7 +263,7 @@ const install = spawnSync(playwrightBin, ["install", "chromium"], {
   stdio: "inherit",
 });
 if (install.status !== 0) {
-  fail("playwright install chromium failed", install.status ?? 1);
+  fail("playwright install chromium failed", 1);
 }
 
 const scratch = mkdtempSync(join(tmpdir(), `workhorse-e2e-shard-${shard}-`));
@@ -266,7 +292,7 @@ if (!(await portFreeWithin(port, TEARDOWN_GRACE_MS))) {
   console.error(
     `e2e-shard ${shard}: TEARDOWN_FAIL — port ${port} still bound ${TEARDOWN_GRACE_MS}ms after the run (${portOccupant(port)})`,
   );
-  process.exit(status === 0 ? 97 : status);
+  process.exit(status === 0 ? TEARDOWN_EXIT : 1);
 }
 console.log(`e2e-shard ${shard}: port ${port} free after the run`);
-process.exit(status);
+process.exit(status === 0 ? 0 : 1);

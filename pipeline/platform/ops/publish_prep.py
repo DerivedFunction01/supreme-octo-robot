@@ -81,7 +81,6 @@ Exit 0 = every assertion passes; 1 = a named assertion
 failed; 2 = usage error (missing tools, unstageable tree).
 """
 
-import argparse
 import hashlib
 import importlib.util
 import json
@@ -512,13 +511,67 @@ class PrepError(Exception):
     pass
 
 
+def _load_paths():
+    """The platform paths spine, loaded by path (the
+    package's standing bootstrap form)."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_paths",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "publish-prep",
+    "flags": {
+        "tree": {"takes_value": True, "required": True, "help": 'the staging tree to (re)build'},
+        "repo": {"takes_value": True, "default": REPO_ROOT, "help": 'the mega repo (default: this repo)'},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--tree", required=True,
-                    help="the staging tree to (re)build")
-    ap.add_argument("--repo", default=REPO_ROOT,
-                    help="the mega repo (default: this repo)")
-    args = ap.parse_args(argv)
+    args = _parse(argv)
 
     if shutil.which("bun") is None:
         print("FAIL bun is not on PATH")
