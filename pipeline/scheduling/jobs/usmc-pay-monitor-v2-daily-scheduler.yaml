@@ -17,9 +17,12 @@ cadence:
 timezone: America/New_York
 owner: goal:usmc-pay-monitor-v2
 run:
+  cwd: ${WS}/usmc-pay-monitor-v2
   argv:
-    - bash
-    - ${REPO}/ops/lane_daily_scheduler.sh
+    - ${WS}/usmc-pay-monitor-v2/var/venv/bin/python
+    - -m
+    - platform.scheduler
+    - run-day
 timeout_secs: 14400
 report:
   when: always
@@ -28,5 +31,5 @@ report:
 state_paths:
   - ${WS}/usmc-pay-monitor-v2/var/state/scheduler
   - ${WS}/usmc-pay-monitor-v2/var/exports/live-model.json
-classification: fixed command (the scheduler run-day host via ops/lane_daily_scheduler.sh); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.
+classification: fixed command (the scheduler run-day host, composed as data: cwd the app root, argv the app's venv python -m platform.scheduler run-day); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.
 lifetime: permanent

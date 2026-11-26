@@ -17,9 +17,12 @@ cadence:
 timezone: America/New_York
 owner: goal:usmc-pay-monitor-v2
 run:
+  cwd: ${WS}/usmc-pay-monitor-v2
   argv:
-    - bash
-    - ${REPO}/ops/lane_deferral_retries.sh
+    - ${WS}/usmc-pay-monitor-v2/var/venv/bin/python
+    - -m
+    - platform.scheduler
+    - run-due
 timeout_secs: 3600
 report:
   when: on_output
@@ -29,5 +32,5 @@ report:
     - nothing due
 state_paths:
   - ${WS}/usmc-pay-monitor-v2/var
-classification: fixed command (the scheduler run-due host via ops/lane_deferral_retries.sh); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.
+classification: fixed command (the scheduler run-due host, composed as data: cwd the app root, argv the app's venv python -m platform.scheduler run-due); it prints one line per re-driven entry plus EXHAUSTED lines and nothing reportable when nothing is due, so speaking is determined by output presence under the on_output amendment.
 lifetime: permanent

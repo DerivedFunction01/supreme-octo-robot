@@ -102,6 +102,22 @@ class RegistryTests(unittest.TestCase):
         ws = os.path.dirname(self.tmp)
         self.assertEqual(entry.data["state_paths"], [os.path.join(ws, "elsewhere", "state.json")])
 
+    def test_anchors_expand_in_run_cwd(self):
+        text = scripted_yaml("job-a", "/bin/true").replace(
+            "  argv:\n", "  cwd: ${WS}/elsewhere\n  argv:\n")
+        entries, errors = self._load("job-a", text)
+        self.assertEqual(errors, [])
+        ws = os.path.dirname(self.tmp)
+        self.assertEqual(entries["job-a"].data["run"]["cwd"],
+                         os.path.join(ws, "elsewhere"))
+
+    def test_rejects_absolute_path_in_run_cwd(self):
+        text = scripted_yaml("job-a", "/bin/true").replace(
+            "  argv:\n", "  cwd: /elsewhere\n  argv:\n")
+        entries, errors = self._load("job-a", text)
+        self.assertEqual(entries, {})
+        self.assertTrue(any("not portable" in e for e in errors))
+
     def test_rejects_absolute_path_in_argv(self):
         text = scripted_yaml("job-a", "/bin/true").replace(
             "    - ${REPO}/true", "    - /bin/true")

@@ -684,6 +684,10 @@ def validate(job_id, data, home, where=None, anchors=None, require_bodies=False)
         for i, item in enumerate(argv):
             _check_portable_path(item, where, f"run.argv[{i}]")
         run["argv"] = [expand_anchors(item, anchors) for item in argv]
+    cwd = run.get("cwd")
+    if isinstance(cwd, str):
+        _check_portable_path(cwd, where, "run.cwd")
+        run["cwd"] = expand_anchors(cwd, anchors)
     for i, item in enumerate(data.get("state_paths", [])):
         _check_portable_path(item, where, f"state_paths[{i}]")
     if isinstance(data.get("state_paths"), list):

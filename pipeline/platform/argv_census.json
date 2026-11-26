@@ -312,21 +312,6 @@
    "migrated": true
   },
   {
-   "path": "pipeline/***REMOVED***",
-   "family": "shell",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/***REMOVED***",
-   "family": "shell",
-   "migrated": true
-  },
-  {
-   "path": "pipeline/***REMOVED***",
-   "family": "shell",
-   "migrated": true
-  },
-  {
    "path": "pipeline/scheduling/ops/venue/colab_transient_restore.sh",
    "family": "shell",
    "migrated": true
