@@ -261,6 +261,39 @@ body {
   justify-content: flex-end;
 }
 
+/* ---- registries: phone stacking ----
+   Scoped to the Registries surface: on phone widths its
+   rows stack structurally instead of ellipsizing —
+   labels, subs and values wrap in full and the row value
+   drops to its own line. Above the phone seam the
+   single-line table form above stands untouched. */
+@media (max-width: 640px) {
+  .registries-view .subtitle {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+  .registries-view .row .lab,
+  .registries-view .row .val {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+  .registries-view .row .sub,
+  .registries-view .row .sub-trunc {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+  .registries-view .row .val {
+    flex-basis: 100%;
+    margin-left: 0 !important;
+  }
+}
+
 /* ---- programme cards ---- */
 .programme-grid {
   display: grid;

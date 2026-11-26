@@ -137,7 +137,7 @@ export function RegistriesView() {
   };
 
   return (
-    <>
+    <div className="registries-view">
       <LargeTitle
         title="Registries"
         subtitle="The vocabulary the rules match over — added here, never in code"
@@ -339,6 +339,6 @@ export function RegistriesView() {
           </Row>
         )}
       </Group>
-    </>
+    </div>
   );
 }
