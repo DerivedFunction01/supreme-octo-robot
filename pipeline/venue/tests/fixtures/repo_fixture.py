@@ -100,6 +100,16 @@ def cli_repo(root: Path, var: Path) -> Path:
     paths_link = root / "paths.py"
     if not paths_link.exists():
         paths_link.symlink_to(CHECKOUT / "paths.py")
+    # The platform layer sits beside the package root: the
+    # entry layer's loader climbs to it by path for the
+    # unified writer and the unified argument parser (the
+    # same fixture-copy precedent: a tree that carries the
+    # entry layer carries the platform modules it climbs
+    # to, planted at the fixture root's parent, where the
+    # climb looks).
+    platform_link = root.parent / "platform"
+    if not platform_link.exists():
+        platform_link.symlink_to(CHECKOUT.parent / "platform")
     for name in ("sync", "ops"):
         link = root / name
         if not link.exists():

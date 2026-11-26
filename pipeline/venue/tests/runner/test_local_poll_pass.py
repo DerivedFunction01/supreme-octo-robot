@@ -165,12 +165,14 @@ def test_poll_contested_exit_reading_serves_no_verdict(tmp_path, monkeypatch, ca
     truth_zero = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:20:00+00:00", "output_tail": ""}
     mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, truth_zero])
     rc, out = _poll(monkeypatch, mod, capsys)
-    assert rc == 0
+    # BT5 (unified argv plan): the still-running poll exit is
+    # 3 on both run twins — this pin read 0 before the token.
+    assert rc == 3
     assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
     assert finalized == []
     mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
     rc, out = _poll(monkeypatch, mod, capsys)
-    assert rc == 0
+    assert rc == 3
     assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
     assert finalized == []
 
@@ -209,7 +211,8 @@ def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, ca
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     mod, finalized, reads = load_local_run_seq(monkeypatch, rec, [{"reading": "unknown"}])
     rc, out = _poll(monkeypatch, mod, capsys)
-    assert rc == 0 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
+    # BT5: still running exits 3 (was 0 before the token).
+    assert rc == 3 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
     assert finalized == []
     assert len(reads) == len(mod.READ_BACKOFF_S) + 1
 
@@ -325,8 +328,9 @@ def test_poll_running_and_unreachable_readings(tmp_path, monkeypatch, capsys):
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     mod, finalized = load_local_run(monkeypatch, rec, {"reading": "running"})
     rc, out = _poll(monkeypatch, mod, capsys)
-    assert rc == 0 and out == {"run_id": RID, "state": "running"}
+    # BT5: still running exits 3 (was 0 before the token).
+    assert rc == 3 and out == {"run_id": RID, "state": "running"}
     mod, finalized = load_local_run(monkeypatch, rec, {"reading": "unknown"})
     rc, out = _poll(monkeypatch, mod, capsys)
-    assert rc == 0 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
+    assert rc == 3 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
     assert finalized == []

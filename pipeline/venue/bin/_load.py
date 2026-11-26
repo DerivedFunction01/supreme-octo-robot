@@ -82,3 +82,12 @@ def platform_writer():
     from the bin entry points through this loader like every
     other cross-tree module."""
     return _exec("platform_writer", REPO.parent / "platform" / "writer.py")
+
+
+def platform_argv():
+    """Load the platform's unified argument parser
+    (pipeline/platform/argv.py) — the one contract home for
+    operator argument parsing, reached from the bin entry
+    points through this loader like every other cross-tree
+    module."""
+    return _exec("platform_argv", REPO.parent / "platform" / "argv.py")

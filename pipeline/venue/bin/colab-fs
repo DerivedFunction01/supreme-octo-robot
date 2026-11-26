@@ -43,104 +43,81 @@
 
 set -u
 
+# The operator surface, declared once for the unified
+# argument parser's bash adapter (pipeline/platform/
+# argv.sh, the contract home's bash form): usage is
+# generated from this declaration, and anything outside
+# it — an unknown flag, another op's flag, a surplus
+# positional, a value flag with no value — is a usage
+# refusal at exit 2.
+source "$(dirname "${BASH_SOURCE[0]}")/../../platform/argv.sh"
+
+argv_tool colab-fs "write/patch/delete/read files on a Colab session"
+argv_global_flag session value short=s
+argv_verb write "write a file from a local file (--from) or stdin (--stdin)"
+argv_flag from value
+argv_flag stdin bool
+argv_positional path required
+argv_end_verb
+argv_verb patch "patch a file by exact text or file pair"
+argv_flag old value
+argv_flag new value
+argv_flag old-file value
+argv_flag new-file value
+argv_positional path required
+argv_end_verb
+argv_verb delete "delete a file"
+argv_flag missing-ok bool
+argv_positional path required
+argv_end_verb
+argv_verb read "read a paged window of a file"
+argv_flag offset value
+argv_flag max-lines value
+argv_positional path required
+argv_end_verb
+
+argv_parse "$@" || exit 2
+[ "${ARGV_HELP:-0}" = 1 ] && exit 0
+op=$ARGV_VERB
+
 usage() {
-    printf 'usage: colab-fs write|patch|delete|read -s SESSION PATH [options]\n' >&2
+    argv_usage "$op" >&2
     exit 2
 }
 
 b64() { base64 | tr -d '\n'; }
 
-[ $# -ge 1 ] || usage
-op=$1
-shift
-case $op in
-    write | patch | delete | read) ;;
-    *) usage ;;
-esac
-
-session=${COLAB_SH_SESSION:-}
-path=
-from_file=
+session=${ARGV_FLAGS[session]:-}
+[ -n "$session" ] || session=${COLAB_SH_SESSION:-}
+path=${ARGV_POSITIONALS[path]:-}
+from_file=${ARGV_FLAGS[from]:-}
 use_stdin=0
-old_text=
-new_text=
+[ "${ARGV_FLAGS[stdin]:-false}" = true ] && use_stdin=1
+old_text=${ARGV_FLAGS[old]:-}
+new_text=${ARGV_FLAGS[new]:-}
 old_set=0
+[ -n "${ARGV_PRESENT[old]:-}" ] && old_set=1
 new_set=0
-old_file=
-new_file=
+[ -n "${ARGV_PRESENT[new]:-}" ] && new_set=1
+old_file=${ARGV_FLAGS[old-file]:-}
+new_file=${ARGV_FLAGS[new-file]:-}
 missing_ok=0
+[ "${ARGV_FLAGS[missing-ok]:-false}" = true ] && missing_ok=1
 read_offset=1
 read_max_lines=${COLAB_FS_READ_MAX_LINES:-900}
 read_max_bytes=${COLAB_FS_MAX_READ_BYTES:-52428800}
 max_write_bytes=${COLAB_FS_MAX_WRITE_BYTES:-52428800}
 paging_set=0
-
-while [ $# -gt 0 ]; do
-    case $1 in
-        -s)
-            [ $# -ge 2 ] || usage
-            session=$2
-            shift 2
-            ;;
-        --from)
-            [ $# -ge 2 ] || usage
-            from_file=$2
-            shift 2
-            ;;
-        --stdin)
-            use_stdin=1
-            shift
-            ;;
-        --old)
-            [ $# -ge 2 ] || usage
-            old_text=$2
-            old_set=1
-            shift 2
-            ;;
-        --new)
-            [ $# -ge 2 ] || usage
-            new_text=$2
-            new_set=1
-            shift 2
-            ;;
-        --old-file)
-            [ $# -ge 2 ] || usage
-            old_file=$2
-            shift 2
-            ;;
-        --new-file)
-            [ $# -ge 2 ] || usage
-            new_file=$2
-            shift 2
-            ;;
-        --missing-ok)
-            missing_ok=1
-            shift
-            ;;
-        --offset)
-            [ $# -ge 2 ] || usage
-            case $2 in '' | *[!0-9]* | 0) usage ;; esac
-            read_offset=$2
-            paging_set=1
-            shift 2
-            ;;
-        --max-lines)
-            [ $# -ge 2 ] || usage
-            case $2 in '' | *[!0-9]*) usage ;; esac
-            read_max_lines=$2
-            paging_set=1
-            shift 2
-            ;;
-        -*)
-            usage
-            ;;
-        *)
-            [ -z "$path" ] || usage
-            path=$1
-            shift
-            ;;
-    esac
-done
+if [ -n "${ARGV_PRESENT[offset]:-}" ]; then
+    case ${ARGV_FLAGS[offset]} in '' | *[!0-9]* | 0) usage ;; esac
+    read_offset=${ARGV_FLAGS[offset]}
+    paging_set=1
+fi
+if [ -n "${ARGV_PRESENT[max-lines]:-}" ]; then
+    case ${ARGV_FLAGS[max-lines]} in '' | *[!0-9]*) usage ;; esac
+    read_max_lines=${ARGV_FLAGS[max-lines]}
+    paging_set=1
+fi
 
 [ -n "$session" ] || usage
 [ -n "$path" ] || usage
@@ -161,7 +138,6 @@ refuse_oversize_write() {
 spec=
 case $op in
     write)
-        [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$missing_ok" = 0 ] && [ "$paging_set" = 0 ] || usage
         content_b64=
         if [ -n "$from_file" ] && [ "$use_stdin" = 0 ]; then
             [ -f "$from_file" ] || usage
@@ -185,7 +161,6 @@ case $op in
         spec=$(printf '{"op":"write","path":"%s","content_b64":"%s"}' "$path" "$content_b64")
         ;;
     patch)
-        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$missing_ok" = 0 ] && [ "$paging_set" = 0 ] || usage
         old_b64=
         new_b64=
         if [ "$old_set" = 1 ] && [ "$new_set" = 1 ] && [ -z "$old_file" ] && [ -z "$new_file" ]; then
@@ -201,7 +176,6 @@ case $op in
         spec=$(printf '{"op":"patch","path":"%s","old_b64":"%s","new_b64":"%s"}' "$path" "$old_b64" "$new_b64")
         ;;
     delete)
-        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$paging_set" = 0 ] || usage
         if [ "$missing_ok" = 1 ]; then
             spec=$(printf '{"op":"delete","path":"%s","missing_ok":true}' "$path")
         else
@@ -209,7 +183,6 @@ case $op in
         fi
         ;;
     read)
-        [ -z "$from_file" ] && [ "$use_stdin" = 0 ] && [ "$old_set" = 0 ] && [ "$new_set" = 0 ] && [ -z "$old_file" ] && [ -z "$new_file" ] && [ "$missing_ok" = 0 ] || usage
         spec=$(printf '{"op":"read","path":"%s","offset":%s,"max_lines":%s,"max_bytes":%s}' "$path" "$read_offset" "$read_max_lines" "$read_max_bytes")
         ;;
 esac

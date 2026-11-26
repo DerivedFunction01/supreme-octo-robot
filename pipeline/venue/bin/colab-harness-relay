@@ -15,24 +15,53 @@ smoke; this entry point serves a consumer running longer than
 a bootstrap (a venue sweep, an operator-held session).
 """
 
-import argparse
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _load  # noqa: E402
 
 harness = _load.sync("harness")
 cli = _load.sync("cli")
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): help is
+# generated from this declaration, and anything outside
+# it is a usage refusal at exit 2.
+DECL = {
+    "name": "colab-harness-relay",
+    "summary": "The home-side ferry relay for one session.",
+    "flags": {
+        "session": {"takes_value": True, "short": "s", "required": True, "help": "session name"},
+        "interval": {"takes_value": True, "help": "seconds between cycles (default 5)"},
+        "cycles": {"takes_value": True, "help": "cycles to run (default 0 = until interrupted)"},
+        "url": {"takes_value": True, "help": "connector service URL"},
+    },
+}
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(prog="colab-harness-relay")
-    ap.add_argument("-s", "--session", required=True)
-    ap.add_argument("--interval", type=float, default=5.0)
-    ap.add_argument("--cycles", type=int, default=0, help="0 = until interrupted")
-    ap.add_argument("--url", default=harness.SERVICE_URL)
-    a = ap.parse_args()
+def main(argv=None) -> int:
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:] if argv is None else argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    try:
+        interval = float(flags["interval"]) if flags.get("interval") is not None else 5.0
+        cycles = int(flags["cycles"]) if flags.get("cycles") is not None else 0
+    except ValueError:
+        print("colab-harness-relay: --interval and --cycles take numbers", file=sys.stderr)
+        return 2
+    a = SimpleNamespace(
+        session=flags["session"], interval=interval, cycles=cycles,
+        url=flags.get("url") or harness.SERVICE_URL)
     totals = {"cycles": 0, "served": 0, "errors": 0}
     try:
         lock_ctx = harness.relay_lock(_load.REPO, a.session)

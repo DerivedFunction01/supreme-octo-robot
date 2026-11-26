@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 # Stop a session by name. Usage: colab-down SESSION
 set -euo pipefail
+# The operator surface, declared for the unified argument
+# parser's bash adapter (pipeline/platform/argv.sh):
+# exactly one session positional; anything else is a
+# usage refusal at exit 2.
+source "$(dirname "${BASH_SOURCE[0]}")/../../platform/argv.sh"
+argv_tool colab-down "Stop a session by name."
+argv_positional session required
+argv_parse "$@" || exit 2
+[ "${ARGV_HELP:-0}" = 1 ] && exit 0
 source "$(dirname "${BASH_SOURCE[0]}")/_wrap.sh"
 wrap_enter
-SESSION="${1:?usage: colab-down SESSION}"
+SESSION="${ARGV_POSITIONALS[session]}"
 "$COLAB_BIN" --auth oauth2 stop -s "$SESSION"

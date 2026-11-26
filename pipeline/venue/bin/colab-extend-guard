@@ -29,8 +29,29 @@ spec_g = importlib.util.spec_from_file_location("extend_guard", REPO / "sync" / 
 guard = importlib.util.module_from_spec(spec_g)
 spec_g.loader.exec_module(guard)
 
+argv_mod = _load.platform_argv()
 
-def main() -> int:
+# No-argument tool (the unified argument parser's guard
+# form): the declaration is empty, so any argument at all
+# is a usage refusal at exit 2. Exit 3 on findings is the
+# declared verdict code.
+DECL = {
+    "name": "colab-extend-guard",
+    "summary": "Auto-extension guard: extend every live lease before it lapses. Takes no arguments.",
+    "verdict_codes": {"3": "the guard ran and has findings"},
+}
+
+
+def main(argv=None) -> int:
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:] if argv is None else argv)
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
     code, lines = guard.run_guard(lease, cr.colab, REPO)
     for line in lines:
         print(json.dumps(line, sort_keys=True))

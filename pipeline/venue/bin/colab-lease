@@ -71,46 +71,146 @@ spec_l.loader.exec_module(lease)
 
 TOKEN = Path.home() / ".config" / "colab-cli" / "token.json"
 
+argv_mod = _load.platform_argv()
 
-def parse_hours(rest: list[str]) -> tuple[float | None, list[str], str | None]:
-    """Pull `--hours H` out of an argument list. Returns (hours,
-    remaining, error): hours is None when the flag is absent."""
-    hours, out = None, []
-    i = 0
-    while i < len(rest):
-        tok = rest[i]
-        if tok == "--hours":
-            if i + 1 >= len(rest):
-                return None, out, "--hours needs a value"
-            try:
-                hours = float(rest[i + 1])
-            except ValueError:
-                return None, out, "--hours needs a number"
-            i += 2
-        else:
-            out.append(tok)
-            i += 1
-    if hours is not None and hours <= 0:
-        return None, out, "--hours must be > 0"
-    return hours, out, None
+_VALUE = {"takes_value": True}
+_CALLER = {"caller": {"takes_value": True, "help": "caller tag"}}
+_HOURS = {"hours": {"takes_value": True, "help": "hours (a number > 0)"}}
+_SESSION = [{"name": "session", "required": True}]
+
+# The verb surface, declared once for the unified argument
+# parser (pipeline/platform/argv.py): every verb's flags and
+# positionals live here, help is generated from this
+# declaration, and anything outside it — an unknown flag, a
+# surplus positional, a value flag with no value — is a usage
+# refusal at exit 2. Repeated value flags are last-wins.
+DECL = {
+    "name": "colab-lease",
+    "summary": "Thin CLI over sync/lease/ — the shared-session lease. Prints one JSON result.",
+    "verbs": {
+        "status": {"positionals": [{"name": "session"}]},
+        "acquire": {
+            "flags": {
+                "shape": {"takes_value": True, "help": "shape id"},
+                "hours": _HOURS["hours"],
+                "via": {"takes_value": True, "help": "via tag"},
+                "caller": _CALLER["caller"],
+                "create": {"help": "create the session when none is free"},
+                "venue": {"takes_value": True, "help": "venue adapter id"},
+            },
+            "positionals": [{"name": "shape"}],
+        },
+        "extend": {"flags": {**_HOURS, **_CALLER}, "positionals": _SESSION},
+        "adopt": {
+            "flags": {
+                "endpoint": {"takes_value": True, "help": "endpoint of a nameless live assignment"},
+                "deadline": {"takes_value": True, "help": "ISO deadline"},
+                "shape": {"takes_value": True, "help": "shape id"},
+                **_HOURS,
+                **_CALLER,
+            },
+            "positionals": [{"name": "session"}],
+        },
+        "shorten": {
+            "flags": {
+                "deadline": {"takes_value": True, "help": "ISO deadline"},
+                **_HOURS,
+                **_CALLER,
+            },
+            "positionals": _SESSION,
+        },
+        "claim-sync": {"flags": dict(_CALLER), "positionals": _SESSION},
+        "release-sync": {"flags": dict(_CALLER), "positionals": _SESSION},
+        "release": {"positionals": [{"name": "session"}]},
+        "release-session": {
+            "flags": {"endpoint": {"takes_value": True, "help": "endpoint of a nameless live assignment"}},
+            "positionals": [{"name": "session"}],
+        },
+        "reap": {
+            "flags": {
+                "gate-pending-hosts": {"takes_value": True, "help": "CSV of approval-gate hosts with no proven contact"},
+                "gate-probe-hosts": {"takes_value": True, "help": "CSV subset of the gate hosts whose hourly probe is due"},
+            },
+        },
+        "keepalive": {},
+        "auto": {},
+        "request": {
+            "flags": {
+                "shape": {"takes_value": True, "help": "shape id"},
+                "reason": {"takes_value": True, "help": "demand reason text"},
+                "caller": _CALLER["caller"],
+                "via": {"takes_value": True, "help": "legacy spelling of --caller"},
+                "at": {"takes_value": True, "help": "ISO time for a timed start"},
+            },
+            "positionals": [{"name": "shape"}],
+        },
+        "unrequest": {},
+        "grant": {
+            "flags": {
+                "burst": {"takes_value": True, "help": "burst shape id"},
+                **_HOURS,
+            },
+        },
+        "extend-grant": {"flags": dict(_HOURS)},
+        "ungrant": {},
+        "standing": {},
+        "state": {
+            "flags": {
+                "part": {
+                    "takes_value": True,
+                    "choices": ["records", "specs", "budget", "grant", "meta", "orphans", "listeners"],
+                    "help": "serve one portion of the state read",
+                },
+            },
+        },
+        "budget-caps": {
+            "flags": {
+                "daily": {"takes_value": True, "help": "daily cap (a number or 'none')"},
+                "monthly": {"takes_value": True, "help": "monthly cap (a number or 'none')"},
+                "standing-daily": {"takes_value": True, "help": "standing daily cap (a number or 'none')"},
+                "venue": {"takes_value": True, "help": "venue adapter id"},
+                "account": {"takes_value": True, "help": "account id"},
+            },
+        },
+        "accounts": {},
+        "admission": {
+            "flags": {
+                "shape": {"takes_value": True, "help": "shape id"},
+                "via": {"takes_value": True, "help": "via tag"},
+                "caller": _CALLER["caller"],
+            },
+            "positionals": [{"name": "shape"}],
+        },
+        "plan": {
+            "flags": {"shape": {"takes_value": True, "help": "shape id"}},
+            "positionals": [{"name": "shape"}],
+        },
+    },
+}
 
 
-def parse_flag(rest: list[str], flag: str) -> tuple[str | None, list[str], str | None]:
-    """Pull `--flag VALUE` out of an argument list. Returns (value,
-    remaining, error): value is None when the flag is absent."""
-    value, out = None, []
-    i = 0
-    while i < len(rest):
-        tok = rest[i]
-        if tok == flag:
-            if i + 1 >= len(rest):
-                return None, out, f"{flag} needs a value"
-            value = rest[i + 1]
-            i += 2
-        else:
-            out.append(tok)
-            i += 1
-    return value, out, None
+def _hours(flags: dict, verb: str, required: bool = False) -> tuple[float | None, str | None]:
+    """The --hours flag as a float, with the standing
+    messages. Returns (hours, error): hours is None when the
+    flag is absent and not required."""
+    raw = flags.get("hours")
+    if raw is None:
+        if required:
+            return None, f"{verb} requires --hours H (H > 0)"
+        return None, None
+    try:
+        hours = float(raw)
+    except ValueError:
+        return None, "--hours needs a number"
+    if hours <= 0:
+        return None, "--hours must be > 0"
+    return hours, None
+
+
+def _shape(parsed: dict) -> str | None:
+    """The shape a verb acts on: the --shape flag, else the
+    positional of the same name."""
+    return parsed["flags"].get("shape") or parsed["positionals"].get("shape")
 
 
 def resolve_cli_caller(flag: str | None) -> tuple[str | None, str | None]:
@@ -123,18 +223,6 @@ def resolve_cli_caller(flag: str | None) -> tuple[str | None, str | None]:
     if err:
         return None, err
     return lease.resolve_caller(REPO, flag=flag, env=env), None
-
-
-def shape_arg(rest: list[str]) -> tuple[str | None, list[str], str | None]:
-    """The shape a verb acts on: the --shape flag, else the first
-    positional. Returns (shape, remaining, error)."""
-    shape, rest, err = parse_flag(rest, "--shape")
-    if err:
-        return None, rest, err
-    positional = [t for t in rest if not t.startswith("--")]
-    if shape is None and positional:
-        shape = positional[0]
-    return shape, rest, None
 
 
 # --- reap command composition -------------------------------------------------
@@ -237,41 +325,34 @@ def _reap_with_collector(gate=None) -> dict:
 
 
 def main() -> int:
-    args = sys.argv[1:]
-    if not args or args[0] not in ("status", "acquire", "extend", "adopt", "shorten", "claim-sync", "release-sync", "release", "release-session", "reap", "keepalive", "auto", "request", "unrequest", "grant", "extend-grant", "ungrant", "standing", "state", "budget-caps", "accounts", "admission", "plan"):
-        print(__doc__.strip().split("\n")[2], file=sys.stderr)
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:])
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
         return 2
-    cmd = args[0]
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    cmd = parsed["verb"]
+    flags = parsed["flags"]
+    pos = parsed["positionals"]
     # A local-venue acquire touches no Colab state: it needs
     # neither the Colab login nor the transient mirror.
-    venue_arg = None
-    if "--venue" in args and args.index("--venue") + 1 < len(args):
-        venue_arg = args[args.index("--venue") + 1]
-    local_acquire = cmd == "acquire" and venue_arg == "local"
+    local_acquire = cmd == "acquire" and flags.get("venue") == "local"
     if not local_acquire:
         if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
             print("colab-lease: STAGED — no colab login yet.", file=sys.stderr)
             return 2
         cr.mirror("restore")
     if cmd == "status":
-        session = args[1] if len(args) > 1 else None
-        result = lease.status(cr.colab, REPO, session)
+        result = lease.status(cr.colab, REPO, pos.get("session"))
     elif cmd == "acquire":
-        hours, rest, err = parse_hours(args[1:])
-        create = "--create" in rest
-        rest = [a for a in rest if a != "--create"]
-        via = None
-        caller_flag = None
-        if err is None:
-            via, rest, err = parse_flag(rest, "--via")
-        if err is None:
-            caller_flag, rest, err = parse_flag(rest, "--caller")
+        hours, err = _hours(flags, "acquire")
         caller = None
         if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
-        shape = None
-        if err is None:
-            shape, rest, err = shape_arg(rest)
+            caller, err = resolve_cli_caller(flags.get("caller"))
+        shape = _shape(parsed) if err is None else None
         if err is None and shape is None:
             err = "acquire requires --shape ID"
         if err:
@@ -281,7 +362,7 @@ def main() -> int:
             result = lease.acquire_local(REPO, shape, caller=caller, hours=hours)
             print(json.dumps(result, indent=2, default=str))
             return 0
-        result = lease.acquire(cr.colab, REPO, shape, hours=hours, via=via, caller=caller, create=create)
+        result = lease.acquire(cr.colab, REPO, shape, hours=hours, via=flags.get("via"), caller=caller, create=flags["create"])
         if result.get("host_changed") and result.get("record"):
             # Initiation-time approval, Step 2: this entry point just
             # birthed (or adopted) a session on a new tunnel host —
@@ -289,39 +370,20 @@ def main() -> int:
             # minute, rather than letting it surface on a later call.
             result["prime"] = lease.prime_session_host(cr.colab, REPO, result["record"]["session"])
     elif cmd == "extend":
-        hours, rest, err = parse_hours(args[1:])
-        caller_flag = None
-        if err is None:
-            caller_flag, rest, err = parse_flag(rest, "--caller")
+        hours, err = _hours(flags, "extend", required=True)
         caller = None
         if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
-        if err is None and hours is None:
-            err = "extend requires --hours H (H > 0)"
-        positional = [t for t in rest if not t.startswith("--")]
-        if err is None and not positional:
-            err = "extend requires a session name"
+            caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
-        result = lease.extend(cr.colab, REPO, positional[0], hours, caller=caller)
+        result = lease.extend(cr.colab, REPO, pos["session"], hours, caller=caller)
     elif cmd == "adopt":
-        hours, rest, err = parse_hours(args[1:])
-        deadline_raw = None
-        caller_flag = None
-        shape_flag = None
-        if err is None:
-            deadline_raw, rest, err = parse_flag(rest, "--deadline")
-        if err is None:
-            caller_flag, rest, err = parse_flag(rest, "--caller")
-        if err is None:
-            shape_flag, rest, err = parse_flag(rest, "--shape")
-        endpoint_flag = None
-        if err is None:
-            endpoint_flag, rest, err = parse_flag(rest, "--endpoint")
+        hours, err = _hours(flags, "adopt")
         caller = None
         if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
+            caller, err = resolve_cli_caller(flags.get("caller"))
+        deadline_raw = flags.get("deadline")
         deadline = None
         if err is None and deadline_raw is not None:
             if hours is not None:
@@ -331,88 +393,60 @@ def main() -> int:
                     deadline = datetime.fromisoformat(deadline_raw)
                 except ValueError:
                     err = "--deadline needs an ISO timestamp"
-        positional = [t for t in rest if not t.startswith("--")]
-        if err is None and not positional and endpoint_flag is None:
+        session = pos.get("session")
+        endpoint_flag = flags.get("endpoint")
+        if err is None and not session and endpoint_flag is None:
             err = "adopt requires a session name or --endpoint"
-        if err is None and positional and endpoint_flag is not None:
+        if err is None and session and endpoint_flag is not None:
             err = "adopt takes a session name or --endpoint, not both"
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
         if endpoint_flag is not None:
-            result = lease.adopt_nameless(cr.colab, REPO, endpoint_flag, deadline=deadline, hours=hours, caller=caller, shape=shape_flag)
+            result = lease.adopt_nameless(cr.colab, REPO, endpoint_flag, deadline=deadline, hours=hours, caller=caller, shape=flags.get("shape"))
         else:
-            result = lease.adopt_orphan(cr.colab, REPO, positional[0], deadline=deadline, hours=hours, caller=caller, shape=shape_flag)
+            result = lease.adopt_orphan(cr.colab, REPO, session, deadline=deadline, hours=hours, caller=caller, shape=flags.get("shape"))
     elif cmd == "shorten":
-        hours, rest, err = parse_hours(args[1:])
-        deadline_raw = None
-        caller_flag = None
-        if err is None:
-            deadline_raw, rest, err = parse_flag(rest, "--deadline")
-        if err is None:
-            caller_flag, rest, err = parse_flag(rest, "--caller")
+        hours, err = _hours(flags, "shorten")
         caller = None
         if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
+            caller, err = resolve_cli_caller(flags.get("caller"))
+        deadline_raw = flags.get("deadline")
         deadline = None
         if err is None:
-            if (deadline_raw is None) == (hours is None):
+            if (deadline_raw is None) == (flags.get("hours") is None):
                 err = "shorten requires exactly one of --deadline ISO or --hours H"
             elif deadline_raw is not None:
                 try:
                     deadline = datetime.fromisoformat(deadline_raw)
                 except ValueError:
                     err = "--deadline needs an ISO timestamp"
-        positional = [t for t in rest if not t.startswith("--")]
-        if err is None and not positional:
-            err = "shorten requires a session name"
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
-        result = lease.shorten(cr.colab, REPO, positional[0], deadline=deadline, hours=hours, caller=caller)
+        result = lease.shorten(cr.colab, REPO, pos["session"], deadline=deadline, hours=hours, caller=caller)
     elif cmd == "claim-sync":
-        caller_flag, rest, err = parse_flag(args[1:], "--caller")
-        caller = None
-        if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
-        positional = [t for t in rest if not t.startswith("--")]
-        if err is None and not positional:
-            err = "claim-sync requires a session name"
+        caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
-        result = lease.claim_sync(REPO, positional[0], caller=caller)
+        result = lease.claim_sync(REPO, pos["session"], caller=caller)
     elif cmd == "release-sync":
-        caller_flag, rest, err = parse_flag(args[1:], "--caller")
-        caller = None
-        if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
-        positional = [t for t in rest if not t.startswith("--")]
-        if err is None and not positional:
-            err = "release-sync requires a session name"
+        caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
-        result = lease.release_sync_claim(REPO, positional[0], caller=caller)
+        result = lease.release_sync_claim(REPO, pos["session"], caller=caller)
     elif cmd == "release":
-        session = args[1] if len(args) > 1 else None
+        session = pos.get("session")
         rec = lease.load_record(REPO, session) if session else None
         if rec and (rec.get("venue") or "colab") == "local":
             result = lease.release_local(REPO, session)
         else:
             result = lease.release(cr.colab, REPO, session=session)
     elif cmd == "grant":
-        hours, rest, err = parse_hours(args[1:])
-        burst = None
-        i = 0
-        while err is None and i < len(rest):
-            if rest[i] == "--burst" and i + 1 < len(rest):
-                burst = rest[i + 1]
-                i += 2
-            else:
-                i += 1
-        if err is None and hours is None:
-            err = "grant requires --hours H (H > 0)"
+        hours, err = _hours(flags, "grant", required=True)
+        burst = flags.get("burst")
         if err is None and burst is not None and burst not in lease.catalog_shapes(REPO, cr.colab):
             err = f"unknown burst shape {burst!r}"
         if err:
@@ -420,9 +454,7 @@ def main() -> int:
             return 2
         result = lease.write_grant(REPO, hours, burst_shape=burst)
     elif cmd == "extend-grant":
-        hours, rest, err = parse_hours(args[1:])
-        if err is None and hours is None:
-            err = "extend-grant requires --hours H (H > 0)"
+        hours, err = _hours(flags, "extend-grant", required=True)
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
@@ -433,7 +465,6 @@ def main() -> int:
         result = lease.standing_duty(cr.colab, REPO)
         result["bridge"] = lease.bridge_duty(cr.colab, REPO)
     elif cmd == "state":
-        rest = args[1:]
         portions = {
             "records": lease.state_records,
             "specs": lease.state_specs,
@@ -443,62 +474,38 @@ def main() -> int:
             "orphans": lease.state_orphans,
             "listeners": lambda colab, repo: lease.state_listeners(repo),
         }
-        if not rest:
+        part = flags.get("part")
+        if part is None:
             result = lease.state(cr.colab, REPO)
-        elif len(rest) == 2 and rest[0] == "--part" and rest[1] in portions:
-            result = portions[rest[1]](cr.colab, REPO)
         else:
-            print("colab-lease: state takes [--part records|specs|budget|grant|meta|orphans|listeners]", file=sys.stderr)
-            return 2
+            result = portions[part](cr.colab, REPO)
     elif cmd == "budget-caps":
         updates = {}
         err = None
-        rest = args[1:]
-        flags = {"--daily": "daily", "--monthly": "monthly", "--standing-daily": "standing_daily"}
-        addr_flags = {"--venue": "venue", "--account": "account"}
-        i = 0
-        while err is None and i < len(rest):
-            tok = rest[i]
-            if tok in addr_flags:
-                if i + 1 >= len(rest):
-                    err = f"{tok} needs a value"
-                else:
-                    updates[addr_flags[tok]] = rest[i + 1]
-                    i += 2
-            elif tok not in flags:
-                err = f"unknown argument {tok!r}"
-            elif i + 1 >= len(rest):
-                err = f"{tok} needs a value (a number or 'none')"
-            else:
-                raw = rest[i + 1]
+        cap_flags = {"daily": "daily", "monthly": "monthly", "standing-daily": "standing_daily"}
+        for name, key in cap_flags.items():
+            if name in parsed["present"]:
+                raw = flags[name]
                 if raw.lower() == "none":
-                    updates[flags[tok]] = None
+                    updates[key] = None
                 else:
                     try:
-                        updates[flags[tok]] = float(raw)
+                        updates[key] = float(raw)
                     except ValueError:
-                        err = f"{tok} needs a number or 'none'"
-                i += 2
+                        err = f"--{name} needs a number or 'none'"
+        if err is None:
+            for name in ("venue", "account"):
+                if name in parsed["present"]:
+                    updates[name] = flags[name]
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
         result = lease.set_budget_caps(REPO, **updates)
     elif cmd == "accounts":
-        if len(args) > 1:
-            print("colab-lease: accounts takes no arguments", file=sys.stderr)
-            return 2
         result = lease.accounts_state(REPO)
     elif cmd == "admission":
-        via, rest, err = parse_flag(args[1:], "--via")
-        caller_flag = None
-        if err is None:
-            caller_flag, rest, err = parse_flag(rest, "--caller")
-        caller = None
-        if err is None:
-            caller, err = resolve_cli_caller(caller_flag)
-        shape = None
-        if err is None:
-            shape, rest, err = shape_arg(rest)
+        caller, err = resolve_cli_caller(flags.get("caller"))
+        shape = _shape(parsed) if err is None else None
         if err is None and shape is None:
             err = "admission requires --shape ID"
         if err:
@@ -507,11 +514,11 @@ def main() -> int:
         if shape not in lease.catalog_shapes(REPO):
             result = {"action": "unknown-shape", "shape": shape}
         else:
-            refusal = lease.enforce_session_admission(REPO, shape, via=via, seam="wrapper", caller=caller)
+            refusal = lease.enforce_session_admission(REPO, shape, via=flags.get("via"), seam="wrapper", caller=caller)
             result = refusal if refusal is not None else {"action": "admitted", "shape": shape, "caller": caller}
     elif cmd == "plan":
-        shape, rest, err = shape_arg(args[1:])
-        if err is None and shape is None:
+        shape, err = _shape(parsed), None
+        if shape is None:
             err = "plan requires --shape ID"
         if err is None and shape not in lease.catalog_shapes(REPO, cr.colab):
             err = f"unknown shape {shape!r}"
@@ -535,46 +542,32 @@ def main() -> int:
     elif cmd == "auto":
         result = lease.auto_acquire(cr.colab, REPO)
     elif cmd == "request":
-        shape, reason, claim, at = None, "", None, None
-        rest = args[1:]
-        while rest:
-            tok, rest = rest[0], rest[1:]
-            if tok == "--reason" and rest:
-                reason, rest = rest[0], rest[1:]
-            elif tok in ("--caller", "--via") and rest:
-                # --via is the caller claim's legacy spelling; both
-                # feed the one governed claim.
-                claim, rest = rest[0], rest[1:]
-            elif tok == "--shape" and rest:
-                shape, rest = rest[0], rest[1:]
-            elif tok == "--at" and rest:
-                at, rest = rest[0], rest[1:]
-            elif not tok.startswith("--"):
-                shape = tok
+        # --via is the caller claim's legacy spelling; both
+        # feed the one governed claim (--caller wins when both
+        # are presented).
+        claim = flags.get("caller") if flags.get("caller") is not None else flags.get("via")
         caller, err = resolve_cli_caller(claim)
         if err:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
+        at = flags.get("at")
         if at is not None:
             try:
                 datetime.fromisoformat(at)
             except ValueError:
                 print("colab-lease: --at needs an ISO timestamp", file=sys.stderr)
                 return 2
-        result = lease.write_request(REPO, reason=reason, shape=shape, caller=caller, not_before=at)
+        result = lease.write_request(REPO, reason=flags.get("reason") or "", shape=_shape(parsed), caller=caller, not_before=at)
     elif cmd == "release-session":
-        endpoint_flag, rest, err = parse_flag(args[1:], "--endpoint")
-        if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
-            return 2
-        positional = [t for t in rest if not t.startswith("--")]
-        if endpoint_flag is not None and positional:
+        endpoint_flag = flags.get("endpoint")
+        session = pos.get("session")
+        if endpoint_flag is not None and session:
             print("colab-lease: release-session takes a session name or --endpoint, not both", file=sys.stderr)
             return 2
         if endpoint_flag is not None:
             result = lease.release_endpoint(cr.colab, REPO, endpoint_flag)
-        elif positional:
-            result = lease.release_session(cr.colab, REPO, positional[0])
+        elif session:
+            result = lease.release_session(cr.colab, REPO, session)
         else:
             print("colab-lease: release-session needs a session name or --endpoint", file=sys.stderr)
             return 2
@@ -583,14 +576,11 @@ def main() -> int:
         lease.clear_request(REPO)
         result = {"action": "request-cleared" if had else "no-demand"}
     elif cmd == "reap":
-        pending_csv, rest, err = parse_flag(args[1:], "--gate-pending-hosts")
-        probe_csv = None
-        if err is None:
-            probe_csv, rest, err = parse_flag(rest, "--gate-probe-hosts")
-        if err is None and rest:
-            err = f"reap takes no arguments besides --gate-pending-hosts/--gate-probe-hosts, got {rest[0]!r}"
+        pending_csv = flags.get("gate-pending-hosts")
+        probe_csv = flags.get("gate-probe-hosts")
         gate = None
-        if err is None and (pending_csv is not None or probe_csv is not None):
+        err = None
+        if pending_csv is not None or probe_csv is not None:
             try:
                 gate = lease.parse_gate_scope(pending_csv, probe_csv)
             except ValueError as exc:
@@ -599,8 +589,6 @@ def main() -> int:
             print(f"colab-lease: {err}", file=sys.stderr)
             return 2
         result = _reap_with_collector(gate)
-    else:
-        result = _reap_with_collector()
     print(json.dumps(result, indent=2))
     cr.mirror("capture")
     return 0 if result.get("action") not in ("refused-budget", "create-failed", "auto-failed", "standing-failed", "standing-refused-budget", "extend-no-lease", "extend-unknown", "extend-standing-managed", "grant-inactive", "caps-invalid", "unknown-shape", "shape-refused", "shape-mismatch", "caller-start-refused", "session-has-record", "session-stop-failed", "release-absent", "release-unknown", "adopt-has-record", "adopt-absent", "adopt-unknown", "adopt-deadline-past", "adopt-deadline-shortens", "adopt-no-deadline", "adopt-shape-ambiguous", "adopt-shape-unknown", "adopt-shape-conflict", "adopt-bridge-managed", "adopt-handover-pending", "shorten-no-lease", "shorten-unknown", "shorten-standing-managed", "shorten-not-earlier", "shorten-deadline-past", "shorten-no-target", "sync-claim-refused-claim", "sync-claim-refused-activity", "sync-claim-unattributed", "sync-release-refused") else 1

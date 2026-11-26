@@ -449,77 +449,77 @@
   {
    "path": "pipeline/venue/bin/colab-bridge",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-check",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-down",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-extend-guard",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-fs",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-harness-bootstrap",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-harness-relay",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-lease",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-liveness",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-run",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-sh",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-status",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-up",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-venue-migrate",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/colab-xfer",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/bin/local-fwd-beacon",
@@ -529,7 +529,7 @@
   {
    "path": "pipeline/venue/bin/local-run",
    "family": "venue-bin",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/ops/bootstrap_local.sh",

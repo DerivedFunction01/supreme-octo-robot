@@ -2,6 +2,9 @@
 """Job dispatch to the local venue, over SSH.
 
 Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
+--poll exits 0 complete, 1 failed, 3 still running; --wait the
+same at its bound (--max default 3600) — the still-running
+exit the two run twins share.
 
 --poll and --wait ATTACH to an existing run and never
 dispatch, wherever the flag sits: the attach target is a
@@ -84,6 +87,37 @@ runner = _load.sync("runner")
 for _name in runner.__all__:
     globals()[_name] = getattr(runner, _name)
 del _name
+
+argv_mod = _load.platform_argv()
+
+# The operator surface, declared once for the unified
+# argument parser (pipeline/platform/argv.py): help is
+# generated from this declaration, and anything outside it
+# — an unknown flag, a surplus positional, a value flag
+# with no value — is a usage refusal at exit 2, never
+# silently ignored or forwarded (BT5). The four modes are
+# one mutually exclusive mode group; --detach and --caller
+# ride the dispatch mode, --max bounds the --wait mode.
+# Declared verdict code: 3 is the still-running exit the
+# two run twins share (a --poll, or a bounded --wait, that
+# finds the run still running).
+DECL = {
+    "name": "local-run",
+    "summary": "Job dispatch to the local venue, over SSH. A bare job name dispatches; --poll/--wait attach to an existing run and never dispatch.",
+    "flags": {
+        "poll": {"help": "attach: one poll of an existing run (run id, or a job name's newest run)"},
+        "wait": {"help": "attach: wait for an existing run to settle"},
+        "seal": {"help": "seal a job's script files in place"},
+        "verify-sealed": {"help": "verify a sealed job's blobs against the register"},
+        "detach": {"help": "dispatch and return at once (dispatch is detached on the venue either way)"},
+        "caller": {"takes_value": True, "help": "caller tag"},
+        "max": {"takes_value": True, "help": "--wait bound in seconds (default 3600)"},
+        "evidence": {"takes_value": True, "help": "the flag report that classes a job for --seal"},
+    },
+    "positionals": [{"name": "target"}],
+    "mode_groups": [{"name": "mode", "flags": ["poll", "wait", "seal", "verify-sealed"]}],
+    "verdict_codes": {"3": "still running (--poll, or --wait at its bound)"},
+}
 
 _spec_l = importlib.util.spec_from_file_location(
     "lease", REPO / "sync" / "lease" / "__init__.py",
@@ -303,7 +337,7 @@ def _wait(rec: dict, target: dict, max_s: int, timeout_s: int) -> int:
             return 0 if out["state"] == "complete" else 1
         if time.monotonic() > deadline:
             print(json.dumps({"run_id": rec["run_id"], "state": "running", "note": "wait bound reached; the run continues detached"}, indent=2))
-            return 0
+            return 3
         time.sleep(POLL_S)
 
 
@@ -343,7 +377,7 @@ def _newest_record_for_job(job_name: str) -> dict | None:
     return best
 
 
-def _seal_job(job_name: str, args: list) -> int:
+def _seal_job(job_name: str, evidence: str | None) -> int:
     """Seal one job's script files in place: every file
     beside the manifest except job.json and existing
     blobs is encrypted to <name>.sealed under the
@@ -354,12 +388,6 @@ def _seal_job(job_name: str, args: list) -> int:
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
-    evidence = None
-    if "--evidence" in args:
-        try:
-            evidence = args[args.index("--evidence") + 1]
-        except IndexError:
-            return _fail("--evidence needs a value")
     if not evidence:
         return _fail("--seal needs --evidence \"<the flag report that classes this job>\"")
     job_dir = manifest_path.parent
@@ -442,18 +470,26 @@ def _verify_sealed(job_name: str) -> int:
 
 
 def main() -> int:
-    args = sys.argv[1:]
-    if not args:
-        return _fail("usage: local-run <job-name> [--caller TAG] [--detach] | --poll RUN_ID | --wait RUN_ID [--max SECONDS] | --seal <job-name> --evidence TEXT | --verify-sealed <job-name>")
-    if args[0] == "--seal":
-        if len(args) < 2:
+    try:
+        parsed = argv_mod.parse(DECL, sys.argv[1:])
+    except argv_mod.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    if "help" in parsed:
+        print(parsed["help"])
+        return 0
+    flags = parsed["flags"]
+    target_token = parsed["positionals"].get("target")
+    if flags["seal"]:
+        if target_token is None:
             return _fail("usage: local-run --seal <job-name> --evidence \"<flag report>\"")
-        return _seal_job(args[1], args)
-    if args[0] == "--verify-sealed":
-        if len(args) < 2:
+        return _seal_job(target_token, flags.get("evidence"))
+    if flags["verify-sealed"]:
+        if target_token is None:
             return _fail("usage: local-run --verify-sealed <job-name>")
-        return _verify_sealed(args[1])
-    if "--poll" in args or "--wait" in args:
+        return _verify_sealed(target_token)
+    if flags["poll"] or flags["wait"]:
         # Attach, never dispatch: an invocation carrying an
         # attach flag resolves to an existing run record or
         # fails here — it can never fall through to the job
@@ -461,13 +497,7 @@ def main() -> int:
         # spelling. (The defect this closes: `local-run <job>
         # --wait` read as a dispatch and re-fired the job —
         # a second execution of work believed to be a poll.)
-        mode = "--wait" if "--wait" in args else "--poll"
-        flag_at = args.index(mode)
-        target_token = None
-        if flag_at + 1 < len(args) and not args[flag_at + 1].startswith("--"):
-            target_token = args[flag_at + 1]
-        elif args[0] != mode:
-            target_token = args[0]
+        mode = "--wait" if flags["wait"] else "--poll"
         rec = load_run_record(target_token) if target_token else None
         if rec is None and target_token:
             rec = _newest_record_for_job(target_token)
@@ -496,16 +526,23 @@ def main() -> int:
         if mode == "--poll":
             out = _poll(rec, target)
             print(json.dumps({"run_id": rec["run_id"], **out}, indent=2))
-            return 0
+            # The twins' shared still-running verdict (BT5):
+            # 3 while the run is still running, as colab-run's
+            # poll has always read; a poll that settles the run
+            # keeps this tool's standing 0.
+            return 3 if out["state"] == "running" else 0
         max_s = 3600
-        if "--max" in args:
+        if flags.get("max") is not None:
             try:
-                max_s = int(args[args.index("--max") + 1])
-            except (IndexError, ValueError):
+                max_s = int(flags["max"])
+            except ValueError:
                 return _fail("--max must be an integer number of seconds")
         return _wait(rec, target, max_s, int(rec.get("timeout_s") or 18000))
 
-    job_name = args[0]
+    if target_token is None:
+        print(argv_mod.help_text(DECL), file=sys.stderr)
+        return 2
+    job_name = target_token
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
@@ -555,12 +592,7 @@ def main() -> int:
             return _fail(f"job {job_name}: declared upload {rel} not found at {src}")
         seen.add(name)
         uploads.append((name, src.read_bytes()))
-    caller_flag = None
-    if "--caller" in args:
-        try:
-            caller_flag = args[args.index("--caller") + 1]
-        except IndexError:
-            return _fail("--caller needs a value")
+    caller_flag = flags.get("caller")
     claim_raw = caller_flag if caller_flag is not None else job.get("caller")
     claim_err = lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
     if claim_err:
@@ -594,7 +626,7 @@ def main() -> int:
         return 1
     rec.update(state="running")
     save_record(rec)
-    if "--detach" in args:
+    if flags["detach"]:
         print(json.dumps({"run_id": run_id, "state": "running", "session": session}, indent=2))
         return 0
     return _wait(rec, target, int(job.get("timeout_s") or 18000), int(job.get("timeout_s") or 18000))
