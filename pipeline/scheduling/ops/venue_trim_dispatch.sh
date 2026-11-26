@@ -22,8 +22,18 @@ set -uo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=paths.sh
+. "$OPS_DIR/paths.sh"
 REPO_ROOT="$(cd "$OPS_DIR/../../.." && pwd)"
 LOCAL_RUN="$REPO_ROOT/pipeline/venue/bin/local-run"
+# The report read rides the runner's own SSH transport.
+# The identity is a deployment binding, never a literal
+# in tracked code: the env override wins; the default
+# derives from the workspace root the paths spine
+# provides (the workspace is a direct child of the
+# operator's home, where the keypair lives).
+SSH_IDENTITY="${VENUE_TRIM_SSH_IDENTITY:-$(dirname "$SCHED_WS_ROOT")/.ssh/id_ed25519}"
+SSH_KNOWN_HOSTS="$(dirname "$SSH_IDENTITY")/known_hosts"
 
 partial=0
 
@@ -42,10 +52,10 @@ dispatch() {
     return
   fi
   "$LOCAL_RUN" --wait "$run_id" --max=1500 >/dev/null 2>&1 || true
-  report="$(ssh -p "$2" -i "$HOME/.ssh/id_ed25519" \
-    -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+  report="$(ssh -p "$2" -i "$SSH_IDENTITY" \
+    -o UserKnownHostsFile="$SSH_KNOWN_HOSTS" \
     -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
-    agent@127.0.0.1 "cat ~/runs/$run_id/trim-report.txt" 2>/dev/null)"
+    agent@127.0.0.1 "cat runs/$run_id/trim-report.txt" 2>/dev/null)"
   if [ -z "$report" ]; then
     echo "VENUE-TRIM-REPORT-MISSING venue=$3 run=$run_id"
     partial=3
