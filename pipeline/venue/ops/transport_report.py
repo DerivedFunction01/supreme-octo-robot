@@ -43,11 +43,16 @@ window ending at that instant; no arguments read the last
 24 hours. --runs-dir reads a records directory other than
 the store's own (a mirror, an archive, a test sandbox).
 Output is one JSON object on stdout.
+
+The argument surface parses through the unified argv
+contract (pipeline/platform/argv.py): --hours converts
+after the parse (a non-number is a usage refusal,
+exit 2), and an unknown or malformed token is a usage
+refusal, never a report over a misread window.
 """
 
 from __future__ import annotations
 
-import argparse
 import importlib.util as _ilu
 import json
 import os
@@ -70,6 +75,31 @@ _paths_spec.loader.exec_module(_paths)
 _env_home = os.environ.get("COLAB_RUNNER_HOME")
 REPO = Path(_env_home) if _env_home else _paths.REPO_RESOLVED
 RUNS = REPO / "results" / "runs"
+
+# The unified argv contract home, loaded by location
+# through the paths spine.
+_argv_spec = _ilu.spec_from_file_location(
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+platform_argv = _ilu.module_from_spec(_argv_spec)
+_argv_spec.loader.exec_module(platform_argv)
+
+DECLARATION = {
+    "name": "transport_report",
+    "summary": "per-programme branch-transport adoption "
+               "counts from the run records",
+    "flags": {
+        "day": {"takes_value": True,
+                "help": "a UTC calendar day, YYYY-MM-DD"},
+        "end": {"takes_value": True,
+                "help": "rolling window end (ISO); default: now"},
+        "hours": {"takes_value": True, "default": 24.0,
+                  "help": "rolling window length in hours "
+                          "(default 24)"},
+        "runs-dir": {"takes_value": True,
+                     "help": "records directory other than "
+                             "the store's own"},
+    },
+}
 
 # Timestamp parsing and formatting ride the venue subtree's
 # shared date home (the lease core foundation), never a
@@ -198,37 +228,44 @@ def _iso(epoch_s: float) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--day", default=None,
-                    help="a UTC calendar day, YYYY-MM-DD")
-    ap.add_argument("--end", default=None,
-                    help="rolling window end (ISO); default: now")
-    ap.add_argument("--hours", type=float, default=24.0,
-                    help="rolling window length in hours (default 24)")
-    ap.add_argument("--runs-dir", default=None,
-                    help="records directory other than the store's own")
-    args = ap.parse_args()
+    try:
+        parsed = platform_argv.parse(DECLARATION, sys.argv[1:])
+    except platform_argv.UsageError as exc:
+        print(str(exc), file=sys.stderr)
+        print(platform_argv.help_text(DECLARATION),
+              file=sys.stderr, end="")
+        return platform_argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    flags = parsed["flags"]
+    try:
+        hours = float(flags["hours"])
+    except ValueError:
+        print("transport_report: --hours takes a number",
+              file=sys.stderr)
+        return platform_argv.USAGE_EXIT
 
-    if args.day:
-        start = _epoch(f"{args.day}T00:00:00+00:00")
+    if flags["day"]:
+        start = _epoch(f"{flags['day']}T00:00:00+00:00")
         if start is None:
-            print(f"transport_report: unparseable --day {args.day!r}",
+            print(f"transport_report: unparseable --day {flags['day']!r}",
                   file=sys.stderr)
             return 2
         end = start + 24 * 3600
-        window = {"kind": "day", "day": args.day}
+        window = {"kind": "day", "day": flags["day"]}
     else:
-        end = _epoch(args.end) if args.end else time.time()
+        end = _epoch(flags["end"]) if flags["end"] else time.time()
         if end is None:
-            print(f"transport_report: unparseable --end {args.end!r}",
+            print(f"transport_report: unparseable --end {flags['end']!r}",
                   file=sys.stderr)
             return 2
-        start = end - args.hours * 3600
-        window = {"kind": "rolling", "hours": args.hours}
+        start = end - hours * 3600
+        window = {"kind": "rolling", "hours": hours}
     window["start"] = _iso(start)
     window["end"] = _iso(end)
 
-    runs_dir = Path(args.runs_dir) if args.runs_dir else RUNS
+    runs_dir = Path(flags["runs-dir"]) if flags["runs-dir"] else RUNS
     records, unparseable = load_records(runs_dir)
     report = summarize(records, start, end)
     report["window"] = window

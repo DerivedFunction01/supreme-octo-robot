@@ -484,17 +484,17 @@
   {
    "path": "pipeline/venue/ops/mirror_transient.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/ops/store_prune.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/ops/transport_report.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/sync/apply_bundle_remote.py",
@@ -514,7 +514,7 @@
   {
    "path": "pipeline/venue/sync/data_manifest.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/sync/make_snapshot_bundle.sh",
@@ -524,7 +524,7 @@
   {
    "path": "pipeline/venue/sync/pull_results.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/sync/runner/main.py",
