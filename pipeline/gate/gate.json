@@ -164,10 +164,6 @@
     {
      "kind": "test fixture \u2014 writes a history log only inside a TemporaryDirectory",
      "path": "pipeline/evaluation/tests/test_repo_state.py"
-    },
-    {
-     "kind": "test fixture \u2014 writes ledger source logs only inside the suite's temporary directory",
-     "path": "pipeline/scheduling/tests/test_ledger_sqlite.py"
     }
    ],
    "leg": "repowriteruniqueness",
