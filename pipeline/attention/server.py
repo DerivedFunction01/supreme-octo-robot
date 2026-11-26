@@ -88,7 +88,7 @@ from attention.services.waits import (
     engine,
     facts,
 )
-from attention.services.writes import ingest, writes
+from attention.services.writes import freshness, ingest, writes
 from attention.settings import Settings
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
@@ -387,7 +387,7 @@ def build_mount(settings: Settings, store: Store):
         )
 
     def registries(state, now, request):
-        return 200, model.build_registries(state), False
+        return 200, model.build_registries(state, now), False
 
     def programmes_route(state, now, request):
         return (
@@ -514,6 +514,12 @@ def build_mount(settings: Settings, store: Store):
         result = writes.record_verification(state, body(request), now)
         return 201, result, True
 
+    def handler_freshness(state, now, request):
+        result = freshness.record_freshness(
+            state, request.params["handle"], body(request), now
+        )
+        return 201, result, True
+
     r.add("GET", "/health", cycle(health))
     r.add("GET", "/api/v1/glance", cycle(glance))
     r.add("GET", "/api/v1/today", cycle(today))
@@ -531,6 +537,7 @@ def build_mount(settings: Settings, store: Store):
     r.add("POST", "/api/v1/presence", cycle(presence))
     r.add("POST", "/api/v1/items/{item_id}/action", cycle(item_action))
     r.add("POST", "/api/v1/handlers/{handle}/action", cycle(handler_action))
+    r.add("POST", "/api/v1/handlers/{handle}/freshness", cycle(handler_freshness))
     r.add("POST", "/api/v1/handlers/{handle}/unmute", cycle(handler_unmute))
     r.add("POST", "/api/v1/handlers/{handle}/mute", cycle(handler_mute))
     r.add("POST", "/api/v1/digest/prefs", cycle(digest_prefs))

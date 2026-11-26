@@ -27,12 +27,16 @@ import {
   LogRowDrawer,
   type LogRowEntry,
 } from "@workhorse/kit/components/display/LogRow";
-import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
+import {
+  StatusChip,
+  type StatusTone,
+} from "@workhorse/kit/components/display/StatusChip";
 import { HandlerVerbButton, ItemCard } from "./item-card";
 import {
   clock,
   dateToken,
   day,
+  type HandlerFreshness,
   type HandlerPayload,
   type RegistriesPayload,
 } from "./model";
@@ -63,7 +67,13 @@ export function HandlersView() {
           </ScopeLine>
           <GroupedList>
             {handlers.map((h) => (
-              <HandlerRow key={h.handle} handle={h.handle} label={h.label || h.handle} slot={h.color_slot} />
+              <HandlerRow
+                key={h.handle}
+                handle={h.handle}
+                label={h.label || h.handle}
+                slot={h.color_slot}
+                freshness={h.freshness}
+              />
             ))}
           </GroupedList>
         </>
@@ -72,16 +82,42 @@ export function HandlersView() {
   );
 }
 
+const BINDING_TONES: Record<string, StatusTone> = {
+  "live-seat": "ok",
+  superseded: "warn",
+  deleted: "fail",
+  unresolvable: "idle",
+  none: "idle",
+};
+
+const VERDICT_TONES: Record<string, StatusTone> = {
+  current: "ok",
+  stale: "warn",
+  "dead-binding": "fail",
+  unresolvable: "idle",
+  "retired-with-cause": "idle",
+};
+
 /** One frame-7 row: the registry facts at once, the
- *  per-handler counts when its detail portion lands. */
+ *  per-handler counts when its detail portion lands.
+ *  The freshness record rides the registries payload
+ *  itself (the handler-freshness plan): the binding
+ *  state as its own chip beside the label, the verdict
+ *  chip at the end, and the reconcile age, the last
+ *  evidence, and the declaration age as their own
+ *  lines — every string served, none derived here. A
+ *  retired-with-cause row renders in the retired
+ *  register: muted label, its cause named. */
 function HandlerRow({
   handle,
   label,
   slot,
+  freshness,
 }: {
   handle: string;
   label: string;
   slot: number | undefined;
+  freshness: HandlerFreshness | undefined;
 }) {
   const ui = useAttentionUi();
   const detail = usePortion<HandlerPayload>(
@@ -106,18 +142,79 @@ function HandlerRow({
     if (d.status?.status_label) facts.push(d.status.status_label);
   }
 
+  const f = freshness;
+  const retired = f?.verdict === "retired-with-cause";
+  const subLines: string[] = [];
+  if (facts.length) subLines.push(facts.join(" · "));
+  else if (!f) subLines.push(handle);
+  if (f) {
+    if (retired) {
+      subLines.push(
+        f.cause_label ? `Retired — ${f.cause_label}` : "Retired — with cause",
+      );
+    } else if (f.last_reconcile_at) {
+      subLines.push(
+        f.reconcile_age_label
+          ? `${f.verdict_label} — reconciled ${f.reconcile_age_label}`
+          : f.verdict_label,
+      );
+    } else {
+      subLines.push(f.verdict_label);
+    }
+    if (f.last_evidence)
+      subLines.push(
+        `Last evidence: ${f.last_evidence.kind_label}${
+          f.last_evidence.age_label ? ` · ${f.last_evidence.age_label}` : ""
+        } · ${f.last_evidence.ref}`,
+      );
+    if (f.declaration_age_days !== null && f.declaration_age_days !== undefined)
+      subLines.push(
+        `Declaration ${f.declaration_age_days} day${f.declaration_age_days === 1 ? "" : "s"} old`,
+      );
+  }
+
   return (
     <Row
       label={
         <span className="flex items-center gap-2">
           <SlotDot slot={slot} />
-          {label}
+          <span style={retired ? { color: "var(--ui-content-muted)" } : undefined}>
+            {label}
+          </span>
+          {f ? (
+            <StatusChip
+              tone={BINDING_TONES[f.binding_state] ?? "idle"}
+              label={f.binding_label}
+            />
+          ) : null}
         </span>
       }
-      sub={facts.length ? facts.join(" · ") : handle}
+      sub={
+        subLines.length === 1 ? (
+          subLines[0]
+        ) : (
+          <span>
+            {subLines.map((line, i) => (
+              <span key={i} className="block">
+                {line}
+              </span>
+            ))}
+          </span>
+        )
+      }
       end={
-        decisions !== null && decisions > 0 ? (
-          <StatusChip tone="fail" label={`${decisions} waiting`} />
+        f || (decisions !== null && decisions > 0) ? (
+          <>
+            {f ? (
+              <StatusChip
+                tone={VERDICT_TONES[f.verdict] ?? "idle"}
+                label={f.verdict_label}
+              />
+            ) : null}
+            {decisions !== null && decisions > 0 ? (
+              <StatusChip tone="fail" label={`${decisions} waiting`} />
+            ) : null}
+          </>
         ) : undefined
       }
       chevron

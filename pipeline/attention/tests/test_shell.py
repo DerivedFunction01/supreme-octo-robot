@@ -133,6 +133,182 @@ class MountTests(unittest.TestCase):
             self.assertEqual(resp.headers.get("X-Frame-Options"), "DENY")
 
 
+class FreshnessTests(unittest.TestCase):
+    """The handler-freshness pins (the handler-freshness
+    plan, step 1): a verdict written through the API
+    serves back inline on the registries payload; a
+    handler with no record serves unresolvable, never
+    current; a verdict older than the registry's stale
+    window renders stale with the composed verdict
+    beside it, while a retired-with-cause disposition
+    does not decay; writes outside the registry's
+    vocabularies refuse as problems."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self._start(store_mod.empty_state())
+
+    def _start(self, state):
+        path = Path(self.tmp.name) / "state.json"
+        path.write_text(json.dumps(state), encoding="utf-8")
+        settings = Settings(data_path=path, host="127.0.0.1", port=0)
+        store = server_mod.make_store(settings)
+        mount, _workers = server_mod.build_mount(settings, store)
+        self.listener = server_mod.serving.Listener(mount, "127.0.0.1", 0)
+        self.port = self.listener.server_address[1]
+        self.thread = threading.Thread(target=self.listener.serve_forever, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.listener.shutdown)
+        self.addCleanup(self.listener.server_close)
+
+    def call(self, method, path, body=None):
+        req = urllib.request.Request(
+            f"http://127.0.0.1:{self.port}{path}",
+            method=method,
+            data=None if body is None else json.dumps(body).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status, json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            return e.code, json.loads(e.read())
+
+    def _register(self, handle="@example-lane"):
+        status, _payload = self.call(
+            "POST", "/api/v1/handlers", {"handle": handle, "label": "Example"}
+        )
+        self.assertEqual(status, 201)
+
+    def _served_freshness(self, handle="@example-lane"):
+        status, payload = self.call("GET", "/api/v1/registries")
+        self.assertEqual(status, 200)
+        entry = next(h for h in payload["handlers"] if h["handle"] == handle)
+        return payload, entry["freshness"]
+
+    def test_write_serves_back_inline(self):
+        self._register()
+        status, payload = self.call(
+            "POST",
+            "/api/v1/handlers/@example-lane/freshness",
+            {
+                "verdict": "current",
+                "binding_state": "live-seat",
+                "bound_chat": "chat-a",
+                "seat_chat": "chat-a",
+                "last_evidence": {
+                    "kind": "run",
+                    "at": "2026-11-26T09:00:00+00:00",
+                    "ref": "run-123",
+                },
+                "declaration_age_days": 1,
+            },
+        )
+        self.assertEqual(status, 201)
+        self.assertTrue(payload["recorded"])
+        _registries, fresh = self._served_freshness()
+        self.assertEqual(fresh["verdict"], "current")
+        self.assertEqual(fresh["verdict_label"], "Current")
+        self.assertEqual(fresh["binding_state"], "live-seat")
+        self.assertEqual(fresh["binding_label"], "Live seat")
+        self.assertEqual(fresh["bound_chat"], "chat-a")
+        self.assertEqual(fresh["seat_chat"], "chat-a")
+        self.assertIsNotNone(fresh["last_reconcile_at"])
+        self.assertIsNotNone(fresh["reconcile_age_label"])
+        self.assertEqual(fresh["last_evidence"]["kind"], "run")
+        self.assertEqual(fresh["last_evidence"]["kind_label"], "Run")
+        self.assertEqual(fresh["last_evidence"]["ref"], "run-123")
+        self.assertEqual(fresh["declaration_age_days"], 1)
+
+    def test_absent_record_serves_unresolvable(self):
+        self._register()
+        _registries, fresh = self._served_freshness()
+        self.assertEqual(fresh["verdict"], "unresolvable")
+        self.assertEqual(fresh["binding_state"], "unresolvable")
+        self.assertIsNone(fresh["last_reconcile_at"])
+        self.assertIsNone(fresh["last_evidence"])
+
+    def test_freshness_registry_is_served(self):
+        status, registries = self.call("GET", "/api/v1/registries")
+        self.assertEqual(status, 200)
+        codes = {e["code"] for e in registries["freshness"]["verdicts"]}
+        self.assertEqual(
+            codes,
+            {"current", "stale", "dead-binding", "unresolvable", "retired-with-cause"},
+        )
+        self.assertEqual(registries["freshness"]["verdict_stale_after_hours"], 2)
+        self.assertEqual(registries["freshness"]["evidence_window_seat_hours"], 24)
+        self.assertEqual(registries["freshness"]["evidence_window_lane_hours"], 168)
+
+    def test_aged_verdict_renders_stale_but_retirement_does_not_decay(self):
+        state = store_mod.empty_state()
+        state["handlers"] = [
+            {"handle": "@aged", "label": "Aged"},
+            {"handle": "@retired", "label": "Retired"},
+        ]
+        aged_at = "2026-11-26T00:00:00+00:00"
+        state["handler_freshness"] = {
+            "@aged": {
+                "handle": "@aged",
+                "verdict": "current",
+                "binding_state": "live-seat",
+                "bound_chat": "chat-a",
+                "seat_chat": "chat-a",
+                "last_reconcile_at": aged_at,
+                "last_evidence": None,
+                "declaration_age_days": None,
+                "cause": None,
+            },
+            "@retired": {
+                "handle": "@retired",
+                "verdict": "retired-with-cause",
+                "binding_state": "deleted",
+                "bound_chat": "chat-gone",
+                "seat_chat": None,
+                "last_reconcile_at": aged_at,
+                "last_evidence": None,
+                "declaration_age_days": None,
+                "cause": "seat-deleted",
+            },
+        }
+        self.listener.shutdown()
+        self.listener.server_close()
+        self._start(state)
+        _r, fresh = self._served_freshness("@aged")
+        self.assertEqual(fresh["verdict"], "stale")
+        self.assertEqual(fresh["composed_verdict"], "current")
+        _r, fresh = self._served_freshness("@retired")
+        self.assertEqual(fresh["verdict"], "retired-with-cause")
+        self.assertEqual(fresh["cause"], "seat-deleted")
+        self.assertEqual(fresh["cause_label"], "Seat deleted")
+
+    def test_write_outside_the_vocabulary_refuses(self):
+        self._register()
+        status, payload = self.call(
+            "POST",
+            "/api/v1/handlers/@example-lane/freshness",
+            {"verdict": "probably-fine", "binding_state": "live-seat"},
+        )
+        self.assertEqual(status, 422)
+        self.assertEqual(payload["type"], "urn:problem:validation")
+        status, _payload = self.call(
+            "POST",
+            "/api/v1/handlers/@example-lane/freshness",
+            {"verdict": "retired-with-cause", "binding_state": "deleted"},
+        )
+        self.assertEqual(status, 422)
+
+    def test_write_to_unknown_handler_is_a_problem(self):
+        status, payload = self.call(
+            "POST",
+            "/api/v1/handlers/@absent/freshness",
+            {"verdict": "current", "binding_state": "live-seat"},
+        )
+        self.assertEqual(status, 404)
+        self.assertEqual(payload["type"], "urn:problem:not-found")
+
+
 class CapacityPassCase(unittest.TestCase):
     """The capacity pass's failure discipline: a throw
     anywhere in the collection is recorded in the

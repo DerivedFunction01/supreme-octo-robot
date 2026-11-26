@@ -263,11 +263,44 @@ export interface RulesPayload {
   rules: AttentionRule[];
 }
 
+export interface HandlerFreshnessEvidence {
+  kind: string;
+  kind_label: string;
+  at: string;
+  age_label: string | null;
+  ref: string;
+}
+
+/** One handler's served freshness record (the
+ *  handler-freshness plan): the reconciler's composed
+ *  verdict with its labels resolved server-side — the
+ *  row renders these strings, it derives none of them. */
+export interface HandlerFreshness {
+  handle: string;
+  verdict: string;
+  verdict_label: string;
+  composed_verdict: string | null;
+  binding_state: string;
+  binding_label: string;
+  bound_chat: string | null;
+  seat_chat: string | null;
+  last_reconcile_at: string | null;
+  reconcile_age_label: string | null;
+  last_evidence: HandlerFreshnessEvidence | null;
+  declaration_age_days: number | null;
+  cause: string | null;
+  cause_label: string | null;
+}
+
 export interface RegistryHandler {
   handle: string;
   label: string;
   color_slot?: number;
   icon?: string;
+  thread_id?: string | null;
+  ui_surface?: boolean;
+  retired?: boolean;
+  freshness?: HandlerFreshness;
 }
 
 export interface RegistriesPayload {
@@ -285,6 +318,14 @@ export interface RegistriesPayload {
   templates: { kind: string; version: number; audience: string; slots: string[]; text: string }[];
   wait_classes: { name: string; label?: string; hard_stop?: boolean }[];
   item_kinds: { kind: string; label: string; status_kind?: boolean; digest_owner_label?: string }[];
+  freshness?: {
+    verdicts: { code: string; label: string }[];
+    binding_states: { code: string; label: string }[];
+    causes: { code: string; label: string }[];
+    verdict_stale_after_hours: number;
+    evidence_window_seat_hours: number;
+    evidence_window_lane_hours: number;
+  };
   handlers: RegistryHandler[];
 }
 

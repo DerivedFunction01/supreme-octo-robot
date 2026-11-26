@@ -104,6 +104,88 @@ def default_status_codes() -> list:
 
 STATUS_NEED = {c["code"]: c["need"] for c in default_status_codes()}
 
+
+# The handler-freshness vocabulary ships as a registry
+# too (the handler-freshness plan, D3 registry-held): the
+# verdict set, the binding states, the retirement causes,
+# and the staleness windows the serve derives from. The
+# reconciler composes verdicts; this registry names what
+# a verdict may say — new entries are added in-app, never
+# by editing this file.
+FRESHNESS_VERDICTS = (
+    "current",
+    "stale",
+    "dead-binding",
+    "unresolvable",
+    "retired-with-cause",
+)
+FRESHNESS_BINDING_STATES = (
+    "live-seat",
+    "superseded",
+    "deleted",
+    "unresolvable",
+    "none",
+)
+# The fixed retirement causes; "superseded-by <handle>"
+# is the one parameterized form (the successor's handle
+# rides in the cause string itself).
+FRESHNESS_CAUSES = ("seat-deleted", "lane-dissolved")
+FRESHNESS_CAUSE_PREFIX = "superseded-by "
+
+
+def default_freshness_registry() -> dict:
+    """The freshness registry's shipped shape: the
+    vocabularies with their labels, and the windows —
+    a verdict older than verdict_stale_after_hours
+    renders stale; the evidence windows (24 h seats,
+    7 d lanes) bound the reconciler's last-evidence
+    composition."""
+    return {
+        "verdicts": [
+            {"code": "current", "label": "Current"},
+            {"code": "stale", "label": "Stale"},
+            {"code": "dead-binding", "label": "Dead binding"},
+            {"code": "unresolvable", "label": "Unresolvable"},
+            {"code": "retired-with-cause", "label": "Retired — with cause"},
+        ],
+        "binding_states": [
+            {"code": "live-seat", "label": "Live seat"},
+            {"code": "superseded", "label": "Superseded"},
+            {"code": "deleted", "label": "Deleted"},
+            {"code": "unresolvable", "label": "Unresolvable"},
+            {"code": "none", "label": "No binding"},
+        ],
+        "causes": [
+            {"code": "seat-deleted", "label": "Seat deleted"},
+            {"code": "lane-dissolved", "label": "Lane dissolved"},
+            {"code": "superseded-by", "label": "Superseded by"},
+        ],
+        "verdict_stale_after_hours": 2,
+        "evidence_window_seat_hours": 24,
+        "evidence_window_lane_hours": 168,
+    }
+
+
+def freshness_registry(state: dict) -> dict:
+    """The state's freshness registry, or the shipped
+    default when the state predates it."""
+    return state.get("freshness") or default_freshness_registry()
+
+
+def freshness_cause_ok(state: dict, cause) -> bool:
+    """A cause is one of the registry's fixed codes, or
+    the parameterized superseded-by form naming a
+    handler the registry itself carries."""
+    if not isinstance(cause, str) or not cause:
+        return False
+    if cause in FRESHNESS_CAUSES:
+        return True
+    if cause.startswith(FRESHNESS_CAUSE_PREFIX):
+        successor = cause[len(FRESHNESS_CAUSE_PREFIX) :].strip()
+        return successor in {h["handle"] for h in state.get("handlers", [])}
+    return False
+
+
 # Wait classes are a registry too: the hard-stop mark is a
 # property of the class, not of any rule — hard-stop
 # classes are the non-declarable floor (spec §1.10).

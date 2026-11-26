@@ -37,6 +37,7 @@ import os
 from datetime import UTC, datetime
 
 from attention import paths as _paths
+from attention.domain.catalogs import default_freshness_registry
 
 _SEEDS_PATH = _paths.SEEDS
 
@@ -76,6 +77,13 @@ def empty_state() -> dict:
         "muted": [],
         "allowlist": [],
         "handler_status": {},
+        "handler_freshness": {},
+        # The freshness registry's seed is the domain
+        # catalog's default (the sample builder's form
+        # for the shipped registries), not the JSON seed
+        # data: the vocabulary is young and the JSON file
+        # sits at its line cap.
+        "freshness": default_freshness_registry(),
         "rules": seeds["rules"],
         "status_codes": seeds["status_codes"],
         "fields": seeds["fields"],

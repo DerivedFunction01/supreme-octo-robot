@@ -30,6 +30,9 @@ from .labels import (
     digest_window_tz,
     digest_windows,
     effective_mode,
+    freshness_binding_label,
+    freshness_cause_label,
+    freshness_verdict_label,
     handler_map,
     handler_order,
     handler_presentation,
@@ -398,12 +401,89 @@ def build_sends(state: dict, handle: str | None = None, now=None) -> dict:
     return {"contract": CONTRACT, "sends": [send_view(s, now) for s in sends][-50:]}
 
 
-def build_registries(state: dict) -> dict:
+_EVIDENCE_KIND_LABELS = {"posting": "Posting", "run": "Run"}
+
+
+def freshness_view(state: dict, handler: dict, now: datetime | None = None) -> dict:
+    """One handler's served freshness record (the
+    handler-freshness plan): the reconciler's composed
+    verdict, its labels resolved from the registry, and
+    the serve-time derivations — a verdict older than
+    the registry's stale window renders stale (the
+    composed verdict stays on the record beside it),
+    and every age the surface shows is composed here.
+
+    A handler with no record serves unresolvable —
+    never current: an unwritten verdict is an unknown,
+    and the surface renders it as one."""
+    registry = dom.freshness_registry(state)
+    handle = handler["handle"]
+    record = (state.get("handler_freshness") or {}).get(handle)
+    if record is None:
+        return {
+            "handle": handle,
+            "verdict": "unresolvable",
+            "verdict_label": freshness_verdict_label(state, "unresolvable"),
+            "composed_verdict": None,
+            "binding_state": "unresolvable",
+            "binding_label": freshness_binding_label(state, "unresolvable"),
+            "bound_chat": handler.get("thread_id"),
+            "seat_chat": None,
+            "last_reconcile_at": None,
+            "reconcile_age_label": None,
+            "last_evidence": None,
+            "declaration_age_days": None,
+            "cause": None,
+            "cause_label": None,
+        }
+    view = dict(record)
+    verdict = record["verdict"]
+    composed = None
+    reconciled_at = record.get("last_reconcile_at")
+    if (
+        now is not None
+        and isinstance(reconciled_at, datetime)
+        and verdict != "retired-with-cause"
+        and (now - reconciled_at).total_seconds()
+        > registry["verdict_stale_after_hours"] * 3600
+    ):
+        composed = verdict
+        verdict = "stale"
+    view["verdict"] = verdict
+    view["verdict_label"] = freshness_verdict_label(state, verdict)
+    view["composed_verdict"] = composed
+    view["binding_label"] = freshness_binding_label(state, record["binding_state"])
+    view["last_reconcile_at"] = _iso(reconciled_at)
+    view["reconcile_age_label"] = (
+        dom.waiting_label(reconciled_at, now)
+        if now is not None and isinstance(reconciled_at, datetime)
+        else None
+    )
+    evidence = record.get("last_evidence")
+    if evidence:
+        at = evidence.get("at")
+        view["last_evidence"] = {
+            "kind": evidence["kind"],
+            "kind_label": _EVIDENCE_KIND_LABELS.get(evidence["kind"], evidence["kind"]),
+            "at": _iso(at),
+            "age_label": (
+                dom.waiting_label(at, now)
+                if now is not None and isinstance(at, datetime)
+                else None
+            ),
+            "ref": evidence.get("ref"),
+        }
+    view["cause_label"] = freshness_cause_label(state, record.get("cause"))
+    return view
+
+
+def build_registries(state: dict, now: datetime | None = None) -> dict:
     """The Registries screen + the rule editor's pickers:
     every vocabulary the declarative engine matches over."""
     return {
         "contract": CONTRACT,
         "status_codes": state.get("status_codes", []),
+        "freshness": dom.freshness_registry(state),
         "fields": [
             {**f, "label": class_label(f["name"])} for f in state.get("fields", [])
         ],
@@ -441,6 +521,7 @@ def build_registries(state: dict) -> dict:
                 **handler_presentation(h),
                 "ui_surface": bool(h.get("ui_surface")),
                 "retired": bool(h.get("retired")),
+                "freshness": freshness_view(state, h, now),
             }
             for h in state["handlers"]
         ],

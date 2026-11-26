@@ -71,6 +71,44 @@ def status_label(state: dict, code: str) -> str:
     return code
 
 
+def freshness_verdict_label(state: dict, code: str) -> str:
+    """A freshness verdict's display label from the
+    registry — every surface renders the label, never
+    the raw code."""
+    for entry in dom.freshness_registry(state)["verdicts"]:
+        if entry["code"] == code:
+            return entry["label"]
+    return code
+
+
+def freshness_binding_label(state: dict, code: str) -> str:
+    """A freshness binding state's display label, from
+    the same registry."""
+    for entry in dom.freshness_registry(state)["binding_states"]:
+        if entry["code"] == code:
+            return entry["label"]
+    return code
+
+
+def freshness_cause_label(state: dict, cause: str | None) -> str | None:
+    """A retirement cause's display label: the fixed
+    codes read from the registry; the parameterized
+    superseded-by form composes its successor's handle
+    onto the registry's prefix label."""
+    if not cause:
+        return None
+    if cause.startswith(dom.FRESHNESS_CAUSE_PREFIX):
+        successor = cause[len(dom.FRESHNESS_CAUSE_PREFIX) :].strip()
+        for entry in dom.freshness_registry(state)["causes"]:
+            if entry["code"] == "superseded-by":
+                return f"{entry['label']} {successor}"
+        return cause
+    for entry in dom.freshness_registry(state)["causes"]:
+        if entry["code"] == cause:
+            return entry["label"]
+    return cause
+
+
 def class_label(name: str) -> str:
     """A wait class's display name (classes carry no label
     field; the name title-cased is the display form)."""

@@ -150,6 +150,13 @@ def report_dispatch_failure(send_id: str, consumer: str, reason: str) -> dict:
     )
 
 
+def post_freshness(handle: str, record: dict) -> dict:
+    """The reconciler's per-handler freshness write
+    (the handler-freshness plan): the composed verdict
+    record, posted under the governed caller."""
+    return request("POST", f"/api/v1/handlers/{handle}/freshness", record)
+
+
 def verify_status(handle: str, verdict: str, note: str, posted_by: str) -> dict:
     return request(
         "POST",
