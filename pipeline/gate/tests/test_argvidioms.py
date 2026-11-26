@@ -102,6 +102,16 @@ class ShellAndJsIdiomTests(unittest.TestCase):
             kinds(ai.scan_js_source(src)),
             [(1, "argv-membership"), (2, "argv-index")])
 
+    def test_js_bare_argv_variable_is_a_finding(self):
+        src = "if (argv.includes(\"--force\")) go();\n"
+        self.assertEqual(kinds(ai.scan_js_source(src)),
+                         [(1, "argv-membership")])
+
+    def test_js_served_data_argv_field_is_not_a_finding(self):
+        src = ("check(entry.run.argv.includes(\"progress-check\"));\n"
+               "const n = entry.run.argv.indexOf(\"x\");\n")
+        self.assertEqual(ai.scan_js_source(src), [])
+
 
 class HomeTests(unittest.TestCase):
     SPECIMEN = "x = \"--caller\" in argv\n"
