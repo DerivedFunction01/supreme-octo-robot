@@ -45,10 +45,16 @@ def extract_step_blocks(text):
     prerequisite todos), est (the step's declared
     estimate, the machine form of its closing est:
     line, raw — None when the block declares none), and
-    exactly one of fanout / serial. The lib-side reader
-    of the block grammar; the attention measure's
-    frontier reader reads the same blocks service-side
-    over the workbench seam."""
+    exactly one of fanout / serial. `requires_present`
+    records whether the block carries a requires= field
+    at all: an empty requires and an undeclared one
+    both read as no prerequisites in `requires`, and
+    the plan-check gate (lib/plans/plan_check) refuses
+    the undeclared form, so the distinction is the
+    reader's to keep. The lib-side reader of the block
+    grammar; the attention measure's frontier reader
+    reads the same blocks service-side over the
+    workbench seam."""
     steps = []
     for match in _STEP_BLOCK_RE.finditer(text or ""):
         fields = {}
@@ -69,6 +75,7 @@ def extract_step_blocks(text):
             {"step": number,
              "todos": todos,
              "requires": requires,
+             "requires_present": "requires" in fields,
              "est": fields.get("est"),
              "fanout": fields.get("fanout"),
              "serial": fields.get("serial")})

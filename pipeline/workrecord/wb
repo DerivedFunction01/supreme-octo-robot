@@ -63,6 +63,7 @@ from wbcli.bundles import cmd_todo_new  # noqa: E402,F401
 from wbcli.drivers import cmd_activate  # noqa: E402,F401
 from wbcli.drivers import cmd_doctor  # noqa: E402,F401
 from wbcli.drivers import cmd_goal_check  # noqa: E402,F401
+from wbcli.drivers import cmd_plan_check  # noqa: E402,F401
 from wbcli.drivers import cmd_print_schedule  # noqa: E402,F401
 from wbcli.drivers import cmd_progress  # noqa: E402,F401
 from wbcli.drivers import cmd_progress_check  # noqa: E402,F401

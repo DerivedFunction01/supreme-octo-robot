@@ -21,6 +21,7 @@ from wbcli.drivers import cmd_goal_check  # noqa: E402
 from wbcli.drivers import cmd_print_schedule  # noqa: E402
 from wbcli.drivers import cmd_progress  # noqa: E402
 from wbcli.drivers import cmd_commission_check  # noqa: E402
+from wbcli.drivers import cmd_plan_check  # noqa: E402
 from wbcli.drivers import cmd_progress_check  # noqa: E402
 from wbcli.entries import cmd_add  # noqa: E402
 from wbcli.entries import cmd_archive  # noqa: E402
@@ -374,6 +375,23 @@ def build_parser():
              "project fails loud (exit 2)")
     sp.add_argument("id", help="the todo id the claim cites")
     sp.set_defaults(fn=cmd_commission_check)
+
+    sp = sub.add_parser(
+        "plan-check",
+        help="one plan file's syntax gate (coding-plan "
+             "skill): exit 0 with the frontier adoption "
+             "will arm when the plan's step blocks, "
+             "prerequisites, estimates, and question "
+             "sentinels all parse and agree; exit 3 with "
+             "one finding per violation when refused "
+             "(prose-only steps, undeclared or dangling "
+             "prerequisites, requires cycles, steps "
+             "with no fan-out or serial exception); "
+             "exit 2 when the file cannot be read as "
+             "a plan")
+    sp.add_argument("plan",
+                    help="path to the plan .md file")
+    sp.set_defaults(fn=cmd_plan_check)
 
     sp = sub.add_parser(
         "goal-check",

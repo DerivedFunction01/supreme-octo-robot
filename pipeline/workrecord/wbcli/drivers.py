@@ -246,6 +246,51 @@ def cmd_commission_check(args):
     return 3
 
 
+def cmd_plan_check(args):
+    """One plan file's syntax gate (coding_plan
+    skill): exit 0 with the frontier adoption will
+    arm when the plan's step blocks, prerequisites,
+    estimates, and question sentinels all parse and
+    agree; exit 3 with one finding per violation when
+    refused; exit 2 when the named file cannot be
+    read as a plan at all. The check itself is
+    lib/plans/plan_check — the parser's grammar,
+    composed, never re-read here. The file names its
+    own context: its .plans dir is the project scope
+    its prerequisites resolve against, the way the
+    other check verbs resolve against their pinned
+    project."""
+    from lib.plans import plan_check as plan_check_mod
+    path = Path(args.plan)
+    if not path.is_file():
+        print(f"plan-check: no such plan file: "
+              f"{args.plan}")
+        return 2
+    if path.suffix != ".md":
+        print(f"plan-check: not a plan file "
+              f"(expected a .md plan): {args.plan}")
+        return 2
+    try:
+        result = plan_check_mod.check_plan_file(path)
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"plan-check: cannot read {args.plan}: {e}")
+        return 2
+    findings = result["findings"]
+    if findings:
+        for f in findings:
+            print(f"{path.name}: {f}")
+        print(f"wb plan-check: {path.name} — "
+              f"{len(findings)} finding(s), plan refused")
+        return 3
+    print(f"wb plan-check: {path.name} — clean")
+    print("frontier (adoption arms):")
+    for entry in result["frontier"]:
+        todos = "|".join(entry["todos"])
+        suffix = " (serial)" if entry["serial"] else ""
+        print(f"  step {entry['step']} — {todos}{suffix}")
+    return 0
+
+
 def cmd_goal_check(args):
     """One goal record's stall verdict, for the scheduler
     entry the record armed about itself (contract 11):
