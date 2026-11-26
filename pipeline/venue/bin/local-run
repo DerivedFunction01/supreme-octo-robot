@@ -231,13 +231,33 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
         # out client-side may still have started the job, and
         # the retry must confirm that launch — the guard
         # answers "launched" without starting a second copy.
+        # Inside the wrapper the job starts in the background
+        # so its pid is stamped to root.pid before the wrapper
+        # waits on it (venue-state plan, step 2: root.pid is
+        # the root the sampler's process-tree reads walk
+        # from). The semantics are the old form's exactly:
+        # output.log is the job's redirected output, and the
+        # exit file lands only when the job finishes — the
+        # wait returns the job's own status, which is what
+        # the echo writes. The read-back after the guard
+        # waits briefly for root.pid and prints it after
+        # "launched", so the record carries root_pid from
+        # this same SSH call; a stamp that never lands is
+        # not a launch failure — the record carries none.
         cmd = (
             f"cd ~/{base} && if [ ! -f .launched ]; then touch .launched; "
-            f"nohup bash -c 'bash run.sh > output.log 2>&1; echo $? > exit' "
-            ">/dev/null 2>&1 & fi; echo launched")
+            f"nohup bash -c 'bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
+            ">/dev/null 2>&1 & fi; "
+            "for i in 1 2 3 4 5 6 7 8 9 10; do [ -s root.pid ] && break; sleep 1; done; "
+            "echo launched; cat root.pid 2>/dev/null || true")
         r = _ssh(target, cmd, timeout=90)
         if r.returncode != 0 or b"launched" not in r.stdout:
             return f"launch failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
+        for line in r.stdout.decode(errors="replace").splitlines():
+            text = line.strip()
+            if text.isdigit():
+                rec["root_pid"] = int(text)
+                break
         return None
 
     steps = [mkdir, upload]

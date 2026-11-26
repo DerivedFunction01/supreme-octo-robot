@@ -44,6 +44,19 @@ def test_detach_returns_at_once_and_poll_reconciles_to_complete(tmp_path):
     assert run_verb(env, "--wait", out["run_id"], "--max", "5").returncode == 0
 
 
+def test_detach_record_carries_root_pid_from_the_launch(tmp_path):
+    """Venue-state plan, step 2, Colab leg: the launcher
+    prints the detached spawn's pid as root_pid= and the
+    record stamps it when the launch exec carries it back
+    — the fake CLI runs the launcher with a real Popen, so
+    the stamp lands end to end here as a positive int."""
+    env = runner_env(tmp_path)
+    out = _detach_smoke(env)
+    rec = json.loads((runs_dir(env) / f"{out['run_id']}.json").read_text())
+    assert rec["state"] == "polling"
+    assert isinstance(rec["root_pid"], int) and rec["root_pid"] > 0
+
+
 def test_poll_routes_by_the_launch_session_not_the_binding(tmp_path):
     """VENUE DEFECT 2, leg c: the launch stamps launch_session
     in the same save as remote_out, and collection reads the

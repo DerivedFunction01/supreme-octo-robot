@@ -1,0 +1,233 @@
+#!/usr/bin/env python3
+"""Venue-state sampler: the venue-state mechanism's clock.
+
+Usage: venue-state-sample [--target TARGET ...] [--once] [--var-dir PATH]
+
+The argv is a declared surface on the unified argument
+contract (pipeline/platform/argv.py): an unknown flag, a
+missing value, or a surplus positional is a loud usage
+refusal (exit 2), never silently ignored.
+
+One pass per invocation — the 120 s cron that calls this
+entry supplies the cadence, so --once (the cron's form) and
+a bare invocation are the same single pass. Each pass, per
+local target: ensure the target's transport, run the
+sampler leaf's probe payload (sync/runner/venue_sample.py)
+in one SSH exec over the lease layer's ssh_args, parse the
+reading with the leaf's parser, append it to the venue's
+sample store (the leaf's SampleStore), classify it against
+the previous sample (sync/runner/venue_classify.py), and
+write the venue's state file (var/venue-state-<venue>.json)
+— the surface the measures read, so no consumer
+reconstructs venue state from run records' faces again.
+
+A venue that cannot be sampled at all is a transport
+verdict, not a classification: the pass writes its state
+file with state "unreachable" and still exits 0. Exit 1 is
+reserved for this tool's own defects (a classification or
+write failure on a venue that did answer); one JSON line
+per target goes to stdout either way.
+"""
+
+import importlib
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _load  # noqa: E402
+
+_argv = _load.platform_argv()
+
+DECLARATION = {
+    "name": "venue-state-sample",
+    "summary": "Sample each local venue once, classify it against the previous sample, and write its state file.",
+    "flags": {
+        "target": {
+            "takes_value": True,
+            "repeatable": True,
+            "help": "local target to sample (repeatable; default: every configured local target)",
+        },
+        "once": {
+            "help": "single pass (the only form; the calling cron supplies the cadence)"
+        },
+        "var-dir": {
+            "takes_value": True,
+            "help": "state/sample directory (default: the runner var dir)",
+        },
+    },
+}
+
+# One sampling exec's bound: the probe is a /proc walk, and
+# a venue that cannot answer inside it is unreachable for
+# this pass, not a hang for the cron.
+SAMPLE_TIMEOUT_S = 45
+
+
+def _load_runner_modules():
+    """The runner package and the leaves this entry drives,
+    loaded through the one bin loader. The sampler leaf is
+    imported here, at pass time, so a tree without it fails
+    as this tool's defect with the missing module named,
+    not as an import-time crash before the other targets
+    are served."""
+    _load.sync("runner")
+    return {
+        "classify": importlib.import_module("runner.venue_classify"),
+        "records": importlib.import_module("runner.records"),
+        "sample": importlib.import_module("runner.venue_sample"),
+        "foundation": importlib.import_module("runner.foundation"),
+    }
+
+
+def _read_history(store, venue: str) -> list:
+    """The venue's full sample history, oldest first, read
+    from the sampler leaf's store (the write side is the
+    store's alone; this entry only reads). A torn or
+    unreadable line is skipped, never fatal: one bad line
+    must not blind the classification."""
+    samples = []
+    try:
+        lines = store.path_for(venue).read_text().splitlines()
+    except OSError:
+        return samples
+    for line in lines:
+        if not line.strip():
+            continue
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(entry, dict):
+            samples.append(entry)
+    return samples
+
+
+def _first_seen(samples: list) -> dict:
+    """run id -> the earliest sample stamp that saw it,
+    over the whole store: the age anchor the classifier's
+    grace and timeout verdicts measure from."""
+    seen = {}
+    for sample in samples:
+        for job in sample.get("jobs", []):
+            run_id = job.get("run_id")
+            if run_id is not None and run_id not in seen:
+                seen[run_id] = sample.get("at")
+    return seen
+
+
+def _take_sample(mods, local_venue, repo, target_id, target, at):
+    """One sampler reading for a target: the SAMPLE dict,
+    or None when the venue cannot be sampled — the
+    transport does not answer, the exec fails or times
+    out, or the probe reports nothing parseable. The
+    caller writes the unreachable state for that target."""
+    if not local_venue.ensure_transport(target):
+        return None
+    args = local_venue.ssh_args(repo, target)
+    args.append(mods["sample"].build_probe_command())
+    try:
+        proc = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            timeout=SAMPLE_TIMEOUT_S,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return None
+    return mods["sample"].parse_sample(proc.stdout, target_id, at)
+
+
+def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> str:
+    """Sample, store, classify, and write one target's
+    state file. Returns the state name written. Raises on
+    this tool's own defects (classification/write failure
+    on a venue that answered)."""
+    classify_mod = mods["classify"]
+    at = mods["foundation"].now()
+    sample = _take_sample(mods, local_venue, repo, target_id, target, at)
+    if sample is None:
+        state = {
+            "venue": target_id,
+            "state": "unreachable",
+            "sampled_at": at,
+            "pids_current": None,
+            "pids_capacity": None,
+            "jobs": [],
+        }
+        classify_mod.write_state(state, var_dir)
+        return "unreachable"
+    store = mods["sample"].SampleStore(root=var_dir)
+    history = _read_history(store, target_id)
+    prev_sample = history[-1] if history else None
+    store.append(sample)
+    first_seen = _first_seen(history + [sample])
+    records_by_run_id = {}
+    for job in sample.get("jobs", []):
+        run_id = job.get("run_id")
+        rec = dict(mods["records"].load_run_record(run_id) or {})
+        if first_seen.get(run_id) is not None:
+            rec["first_seen_at"] = first_seen[run_id]
+        records_by_run_id[run_id] = rec
+    state = classify_mod.classify(prev_sample, sample, records_by_run_id)
+    classify_mod.write_state(state, var_dir)
+    return state["state"]
+
+
+def main(argv: list[str]) -> int:
+    try:
+        parsed = _argv.parse(DECLARATION, list(argv))
+    except _argv.UsageError as exc:
+        print(f"venue-state-sample: {exc}", file=sys.stderr)
+        print(_argv.help_text(DECLARATION), file=sys.stderr, end="")
+        return _argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    repo = _load.REPO
+    lease = _load.sync("lease")
+    local_venue = lease.local_venue
+    targets_by_id = local_venue.local_targets(repo)
+    known = sorted(targets_by_id)
+    targets = parsed["flags"].get("target") or known
+    unknown = [t for t in targets if t not in known]
+    if unknown:
+        print(
+            f"venue-state-sample: unknown target(s) {unknown}; configured local targets: {known}",
+            file=sys.stderr,
+        )
+        return _argv.USAGE_EXIT
+    if parsed["flags"].get("var-dir"):
+        var_dir = Path(parsed["flags"]["var-dir"])
+    else:
+        var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", repo / "var"))
+    try:
+        mods = _load_runner_modules()
+    except Exception as exc:
+        print(
+            f"venue-state-sample: cannot load the runner modules: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+    defect = False
+    for target_id in targets:
+        try:
+            state_name = _pass_target(
+                target_id, targets_by_id[target_id], repo, var_dir, mods, local_venue
+            )
+        except Exception as exc:
+            defect = True
+            print(
+                json.dumps({"target": target_id, "state": "error", "error": str(exc)})
+            )
+            continue
+        print(json.dumps({"target": target_id, "state": state_name}))
+    return 1 if defect else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

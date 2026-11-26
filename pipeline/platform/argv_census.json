@@ -462,6 +462,11 @@
    "migrated": true
   },
   {
+   "path": "pipeline/venue/bin/venue-state-sample",
+   "family": "venue-bin",
+   "migrated": true
+  },
+  {
    "path": "pipeline/venue/ops/bootstrap_local.sh",
    "family": "venue",
    "migrated": true
