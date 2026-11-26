@@ -120,6 +120,17 @@ class Refusals(unittest.TestCase):
         self.assertEqual(
             [], findings_of("bound-stated-in-rulings.md"))
 
+    def test_described_anti_pattern_passes(self):
+        # A step that describes the refusal class —
+        # its title names what the class refuses, its
+        # body names the anti-patterns under the
+        # refusal — and a step stating the union bound
+        # in its own form (one union gate per waiting
+        # batch) make no finding: a description is not
+        # a declaration, and a batch is not a unit.
+        self.assertEqual(
+            [], findings_of("described-anti-pattern.md"))
+
 
 class Passing(unittest.TestCase):
     def test_passing_fixture_is_clean(self):

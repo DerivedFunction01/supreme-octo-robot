@@ -53,10 +53,17 @@ tests merge into one union gated once. The class
 reads only declarations: the step bodies, the
 fan-out values, and the Rulings section. A sentence
 carrying a negation or prohibition (never, not, no,
-banned, refused, prohibited, avoid) declares the
-bound, not the anti-pattern, and makes no finding —
-the corpus's own rulings state the bound in those
-words.
+ban, refuses / refusal, prohibits, avoid, forbidden)
+declares the bound, not the anti-pattern, and makes
+no finding — the corpus's own rulings state the
+bound in those words, and a step that describes
+this class (its title names what it refuses) is a
+description, not a declaration. The per-unit shapes
+name units (row, item, lane, family, change, step,
+file, landing, commit): the union bound's own
+statement (one union gate per waiting batch) binds
+the gate to a batch, not a unit, and makes no
+finding either.
 
 The headline rule (supervision rules, estimates
 passage): a plan's duration is its wall-clock — the
@@ -139,7 +146,9 @@ def _est_agrees(block_est, line_est):
 # "each row its own worktree".
 _FORMATION_DECL_RES = (
     (re.compile(
-        r"\b(?:worktrees?|branch(?:es)?)\s+per\s+[\w-]+"
+        r"\b(?:worktrees?|branch(?:es)?)\s+per\s+"
+        r"(?:row|item|lane|family|change|step|file|"
+        r"landing|commit)\b"
         r"|\bper[-\s](?:row|item|lane|family)[-\s]"
         r"(?:worktrees?|branch(?:es)?)\b"
         r"|\b(?:one|a|an|each|every)\s+(?:worktree|branch)"
@@ -148,7 +157,9 @@ _FORMATION_DECL_RES = (
         r"(?:its\s+own|a\s+separate)\s+(?:worktree|branch)\b"),
      "formation"),
     (re.compile(
-        r"\bgates?\s+per\s+[\w-]+"
+        r"\bgates?\s+per\s+"
+        r"(?:row|item|lane|family|change|step|file|"
+        r"landing|commit)\b"
         r"|\bper[-\s](?:row|item)[-\s]gates?\b"
         r"|\b(?:one|a|an|each|every)\s+gate\s+"
         r"(?:per|for\s+each|for\s+every)\b"),
@@ -156,8 +167,8 @@ _FORMATION_DECL_RES = (
 )
 
 _NEGATION_RE = re.compile(
-    r"\b(?:never|not|no|banned|refused|prohibited|"
-    r"avoid|forbidden)\b")
+    r"\b(?:never|not|no|ban(?:s|ned)?|refus\w+|"
+    r"prohibit\w+|avoid|forbidden)\b")
 
 
 def _formation_findings(text):
