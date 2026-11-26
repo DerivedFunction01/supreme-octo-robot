@@ -14,8 +14,9 @@ machinery, the SSH and warmup seams, the wait form.
 The launch: one run record for the envelope (constituents
 recorded in declaration order, the union form's recording
 generalized from branch tips to jobs), one run dir per job
-under the envelope's run dir (~/runs/<envelope_run_id>/
-<job>/), per-job exit files, and the envelope's own exit —
+under the envelope's run dir on the venue (the runs root,
+then the envelope run id, then the job name), per-job exit
+files, and the envelope's own exit —
 written by the launch wrapper from the launcher's exit
 code, the first non-zero job exit in order or 0. The
 grouped jobs run CONCURRENTLY: the generated launcher
