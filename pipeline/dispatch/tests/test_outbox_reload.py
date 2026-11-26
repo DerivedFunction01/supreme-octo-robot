@@ -1,5 +1,5 @@
 """Outbox reload keying and terminal retention (the
-2026-11-26 health-wedge cure): an operation re-reads the
+health-wedge cure): an operation re-reads the
 file only when its stamp moved — another process's write
 is still seen on the next operation — and a save prunes
 terminal pings past the retention horizon while pending

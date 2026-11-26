@@ -9,8 +9,8 @@ window, tracked by last_woken_at.
 
 The file is a working set, not the history: the ledger holds
 the ping event sequence at its own retention. Two mechanisms
-keep the working set cheap to stand behind (the 2026-11-26
-health-wedge cure — at 4,119 pings the file cost 0.3–0.6s to
+keep the working set cheap to stand behind (the health-
+wedge cure — at 4,119 pings the file cost 0.3–0.6s to
 re-parse on every operation, every operation took the one
 lock to do it, and the health surface's own depth() call
 queued behind the convoy until supervision read a live,

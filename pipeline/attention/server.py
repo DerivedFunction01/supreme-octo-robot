@@ -525,7 +525,7 @@ def build_mount(settings: Settings, store: Store):
         payload is constants, and liveness must not queue
         behind the cycle's lock and full state load — a
         slow cycle would otherwise read as a dead server
-        (the 2026-11-26 health-wedge defect: /health
+        (the health-wedge defect: /health
         timed out on a live, dispatching process while
         every cycle request paid a multi-second load).
         Wait evaluation stays driven by the state routes
