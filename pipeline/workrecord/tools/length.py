@@ -81,6 +81,13 @@ def _default_root() -> Path:
 
 
 def main(argv: list[str]) -> int:
+    if len(argv) > 2 or (len(argv) > 1
+                         and argv[1].startswith("-")):
+        # The surface is one optional positional; a
+        # surplus positional or a flag-shaped token is a
+        # usage refusal, never silently dropped.
+        print("usage: length.py [root]", file=sys.stderr)
+        return 2
     root = Path(argv[1]).resolve() if len(argv) > 1 \
         else _default_root()
     findings = find_over_cap(root, source_files(root))

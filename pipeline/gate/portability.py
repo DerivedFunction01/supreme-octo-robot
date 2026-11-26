@@ -284,7 +284,18 @@ def denylist_provisioned(root):
 def main(argv):
     root = os.getcwd()
     fail_on_denylist = False
-    args = list(argv)
+    # The unified contract's value forms (BT12): the
+    # --flag=value form expands to the two-token form, so
+    # both are the same flag. (linecap.expand_equals,
+    # inlined: this component's standalone form imports
+    # nothing from the package.)
+    args = []
+    for token in argv:
+        if token.startswith("--") and "=" in token:
+            name, value = token.split("=", 1)
+            args += [name, value]
+        else:
+            args.append(token)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:

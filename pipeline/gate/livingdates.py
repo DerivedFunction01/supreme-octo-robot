@@ -40,7 +40,7 @@ import sys
 import tokenize
 from pathlib import Path
 
-from .linecap import enumerate_tracked_files
+from .linecap import enumerate_tracked_files, expand_equals
 
 DOC_SUFFIXES = (".md",)
 PYTHON_SUFFIXES = (".py",)
@@ -414,7 +414,7 @@ def render(rows, failures, scanned=None):
 
 def main(argv):
     root = os.getcwd()
-    args = list(argv)
+    args = expand_equals(argv)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:

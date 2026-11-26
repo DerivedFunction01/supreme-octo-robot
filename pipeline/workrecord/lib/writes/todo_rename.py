@@ -423,7 +423,8 @@ def main(argv=None) -> int:
         prog="todo_rename",
         description="Rename legacy todo ids to "
                     "GitHub-like names (dry-run "
-                    "unless --apply).")
+                    "unless --apply).",
+        allow_abbrev=False)
     parser.add_argument("--root", required=True,
                         help="the project root (holds "
                              "workbench.yaml)")

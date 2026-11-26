@@ -42,10 +42,49 @@ from wbcli.entries import cmd_unarchive  # noqa: E402
 from wbcli.entries import cmd_validate  # noqa: E402
 from wbcli.entries import cmd_verify  # noqa: E402
 
+_GLOBAL_SELECTORS = (
+    ("--project", "project slug (sweep)"),
+    ("--root", "project root with workbench.yaml"),
+    ("--db", "registry DB path (direct)"),
+)
+
+
+def _apply_argv_contract(p):
+    """The unified argv contract over the whole parser
+    tree: abbreviations off at every level (BT9), and
+    the global selectors declared on every verb as well
+    as before it — a selector is a declared flag
+    wherever it stands, so `wb add <slug> --project x`
+    parses (the selector is a declaration, not a
+    positional guess). A verb that already declares a
+    selector (the sweep verbs' repeatable --root) keeps
+    its own declaration."""
+    tree = []
+    stack = [p]
+    while stack:
+        parser = stack.pop()
+        parser.allow_abbrev = False
+        tree.append(parser)
+        for action in parser._actions:
+            choices = getattr(action, "choices", None)
+            if isinstance(choices, dict):
+                stack.extend(choices.values())
+    for parser in tree[1:]:
+        declared = {s for a in parser._actions
+                    for s in a.option_strings}
+        for flag, helptext in _GLOBAL_SELECTORS:
+            if flag not in declared:
+                parser.add_argument(
+                    flag, default=argparse.SUPPRESS,
+                    help=helptext)
+    return p
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         prog="wb", description="Workbench harness CLI "
-        "(thin caller over lib/ — one mutation path).")
+        "(thin caller over lib/ — one mutation path).",
+        allow_abbrev=False)
     p.add_argument("--project", help="project slug (sweep)")
     p.add_argument("--root", help="project root with "
                                   "workbench.yaml")
@@ -405,4 +444,4 @@ def build_parser():
 
     sub.add_parser("print-schedule").set_defaults(
         fn=cmd_print_schedule)
-    return p
+    return _apply_argv_contract(p)

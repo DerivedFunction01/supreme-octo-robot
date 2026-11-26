@@ -233,29 +233,55 @@ def render(result, cap=DEFAULT_CAP, band=DEFAULT_BAND):
     return lines
 
 
+def expand_equals(argv):
+    """The unified contract's value forms, applied to a
+    gate component CLI's token list: `--flag=value`
+    expands to the two-token form, so the space and
+    equals forms are the same flag (BT12). A boolean
+    flag's attached value expands with it and is refused
+    downstream as a surplus token, never silently
+    taken."""
+    args = []
+    for token in argv:
+        if token.startswith("--") and "=" in token:
+            name, value = token.split("=", 1)
+            args += [name, value]
+        else:
+            args.append(token)
+    return args
+
+
 def main(argv):
     root = os.getcwd()
     cap = DEFAULT_CAP
     band = DEFAULT_BAND
     tracked = False
     extensions = None
-    args = list(argv)
+    usage = ("usage: linecap.py [--root DIR] [--cap N] "
+             "[--band N] [--tracked] [--ext .py,.ts]")
+    args = expand_equals(argv)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:
             root = os.path.abspath(args.pop(0))
         elif arg == "--cap" and args:
-            cap = int(args.pop(0))
+            try:
+                cap = int(args.pop(0))
+            except ValueError:
+                print(usage, file=sys.stderr)
+                return 2
         elif arg == "--band" and args:
-            band = int(args.pop(0))
+            try:
+                band = int(args.pop(0))
+            except ValueError:
+                print(usage, file=sys.stderr)
+                return 2
         elif arg == "--tracked":
             tracked = True
         elif arg == "--ext" and args:
             extensions = tuple(args.pop(0).split(","))
         else:
-            print("usage: linecap.py [--root DIR] [--cap N] "
-                  "[--band N] [--tracked] [--ext .py,.ts]",
-                  file=sys.stderr)
+            print(usage, file=sys.stderr)
             return 2
     result = scan(root, cap=cap, band=band,
                   extensions=extensions, tracked=tracked,
