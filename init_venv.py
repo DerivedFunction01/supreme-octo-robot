@@ -31,9 +31,41 @@ from gate.venvbuild import VenvConfig, build_venv  # noqa: E402
 
 PACKAGE_INITS = ("attention", "workrecord")
 
+_DECL = {
+    "name": "init_venv",
+    "summary": "Create the mega repo's root driver "
+               "virtualenv and build the package venvs.",
+    "flags": {"recreate": {"help": "rebuild the venv "
+                                   "from scratch"}},
+}
+
+
+def _load_uargv():
+    """The unified argv module (pipeline/platform/
+    argv.py), loaded by path — the tree's cross-package
+    form for the platform home."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv",
+        _PIPELINE_ROOT / "platform" / "argv.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
 
 def main() -> int:
-    recreate = "--recreate" in sys.argv
+    uargv = _load_uargv()
+    try:
+        parsed = uargv.parse(_DECL, sys.argv[1:])
+    except uargv.UsageError as exc:
+        print(f"init_venv: {exc}", file=sys.stderr)
+        print(uargv.help_text(_DECL), file=sys.stderr, end="")
+        return 2
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    recreate = parsed["flags"]["recreate"]
     config = VenvConfig(
         root=ROOT,
         venv_dir=ROOT / ".venv",

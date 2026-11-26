@@ -79,12 +79,12 @@
   {
    "path": "check.py",
    "family": "root",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "init_venv.py",
    "family": "root",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "kit/tools/contrast/core.mjs",
@@ -109,12 +109,12 @@
   {
    "path": "pipeline/attention/cli.py",
    "family": "attention",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/attention/init_venv.py",
    "family": "attention",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/attention/register_caller.py",
@@ -124,32 +124,32 @@
   {
    "path": "pipeline/gate/dateuniqueness.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/importisolation.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/linecap.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/livingdates.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/portability.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/gate/writeruniqueness.py",
    "family": "gate",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/assemble_registry.py",
@@ -614,12 +614,12 @@
   {
    "path": "pipeline/workrecord/init_venv.py",
    "family": "workrecord",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/workrecord/lib/writes/todo_rename.py",
    "family": "workrecord",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/workrecord/ops/bootstrap-staging.sh",
@@ -639,7 +639,7 @@
   {
    "path": "pipeline/workrecord/tools/length.py",
    "family": "workrecord",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/workrecord/wb",
@@ -649,7 +649,7 @@
   {
    "path": "pipeline/workrecord/wbcli/parser.py",
    "family": "workrecord",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "run.py",

@@ -111,7 +111,7 @@ import json
 import os
 import sys
 
-from .linecap import enumerate_files
+from .linecap import enumerate_files, expand_equals
 
 
 def scan_source(text, siblings):
@@ -351,7 +351,7 @@ def composed_siblings(root):
 
 def main(argv):
     root = os.getcwd()
-    args = list(argv)
+    args = expand_equals(argv)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:

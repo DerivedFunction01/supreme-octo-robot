@@ -117,7 +117,8 @@ import json
 import os
 import sys
 
-from .linecap import enumerate_files, enumerate_tracked_files
+from .linecap import (enumerate_files, enumerate_tracked_files,
+                      expand_equals)
 
 # The one home: the unified writer itself is never
 # scanned (repo-relative, and the bare name at the
@@ -544,7 +545,7 @@ def _leg_exceptions(root):
 
 def main(argv):
     root = os.getcwd()
-    args = list(argv)
+    args = expand_equals(argv)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:

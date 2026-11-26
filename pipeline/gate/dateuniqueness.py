@@ -105,7 +105,7 @@ import os
 import subprocess
 import sys
 
-from .linecap import enumerate_files
+from .linecap import enumerate_files, expand_equals
 
 # The family -> home map is scanner data (see the module
 # docstring): families, homed modules, sanctioned copies,
@@ -535,7 +535,7 @@ def _repo_root(root):
 
 def main(argv):
     root = os.getcwd()
-    args = list(argv)
+    args = expand_equals(argv)
     while args:
         arg = args.pop(0)
         if arg == "--root" and args:

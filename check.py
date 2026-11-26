@@ -29,6 +29,18 @@ pipeline/gate. This file composes them:
                                        # diagnostic: run only the named
                                        # legs, no fail-fast
 
+Mode precedence is declared, not emergent: --scan and
+--test are exclusive modes; --legs combines only with
+the full and pathspec modes (a mode's own leg set is
+never silently overridden by the filter, nor the filter
+by the mode); --fix is honoured by the full and
+pathspec modes and refused with --scan/--test; --all
+modifies --test and pathspec runs only. A conflicting
+combination is a usage error (exit 2), never a silently
+dropped flag. A --legs value naming no declared leg
+kind or name is likewise a usage error, never a thin
+green.
+
 Every run also executes the repo-scoped folder census
 (gate.foldercensus) once and prints it: folders at/over
 the warn threshold, family declarations exempt from
@@ -141,20 +153,21 @@ def _run_pathspec(pkg, args, paths) -> bool:
         return runner.run_package(
             pkg, repo_root=REPO_ROOT,
             legs_filter=args.legs.split(",") if args.legs else None,
-            skip_tests=args.fast).ok
+            skip_tests=args.fast, fix=args.fix).ok
     targeted_files = (
         [] if selection == "none" else list(selection.test_files))
     return runner.run_package(
         pkg, repo_root=REPO_ROOT,
         legs_filter=args.legs.split(",") if args.legs else None,
-        skip_tests=args.fast,
+        skip_tests=args.fast, fix=args.fix,
         targeted_files=targeted_files).ok
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        allow_abbrev=False)
     parser.add_argument("--all", action="store_true",
                         help="with a pathspec or --test: full "
                              "suites instead of AST-targeted")
@@ -181,7 +194,40 @@ def main() -> int:
                              "pathspec run")
     args = parser.parse_args()
 
+    # The declared mode precedence: a combination whose
+    # member would be silently dropped is a usage error.
+    if args.scan and args.test:
+        parser.error("--scan and --test are conflicting modes")
+    if args.legs and (args.scan or args.test):
+        parser.error("--legs cannot combine with --scan or "
+                     "--test (the mode selects its own leg set)")
+    if args.fix and (args.scan or args.test):
+        parser.error("--fix cannot combine with --scan or "
+                     "--test (no leg in those modes applies fixes)")
+    if args.all and args.scan:
+        parser.error("--all cannot combine with --scan")
+    if args.fast and (args.scan or args.test):
+        parser.error("--fast cannot combine with --scan or --test")
+
     packages = runner.load_packages(REPO_ROOT)
+
+    if args.legs:
+        # BT8: every named leg must be a declared leg kind
+        # or name somewhere in the composed gate; an unknown
+        # name is a usage refusal, never a thin green.
+        known_legs = (set(runner.SCANNER_LEG_KINDS)
+                      | set(runner.TEST_LEG_KINDS))
+        for pkg in packages:
+            for leg in pkg.decl.get("legs", []):
+                known_legs.add(leg["leg"])
+                if leg.get("name"):
+                    known_legs.add(leg["name"])
+        unknown = [name for name in args.legs.split(",")
+                   if name not in known_legs]
+        if unknown:
+            print(f"check: unknown leg name(s) in --legs: "
+                  f"{', '.join(unknown)}", file=sys.stderr)
+            return 2
     by_name = {p.name: p for p in packages}
     frontend_names = {
         p.name for p in packages
