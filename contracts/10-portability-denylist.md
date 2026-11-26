@@ -20,11 +20,13 @@ tracked file ever carries the list.
   `pipeline/scheduling/tools/portability_scan.py` re-points
   to this component.
 - **Untracked denylist:** personal literals live only in an
-  untracked file — provisioned via `SCHEDULER_DENYLIST_FILE`
-  or `state/denylist.txt` under the scan root; the runner's
-  `config/denylist.txt` is the same class in its config
-  pattern (contract 04). One component class, one
-  provisioning rule per deployment. Absent a provisioned
+  untracked file — one provisioning convention per repo:
+  the `STARTER_DENYLIST_FILE` env var, else the repo's one
+  home at `pipeline/platform/state/denylist.txt`. No
+  per-package list copies and no per-component env aliases
+  exist; divergent copies converge by union into the one
+  home, and a literal leaves the list only by deliberate
+  removal. Absent a provisioned
   list, the leg prints a notice and skips; where a list is
   provisioned, the gate fails on its findings
   (`--fail-on-denylist`, passed by the gate exactly when a

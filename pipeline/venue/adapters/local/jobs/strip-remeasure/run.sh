@@ -20,7 +20,7 @@ set -o pipefail
 STAGE="$HOME/strip-remeasure-stage"
 TIP="5e551f1e1c8523ed8474f1cdc74259c905b9ba45"
 TREE_SHA="6f319fa7df792eb041bb4b2eb1539a05da18043f"
-export SCHEDULER_DENYLIST_FILE="$STAGE/denylist.txt"
+export STARTER_DENYLIST_FILE="$STAGE/denylist.txt"
 
 {
   echo "strip re-measure: $(date -u +%Y-%m-%dT%H:%M:%SZ) host $(hostname)"

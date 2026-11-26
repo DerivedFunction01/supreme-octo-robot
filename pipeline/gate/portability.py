@@ -23,8 +23,9 @@ Plus the personal-literal leg:
 
 - denylist: personal literals (the owner's name included)
   from an untracked file, resolved env-first
-  (SCHEDULER_DENYLIST_FILE), else state/denylist.txt under
-  the scan root when present. Matching is case-insensitive:
+  (STARTER_DENYLIST_FILE), else the repo's one home,
+  pipeline/platform/state/denylist.txt, when present.
+  Matching is case-insensitive:
   the matching and list-parsing semantics live in
   denylist_match.py beside this component (the one home,
   a synced mirror of the starter scanner's module); this
@@ -229,23 +230,37 @@ def scan_generic(root, files):
 
 
 def _denylist_path(root):
-    """(path, notice) — the env var wins; a set-but-unreadable
-    env path reports a NOTICE rather than falling through."""
-    env = os.environ.get("SCHEDULER_DENYLIST_FILE")
+    """(path, notice) — the one provisioning convention: the
+    STARTER_DENYLIST_FILE env var wins (a set-but-unreadable
+    env path reports a NOTICE rather than falling through);
+    else the repo's one home, pipeline/platform/state/
+    denylist.txt, resolved from the scan root's repo (the
+    first ancestor carrying a .git entry). No per-package
+    list copies exist."""
+    env = os.environ.get("STARTER_DENYLIST_FILE")
     if env:
         if os.path.isfile(env):
             return env, None
         return None, (
-            "denylist: NOTICE - SCHEDULER_DENYLIST_FILE is set but "
+            "denylist: NOTICE - STARTER_DENYLIST_FILE is set but "
             "unreadable; personal-literal leg skipped"
         )
-    candidate = os.path.join(root, "state", "denylist.txt")
-    if os.path.isfile(candidate):
-        return candidate, None
+    here = os.path.abspath(root)
+    while True:
+        if os.path.exists(os.path.join(here, ".git")):
+            candidate = os.path.join(
+                here, "pipeline", "platform", "state", "denylist.txt")
+            if os.path.isfile(candidate):
+                return candidate, None
+            break
+        parent = os.path.dirname(here)
+        if parent == here:
+            break
+        here = parent
     return None, (
         "denylist: NOTICE - no denylist provisioned (env "
-        "SCHEDULER_DENYLIST_FILE or state/denylist.txt); "
-        "personal-literal leg skipped"
+        "STARTER_DENYLIST_FILE or pipeline/platform/state/"
+        "denylist.txt); personal-literal leg skipped"
     )
 
 

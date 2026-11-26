@@ -87,7 +87,7 @@ class DenylistTests(unittest.TestCase):
 
     def test_unreadable_env_path_notices_without_fallback(self):
         tmp = tempfile.mkdtemp()
-        env = {"SCHEDULER_DENYLIST_FILE": os.path.join(tmp, "missing.txt")}
+        env = {"STARTER_DENYLIST_FILE": os.path.join(tmp, "missing.txt")}
         with mock.patch.dict(os.environ, env, clear=True):
             findings, notice, provisioned = scan.scan_denylist(tmp, ["a.md"])
         self.assertEqual(findings, [])
@@ -100,7 +100,7 @@ class DenylistTests(unittest.TestCase):
         list_path = os.path.join(tmp, "list.txt")
         with open(list_path, "w", encoding="utf-8") as fh:
             fh.write(FAKE_LITERAL + "\n")
-        env = {"SCHEDULER_DENYLIST_FILE": list_path}
+        env = {"STARTER_DENYLIST_FILE": list_path}
         with mock.patch.dict(os.environ, env, clear=True):
             findings, notice, provisioned = scan.scan_denylist(tmp, ["a.md"])
         self.assertTrue(provisioned)
@@ -117,7 +117,7 @@ class DenylistTests(unittest.TestCase):
         list_path = os.path.join(tmp, "list.txt")
         with open(list_path, "w", encoding="utf-8") as fh:
             fh.write(FAKE_LITERAL + "\n")
-        env = {"SCHEDULER_DENYLIST_FILE": list_path}
+        env = {"STARTER_DENYLIST_FILE": list_path}
         with mock.patch.dict(os.environ, env, clear=True):
             findings, _notice, provisioned = scan.scan_denylist(tmp, ["a.md"])
         self.assertTrue(provisioned)

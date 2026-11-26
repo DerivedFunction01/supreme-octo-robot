@@ -15,8 +15,9 @@ Two pattern sources:
   they name no person, project, or machine.
 - PERSONAL literals (a personal name, a hosting username,
   sibling project names, the published artifact's slug) live
-  ONLY in an untracked denylist: `state/denylist.txt` in this
-  checkout, or the file the WB_DENYLIST_FILE env var names.
+  ONLY in an untracked denylist: the repo's one home,
+  `pipeline/platform/state/denylist.txt`, or the file the
+  STARTER_DENYLIST_FILE env var names.
   Matching is case-insensitive. A split construction is still
   a leak — anyone reading the code learns the literal — so no
   personal literal, whole or fragmented, belongs in a tracked
@@ -50,8 +51,23 @@ GENERIC = [
     "/op" + "t/",  # host tool paths
 ]
 
-DENYLIST_ENV = "WB_DENYLIST_FILE"
-DENYLIST_DEFAULT = ROOT / "state" / "denylist.txt"
+DENYLIST_ENV = "STARTER_DENYLIST_FILE"
+
+
+def _default_denylist():
+    """The repo's one denylist home, resolved from this
+    package's root upward to the repo root (the first
+    ancestor carrying a .git entry)."""
+    here = ROOT
+    while True:
+        if (here / ".git").exists():
+            return here / "pipeline" / "platform" / "state" / "denylist.txt"
+        if here.parent == here:
+            return ROOT / "state" / "denylist.txt"
+        here = here.parent
+
+
+DENYLIST_DEFAULT = _default_denylist()
 
 
 def load_denylist(path=None):

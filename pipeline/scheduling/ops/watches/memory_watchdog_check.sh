@@ -22,7 +22,8 @@
 # file carries one Locate: line near its top).
 # 8 = a denylisted literal (the untracked denylist, same
 # pattern as tools/portability_scan.py: env
-# SCHEDULER_DENYLIST_FILE or state/denylist.txt in this repo;
+# STARTER_DENYLIST_FILE or the repo's one home,
+# pipeline/platform/state/denylist.txt;
 # one literal per line, #-comments ignored) appears in a topic
 # file, in ${HOME}/AGENTS.md, in MAINTENANCE.md, or in
 # MEMORY.md itself, with the index matching (rule 0b in
@@ -119,7 +120,7 @@ if [[ -d "$TOPICS_DIR" ]]; then
   fi
 fi
 
-DENYLIST_FILE="${SCHEDULER_DENYLIST_FILE:-$REPO_ROOT/state/denylist.txt}"
+DENYLIST_FILE="${STARTER_DENYLIST_FILE:-$REPO_ROOT/../platform/state/denylist.txt}"
 AGENTS_FILE="${SCHEDULER_AGENTS_FILE:-$USER_HOME_DIR/AGENTS.md}"
 MAINTENANCE_FILE="$WS_ROOT/memory-watch/MAINTENANCE.md"
 denylist_hits=""

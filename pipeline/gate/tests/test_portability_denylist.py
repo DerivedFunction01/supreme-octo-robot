@@ -42,8 +42,10 @@ def _fixture_literal():
 def _scratch_tree(*fixture_names, provisioned):
     """A scratch scan root holding copies of the named
     fixture files; when provisioned, the fixture denylist
-    sits at state/denylist.txt — the bare-clone seam the
-    runner's auto form resolves."""
+    sits at state/denylist.txt inside the scratch tree and
+    the provisioned tests resolve it through the one env
+    convention (STARTER_DENYLIST_FILE) — a scratch tree is
+    not a repo, so the one-home default cannot resolve."""
     root = tempfile.mkdtemp(prefix="gate-denylist-")
     for name in fixture_names:
         shutil.copy(os.path.join(FIXTURES, name),
@@ -54,6 +56,11 @@ def _scratch_tree(*fixture_names, provisioned):
         shutil.copy(FIXTURE_DENYLIST,
                     os.path.join(state, "denylist.txt"))
     return root
+
+
+def _provisioned_env(root):
+    return {"STARTER_DENYLIST_FILE":
+            os.path.join(root, "state", "denylist.txt")}
 
 
 def _run_main(root, *extra_argv):
@@ -70,7 +77,7 @@ class ProvisionedLegTests(unittest.TestCase):
     def test_specimen_flagged_by_name_literal_never_printed(self):
         root = _scratch_tree("specimen.md", "clean.md",
                              provisioned=True)
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, _provisioned_env(root), clear=True):
             self.assertTrue(portability.denylist_provisioned(root))
             code, output = _run_main(root, "--fail-on-denylist")
         self.assertEqual(code, 1)
@@ -92,7 +99,7 @@ class ProvisionedLegTests(unittest.TestCase):
                   encoding="utf-8") as fh:
             fh.write("approved by "
                      + _fixture_literal().lower() + "\n")
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, _provisioned_env(root), clear=True):
             code, output = _run_main(root, "--fail-on-denylist")
         self.assertEqual(code, 1)
         self.assertIn("variant.md", output)
@@ -100,7 +107,7 @@ class ProvisionedLegTests(unittest.TestCase):
 
     def test_clean_tree_leg_runs_and_passes_not_skipped(self):
         root = _scratch_tree("clean.md", provisioned=True)
-        with mock.patch.dict(os.environ, {}, clear=True):
+        with mock.patch.dict(os.environ, _provisioned_env(root), clear=True):
             self.assertTrue(portability.denylist_provisioned(root))
             code, output = _run_main(root, "--fail-on-denylist")
         self.assertEqual(code, 0)
@@ -112,7 +119,7 @@ class ProvisionedLegTests(unittest.TestCase):
 class UnprovisionedLegTests(unittest.TestCase):
     def test_skip_notice_survives_when_nothing_provisioned(self):
         # Bare-clone honesty for real trees: no denylist
-        # anywhere (env cleared, no state/denylist.txt) —
+        # anywhere (env cleared, no repo one-home file) —
         # the leg notices and skips, and the scan passes.
         root = _scratch_tree("clean.md", provisioned=False)
         with mock.patch.dict(os.environ, {}, clear=True):

@@ -9,9 +9,10 @@ paths, and are out of scope here.
 
 Personal literals are never named in tracked code, not even split
 into fragments — a split literal is still readable, so it leaks the
-same. They live only in the untracked denylist
-(`config/denylist.txt`, gitignored; `$COLAB_RUNNER_DENYLIST`
-overrides the path), matched case-insensitively; findings name the
+same. They live only in the untracked denylist (the repo's one
+home, `pipeline/platform/state/denylist.txt`; the
+`STARTER_DENYLIST_FILE` env var overrides the path), matched
+case-insensitively; findings name the
 offending file only, never the literal. With no denylist
 provisioned the personal leg is skipped, so a bare clone stays
 green; the tracked legs below are nameless shapes and always run.
@@ -41,7 +42,13 @@ def _tracked_names():
 
 def _personal_literals():
     """The untracked denylist's literals, or [] when unprovisioned."""
-    path = Path(os.environ.get("COLAB_RUNNER_DENYLIST") or REPO / "config" / "denylist.txt")
+    env = os.environ.get("STARTER_DENYLIST_FILE")
+    if env:
+        path = Path(env)
+    else:
+        top = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                             cwd=REPO, capture_output=True, text=True).stdout.strip()
+        path = Path(top or REPO) / "pipeline" / "platform" / "state" / "denylist.txt"
     try:
         lines = path.read_text().splitlines()
     except OSError:
