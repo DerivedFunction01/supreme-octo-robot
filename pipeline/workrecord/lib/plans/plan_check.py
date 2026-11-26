@@ -41,6 +41,30 @@ recommended field. A question with no sentinel is
 not a finding — agent-settleable questions carry
 none, per the skill.
 
+The headline rule (supervision rules, estimates
+passage): a plan's duration is its wall-clock — the
+critical path through its steps under their
+declared fan-out, never the serial sum of its step
+estimates. A plan states a total for itself in its
+header fields (the grammar's field form — the
+header is where a plan states facts about itself:
+Status, Executor, Goal): a Total / Est / Estimate /
+Duration / Wall-clock field whose value carries a
+duration. When the stated figure exceeds the
+computed critical path — the longest path over the
+in-plan requires graph with every step at its est=
+(a fan-out step's est= is already its longest
+lane's wall-clock, per the skill) — the plan is
+refused, the finding naming the stated figure, the
+critical path, and its chain. A plan stating no
+total makes no headline finding. The migration
+edit-cap from the same passage is NOT enforced
+here: no machine-readable declaration names a
+phase migration-class anywhere in the grammar or
+the corpus (the one specimen plan declares it in
+Rulings prose alone), so there is nothing for a
+check to read until the grammar grows one.
+
 On a pass, the frontier adoption will arm: the steps
 no in-plan prerequisite holds back (their requires
 are empty or resolve outside this plan's minting),
@@ -48,7 +72,8 @@ in step order — the adoption-time read of the
 frontier reader's eligibility rule (a step is
 eligible when every prerequisite reads done; at
 adoption, only this plan's own minting can be
-undone).
+undone). The computed critical path (value and
+chain) is reported alongside it.
 """
 
 import re
@@ -89,6 +114,123 @@ def _est_agrees(block_est, line_est):
     return (block_est or "").strip() == (line_est or "").strip()
 
 
+def format_minutes(minutes):
+    """A duration in minutes, in the corpus's own
+    forms: 45m under an hour, 2h on the hour,
+    1h30m between."""
+    if minutes < 60:
+        return f"{minutes:g}m"
+    hours = int(minutes // 60)
+    rem = minutes - hours * 60
+    if rem == 0:
+        return f"{hours}h"
+    return f"{hours}h{rem:g}m"
+
+
+# The header keys a plan states its own total under,
+# normalized (lower-cased, _ and - read as spaces) —
+# the stated-total form the headline rule reads.
+_TOTAL_KEYS = {"total", "total est", "total estimate",
+               "est", "estimate", "duration",
+               "wall clock"}
+
+
+def _stated_total(doc):
+    """The plan's stated total: (key, raw value,
+    minutes) from the first header field naming one,
+    or None when the header states none. Minutes is
+    None when the value carries no duration token —
+    an unparseable statement makes no finding."""
+    for key, value in doc["fields"].items():
+        normalized = key.strip().lower() \
+            .replace("_", " ").replace("-", " ")
+        if normalized in _TOTAL_KEYS:
+            return (key, value.strip(),
+                    first_duration_minutes(value))
+    return None
+
+
+def _critical_path(steps, blocks_by_step, minted):
+    """The plan's wall-clock: the longest path over
+    the in-plan requires graph with every step at
+    its est=, as {minutes, serial_sum, chain} with
+    the chain's steps in path order ({step, todos,
+    minutes} each). None when the path is not
+    computable — a step with no single block, or an
+    est= carrying no duration: the plan's other
+    findings already refuse it, and a wall-clock is
+    never guessed. The caller guarantees the graph
+    is acyclic (the cycle finding stands in its
+    place). Deterministic: predecessors are visited
+    in step order and a tie keeps the earlier step."""
+    per_step = {}
+    for step in steps:
+        group = blocks_by_step.get(step["n"], [])
+        if len(group) != 1:
+            return None
+        block = group[0]
+        if block["est"] is None:
+            return None
+        minutes = first_duration_minutes(block["est"])
+        if minutes is None:
+            return None
+        preds = sorted(
+            {minted[r] for r in block["requires"]
+             if r in minted and minted[r] != step["n"]})
+        per_step[step["n"]] = {
+            "minutes": minutes,
+            "todos": list(block["todos"]),
+            "preds": preds}
+    best = {}
+
+    def solve(n):
+        if n in best:
+            return best[n]
+        info = per_step[n]
+        chosen = None
+        for pred in info["preds"]:
+            if pred not in per_step:
+                # A block naming no parsed step mints
+                # the todo; that block is its own
+                # finding and carries no path weight.
+                continue
+            total, _chain = solve(pred)
+            if chosen is None or total > chosen[0]:
+                chosen = (total, pred)
+        if chosen is None:
+            best[n] = (info["minutes"], [n])
+        else:
+            total, chain = solve(chosen[1])
+            best[n] = (total + info["minutes"],
+                       chain + [n])
+        return best[n]
+
+    winner = None
+    for step in steps:
+        total, chain = solve(step["n"])
+        if winner is None or total > winner[0]:
+            winner = (total, chain)
+    total, chain = winner
+    return {
+        "minutes": total,
+        "serial_sum": sum(i["minutes"]
+                          for i in per_step.values()),
+        "chain": [{"step": n,
+                   "todos": per_step[n]["todos"],
+                   "minutes": per_step[n]["minutes"]}
+                  for n in chain]}
+
+
+def _chain_text(chain):
+    """A critical-path chain as text: each step named
+    by the todos it mints, at its est — the steps'
+    identities in this grammar."""
+    return " -> ".join(
+        f"{'|'.join(e['todos'])} "
+        f"({format_minutes(e['minutes'])})"
+        for e in chain)
+
+
 def _find_cycle(deps):
     """One cycle in the todo -> prerequisites graph,
     as a path [a, b, ..., a], or None. Deterministic:
@@ -123,8 +265,9 @@ def _find_cycle(deps):
 
 def check_plan(text, *, name="", plans_dir=None,
                archived=False, self_rel=None):
-    """One plan file's text -> {findings, frontier}.
-    `plans_dir` (the plan's .plans dir) scopes the
+    """One plan file's text -> {findings, frontier,
+    critical_path}. `plans_dir` (the plan's .plans
+    dir) scopes the
     prerequisite resolution: sibling plans' minted
     todos plus the project's bundle todo store.
     `archived` is the filing fact the closeout rule
@@ -285,6 +428,31 @@ def check_plan(text, *, name="", plans_dir=None,
         findings.append(
             "requires cycle: " + " -> ".join(cycle))
 
+    critical = None
+    if cycle is None:
+        critical = _critical_path(steps, blocks_by_step,
+                                  minted)
+    if critical is not None:
+        stated = _stated_total(doc)
+        if stated is not None:
+            key, raw, stated_minutes = stated
+            if stated_minutes is not None \
+                    and stated_minutes > critical["minutes"]:
+                findings.append(
+                    f"headline: the plan states a "
+                    f"total of "
+                    f"{format_minutes(stated_minutes)} "
+                    f"({key}: {raw}) but its wall-clock "
+                    f"— the critical path through its "
+                    f"steps under their declared "
+                    f"prerequisites — is "
+                    f"{format_minutes(critical['minutes'])} "
+                    f"({_chain_text(critical['chain'])}); "
+                    f"a plan's stated duration is its "
+                    f"wall-clock, never the serial sum "
+                    f"of its step estimates (serial sum: "
+                    f"{format_minutes(critical['serial_sum'])})")
+
     for err in doc["sentinel_errors"]:
         subject = f"question sentinel (line {err['line']}"
         if err.get("id"):
@@ -314,7 +482,7 @@ def check_plan(text, *, name="", plans_dir=None,
                 and block["serial"].strip() != "",
             })
     return {"findings": findings, "frontier": frontier,
-            "doc": doc}
+            "critical_path": critical, "doc": doc}
 
 
 def check_plan_file(path):

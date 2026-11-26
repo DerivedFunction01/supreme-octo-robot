@@ -249,7 +249,8 @@ def cmd_commission_check(args):
 def cmd_plan_check(args):
     """One plan file's syntax gate (coding_plan
     skill): exit 0 with the frontier adoption will
-    arm when the plan's step blocks, prerequisites,
+    arm and the computed critical path when the
+    plan's step blocks, prerequisites,
     estimates, and question sentinels all parse and
     agree; exit 3 with one finding per violation when
     refused; exit 2 when the named file cannot be
@@ -288,6 +289,15 @@ def cmd_plan_check(args):
         todos = "|".join(entry["todos"])
         suffix = " (serial)" if entry["serial"] else ""
         print(f"  step {entry['step']} — {todos}{suffix}")
+    critical = result.get("critical_path")
+    if critical is not None:
+        chain = " -> ".join(
+            f"{'|'.join(e['todos'])} "
+            f"({plan_check_mod.format_minutes(e['minutes'])})"
+            for e in critical["chain"])
+        print(f"critical path (wall-clock): "
+              f"{plan_check_mod.format_minutes(critical['minutes'])}"
+              f" — {chain}")
     return 0
 
 

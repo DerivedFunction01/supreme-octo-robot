@@ -6,6 +6,11 @@ convicting exactly its class; the passing fixture
 asserts the frontier output at the lib level and,
 through the CLI, the exit codes (0 pass with the
 frontier, 3 refused with findings, 2 unreadable).
+The headline fixtures pin the estimate-discipline
+extension: a stated plan total over the computed
+critical path refuses (the serial-sum-with-fanout
+plan is the specimen), a stated total at or under
+it passes, and a pass prints the critical path.
 Fixtures are the tests' own — no live plan file is
 ever an input.
 """
@@ -167,6 +172,102 @@ class Cli(unittest.TestCase):
                     str(FIXTURES / "no-such-plan.md"))
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertIn("no such plan file", r.stdout)
+
+
+class Headline(unittest.TestCase):
+    """The headline rule (supervision rules, estimates
+    passage): a plan's stated total is its wall-clock
+    — the critical path over the in-plan requires
+    graph at each step's est= — never the serial sum.
+    A stated total over the critical path refuses;
+    at or under it, and no stated total at all, pass.
+    The critical path itself is computed and reported
+    either way."""
+
+    def test_stated_total_over_critical_path_refused(self):
+        findings = findings_of("stated-total-over.md")
+        joined = "\n".join(findings)
+        self.assertIn("headline", joined)
+        # The finding names the stated figure, the
+        # computed critical path, and the chain.
+        self.assertIn("2h", joined)
+        self.assertIn("40m", joined)
+        self.assertIn("st-alpha (30m)", joined)
+        self.assertIn("st-join (10m)", joined)
+
+    def test_serial_sum_with_fanout_is_the_specimen(self):
+        # Stated 70m is exactly the serial sum
+        # (30 + 30 + 10) while steps 1-2 declare a
+        # fan-out: the wall-clock is 40m, so the
+        # headline refuses.
+        findings = findings_of("stated-total-serial-sum.md")
+        joined = "\n".join(findings)
+        self.assertIn("headline", joined)
+        self.assertIn("70m", joined)
+        self.assertIn("40m", joined)
+        self.assertIn("serial sum", joined)
+
+    def test_stated_total_at_critical_path_passes(self):
+        result = plan_check.check_plan_file(
+            FIXTURES / "stated-total-within.md")
+        self.assertEqual(result["findings"], [])
+        critical = result["critical_path"]
+        self.assertEqual(critical["minutes"], 40)
+        self.assertEqual(
+            [e["step"] for e in critical["chain"]], [1, 3])
+
+    def test_stated_total_under_critical_path_passes(self):
+        text = (FIXTURES / "stated-total-within.md") \
+            .read_text(encoding="utf-8") \
+            .replace("Total: 40m", "Total: 30m")
+        result = plan_check.check_plan(text)
+        self.assertEqual(result["findings"], [])
+
+    def test_no_stated_total_passes_and_reports_path(self):
+        # The passing fixture states no total: no
+        # headline finding, and the critical path is
+        # still computed — 10m -> 20m down the
+        # pp-alpha chain, 30m against a 35m serial sum.
+        result = plan_check.check_plan_file(
+            FIXTURES / "passing-plan.md")
+        self.assertEqual(result["findings"], [])
+        critical = result["critical_path"]
+        self.assertEqual(critical["minutes"], 30)
+        self.assertEqual(critical["serial_sum"], 35)
+        self.assertEqual(
+            [e["todos"] for e in critical["chain"]],
+            [["pp-alpha"], ["pp-beta"]])
+
+    def test_unparseable_stated_total_makes_no_finding(self):
+        text = (FIXTURES / "passing-plan.md") \
+            .read_text(encoding="utf-8") \
+            .replace("Status: draft",
+                     "Status: draft\nTotal: about a day")
+        result = plan_check.check_plan(text)
+        self.assertEqual(result["findings"], [])
+
+
+class HeadlineCli(unittest.TestCase):
+    def wb(self, *argv):
+        return subprocess.run(
+            [PY, str(WB), *argv], capture_output=True,
+            text=True)
+
+    def test_pass_prints_critical_path_exit_0(self):
+        r = self.wb("plan-check",
+                    str(FIXTURES / "stated-total-within.md"))
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("critical path (wall-clock): 40m",
+                      r.stdout)
+        self.assertIn("tw-alpha (30m)", r.stdout)
+        self.assertIn("tw-join (10m)", r.stdout)
+
+    def test_headline_refusal_exit_3(self):
+        r = self.wb("plan-check",
+                    str(FIXTURES / "stated-total-over.md"))
+        self.assertEqual(r.returncode, 3, r.stdout + r.stderr)
+        self.assertIn("headline", r.stdout)
+        self.assertIn("plan refused", r.stdout)
 
 
 if __name__ == "__main__":
