@@ -6,17 +6,43 @@ that falls due again coalesces into its pending ping. Reading or
 listing never acknowledges; ack is explicit and separate. A
 pending ping re-surfaces in the wake set once per ack-timeout
 window, tracked by last_woken_at.
+
+The file is a working set, not the history: the ledger holds
+the ping event sequence at its own retention. Two mechanisms
+keep the working set cheap to stand behind (the 2026-11-26
+health-wedge cure — at 4,119 pings the file cost 0.3–0.6s to
+re-parse on every operation, every operation took the one
+lock to do it, and the health surface's own depth() call
+queued behind the convoy until supervision read a live,
+dispatching server as dead):
+
+- Reload is keyed on the file's own change stamp
+  (mtime_ns + size): an operation re-reads only when the
+  file actually changed since this process last loaded it.
+  Writes are temp-file-plus-rename, so another process's
+  write always moves the stamp — the freshness the
+  reload-every-operation form bought is kept, at a stat's
+  price instead of a full parse's.
+- Terminal pings (acked, void) are pruned at save time
+  once past TERMINAL_RETENTION_DAYS: the file stops
+  growing with history, so the parse that a stamp change
+  does trigger stays bounded by the working set.
 """
 import os
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from .ledger import iso, parse_iso
 from .stateio import StateError, read_json, write_json
 
 UTC = timezone.utc
 PING_KINDS = ("agent-due", "escalation", "report")
+# The working-set horizon for terminal pings: far past any
+# live wake/ack flow (ack windows are minutes), far short of
+# the ledger's 90-day event retention, which is where the
+# history of a pruned ping remains readable.
+TERMINAL_RETENTION_DAYS = 7
 
 
 class Outbox:
@@ -25,22 +51,58 @@ class Outbox:
         self.ledger = ledger
         self._lock = threading.RLock()
         self._pings = []
+        self._stamp = None
         self._reload()
+
+    def _file_stamp(self):
+        try:
+            st = os.stat(self.path)
+        except OSError:
+            return None
+        return (st.st_mtime_ns, st.st_size)
 
     def _reload(self):
         # The file is the source of truth, shared across processes
         # (the server, bin/sched, a drill planting a ping). Writes
-        # are temp-file-plus-rename, so a reload never tears. Every
-        # public operation reloads first; a cached in-memory copy
-        # would hide other processes' writes — and let this
-        # process's next save silently resurrect an acked ping.
+        # are temp-file-plus-rename, so a reload never tears, and
+        # another process's write always moves the file's stamp.
+        # Every public operation reloads first — but the reload
+        # re-reads only when the stamp moved; an unstamped cache
+        # would hide other processes' writes and let this
+        # process's next save silently resurrect an acked ping,
+        # which is what the stamp keying exists to prevent.
+        stamp = self._file_stamp()
+        if stamp is not None and stamp == self._stamp:
+            return
         data = read_json(self.path, {"pings": []})
         if not isinstance(data, dict) or not isinstance(data.get("pings"), list):
             raise StateError(f"outbox state {self.path} has the wrong shape")
         self._pings = data["pings"]
+        self._stamp = stamp
+
+    def _prune_terminal(self, now):
+        """Drop terminal pings past the retention horizon.
+        A ping whose terminal stamp cannot be read is kept:
+        the prune never drops what it cannot date."""
+        horizon = timedelta(days=TERMINAL_RETENTION_DAYS)
+        kept = []
+        for ping in self._pings:
+            if ping.get("state") == "pending":
+                kept.append(ping)
+                continue
+            raw = ping.get("acked_at") or ping.get("created")
+            try:
+                stamp = parse_iso(raw) if raw else None
+            except (TypeError, ValueError, AttributeError):
+                stamp = None
+            if stamp is None or now - stamp < horizon:
+                kept.append(ping)
+        self._pings = kept
 
     def _save(self):
+        self._prune_terminal(datetime.now(UTC))
         write_json(self.path, {"pings": self._pings})
+        self._stamp = self._file_stamp()
 
     def _log(self, kind, **fields):
         if self.ledger is not None:

@@ -520,7 +520,21 @@ def build_mount(settings: Settings, store: Store):
         )
         return 201, result, True
 
-    r.add("GET", "/health", cycle(health))
+    def health_reply(request):
+        """Health stands outside the dispatch cycle: its
+        payload is constants, and liveness must not queue
+        behind the cycle's lock and full state load — a
+        slow cycle would otherwise read as a dead server
+        (the 2026-11-26 health-wedge defect: /health
+        timed out on a live, dispatching process while
+        every cycle request paid a multi-second load).
+        Wait evaluation stays driven by the state routes
+        and the surface's loops, which ride the cycle as
+        before."""
+        status, payload, _dirty = health(None, None, request)
+        return mount.json_reply(status, payload)
+
+    r.add("GET", "/health", health_reply)
     r.add("GET", "/api/v1/glance", cycle(glance))
     r.add("GET", "/api/v1/today", cycle(today))
     r.add("GET", "/api/v1/digest", cycle(digest_route))

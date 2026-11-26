@@ -91,6 +91,37 @@ class MountTests(unittest.TestCase):
         self.assertEqual(headers.get("X-Frame-Options"), "DENY")
         self.assertEqual(headers.get("X-Content-Type-Options"), "nosniff")
 
+    def test_health_answers_without_touching_the_store(self):
+        # Health stands outside the dispatch cycle: with a
+        # store whose load raises, a state route fails but
+        # /health still answers its pinned payload — a
+        # wedged cycle must not read as a dead server.
+        class RaisingStore:
+            def load_state(self):
+                raise RuntimeError("store load wedged")
+
+            def save_state(self, state):
+                raise RuntimeError("store save wedged")
+
+        settings = Settings(
+            data_path=_fixture_store(self.tmp.name), host="127.0.0.1", port=0
+        )
+        mount, _workers = server_mod.build_mount(settings, RaisingStore())
+        listener = server_mod.serving.Listener(mount, "127.0.0.1", 0)
+        thread = threading.Thread(target=listener.serve_forever, daemon=True)
+        thread.start()
+        try:
+            port = listener.server_address[1]
+            req = urllib.request.Request(f"http://127.0.0.1:{port}/health")
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                payload = json.loads(resp.read())
+                self.assertEqual(resp.status, 200)
+            self.assertEqual(payload["status"], "ok")
+            self.assertEqual(payload["contract"], "api/1")
+        finally:
+            listener.shutdown()
+            listener.server_close()
+
     def test_post_is_readable_after_it_lands(self):
         status, _h, payload = self.call(
             "POST",
