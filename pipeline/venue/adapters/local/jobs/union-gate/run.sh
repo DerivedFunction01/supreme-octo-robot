@@ -111,7 +111,7 @@ done
 HEAD=$(git rev-parse HEAD)
 echo "union head: $HEAD"
 export TMPDIR="$PWD/../tmp-$RUN_ID"
-export STARTER_DENYLIST_FILE=/home/agent/workspace/denylist.txt
+export STARTER_DENYLIST_FILE="$HOME/workspace/denylist.txt"
 # Divided thread budget: this gate's envelope is bounded to
 # half the venue's pid ceiling. Library pools are capped per
 # process, so the footprint is workers x capped pools, never
