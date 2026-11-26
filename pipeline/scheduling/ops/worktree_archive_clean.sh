@@ -53,8 +53,27 @@ OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-$SCHED_WS_ROOT/worktree-archive}"
 STATE_DIR="${WORKTREE_TRIM_STATE_DIR:-$SCHED_STATE_DIR/worktree-trim}"
 NOW="${WORKTREE_TRIM_NOW:-$(date +%s)}"
+
+# Argument surface: the unified argv contract's bash
+# adapter (pipeline/platform/argv.sh), declared here.
+# --dry-run is a safety flag: honoured in any position,
+# and an unrecognised token or form refuses (exit 2)
+# rather than running the purge live — the pre-contract
+# form honoured --dry-run only as $1 and silently
+# ignored everything else. The adapter's path derives
+# exactly as paths.sh derives the platform writer.
+# shellcheck source=../../platform/argv.sh
+. "$(dirname "$SCHED_REPO_ROOT")/platform/argv.sh"
+argv_tool worktree-archive-clean "permanently remove expired worktree archives"
+argv_global_flag dry-run bool safety
+if ! argv_parse "$@"; then
+  exit 2
+fi
+if [ "${ARGV_HELP:-0}" = "1" ]; then
+  exit 0
+fi
 DRY_RUN=0
-[ "${1:-}" = "--dry-run" ] && DRY_RUN=1
+[ "${ARGV_FLAGS[dry-run]:-false}" = "true" ] && DRY_RUN=1
 
 if [ ! -d "$ARCHIVE_ROOT" ]; then
   exit 0

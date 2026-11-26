@@ -155,6 +155,15 @@ class DummyTests(unittest.TestCase):
             bad = [c for c in cases if not c["matched"]]
             self.assertEqual(bad, [], f"{name}: {bad[:2]}")
 
+    def test_dummy_base_case_satisfies_choices(self):
+        decl = {"name": "proof", "flags": {
+            "channel": {"takes_value": True, "required": True,
+                        "choices": ["http", "bridge", "static"]},
+            "slug": {"takes_value": True, "required": True}}}
+        cases = uargv.dummy(decl)
+        bad = [c for c in cases if not c["matched"]]
+        self.assertEqual(bad, [], f"{bad[:2]}")
+
     def test_dummy_covers_every_verb_and_flag(self):
         decl = FIXTURES["declarations"]["verb_tool"]
         cases = uargv.dummy(decl)

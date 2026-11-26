@@ -508,16 +508,18 @@ def _scope_cases(decl, verb, vspec):
     base = list(prefix)
     for name, spec in flags.items():
         if spec.get("required") and spec.get("takes_value"):
-            base += [f"--{name}", "x"]
+            base += [f"--{name}",
+                     spec["choices"][0] if spec.get("choices") else "x"]
     for pspec in vspec.get("positionals", decl.get("positionals", [])):
         if pspec.get("required") and not pspec.get("variadic"):
             base.append("x")
     cases = [{"argv": base, "expect_ok": True}]
     for name, spec in flags.items():
         if spec.get("takes_value"):
-            cases.append({"argv": base + [f"--{name}", "y"],
+            value = spec["choices"][0] if spec.get("choices") else "y"
+            cases.append({"argv": base + [f"--{name}", value],
                           "expect_ok": True})
-            cases.append({"argv": base + [f"--{name}=y"],
+            cases.append({"argv": base + [f"--{name}={value}"],
                           "expect_ok": True})
             cases.append({"argv": base + [f"--{name}"],
                           "expect_ok": False})
