@@ -34,7 +34,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from .foundation import REPO, RUNS, epoch, now
-from .manifest_shape import manifest_shape_error, transport_error
+from .manifest_shape import parse_transport, pin_resolution_error, preflight_error, script_field_error
 from .records import claim_first_save, load_run_record, save_record
 
 CLAIM_DEADLINE_S = 180
@@ -207,9 +207,30 @@ def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     launch-lost over a run that never launched (the
     steampower-criticjd-gate specimen: a dict-form uploads
     entry). Refusing here — named, with no record written —
-    is the honest fire-time form of both deaths."""
+    is the honest fire-time form of both deaths. The validation
+    is the one pre-dispatch pass (manifest_shape.preflight_error):
+    the shape verdicts, the script field, the declared files'
+    presence, and the branch pin's resolution — a defect in
+    any of them refuses here on the same terms."""
     job = load_manifest(manifest_path)
-    shape_err = manifest_shape_error(job) or transport_error(job)
+    transport = parse_transport(job)
+    pin_err = None
+    if transport is not None:
+        # The registry seam is imported at call time, like
+        # resolve_branch_ctx's: this module's standalone load
+        # surface (the test suite's stub foundations) carries
+        # no registry handle.
+        from .foundation import repo_registry
+
+        pin_err = pin_resolution_error(transport, repo=REPO, repo_registry=repo_registry)
+    script = job.get("script")
+    shape_err = preflight_error(
+        job,
+        script_path=(REPO / script) if isinstance(script, str) and script else None,
+        uploads_base=REPO,
+        shape_error=script_field_error(job),
+        pin_error=pin_err,
+    )
     if shape_err:
         raise ValueError(f"job manifest {manifest_path}: {shape_err}")
     minted = f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"

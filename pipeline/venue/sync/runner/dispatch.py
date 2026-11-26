@@ -14,9 +14,9 @@ from datetime import datetime, timezone
 
 from .claims import ManifestUnreadable, adopt, attach_verdict, load_manifest, option_like_refusal, spawn_daemon, stamp_takeover
 from .execute import execute
-from .foundation import JOBS, REPO, RUNS, TOKEN, colab, lease, mirror, now
-from .launch import build_seed_ctx, orphan_notes, transport_error, transport_setup
-from .manifest_shape import manifest_shape_error
+from .foundation import JOBS, REPO, RUNS, TOKEN, colab, lease, mirror, now, repo_registry
+from .launch import build_seed_ctx, orphan_notes, transport_setup
+from .manifest_shape import parse_transport, pin_resolution_error, preflight_error, script_field_error
 from .pull import normalize_manifest_outputs
 from .records import claim_first_save, load_run_record, save_record
 from .replace import acquire_session, record_pin
@@ -108,28 +108,43 @@ def launch(args: list[str]) -> int:
     except ManifestUnreadable as exc:
         print(f"no job manifest at {manifest_path}" if exc.missing else f"colab-run: {exc}", file=sys.stderr)
         return 2 if exc.missing else 1
-    # Manifest shape, settled once at load, before any session
-    # work: outputs normalize to plain local names (mapped
-    # entries tolerated), while uploads / args entries that are
-    # not plain strings refuse the launch loudly, naming the
-    # field and the entry — the shapes have no tolerance
-    # semantics, and discovering that mid-launch cost a
-    # consumer a crashed run.
-    # The transport declaration settles at the same load point
-    # (branch transport plan, Step 1): a malformed branch form refuses here.
-    shape_err = manifest_shape_error(job) or transport_error(job)
-    if shape_err:
-        print(f"colab-run: job {job_name}: {shape_err}", file=sys.stderr)
+    # Pre-dispatch validation (wall-clock plan, step 2): the
+    # one pass, settled at load before any session work —
+    # the field shapes (uploads / args entries that are not
+    # plain strings refuse loudly, naming the field and the
+    # entry; the shapes have no tolerance semantics, and
+    # discovering that mid-launch cost a consumer a crashed
+    # run), the transport declaration, the script field, the
+    # shape's resolvability (named in the manifest or the
+    # config's default — the catalog check below still
+    # settles membership, through the CLI), the declared
+    # files' presence, the caller claim's registration, and
+    # the branch pin's resolution against the source repo.
+    # A defect refuses named, in seconds, with no run record
+    # written; nothing below this point discovers a manifest
+    # defect holding a session. Outputs normalize after the
+    # pass (mapped entries there are tolerated; no verdict
+    # reads them).
+    claim_raw = caller_flag if caller_flag is not None else job.get("caller")
+    field_err = script_field_error(job)
+    if field_err is None and not (job.get("shape") or lease.default_shape(REPO)):
+        field_err = "manifest names no shape and config/lease.json names no default_shape"
+    script = job.get("script")
+    preflight = preflight_error(
+        job,
+        script_path=(REPO / script) if isinstance(script, str) and script else None,
+        uploads_base=REPO,
+        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER")),
+        shape_error=field_err,
+        pin_error=pin_resolution_error(parse_transport(job), repo=REPO, repo_registry=repo_registry),
+    )
+    if preflight:
+        print(f"colab-run: job {job_name}: {preflight}", file=sys.stderr)
         return 2
     normalize_manifest_outputs(job)
     # Caller claim: flag over the manifest's caller key over
-    # $COLAB_CALLER; a presented but unregistered claim is refused
-    # at claim time, before anything starts.
-    claim_raw = caller_flag if caller_flag is not None else job.get("caller")
-    claim_err = lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
-    if claim_err:
-        print(f"colab-run: {claim_err}", file=sys.stderr)
-        return 2
+    # $COLAB_CALLER; its registration settled in the pass
+    # above, before anything starts.
     caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
     # Session pin: flag over the env seam, mirroring the caller
     # claim's precedence. A pin names the lease this run must

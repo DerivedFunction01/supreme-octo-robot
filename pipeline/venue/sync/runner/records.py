@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 from .foundation import REPO, RUNS, VENUE, now, staged_write
+from .outcome import classify_outcome
 
 
 def _prepare(rec: dict) -> None:
@@ -30,6 +31,18 @@ def _prepare(rec: dict) -> None:
     # Venue key (S5, plan §7 V1): stamped at write time, like
     # the lease records'; no reader defaults it (§10.3).
     rec.setdefault("venue", VENUE)
+    # Outcome class (wall-clock plan, step 2): derived on
+    # every save from the record's own evidence through the
+    # one classifier (outcome.classify_outcome), so a
+    # terminal record from either venue's writer carries the
+    # same separation of never-ran causes from ran verdicts.
+    # A non-terminal record carries no class — a resumed run
+    # sheds its prior attempt's class with its state.
+    outcome = classify_outcome(rec)
+    if outcome is not None:
+        rec["outcome_class"] = outcome
+    else:
+        rec.pop("outcome_class", None)
 
 
 def save_record(rec: dict) -> None:
