@@ -61,8 +61,10 @@ PY
 # form every in-container clone of this repo takes.
 git clone -q git@github.com:redacted/supreme-octo-robot.git src || exit 2
 cd src || exit 2
-git config user.name "DL"
-git config user.email ""
+# No identity is set here: the clone inherits the venue's
+# configured global identity (the one approved pair). A
+# hardcoded pair in this script is how an empty email was
+# minted into gate trees before the venues carried one.
 
 # Fetch every constituent and prove its tip is present
 # before any merge is attempted.
