@@ -45,19 +45,17 @@ EXPECTED_EDGAR_CONTRACT = {
     "clearing": "later_measure_only",
     "non_response_after_consecutive_runs": 2,
     "reminder_cadence_minutes": 30,
-    # The staffable queue, from the staffing-
-    # commission amendment as commissioned and
-    # amended since: the CI-gold trace pricing and
-    # the caption-channel reader pricing were
-    # staffed on the owner's direct order and left
-    # the queue as staffed work, so what remains is
-    # the two precondition markers and the Round 4
-    # instrument build gated on the segment
-    # packet's landing. The packet has since
-    # landed and its marker stands flipped landed
-    # by amendment, so the Round 4 build is
-    # staffable now. Family keys are the venue
-    # measure's workstream stems.
+    # The staffable queue in its recorded
+    # specimen form: the two precondition markers
+    # and the Round 4 instrument build gated on
+    # the segment packet's landing, its marker
+    # flipped landed. The specimen keeps the
+    # gated work item so the validation pins
+    # exercise that shape; the live contract has
+    # since discharged the Round 4 build by its
+    # deliverable of record and pruned it, and
+    # carries the markers only. Family keys are
+    # the venue measure's workstream stems.
     "staffable_queue": [
         {
             "key": "segment-register-close",
