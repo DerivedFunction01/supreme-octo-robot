@@ -153,7 +153,8 @@ copied — there is no main triage step.
   its facts are measured at render time. A Digest portion
   that has never loaded renders unreachable, never an
   empty approval queue.
-- The rendered form (`frontend/src/views/DigestView.tsx`)
+- The rendered form (the integrated client's Digest view,
+  `artifact/client/src/views/attention/digest.tsx`)
   is grouped sections, not a feed: the digest windows and
   the next window; the owner-placed sections; stalled
   items; the staffing measure and programme lanes;

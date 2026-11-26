@@ -2,10 +2,10 @@
 
 The attention app: the glance, Today, and Digest surfaces
 over the evaluation and dispatch pipeline shapes — the
-decision queue's presentation, nothing more. Its frontend
-(`frontend/`, package `attention-frontend`) is a Vite/React
-app with mock, live, and relay stores behind one seam; the
-integration entry mounts the live store by default.
+decision queue's presentation, nothing more. Its surfaces
+live in the one integrated frontend (artifact/client, the
+attention views); the standalone frontend this app once
+carried is dropped and does not exist.
 
 - **Governed by:** contract 09 (shell + the contractual
   presence asymmetry: the glance is presence-filtered, the

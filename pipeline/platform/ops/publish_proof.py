@@ -40,8 +40,8 @@ honest-unreachable leg separated — see below):
      apps/workbench/frontend/src/lib/seed.ts, the
      scheduler mock seed ids in
      apps/scheduler/frontend/src/mock/seeds.ts, the
-     attention seed item titles/ids in
-     apps/attention/frontend/src/attention/seed). A marker
+     attention seed item titles/ids from the dropped
+     standalone app's seed — standing as data below). A marker
      hit means the artifact is serving compiled-in seed
      data, whatever its bundle hash says. For workbench
      the scan is structural — the seed slugs are checked

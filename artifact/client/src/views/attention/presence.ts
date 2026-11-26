@@ -178,10 +178,19 @@ export interface ServedPresence {
    *  the shell simply failed to read (critic M-6).
    *  Writes are refused while this is false. */
   loaded: boolean;
-  /** Set the mode, keeping the current expiry. */
-  setMode: (mode: PresenceMode) => void;
-  /** Set mode + expiry together (the Settings form). */
-  setPresence: (mode: PresenceMode, expiresAt: Date | null) => void;
+  /** Set the mode, keeping the current expiry. Resolves
+   *  to the served presence the backend returned;
+   *  rejects when the write is refused (the served
+   *  state has not landed) or the post fails — a
+   *  caller that ignores the promise never produces
+   *  an unhandled rejection, but a caller that awaits
+   *  it can surface the failure. A presence write
+   *  must never fail silently: the Settings section
+   *  awaits this and renders the error in place. */
+  setMode: (mode: PresenceMode) => Promise<PresenceView>;
+  /** Set mode + expiry together (the Settings form).
+   *  Same settlement contract as setMode. */
+  setPresence: (mode: PresenceMode, expiresAt: Date | null) => Promise<PresenceView>;
   /** The Launcher widget's next-digest label. */
   nextDigestLabel: string | null;
   /** The glance's served decision count (the Launcher
@@ -236,28 +245,43 @@ export function useServedPresence(): ServedPresence {
     };
   }, []);
 
-  const setPresence = useCallback((nextMode: PresenceMode, nextExpiry: Date | null) => {
-    // Never post from state that has not landed: the
-    // expiry argument would be derived from the standing
-    // default, and a null derived from ignorance clears
-    // a real served expiry (M-6). Once any glance or
-    // post has landed, writes flow as before.
-    if (!loadedRef.current) return;
-    postPresenceMode(nextMode, nextExpiry)
-      .then((p) => {
+  const setPresence = useCallback(
+    (nextMode: PresenceMode, nextExpiry: Date | null): Promise<PresenceView> => {
+      // Never post from state that has not landed: the
+      // expiry argument would be derived from the standing
+      // default, and a null derived from ignorance clears
+      // a real served expiry (M-6). Once any glance or
+      // post has landed, writes flow as before. The
+      // refusal itself is loud, not silent: it rejects,
+      // so a surface that offered the tap can say the
+      // write did not happen and why.
+      const attempt = (async (): Promise<PresenceView> => {
+        if (!loadedRef.current) {
+          throw new Error(
+            "Presence has not loaded yet — the served state has not arrived, so nothing was posted.",
+          );
+        }
+        const p = await postPresenceMode(nextMode, nextExpiry);
         loadedRef.current = true;
         setLoaded(true);
         setModeState(p.mode);
         setExpiresAt(p.expires_at);
-      })
-      .catch(() => {
-        /* the served state stands; the views surface failures */
-      });
-  }, []);
+        return p;
+      })();
+      // Fire-and-forget callers (the TopBar control)
+      // ignore the returned promise; attach a sink so
+      // their failures never surface as unhandled
+      // rejections. Awaiting callers still see the
+      // rejection on the returned promise itself.
+      attempt.catch(() => {});
+      return attempt;
+    },
+    [],
+  );
 
   const setMode = useCallback(
-    (nextMode: PresenceMode) => {
-      setPresence(nextMode, expiresAt ? new Date(expiresAt) : null);
+    (nextMode: PresenceMode): Promise<PresenceView> => {
+      return setPresence(nextMode, expiresAt ? new Date(expiresAt) : null);
     },
     [setPresence, expiresAt],
   );

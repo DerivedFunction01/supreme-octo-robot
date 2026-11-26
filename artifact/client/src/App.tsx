@@ -277,6 +277,7 @@ export default function App() {
         onPresenceChange={servedPresence.setMode}
         presenceExpiresAt={servedPresence.expiresAt}
         onSetPresence={servedPresence.setPresence}
+        presenceLoaded={servedPresence.loaded}
         onOpen={navigate}
       />
     );

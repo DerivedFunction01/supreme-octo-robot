@@ -105,7 +105,7 @@ _paths_spec.loader.exec_module(paths)
 
 REPO_ROOT = paths.REPO_ROOT
 
-APPS = ["workbench", "scheduler", "attention", "runner"]
+APPS = ["workbench", "scheduler", "runner"]
 REACT_PIN = "19.2.5"
 WRONG_REACTS = ["18.3.1", "19.3.1"]
 

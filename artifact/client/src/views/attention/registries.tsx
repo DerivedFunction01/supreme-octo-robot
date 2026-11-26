@@ -11,8 +11,15 @@ import { useState, type ReactNode } from "react";
 import { Button } from "@workhorse/kit/components/controls/Button";
 import { Card } from "@workhorse/kit/components/display/Card";
 import { LabeledCheckbox } from "@workhorse/kit/components/controls/Checkbox";
-import { DataTable } from "@workhorse/kit/components/display/DataTable";
+import {
+  DataTable,
+  type DataTableColumn,
+} from "@workhorse/kit/components/display/DataTable";
 import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
+import {
+  GroupedList,
+  StatRow,
+} from "@workhorse/kit/components/display/GroupedList";
 import { Field, Input, Select } from "@workhorse/kit/components/controls/Fields";
 import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import type { RegistriesPayload } from "./model";
@@ -62,7 +69,7 @@ export function RegistriesView() {
 
       <section>
         <BandHead label="Status codes" />
-        <DataTable
+        <ReformTable
           ariaLabel="Status codes"
           columns={[
             { key: "code", header: "Code", render: (c) => <b>{c.code}</b> },
@@ -81,7 +88,7 @@ export function RegistriesView() {
 
       <section>
         <BandHead label="Condition fields" />
-        <DataTable
+        <ReformTable
           ariaLabel="Condition fields"
           columns={[
             { key: "name", header: "Field", render: (f) => <b>{f.name}</b> },
@@ -103,7 +110,7 @@ export function RegistriesView() {
 
       <section>
         <BandHead label="Wait classes" />
-        <DataTable
+        <ReformTable
           ariaLabel="Wait classes"
           columns={[
             { key: "name", header: "Class", render: (c) => <b>{c.name}</b> },
@@ -129,10 +136,25 @@ export function RegistriesView() {
             <p className="text-sm">
               <b>{t.kind}</b>{" "}
               <span style={{ color: "var(--ui-content-secondary)" }}>
-                v{t.version} · {t.audience} · slots: {t.slots.join(", ") || "none"}
+                v{t.version} · {t.audience}
               </span>
             </p>
             <p className="mt-1 text-sm [overflow-wrap:anywhere]">{t.text}</p>
+            {/* Slots are a list, not a line: each slot
+                its own row (a character-joined list in a
+                wrapping text line is the defect class the
+                table re-form cured). */}
+            <GroupedList className="mt-2">
+              {t.slots.length ? (
+                t.slots.map((s) => (
+                  <StatRow key={s} label="Slot">
+                    {s}
+                  </StatRow>
+                ))
+              ) : (
+                <StatRow label="Slots">none</StatRow>
+              )}
+            </GroupedList>
           </Card>
         ))}
         <AddCard>
@@ -142,7 +164,7 @@ export function RegistriesView() {
 
       <section>
         <BandHead label="Item kinds" />
-        <DataTable
+        <ReformTable
           ariaLabel="Item kinds"
           columns={[
             { key: "kind", header: "Kind", render: (k) => <b>{k.kind}</b> },
@@ -166,6 +188,58 @@ export function RegistriesView() {
         </AddCard>
       </section>
     </PageColumn>
+  );
+}
+
+/** One vocabulary table in two forms: the kit
+ *  DataTable above the phone breakpoint; below it,
+ *  each record a grouped list — the identity column
+ *  as the group title, every other column a labelled
+ *  row carrying its full value (the table's cells
+ *  truncate by design; the grouped rows wrap). The
+ *  swap is the scoped media block in the client
+ *  stylesheet (att-reg-reform). */
+function ReformTable<T extends object>({
+  ariaLabel,
+  columns,
+  rows,
+  rowKey,
+}: {
+  ariaLabel: string;
+  columns: DataTableColumn<T>[];
+  rows: T[];
+  rowKey: (row: T) => string;
+}) {
+  const cell = (row: T, col: DataTableColumn<T>): ReactNode => {
+    if (col.render) return col.render(row);
+    const value = (row as Record<string, unknown>)[col.key];
+    return value === null || value === undefined ? "" : String(value);
+  };
+  const [identity, ...attrs] = columns;
+  return (
+    <div className="att-reg-reform">
+      <DataTable
+        ariaLabel={ariaLabel}
+        className="att-reform-table"
+        columns={columns}
+        rows={rows}
+        rowKey={rowKey}
+      />
+      <div className="att-reform-cards" aria-label={ariaLabel}>
+        {rows.map((row) => (
+          <GroupedList key={rowKey(row)} className="mb-3">
+            <div className="px-3.5 py-[11px] text-[14.5px] [overflow-wrap:anywhere]">
+              {cell(row, identity)}
+            </div>
+            {attrs.map((col) => (
+              <StatRow key={col.key} label={col.header}>
+                {cell(row, col)}
+              </StatRow>
+            ))}
+          </GroupedList>
+        ))}
+      </div>
+    </div>
   );
 }
 

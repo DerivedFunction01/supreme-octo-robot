@@ -48,7 +48,13 @@ export interface SettingsProps {
    *  the PresenceSection delegates every write to it, so
    *  the section and the TopBar control share the one
    *  served state and the one write path. */
-  onSetPresence?: (value: PresenceState, expiresAt: Date | null) => void;
+  onSetPresence?: (value: PresenceState, expiresAt: Date | null) => Promise<unknown>;
+  /** Whether the shell's served-presence state has
+   *  landed; forwarded to the PresenceSection's
+   *  readiness gate so it never presents postable
+   *  rows while the delegated write path would
+   *  refuse them. */
+  presenceLoaded?: boolean;
   onOpen: (hash: string) => void;
 }
 
@@ -59,6 +65,7 @@ export function Settings({
   onPresenceChange,
   presenceExpiresAt,
   onSetPresence,
+  presenceLoaded,
   onOpen,
 }: SettingsProps) {
   return (
@@ -92,6 +99,7 @@ export function Settings({
           onChange={onPresenceChange}
           expiresAt={presenceExpiresAt}
           onSetPresence={onSetPresence}
+          servedLoaded={presenceLoaded}
         />
 
         <GroupLabel>Appearance</GroupLabel>

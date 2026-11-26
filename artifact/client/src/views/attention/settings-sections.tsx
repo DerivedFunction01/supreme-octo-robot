@@ -79,7 +79,25 @@ export interface PresenceSectionProps {
    *  them the section binds itself, as it did before the
    *  shell adopted the hook. */
   expiresAt?: string | null;
-  onSetPresence?: (value: PresenceState, expiresAt: Date | null) => void;
+  /** The delegated write: resolves with the served
+   *  presence once the post lands, rejects when it is
+   *  refused or fails — the section surfaces the
+   *  rejection in place, exactly as the self-bound
+   *  branch surfaces its own post failures. A write
+   *  that settles silently is a defect: the tap either
+   *  lands and the check moves to the served response,
+   *  or the section says why it did not. */
+  onSetPresence?: (value: PresenceState, expiresAt: Date | null) => Promise<unknown>;
+  /** Whether the shell's served-presence hook has
+   *  actually landed its read. Delegated readiness
+   *  includes it: while the hook has not loaded, its
+   *  write path refuses (it must never post an expiry
+   *  derived from ignorance, M-6), so presenting
+   *  postable rows in that window offers taps that
+   *  can only be refused. Absent = the pre-adoption
+   *  form, where readiness rests on the section's
+   *  own read alone. */
+  servedLoaded?: boolean;
 }
 
 /** Two reads of the same served expiry corroborate when
@@ -97,6 +115,7 @@ export function PresenceSection({
   onChange,
   expiresAt,
   onSetPresence,
+  servedLoaded,
 }: PresenceSectionProps) {
   const glance = usePortion<GlancePayload>("glance", () => call(api.getGlance({})), 0);
   const [localExpiry, setLocalExpiry] = useState<ExpirySelection>("none");
@@ -154,6 +173,7 @@ export function PresenceSection({
   const propExpiry = expiresAt ?? null;
   const ready = delegated
     ? served != null &&
+      servedLoaded !== false &&
       (sameInstant(propExpiry, glanceExpiry) ||
         (lastPostedIso !== undefined && sameInstant(propExpiry, lastPostedIso)))
     : served != null;
@@ -213,9 +233,21 @@ export function PresenceSection({
       // state follows the POST response. The posted
       // expiry is remembered so the readiness check
       // above keeps the section postable while the
-      // prop converges to it.
-      onSetPresence(mode, expiryDate);
-      setLastPostedIso(expiryDate ? expiryDate.toISOString() : null);
+      // prop converges to it — remembered only once
+      // the post has actually landed; a refused or
+      // failed post sets no bridge, and its failure
+      // renders in the section like the self-bound
+      // branch's does. (This branch previously took
+      // the write on faith: the hook swallowed every
+      // rejection, so a dead write moved no check and
+      // showed no error.)
+      setError(null);
+      try {
+        await onSetPresence(mode, expiryDate);
+        setLastPostedIso(expiryDate ? expiryDate.toISOString() : null);
+      } catch (e) {
+        setError(`Presence failed: ${e instanceof Error ? e.message : String(e)}`);
+      }
       return;
     }
     setError(null);

@@ -104,3 +104,29 @@ body {
     display: none;
   }
 }
+
+/* Attention tables at phone width: the kit DataTable's
+   cells truncate by design, so the Registries and
+   Rules views render every record a second time as
+   grouped rows (the record's identity as the group
+   title, each remaining attribute as its own labelled
+   row with its full value) and the two forms swap at
+   the breakpoint — the grouped rows hidden above it,
+   the table hidden below it, the desktop form
+   otherwise untouched. */
+.att-reg-reform .att-reform-cards,
+.att-rules-reform .att-reform-cards {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .att-reg-reform .att-reform-table,
+  .att-rules-reform .att-reform-table {
+    display: none;
+  }
+
+  .att-reg-reform .att-reform-cards,
+  .att-rules-reform .att-reform-cards {
+    display: block;
+  }
+}

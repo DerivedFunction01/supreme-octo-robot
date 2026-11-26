@@ -70,7 +70,7 @@ import shutil
 import sys
 from datetime import datetime, timezone
 
-APPS = ["workbench", "scheduler", "attention", "runner"]
+APPS = ["workbench", "scheduler", "runner"]
 MANIFEST_NAME = "publish-manifest.json"
 
 ARTIFACT_EXCLUDES = ("node_modules", ".bun-cache", "dist",
