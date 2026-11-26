@@ -11,6 +11,7 @@ import { dateLabel } from "./shared";
 export function projectMessage(
   row: FeedMessageRow,
   disposition: InboxMessage["disposition"] | undefined,
+  entryProject?: (entryId: string) => string | undefined,
 ): InboxMessage {
   const ref = row.anchor_ref ?? "";
   const bundle = ref.split("/")[0];
@@ -22,7 +23,14 @@ export function projectMessage(
       target = { section: "plans", bundle };
     } else if (row.showcase || row.anchor_type === "component") {
       kind = "mockup";
-      target = { section: "mockups", entryId: ref };
+      // The entry's project rides the target as data,
+      // resolved from the adapter's entries catalogue —
+      // the message's own project_slug can name a
+      // non-project source (the doctor).
+      const slug = entryProject?.(ref);
+      target = slug
+        ? { section: "mockups", entryId: ref, project: slug }
+        : { section: "mockups", entryId: ref };
     }
   }
   const served =

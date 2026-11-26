@@ -31,7 +31,15 @@ const FULL_BLEED = new Set(["browse", "peek", "editor"]);
 
 export function App() {
   const [nav, setNav] = useState<NavTarget>({ section: "home" });
-  const [project, setProject] = useState("spec-driven-starter");
+  // The initial project is the served catalogue's first
+  // project, read off the seam — no project is named in
+  // component code. Both adapters build their project
+  // list synchronously from data present before first
+  // paint; an empty catalogue seeds empty (honest
+  // absence) until a project is picked.
+  const [project, setProject] = useState<string>(
+    () => adapter.projects()[0]?.slug ?? "",
+  );
   const [pendingNav, setPendingNav] = useState<NavTarget | null>(null);
   const guardRef = useRef<EditorGuard | null>(null);
   const [, setGuardTick] = useState(0);

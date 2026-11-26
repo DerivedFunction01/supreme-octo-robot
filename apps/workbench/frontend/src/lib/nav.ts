@@ -46,7 +46,7 @@ export interface NavApi {
 export const NavContext = createContext<NavApi>({
   nav: { section: "home" },
   navigate: () => {},
-  project: "spec-driven-starter",
+  project: "",
   setProject: () => {},
   setEditorGuard: () => {},
 });

@@ -106,7 +106,13 @@ export function buildLiveState(doc: WorkbenchFeeds): LiveState {
 
   s.messageList = doc.messages.messages
     .filter((m) => m.state !== "draft")
-    .map((m) => projectMessage(m, undefined));
+    .map((m) =>
+      projectMessage(
+        m,
+        undefined,
+        (entryId) => s.entryList.find((e) => e.id === entryId)?.project,
+      ),
+    );
 
   // Message threads (W10): every served row is a thread —
   // drafts included (the Inbox feed above hides them).

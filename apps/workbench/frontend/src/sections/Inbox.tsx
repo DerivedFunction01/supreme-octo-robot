@@ -72,7 +72,7 @@ export function Inbox() {
     const updated = a.openMessage(m.id);
     const t = updated.target;
     if (t.section === "mockups") {
-      setProject(m.project === "workbench doctor" ? "spec-driven-starter" : m.project);
+      setProject(t.project ?? m.project);
       navigate({ section: "mockup", entryId: t.entryId });
     } else if (t.section === "plans") {
       navigate({ section: "plans", bundle: t.bundle });

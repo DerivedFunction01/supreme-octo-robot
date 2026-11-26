@@ -296,9 +296,16 @@ export interface InboxMessage {
   arrivedLabel: string;
   /** null = awaiting a first disposition. */
   disposition: "filed" | "opened" | "dismissed" | null;
-  /** Navigation target for Open. */
+  /** Navigation target for Open. A mockups target carries
+   *  the project the entry belongs to, stamped by the
+   *  serving adapter from its entries catalogue: a
+   *  message's own project can name a non-project source
+   *  (the doctor) whose mockups live under a real project,
+   *  so the entry's project is data, never a mapping a
+   *  component invents. Absent when it is the message's
+   *  own project. */
   target:
-    | { section: "mockups"; entryId: string }
+    | { section: "mockups"; entryId: string; project?: string }
     | { section: "plans"; bundle: string }
     | { section: "overview" };
 }

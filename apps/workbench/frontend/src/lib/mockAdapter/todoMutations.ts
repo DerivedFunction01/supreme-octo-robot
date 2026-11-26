@@ -111,6 +111,15 @@ export function openMessage(h: MockHost, id: string) {
   const m = h.s.db.messages.find((x) => x.id === id);
   if (!m) throw new Error(`unknown message ${id}`);
   if (m.disposition === null) m.disposition = "opened";
+  const t = m.target;
+  if (t.section === "mockups" && !t.project) {
+    // The target's project is the entry's, stamped from
+    // the catalogue as data: a message's own project can
+    // name a non-project source (the doctor) whose
+    // mockups live under a real project.
+    const entry = h.s.db.entries.find((e) => e.id === t.entryId);
+    if (entry) m.target = { ...t, project: entry.project };
+  }
   h.emit();
   return m;
 }
