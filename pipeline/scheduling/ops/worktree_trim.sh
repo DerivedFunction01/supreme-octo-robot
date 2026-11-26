@@ -368,12 +368,12 @@
 # worktree-tier caps only; they are NOT repurposed for the
 # branch cap.
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 export GIT_TERMINAL_PROMPT=0
 
 OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=paths.sh
 . "$OPS_DIR/paths.sh"
+export PATH="$SCHED_PATH"
 
 WS_ROOT="$SCHED_WS_ROOT"
 ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-$WS_ROOT/worktree-archive}"
