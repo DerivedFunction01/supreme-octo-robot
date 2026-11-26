@@ -27,9 +27,11 @@
 
 import { useEffect, useState } from "react";
 import {
+  ActionRow,
   GroupLabel,
   GroupedList,
   RadioRow,
+  Row,
   StatRow,
   SwitchRow,
 } from "@workhorse/kit/components/display/GroupedList";
@@ -39,7 +41,6 @@ import {
   dayWord,
   windowClock,
   windowName,
-  minutesUntil,
   type DigestPayload,
   type GlancePayload,
 } from "./model";
@@ -411,16 +412,18 @@ export function DigestSection() {
 
   const times = d.window.times;
   const nextAt = d.window.next_at;
-  let nextLabel = "No window enabled";
+  // The Next window row carries its facts as separate
+  // elements — the name as the label's sub, the clock as
+  // the trailing value — never a character-joined string
+  // stuffed into one slot.
+  let nextName: string | null = null;
+  let nextClock: string | null = null;
   if (nextAt) {
     const dt = new Date(nextAt);
     const hhmm = `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`;
     const idx = times.indexOf(hhmm);
-    const name = idx >= 0 ? windowName(times, idx) : null;
-    const mins = minutesUntil(nextAt);
-    nextLabel = [dayWord(nextAt), name, clock(nextAt), mins >= 0 ? `in ${mins} min` : ""]
-      .filter(Boolean)
-      .join(" · ");
+    nextName = idx >= 0 ? windowName(times, idx) : null;
+    nextClock = clock(nextAt);
   }
 
   return (
@@ -438,7 +441,11 @@ export function DigestSection() {
             }
           />
         ))}
-        <StatRow label="Next window">{nextLabel}</StatRow>
+        <Row
+          label="Next window"
+          sub={nextClock ? (nextName ?? undefined) : undefined}
+          end={nextClock ?? "No window enabled"}
+        />
       </GroupedList>
       <GroupLabel>Window times</GroupLabel>
       <GroupedList>
@@ -447,16 +454,14 @@ export function DigestSection() {
             {windowClock(time)}
           </StatRow>
         ))}
+        <ActionRow
+          label="Edit window times"
+          onClick={() => {
+            setEditedTimes([...times]);
+            setTimesOpen(true);
+          }}
+        />
       </GroupedList>
-      <Button
-        variant="secondary"
-        onClick={() => {
-          setEditedTimes([...times]);
-          setTimesOpen(true);
-        }}
-      >
-        Edit window times
-      </Button>
       <Sheet
         open={timesOpen}
         title="Window times"
