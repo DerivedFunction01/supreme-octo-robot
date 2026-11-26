@@ -133,21 +133,10 @@ def backfill(state: dict) -> dict:
 # --- the attention fold: dispatch retired,
 # supervision folded to wb + gap-closure ---
 
-_FOLD_DEAD_THREAD_IDS = frozenset(
-    {
-        "f4899f83-3fd4-4d97-822b-ff9b508f2b33",  # venue-lane
-        "c157ad7b-23e3-49b5-a704-4a30eb1fb451",  # scheduling-lane
-        "2450e23d-6613-4d4c-8a3c-bd620a3ea508",  # attention-lane
-        "e02a0d3e-4a51-4324-b1a2-9319b26bb874",  # workbench-lane
-        "6ef5fb96-172f-4bcb-a950-425b2d5f3a8a",  # platform-lane
-        "ebff9fb6-480f-4d9a-91ad-35f0c7f4ae12",  # @attention
-        "89ff5156-8d9d-4980-b50c-f16b3b0404e0",  # edgar-secforms
-    }
-)
-"""Handlers bound to chats retired in the 2026-11-24
-cleanup: marked retired so no surface presents them as
-live. Handles are matched by their bound thread id —
-the binding is the dead fact, not the name."""
+"""A handler is retired at the fold when its own
+freshness record of record carries the retired-with-cause
+verdict: the retirement is served data, keyed by handle,
+and no chat binding is named in code."""
 
 _FOLD_FROZEN_STATUS_HANDLES = ("@checker", "@sweeper")
 """Retired handlers whose frozen legacy handler_status
@@ -204,8 +193,10 @@ def _backfill_attention_fold(state: dict) -> None:
     if isinstance(statuses, dict):
         for handle in _FOLD_FROZEN_STATUS_HANDLES:
             statuses.pop(handle, None)
+    freshness = state.get("handler_freshness") or {}
     for handler in state.get("handlers", []):
-        if handler.get("thread_id") in _FOLD_DEAD_THREAD_IDS:
+        record = freshness.get(handler.get("handle")) or {}
+        if record.get("verdict") == "retired-with-cause":
             handler["retired"] = True
     for item in state.get("items", []):
         if item.get("triage") == "done":

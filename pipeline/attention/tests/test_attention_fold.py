@@ -228,8 +228,14 @@ class MigrationTests(unittest.TestCase):
         state = _state()
         state["handlers"].append(
             {"handle": "venue-lane", "label": "venue lane",
-             "thread_id": "f4899f83-3fd4-4d97-822b-ff9b508f2b33"}
+             "thread_id": "specimen-thread"}
         )
+        state["handler_freshness"] = {
+            "venue-lane": {"handle": "venue-lane",
+                           "verdict": "retired-with-cause",
+                           "binding_state": "deleted",
+                           "cause": "lane-dissolved"},
+        }
         state["handler_status"] = {
             "@checker": {"status_code": "REVIEW", "summary": "frozen", "at": NOW},
             "main": {"status_code": "WORKING", "summary": "live", "at": NOW},
