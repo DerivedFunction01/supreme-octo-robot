@@ -245,7 +245,7 @@ DEFAULTS = {
     # the kernel OOM killer kept killing the service
     # for. The budget is named from the real corpus:
     # the largest real repo's payload is ~9 MB
-    # (usmc-pay-monitor-v2), so 12 MB leaves every real
+    # (the largest measured payload repo), so 12 MB leaves every real
     # repo whole today and caps a corpus giant's eager
     # payload at 12 MB; past the budget, peeks take the
     # deferred form and datasets are omitted — the

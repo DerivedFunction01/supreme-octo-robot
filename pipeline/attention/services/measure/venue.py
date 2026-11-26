@@ -167,11 +167,11 @@ def caller_base(caller: str) -> str:
 def attribute_slug(caller: str, declarations: list) -> str | None:
     """The active programme a caller belongs to: the
     caller base names the programme's slug outright,
-    or carries its slug stem (edgar-specimen →
-    edgar-greenfield), or carries one of the stems
+    or carries its slug stem (specimen-successor →
+    specimen-field), or carries one of the stems
     the programme declares in caller_stems for callers
-    that do not ride the slug (steampower-cust →
-    steampowernj, workhorse → supreme-octo-robot).
+    that do not ride the slug (specimen-cust →
+    specimen-tenant, platform-caller → platform-repo).
     Longest match wins; an ambiguous stem attributes
     to no one."""
     base = caller_base(caller)
@@ -449,7 +449,7 @@ def collect(state: dict, settings: Settings, now: datetime) -> bool:
     # programme that declares it, including one whose
     # declaration names no venue while its runs ride
     # the venue under a declared caller stem
-    # (steampowernj) — attribution is by caller either
+    # (a tenant programme) — attribution is by caller either
     # way, so those programmes join the snapshot with
     # terminal facts only.
     terminal_slugs = {

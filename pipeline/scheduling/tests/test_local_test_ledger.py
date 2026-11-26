@@ -118,9 +118,9 @@ class LedgerConsultCase(unittest.TestCase):
                              tzinfo=_dt.timezone.utc).timestamp()
         argv = ["var/venv/bin/python", "check.py", "backend/apps",
                 "--workers", "2"]
-        cwd = "/ws/usmc-pay-monitor-v2"
-        target = ("bash -c cd /ws/usmc-pay-monitor-v2 && "
-                  "TMPDIR=/ws/usmc-pay-monitor-v2/var/tmp-gate "
+        cwd = "/ws/specimen-app"
+        target = ("bash -c cd /ws/specimen-app && "
+                  "TMPDIR=/ws/specimen-app/var/tmp-gate "
                   "var/venv/bin/python check.py backend/apps "
                   "--workers 2")
         db = self._scratch_db([(21, epoch, target)])

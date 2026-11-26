@@ -175,7 +175,7 @@ def _base_branch(cwd, branch, main_branch):
     consulting it first made the main checkout's working
     diff a merge-base diff — once local main and
     origin/main diverge, that patch carries the whole
-    divergence (hundreds of MB on edgar-sec) and the diff
+    divergence (hundreds of MB on a large specimen repo) and the diff
     route dies on the git timeout. The base branch's
     working diff is HEAD vs the working tree, by the rule
     above."""

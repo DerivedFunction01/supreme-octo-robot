@@ -311,7 +311,7 @@ def _newer_files(root: Path, head_time: int) -> list:
 
     A scandir walk replaces `git ls-files --others
     --ignored` as the enumerator: on a repo carrying a
-    data lake (edgar-sec: ~35k ignored paths under .venv
+    data lake (a large specimen repo: ~35k ignored paths under .venv
     and .artifacts) that one git call takes seconds to
     tens of seconds under load and intermittently crosses
     the git timeout, killing the whole diff with a 500.
