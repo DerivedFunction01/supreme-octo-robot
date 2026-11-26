@@ -228,17 +228,36 @@ def _read_state(rec: dict, target: dict) -> dict:
     return reading
 
 
+def _confirmed_exit(rec: dict, target: dict, reading: dict) -> dict | None:
+    """The confirmation read behind every terminal verdict
+    this module serves: an "exit" reading is believed only
+    when a second, independent read of the run's own exit
+    file agrees on the code. A single anomalous read —
+    whatever its source — cannot carry a verdict alone;
+    a contested read is served as no verdict (the poll
+    reports running, the reader pass leaves the face), and
+    the next poll cycle reads the file again. Returns the
+    reading when confirmed, else None."""
+    confirm = local_venue.read_run_state(REPO, rec, target=target)
+    if confirm.get("reading") == "exit" and confirm.get("exit_code") == reading["exit_code"]:
+        return reading
+    return None
+
+
 def _poll(rec: dict, target: dict) -> dict:
     """One poll of the run's container state, through the
     lease core's tri-state reader (local_venue.read_run_state):
-    an exit file finalizes the record through the runner's
-    shared local finalize — terminal state from the code,
-    completion time from the exit file's own mtime; no exit
-    file yet is "running"; an unreadable container is
-    "running" with the unreachable flag — a lost read is
-    never a verdict."""
+    a confirmed exit file finalizes the record through the
+    runner's shared local finalize — terminal state from
+    the code, completion time from the exit file's own
+    mtime; no exit file yet is "running"; an unreadable
+    container is "running" with the unreachable flag — a
+    lost read is never a verdict, and neither is a single
+    unconfirmed one."""
     reading = _read_state(rec, target)
     if reading["reading"] == "exit":
+        if _confirmed_exit(rec, target, reading) is None:
+            return {"state": "running", "exit_unconfirmed": True}
         state = finalize_local_record(rec, reading)
         return {"state": state, "exit_code": reading["exit_code"]}
     if reading["reading"] == "unknown":
@@ -258,6 +277,8 @@ def _rederive(rec: dict, target: dict) -> dict | None:
     derived outcome, or None when the face stands."""
     reading = local_venue.read_run_state(REPO, rec, target=target)
     if reading["reading"] != "exit":
+        return None
+    if _confirmed_exit(rec, target, reading) is None:
         return None
     code = reading["exit_code"]
     state = "complete" if code == 0 else "failed"

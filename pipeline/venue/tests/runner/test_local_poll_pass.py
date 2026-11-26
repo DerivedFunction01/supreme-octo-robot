@@ -17,6 +17,11 @@ The warmup pins: a poll's "unknown" readings retry inside
 the call on the bounded backoff before the unreachable
 face is served — the read-side sibling of the launch
 path's Step 3 warmup retry (test_local_launch_warmup.py).
+
+The confirmation pins: every terminal verdict — a poll's
+finalize, a reader-pass re-derive — stands on two
+independent reads of the run's own exit file agreeing on
+the code; a contested read serves no verdict.
 """
 
 import json
@@ -137,7 +142,57 @@ def test_poll_retries_an_unknown_reading_through_warmup(tmp_path, monkeypatch, c
     assert rc == 0
     assert out == {"run_id": RID, "state": "complete", "exit_code": 0}
     assert finalized == [(RID, 0)]
-    assert len(reads) == 3
+    # Three reads to the resolved reading, plus the one
+    # confirmation read behind the verdict.
+    assert len(reads) == 4
+
+
+def test_poll_contested_exit_reading_serves_no_verdict(tmp_path, monkeypatch, capsys):
+    """The phantom-verdict pin: a first read reporting an
+    exit the confirmation read contradicts (a different
+    code, or no exit file at all) finalizes nothing and
+    is served as running with the unconfirmed flag — a
+    single anomalous read never carries a verdict, and
+    the next poll cycle reads the file again."""
+    rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
+    phantom = {"reading": "exit", "exit_code": 7, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": ""}
+    truth_zero = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:20:00+00:00", "output_tail": ""}
+    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, truth_zero])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 0
+    assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
+    assert finalized == []
+    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 0
+    assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
+    assert finalized == []
+
+
+def test_poll_agreeing_confirmation_finalizes(tmp_path, monkeypatch, capsys):
+    """Two independent reads agreeing on the code are
+    the verdict: the finalize runs on the agreed code."""
+    rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
+    reading = {"reading": "exit", "exit_code": 7, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "boom\n"}
+    mod, finalized, reads = load_local_run_seq(monkeypatch, rec, [reading, dict(reading)])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 0
+    assert out == {"run_id": RID, "state": "failed", "exit_code": 7}
+    assert finalized == [(RID, 7)]
+    assert len(reads) == 2
+
+
+def test_rederive_contested_exit_leaves_face_alone(tmp_path, monkeypatch, capsys):
+    """The reader pass over a terminal face holds the
+    same line: an exit reading the confirmation read
+    contradicts does not rewrite the face."""
+    rec = {"run_id": RID, "job": "job", "venue": "local", "state": "orphaned"}
+    phantom = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": ""}
+    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
+    rc, out = _poll(monkeypatch, mod, capsys)
+    assert rc == 1
+    assert out == {"run_id": RID, "state": "orphaned"}
+    assert finalized == []
 
 
 def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, capsys):
