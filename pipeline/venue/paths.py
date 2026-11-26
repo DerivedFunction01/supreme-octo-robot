@@ -42,6 +42,7 @@ TRANSIENT_REGISTRY = REPO_RESOLVED / "config" / "transient.json"
 
 # Code loads out of the sync tree (resolved, as the loaders
 # have always resolved them).
+PLATFORM_ARGV = PACKAGE_DIR.parent / "platform" / "argv.py"
 NAMING = REPO_RESOLVED / "sync" / "naming.py"
 LIVENESS_ENTRY = REPO_RESOLVED / "sync" / "liveness_entry.py"
 EXTEND_GUARD = REPO_RESOLVED / "sync" / "extend_guard.py"

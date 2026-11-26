@@ -25,11 +25,15 @@ from .sweep import collect_stale_detached, orphan_sweep
 from .verbs import plant_git_identity, poll_run, wait_run
 
 # The unified argv contract home, loaded by location under
-# a private name — the tree's standing seam for platform
-# modules (the stdlib owns the bare name `platform`).
+# a private name (the stdlib owns the bare name `platform`),
+# through the venue paths spine — the form foundation.py
+# loads the same spine by.
+_paths_spec = importlib.util.spec_from_file_location(
+    "venue_paths", Path(__file__).parent.parent.parent / "paths.py")
+_paths = importlib.util.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(_paths)
 _argv_spec = importlib.util.spec_from_file_location(
-    "pipeline_platform_argv",
-    Path(__file__).resolve().parents[3] / "platform" / "argv.py")
+    "pipeline_platform_argv", _paths.PLATFORM_ARGV)
 platform_argv = importlib.util.module_from_spec(_argv_spec)
 _argv_spec.loader.exec_module(platform_argv)
 

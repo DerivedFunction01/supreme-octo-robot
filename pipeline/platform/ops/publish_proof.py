@@ -116,25 +116,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
-# The unified argv contract home, loaded by location through the
-# platform paths module (the sanctioned bootstrap: the paths
-# module's own location is found by candidate search, every other
-# location derives from its constants).
-_here = os.path.dirname(os.path.abspath(__file__))
-_paths_spec = _importlib_util.spec_from_file_location(
-    "platform_paths",
-    next(_p for _p in (
-        os.path.join(os.path.dirname(
-            os.path.dirname(_here)), "paths.py"),
-        os.path.join(os.path.dirname(_here), "paths.py"),
-        os.path.join(_here, "paths.py"))
-        if os.path.isfile(_p)))
-_paths = _importlib_util.module_from_spec(_paths_spec)
-_paths_spec.loader.exec_module(_paths)
-_argv_spec = _importlib_util.spec_from_file_location(
+# The argv contract home, loaded through the platform paths module.
+_ps = _importlib_util.spec_from_file_location(
+    "platform_paths", Path(__file__).parent.parent / "paths.py")
+_paths = _importlib_util.module_from_spec(_ps); _ps.loader.exec_module(_paths)
+_as = _importlib_util.spec_from_file_location(
     "pipeline_platform_argv", os.path.join(_paths.PACKAGE_DIR, "argv.py"))
-platform_argv = _importlib_util.module_from_spec(_argv_spec)
-_argv_spec.loader.exec_module(platform_argv)
+platform_argv = _importlib_util.module_from_spec(_as)
+_as.loader.exec_module(platform_argv)
 
 DECLARATION = {
     "name": "publish_proof",
@@ -146,8 +135,7 @@ DECLARATION = {
         "base-url": {"takes_value": True},
         "bridge-dir": {"takes_value": True},
         "mirror": {"takes_value": True},
-        "apps": {"takes_value": True,
-                 "default": "workbench,scheduler,runner,attention"},
+        "apps": {"takes_value": True, "default": "workbench,scheduler,runner,attention"},
         "leg": {"takes_value": True, "choices": ["dead-port"]},
         "report": {"takes_value": True, "required": True},
     },
@@ -174,8 +162,7 @@ SEED_MARKERS = {
         "01mock00000000000000seed", "b41d77aa09c3",
     ],
     "attention": [
-        "Northwind cutover rehearsal", "main:northwind-rehearsal",
-        "Rig 12 — renewal due",
+        "Northwind cutover rehearsal", "main:northwind-rehearsal", "Rig 12 — renewal due",
     ],
 }
 
