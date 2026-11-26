@@ -286,8 +286,11 @@ and the container overlay the host's.
   workspace) by the guard below plus prune discipline
   (`docker system df` / `docker system prune`), not by a hard cap.
 - **Guard:** `disk-guard.sh` in the template, on a 15-minute WSL
-  cron — warns at total−8 GB, stops the workspace container at the
-  total (thresholds read from the instance `.env`). On Windows
+  cron — it sums the instance folder's storage against the
+  assigned cap: warns at total−8 GB, stops the workspace container
+  at the total (thresholds read from the instance `.env`). The
+  measure is the folder itself and reads no host-drive paths, so
+  the guard works the same on a pure-Linux host. On Windows
   this is the primary enforcement for the Docker share, not a
   backstop. Docker Desktop's Resource Saver (Settings > Resources)
   additionally idles Docker's own CPU/RAM when no container is

@@ -1,10 +1,13 @@
 #!/bin/bash
-# Host-side (WSL) guard for the instance's total disk budget.
-# The workspace image is a hard cap; Docker storage has no
-# hard cap on the Windows WSL 2 backend, so this guard is the primary
-# enforcement for its remaining share: at WARN it logs, at STOP it stops
-# the workspace container before the host disk is threatened.
-# Cron (WSL): */15 * * * *  $HOME/agent-workspace/disk-guard.sh
+# Host-side guard for the instance's total disk budget: the sum of
+# the instance folder's storage against the assigned cap (WARN and
+# STOP thresholds from the instance .env). The measure is the folder
+# itself, so the guard is host-OS-agnostic — it reads no host-drive
+# paths and works the same on a pure-Linux host. The workspace image
+# inside the folder is a hard cap; Docker storage has no hard cap on
+# the Windows WSL 2 backend, so at STOP the guard stops the workspace
+# container before the instance's growth threatens the host disk.
+# Cron: */15 * * * *  <instance>/disk-guard.sh
 set -u
 # Argument surface: none. This is the vendored
 # refuse-any-argument guard of the unified argv
@@ -40,16 +43,14 @@ WARN_GB="${DISK_WARN_GB:-120}"
 STOP_GB="${DISK_STOP_GB:-128}"
 LOG="$DIR/disk-guard.log"
 
-ws_kb=$(du -sk "$DIR/workspace" 2>/dev/null | cut -f1); ws_kb=${ws_kb:-0}
-img_kb=0
-[ -f "$DIR/workspace.img" ] && img_kb=$(du -sk "$DIR/workspace.img" | cut -f1)
+total_kb=$(du -sk "$DIR" 2>/dev/null | cut -f1); total_kb=${total_kb:-0}
 docker_bytes=$(docker system df --format '{{.Size}}' 2>/dev/null | head -1)
-total_gb=$(( (ws_kb + img_kb) / 1024 / 1024 ))
+total_gb=$(( total_kb / 1024 / 1024 ))
 stamp=$(date -Is)
 
 if [ "$total_gb" -ge "$STOP_GB" ]; then
-  echo "$stamp STOP workspace=${ws_kb}K docker-system-df=${docker_bytes:-?} approx-total=${total_gb}G >= ${STOP_GB}G" >> "$LOG"
+  echo "$stamp STOP folder=${total_kb}K docker-system-df=${docker_bytes:-?} total=${total_gb}G >= ${STOP_GB}G" >> "$LOG"
   (cd "$DIR" && docker compose stop ubuntu) >> "$LOG" 2>&1
 elif [ "$total_gb" -ge "$WARN_GB" ]; then
-  echo "$stamp WARN workspace=${ws_kb}K docker-system-df=${docker_bytes:-?} approx-total=${total_gb}G >= ${WARN_GB}G" >> "$LOG"
+  echo "$stamp WARN folder=${total_kb}K docker-system-df=${docker_bytes:-?} total=${total_gb}G >= ${WARN_GB}G" >> "$LOG"
 fi
