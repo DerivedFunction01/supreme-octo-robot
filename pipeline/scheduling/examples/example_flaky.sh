@@ -13,6 +13,18 @@ set -euo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage.
+. "$ROOT/../platform/argv.sh"
+argv_tool example_flaky.sh "Example scripted job: a check that can fail, demonstrating the escalation pattern."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 MARKER="$ROOT/state/flaky-on"
 
 if [[ -f "$MARKER" ]]; then

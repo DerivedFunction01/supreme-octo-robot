@@ -13,6 +13,19 @@
 # <bundle>.manifest.json beside the bundle.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Argument surface: none (configuration rides the
+# environment, above). The empty declaration is parsed
+# by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage.
+. "$REPO_ROOT/../platform/argv.sh"
+argv_tool make_snapshot_bundle.sh "Build an origin-lineage snapshot bundle of the tree being shipped."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 SRC="${COLAB_REPO_SRC:-}"
 if [ -z "$SRC" ]; then
   echo "make_snapshot_bundle: COLAB_REPO_SRC is not set (pass the registry entry's local_path)" >&2; exit 2

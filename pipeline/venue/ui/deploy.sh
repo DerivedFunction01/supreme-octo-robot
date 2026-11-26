@@ -16,10 +16,23 @@ if [ -z "$RUNTIME" ]; then
 fi
 HATCHLET="${HATCHLET:-hatchlet}"
 
+# Argument surface: one optional positional, declared
+# and parsed by the unified argv contract's bash
+# adapter (contract home: pipeline/platform/argv.py;
+# adapter: argv.sh in the same home, resolved from this
+# script's own location). A surplus argument or any
+# flag is a usage refusal (exit 2); --help prints the
+# usage generated from this declaration.
+. "$HERE/../../platform/argv.sh"
+argv_tool deploy.sh "Deploy or check the Colab Lease artifact."
+argv_global_positional mode
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 CHECK=0
-if [ "${1:-}" = "check" ]; then
+if [ "${ARGV_POSITIONALS[mode]}" = "check" ]; then
   CHECK=1
-elif [ -n "${1:-}" ]; then
+elif [ -n "${ARGV_POSITIONALS[mode]}" ]; then
   echo "usage: ui/deploy.sh [check]" >&2
   exit 2
 fi

@@ -44,8 +44,21 @@ GIT="git -c core.fsync=none"
 
 fail() { echo "RESTORE-FAIL step=$1 archive=${ADIR:-?} detail=$2"; exit 2; }
 
-[ $# -eq 1 ] || { echo "usage: worktree_restore.sh <archive-dir>" >&2; exit 2; }
-ADIR="${1%/}"
+# Argument surface: one required positional, declared
+# and parsed by the unified argv contract's bash
+# adapter (contract home: pipeline/platform/argv.py;
+# adapter: argv.sh in the same home, resolved from this
+# script's own location). A missing or surplus
+# positional, or any flag, is a usage refusal (exit 2);
+# --help prints the usage generated from this
+# declaration.
+. "$OPS_DIR/../../platform/argv.sh"
+argv_tool worktree_restore.sh "Restore an archived worktree from its manifest."
+argv_global_positional archive-dir required
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
+ADIR="${ARGV_POSITIONALS[archive-dir]%/}"
 [ -d "$ADIR" ] || fail manifest "archive directory not found: $ADIR"
 
 MANIFEST=""

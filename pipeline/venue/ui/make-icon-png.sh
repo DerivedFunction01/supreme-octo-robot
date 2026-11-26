@@ -15,6 +15,18 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage.
+. "$HERE/../../platform/argv.sh"
+argv_tool make-icon-png.sh "Rasterize the Colab icon SVG to PNG fallbacks."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 SVG="$HERE/static/colab-icon.svg"
 [ -f "$SVG" ] || { echo "make-icon-png: $SVG not found" >&2; exit 2; }
 

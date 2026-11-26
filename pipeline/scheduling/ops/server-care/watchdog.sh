@@ -66,6 +66,18 @@ set -uo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage.
+. "$SCHED_OPS_DIR/../../platform/argv.sh"
+argv_tool watchdog.sh "Scheduler server watchdog: the restore ladder the keeper hook calls."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 ROOT="${SCHEDULER_ROOT:-$SCHED_REPO_ROOT}"
 UNIT_NAME="scheduler-server.service"
 UNIT_DIR="${SCHEDULER_UNIT_DIR:-/etc/systemd/system}"

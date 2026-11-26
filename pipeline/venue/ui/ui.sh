@@ -49,7 +49,23 @@ ui_pid() {
   return 1
 }
 
-case "${1:-}" in
+# Argument surface: the four verbs, declared once and
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location). An unknown verb, any flag, or a surplus
+# argument is a usage refusal (exit 2); --help prints
+# the usage generated from this declaration.
+. "$UI_DIR/../../platform/argv.sh"
+argv_tool ui.sh "Start/stop the lease control UI server."
+argv_verb start "Start the UI server."
+argv_verb stop "Stop the UI server."
+argv_verb restart "Restart the UI server."
+argv_verb status "Report whether the UI server is running."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
+case "$ARGV_VERB" in
   start)
     if unit_installed; then
       if service_active; then
@@ -128,9 +144,5 @@ case "${1:-}" in
     else
       echo "lease-ui not running"
     fi
-    ;;
-  *)
-    echo "usage: $0 start|stop|restart|status" >&2
-    exit 2
     ;;
 esac

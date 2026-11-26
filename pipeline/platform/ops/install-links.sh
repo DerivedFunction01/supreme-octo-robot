@@ -36,8 +36,24 @@ OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$OPS_DIR/../../.." && pwd)"
 BIN_DIR="${HOME:?install-links: HOME is not set}/.local/bin"
 
+# Argument surface, declared once and parsed by the
+# unified argv contract's bash adapter (contract home:
+# pipeline/platform/argv.py; adapter: argv.sh in the
+# same home). This script executes from inside a
+# checkout (the watchdog invokes it by its in-tree
+# path), so the adapter resolves from the script's own
+# location — no Python dependency is taken. An unknown
+# flag or any positional is a usage refusal (exit 2);
+# --help prints the usage generated from this
+# declaration.
+. "$OPS_DIR/../argv.sh"
+argv_tool install-links.sh "Install short command names for the pipeline entries as symlinks."
+argv_global_flag quiet bool
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 QUIET=0
-[ "${1:-}" = "--quiet" ] && QUIET=1
+[ "${ARGV_FLAGS[quiet]}" = true ] && QUIET=1
 
 # name:target, the target relative to the repo root.
 # runner is the owner's own name for the colab-run

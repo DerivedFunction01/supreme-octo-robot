@@ -15,6 +15,19 @@ set -uo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$DIR/.." && pwd)"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage. The
+# refusal stands apart from wb's propagated exit code
+# below.
+. "$ROOT/../platform/argv.sh"
+argv_tool doctor.sh "wb doctor --post runner: the periodic consistency sweep."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
 PY="$ROOT/.venv/bin/python"
 [ -x "$PY" ] || PY="$(command -v python3)"
 mkdir -p "$ROOT/state"

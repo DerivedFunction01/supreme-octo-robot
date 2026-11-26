@@ -6,6 +6,29 @@
 # the workspace container before the host disk is threatened.
 # Cron (WSL): */15 * * * *  $HOME/agent-workspace/disk-guard.sh
 set -u
+# Argument surface: none. This is the vendored
+# refuse-any-argument guard of the unified argv
+# contract (contract home: pipeline/platform/argv.py;
+# bash adapter: argv.sh in the same home) — vendored,
+# not sourced, because setup.sh copies this file OUT
+# of the checkout into the instance directory, where
+# no adapter stands beside it. Any argument is a usage
+# refusal (exit 2); --help prints usage. Sync
+# obligation: if the contract's no-argument guard form
+# changes in argv.sh, this block changes with it.
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --help|-h)
+      echo "usage: disk-guard.sh"
+      exit 0
+      ;;
+    *)
+      echo "disk-guard: unexpected argument: $1" >&2
+      echo "usage: disk-guard.sh" >&2
+      exit 2
+      ;;
+  esac
+fi
 DIR="$(cd "$(dirname "$0")" && pwd)"
 # Thresholds come from the instance .env when present (cron does not
 # inherit the shell env setup.sh wrote them for).

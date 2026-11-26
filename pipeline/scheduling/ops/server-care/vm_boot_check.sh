@@ -28,6 +28,19 @@ set -uo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage. The
+# refusal stands apart from this script's own verdict
+# exits (0 / 3) documented above.
+. "$SCHED_OPS_DIR/../../platform/argv.sh"
+argv_tool vm_boot_check.sh "VM restart detector: compare the kernel boot id with the previous run's record."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
 REPO_ROOT="$SCHED_REPO_ROOT"
 STATE_FILE="${SCHEDULER_VM_BOOT_STATE:-$REPO_ROOT/state/vm-boot/last_boot_id}"
 BOOT_ID_FILE="${SCHEDULER_VM_BOOT_ID_FILE:-/proc/sys/kernel/random/boot_id}"

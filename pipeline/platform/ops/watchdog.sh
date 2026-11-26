@@ -146,6 +146,19 @@
 set -u
 
 OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Argument surface: none (the unit rides WORKHORSE_UNIT).
+# The empty declaration is parsed by the unified argv
+# contract's bash adapter (contract home:
+# pipeline/platform/argv.py; adapter: argv.sh in the
+# same home, resolved from this script's own location):
+# any argument is a usage refusal (exit 2); --help
+# prints the generated usage.
+. "$OPS_DIR/../argv.sh"
+argv_tool watchdog.sh "The per-unit watchdog ladder: one ladder per systemd unit, selected by WORKHORSE_UNIT."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 ROOT="$(cd "$OPS_DIR/../../.." && pwd)"
 UNIT="${WORKHORSE_UNIT:-workhorse}"
 STATE_DIR="$ROOT/pipeline/platform/var"
