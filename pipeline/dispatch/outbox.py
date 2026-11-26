@@ -90,7 +90,7 @@ class Outbox:
             if ping.get("state") == "pending":
                 kept.append(ping)
                 continue
-            raw = ping.get("acked_at") or ping.get("created")
+            raw = ping.get("acked_at") or ping.get("voided_at") or ping.get("created")
             try:
                 stamp = parse_iso(raw) if raw else None
             except (TypeError, ValueError, AttributeError):
@@ -207,6 +207,7 @@ class Outbox:
                 if ping["job_id"] == job_id and ping["state"] == "pending":
                     ping["state"] = "void"
                     ping["void_reason"] = reason
+                    ping["voided_at"] = iso(datetime.now(UTC))
                     count += 1
                     self._log("ping_voided", ping_id=ping["id"], job_id=job_id, reason=reason)
             if count:
