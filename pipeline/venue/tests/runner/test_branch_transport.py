@@ -384,7 +384,16 @@ def _probe_home(tmp_path, rewrite):
     (ssh_dir / "id_github").write_text("fake key\n")
     (ssh_dir / "known_hosts_github").write_text(
         "github.com ssh-ed25519 " + GITHUB_PUBLISHED["ssh-ed25519"] + "\n")
-    env = dict(os.environ, HOME=str(home))
+    # Git's global config is not HOME-scoped on every
+    # machine (a GIT_CONFIG_GLOBAL baked into the
+    # environment overrides the home derivation), so the
+    # fixture homes pin it explicitly — here and at every
+    # env this file builds for a git consumer — or the
+    # plant probes read and write the machine's real
+    # global config and "missing" is never missing.
+    env = dict(os.environ, HOME=str(home),
+               GIT_CONFIG_GLOBAL=str(home / ".gitconfig"),
+               GIT_CONFIG_NOSYSTEM="1")
 
     def git_config(*args):
         subprocess.run(["git", "config", "--global", *args], env=env, check=True, capture_output=True)
@@ -415,6 +424,8 @@ def _execute_probe(tmp_path, driver_text, home):
     driver = tmp_path / "probe-driver.py"
     driver.write_text(driver_text)
     env = dict(os.environ, HOME=str(home),
+               GIT_CONFIG_GLOBAL=str(home / ".gitconfig"),
+               GIT_CONFIG_NOSYSTEM="1",
                PATH=str(_fake_ssh_bin(tmp_path)) + os.pathsep + os.environ["PATH"])
     r = subprocess.run([sys.executable, str(driver)], capture_output=True, text=True, env=env)
     assert r.returncode == 0, r.stderr
@@ -457,6 +468,8 @@ def _run_plant(tmp_path, extra_bin=None):
     (up / "known_hosts_github").write_text(PINNED_HOSTS.read_text())
     dirs = ([extra_bin] if extra_bin else []) + [_fake_ssh_bin(tmp_path)]
     env = dict(os.environ, HOME=str(home),
+               GIT_CONFIG_GLOBAL=str(home / ".gitconfig"),
+               GIT_CONFIG_NOSYSTEM="1",
                PATH=os.pathsep.join([str(d) for d in dirs] + [os.environ["PATH"]]),
                SHELL_JOB_UPLOADS=str(up), SHELL_JOB_OUT=str(tmp_path / "plant-out"))
     r = subprocess.run(["bash", str(PLANT_SCRIPT)], capture_output=True, text=True, env=env)
@@ -494,7 +507,9 @@ def test_plant_script_reports_ok_with_its_config_read_back(tmp_path):
     r, home = _run_plant(tmp_path)
     assert r.returncode == 0, r.stdout + r.stderr
     assert "PLANT OK" in r.stdout
-    env = dict(os.environ, HOME=str(home))
+    env = dict(os.environ, HOME=str(home),
+               GIT_CONFIG_GLOBAL=str(home / ".gitconfig"),
+               GIT_CONFIG_NOSYSTEM="1")
     rewrite = subprocess.run(
         ["git", "config", "--global", "--get", "url.git@github.com:.insteadOf"],
         env=env, capture_output=True, text=True).stdout.strip()
