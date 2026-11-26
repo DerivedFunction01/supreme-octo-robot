@@ -45,9 +45,10 @@ target, revival is tunnel-shaped, not port-shaped: a port
 that answers with no SSH banner behind it is a forwarder
 holding a dead credential — it is killed and relaunched —
 and every healthy ensure restocks the pin from the calling
-process's own credential, but only with a value that has
-just CONNECT-verified against `fwd_dest`: an empty or
-unverified value never overwrites a live pin.
+process's own credential under refresh_pin's stocking rule:
+an empty value never lands, a CONNECT-refused (407) value
+never lands, and a value whose verification is inconclusive
+lands because an unreachable proxy is not proof of death.
 """
 
 import base64
@@ -208,18 +209,24 @@ def _pin_value(pin: Path) -> str:
     return ""
 
 
-def _connect_verifies(proxy_url: str, dest: tuple[str, int]) -> bool:
-    """Whether one proxy credential CONNECTs to the forwarder's
-    destination right now: a 200 from the proxy's tailnet route,
-    nothing less. The credential itself is never logged."""
+def _connect_verdict(proxy_url: str, dest: tuple[str, int]) -> str:
+    """The three-way verdict on one proxy credential CONNECTed
+    to the forwarder's destination: "established" (a 200 from
+    the proxy's tailnet route), "refused" (a 407 — the proxy
+    rejecting the credential itself, the one definite death),
+    or "inconclusive" (anything else: no credential to test,
+    the proxy unreachable from this process, a timeout, a
+    short or foreign response — none of it proof the
+    credential is dead). The credential itself is never
+    logged."""
     u = urllib.parse.urlparse(proxy_url or "")
     if not u.username or not u.hostname:
-        return False
+        return "inconclusive"
     cred = f"{u.username}:{u.password or ''}"
     try:
         remote = socket.create_connection((u.hostname, _PROXY_TAILNET_PORT), timeout=10)
     except OSError:
-        return False
+        return "inconclusive"
     try:
         auth = base64.b64encode(cred.encode()).decode()
         remote.sendall(
@@ -230,24 +237,44 @@ def _connect_verifies(proxy_url: str, dest: tuple[str, int]) -> bool:
         while b"\r\n\r\n" not in resp:
             chunk = remote.recv(4096)
             if not chunk:
-                return False
+                return "inconclusive"
             resp += chunk
-        return b" 200 " in resp.split(b"\r\n")[0]
+        status = resp.split(b"\r\n")[0]
+        if b" 200 " in status:
+            return "established"
+        if b" 407 " in status or status.endswith(b" 407"):
+            return "refused"
+        return "inconclusive"
     except OSError:
-        return False
+        return "inconclusive"
     finally:
         remote.close()
+
+
+def _connect_verifies(proxy_url: str, dest: tuple[str, int]) -> bool:
+    """Whether one proxy credential CONNECTs to the forwarder's
+    destination right now: a 200 from the proxy's tailnet route,
+    nothing less. The credential itself is never logged."""
+    return _connect_verdict(proxy_url, dest) == "established"
 
 
 def refresh_pin(target: dict, env: dict | None = None) -> bool:
     """Restock a forwarder target's pin from the calling
     process's own HTTPS_PROXY — the refresh-on-dispatch writer.
-    A value lands only after it CONNECT-verifies against the
-    target's `fwd_dest`; an empty or unverified value leaves
-    the pin untouched, so a shell whose environment carries no
-    credential (the scheduler server's, for one) can never
-    blank a live pin. True when the pin already holds or now
-    holds the caller's verified credential."""
+
+    The stocking rule: the candidate is CONNECT-verified
+    against the target's `fwd_dest` and the verdict decides.
+    A 407 is a definite dead credential — the proxy itself
+    rejected it — and is never stocked. An established
+    candidate is stocked. An inconclusive verification (the
+    proxy unreachable from this shell, a timeout, a foreign
+    response) is not proof of death, so the caller's own
+    fresh credential is stocked rather than stranding the pin
+    on an older value the rotation may already have killed.
+    An empty value never lands, so a shell whose environment
+    carries no credential (the scheduler server's, for one)
+    can never blank a live pin. True when the pin already
+    holds or now holds the caller's credential."""
     pin = _fwd_pin_path(target)
     dest = _fwd_dest(target)
     if pin is None or dest is None:
@@ -257,7 +284,7 @@ def refresh_pin(target: dict, env: dict | None = None) -> bool:
         return False
     if candidate == _pin_value(pin):
         return True
-    if not _connect_verifies(candidate, dest):
+    if _connect_verdict(candidate, dest) == "refused":
         return False
     try:
         lines = [ln for ln in pin.read_text().splitlines() if not ln.strip().startswith("HTTPS_PROXY=")] if pin.exists() else []

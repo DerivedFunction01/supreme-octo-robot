@@ -3,6 +3,11 @@
 
 Usage: local-fwd-beacon [--venue-root PATH]
 
+The argv is a declared surface on the unified argument
+contract (pipeline/platform/argv.py): an unknown flag, a
+missing --venue-root value, or a surplus positional is a
+loud usage refusal (exit 2), never silently ignored.
+
 The runtime proxy issues a fresh credential per shell and
 issued credentials die at unpredictable times, so a local
 forwarder target's pin rots between dispatches and the
@@ -30,11 +35,39 @@ import _load  # noqa: E402
 lease = _load._exec_package("lease", _load.REPO / "sync" / "lease")
 local_venue = lease.local_venue
 
+_argv = _load._exec("platform_argv", _load.REPO.parent / "platform" / "argv.py")
+
+# The declared surface: the one flag the beacon takes, on
+# the unified contract — no membership tests, no index takes.
+DECLARATION = {
+    "name": "local-fwd-beacon",
+    "summary": "Restock each local forwarder target's pin from this shell's credential, then take the standing live reading.",
+    "flags": {
+        "venue-root": {"takes_value": True, "help": "venue repo root (default: this repo)"},
+    },
+}
+
+
+def _parse(argv: list[str]) -> dict:
+    """The contract parse of the beacon's argv: the result
+    dict ({"help": ...} when help was requested). Raises
+    UsageError on any refusal."""
+    return _argv.parse(DECLARATION, list(argv))
+
 
 def main(argv: list[str]) -> int:
+    try:
+        parsed = _parse(argv)
+    except _argv.UsageError as exc:
+        print(f"local-fwd-beacon: {exc}", file=sys.stderr)
+        print(_argv.help_text(DECLARATION), file=sys.stderr, end="")
+        return _argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
     repo = _load.REPO
-    if "--venue-root" in argv:
-        repo = Path(argv[argv.index("--venue-root") + 1]).resolve()
+    if parsed["flags"].get("venue-root"):
+        repo = Path(parsed["flags"]["venue-root"]).resolve()
     targets = {
         tid: t
         for tid, t in local_venue.local_targets(repo).items()

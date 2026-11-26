@@ -5,9 +5,12 @@ per shell and die at unpredictable times, so a forwarder can
 hold only dead credentials while its process and port stay
 up — the old port-shaped ensure read that as healthy forever,
 and dispatches reset at the SSH handshake. The specimens pin
-the cure's bounds against fakes: the pin restocks only from
-the caller's own CONNECT-verified credential (an empty or
-unverified value never overwrites a live pin), and ensure
+the cure's bounds against fakes: the pin restocks from the
+caller's own credential under the stocking rule (an empty
+value never lands, a CONNECT-refused 407 value never lands,
+an established value lands, and an inconclusive verification
+lands because an unreachable proxy is not proof of death),
+and ensure
 treats port-up/banner-down as a stale forwarder — refresh
 first, kill and relaunch only when the banner still does not
 read — while a target without forwarder fields keeps the
@@ -38,7 +41,7 @@ def test_refresh_writes_a_verified_candidate_and_keeps_other_lines(repo, tmp_pat
     lv = lease.local_venue
     pin = tmp_path / "pin.env"
     pin.write_text(f"OTHER=1\nHTTPS_PROXY={STALE}\n")
-    monkeypatch.setattr(lv, "_connect_verifies", lambda url, dest: url == CAND)
+    monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: "established" if url == CAND else "refused")
     assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": CAND}) is True
     text = pin.read_text()
     assert f"HTTPS_PROXY={CAND}" in text
@@ -51,19 +54,38 @@ def test_refresh_never_overwrites_with_an_empty_value(repo, tmp_path, monkeypatc
     lv = lease.local_venue
     pin = tmp_path / "pin.env"
     pin.write_text(f"HTTPS_PROXY={STALE}\n")
-    monkeypatch.setattr(lv, "_connect_verifies", lambda url, dest: True)
+
+    def no_verdict(url, dest):
+        raise AssertionError("an empty candidate was verified")
+
+    monkeypatch.setattr(lv, "_connect_verdict", no_verdict)
     assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": ""}) is False
     assert lv.refresh_pin(_fwd_target(pin), env={}) is False
     assert pin.read_text() == f"HTTPS_PROXY={STALE}\n"
 
 
-def test_refresh_never_overwrites_with_an_unverified_value(repo, tmp_path, monkeypatch):
+def test_refresh_never_overwrites_with_a_refused_candidate(repo, tmp_path, monkeypatch):
+    """A 407 is a definite dead credential: never stocked,
+    however fresh the shell that carries it."""
     lv = lease.local_venue
     pin = tmp_path / "pin.env"
     pin.write_text(f"HTTPS_PROXY={STALE}\n")
-    monkeypatch.setattr(lv, "_connect_verifies", lambda url, dest: False)
+    monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: "refused")
     assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": CAND}) is False
     assert pin.read_text() == f"HTTPS_PROXY={STALE}\n"
+
+
+def test_refresh_stocks_an_inconclusive_candidate(repo, tmp_path, monkeypatch):
+    """A network error is not proof of death: when the
+    verification cannot conclude, the caller's own fresh
+    credential is stocked rather than stranding the pin on
+    an older value the rotation may already have killed."""
+    lv = lease.local_venue
+    pin = tmp_path / "pin.env"
+    pin.write_text(f"HTTPS_PROXY={STALE}\n")
+    monkeypatch.setattr(lv, "_connect_verdict", lambda url, dest: "inconclusive")
+    assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": CAND}) is True
+    assert pin.read_text() == f"HTTPS_PROXY={CAND}\n"
 
 
 def test_refresh_noops_when_the_pin_already_holds_the_candidate(repo, tmp_path, monkeypatch):
@@ -71,11 +93,64 @@ def test_refresh_noops_when_the_pin_already_holds_the_candidate(repo, tmp_path, 
     pin = tmp_path / "pin.env"
     pin.write_text(f"HTTPS_PROXY={CAND}\n")
 
-    def no_verify(url, dest):
+    def no_verdict(url, dest):
         raise AssertionError("a stocked pin was re-verified")
 
-    monkeypatch.setattr(lv, "_connect_verifies", no_verify)
+    monkeypatch.setattr(lv, "_connect_verdict", no_verdict)
     assert lv.refresh_pin(_fwd_target(pin), env={"HTTPS_PROXY": CAND}) is True
+
+
+class _FakeSock:
+    def __init__(self, chunks):
+        self._chunks = list(chunks)
+        self.sent = b""
+        self.closed = False
+
+    def sendall(self, data):
+        self.sent += data
+
+    def recv(self, _n):
+        return self._chunks.pop(0) if self._chunks else b""
+
+    def close(self):
+        self.closed = True
+
+
+def _script_proxy(monkeypatch, lv, chunks):
+    monkeypatch.setattr(lv.socket, "create_connection", lambda addr, timeout=0: _FakeSock(chunks))
+
+
+def test_connect_verdict_classifies_the_proxy_answers(repo, monkeypatch):
+    lv = lease.local_venue
+    dest = ("10.0.0.9", 22)
+    _script_proxy(monkeypatch, lv, [b"HTTP/1.1 200 OK\r\n\r\n"])
+    assert lv._connect_verdict(CAND, dest) == "established"
+    assert lv._connect_verifies(CAND, dest) is True
+    _script_proxy(monkeypatch, lv, [b"HTTP/1.1 407 Proxy Authentication Required\r\n\r\n"])
+    assert lv._connect_verdict(CAND, dest) == "refused"
+    assert lv._connect_verifies(CAND, dest) is False
+    _script_proxy(monkeypatch, lv, [b"HTTP/1.1 502 Bad Gateway\r\n\r\n"])
+    assert lv._connect_verdict(CAND, dest) == "inconclusive"
+    _script_proxy(monkeypatch, lv, [])
+    assert lv._connect_verdict(CAND, dest) == "inconclusive"
+
+
+def test_connect_verdict_network_error_and_credentialless_are_inconclusive(repo, monkeypatch):
+    lv = lease.local_venue
+    dest = ("10.0.0.9", 22)
+
+    def dead(addr, timeout=0):
+        raise OSError("proxy unreachable")
+
+    monkeypatch.setattr(lv.socket, "create_connection", dead)
+    assert lv._connect_verdict(CAND, dest) == "inconclusive"
+
+    def no_dial(addr, timeout=0):
+        raise AssertionError("a credentialless value was dialed")
+
+    monkeypatch.setattr(lv.socket, "create_connection", no_dial)
+    assert lv._connect_verdict("http://proxy.invalid", dest) == "inconclusive"
+    assert lv._connect_verdict("", dest) == "inconclusive"
 
 
 def test_refresh_is_inert_without_forwarder_fields(repo, tmp_path):

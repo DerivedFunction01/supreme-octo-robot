@@ -319,6 +319,26 @@ and the container overlay the host's.
   on the tailnet; it does not prove the container is reachable.
 - A shared-device invite link is accepted in the admin console by the
   tailnet owner; an agent cannot accept it from its client-only VM.
+- New connections through a forwarder failing while established work
+  runs on: read the forwarder's state file, `<pin>.state.json` beside
+  the target's pin file (the pin path is the target's `fwd_pin` in the
+  lease config). It records, per credential source (`last_good`,
+  `launch`, `pin_file`) and overall, the last CONNECT outcome
+  (`established` / `proxy-407` / `connect-error`), attempt and failure
+  counts, the open failure streak (`consecutive_failures`,
+  `failing_since`), and — when the instance restarted — a
+  `previous_instance` summary of its predecessor. Source names and
+  outcomes only; no credential material is ever in it. Two shapes:
+  every source failing under one `started_at` is a credential
+  rotation window (the liveness checker reports it as
+  `forwarder-credential-exhaustion` once the streak outlasts a beacon
+  cadence); a `started_at` reset whose `previous_instance` left clean
+  outcomes is an instance death, not exhaustion. The remedy for
+  exhaustion is the recorded one: refresh the pin from a live agent
+  shell (the beacon restocks only under the stocking rule — a 407 is
+  never stocked) and let `ensure_transport` revive the forwarder on
+  the refreshed pin; no hand-editing of the state file — it is the
+  forwarder's own record, rewritten on its next outcome.
 
 ## Status
 

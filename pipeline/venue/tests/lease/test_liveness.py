@@ -171,6 +171,99 @@ def test_local_record_without_a_target_is_binding_missing(tmp_path):
     assert "no local target" in fx.state()["open"]["binding-missing"]["detail"]
 
 
+def _fwd_state(**over):
+    """A forwarder state record in the shape
+    local_compute_fwd.py writes: every credential source
+    failing, a streak open for twenty minutes."""
+    failing = {"last_outcome": "proxy-407", "last_at": iso(now() - timedelta(minutes=20)), "attempts": 4, "failures": 4}
+    state = {
+        "target": "10.0.0.9:22",
+        "listen_port": 2222,
+        "started_at": iso(now() - timedelta(hours=1)),
+        "sources": {
+            "last_good": dict(failing),
+            "launch": dict(failing, last_outcome="connect-error"),
+            "pin_file": dict(failing),
+        },
+        "last_outcome": "failed",
+        "last_at": iso(now() - timedelta(minutes=20)),
+        "consecutive_failures": 12,
+        "failing_since": iso(now() - timedelta(minutes=20)),
+        "previous_instance": None,
+    }
+    state.update(over)
+    return state
+
+
+def _fwd_fx(tmp_path, state):
+    """A local record whose target is a forwarder — the lease
+    config names fwd_pin/fwd_dest — with the forwarder's
+    state file beside the pin (or none, when state is None).
+    The pulse is failing, as it is whenever the tunnel is
+    dark."""
+    fx = Fixture(tmp_path)
+    fx.record(venue="local", host=None, shape="local", last_pulse_result="failed")
+    fx.gate_state(contact_ok=True, blocked=False)
+    pin = fx.root / "fwd-pin.env"
+    pin.write_text("HTTPS_PROXY=http://x:x@proxy.invalid\n")
+    cfg_dir = fx.root / "config"
+    cfg_dir.mkdir(parents=True, exist_ok=True)
+    (cfg_dir / "lease.json").write_text(json.dumps({
+        "venue_targets": {"local": {
+            "host": "127.0.0.1", "port": 2222, "user": "agent", "session": SESSION,
+            "fwd_pin": str(pin), "fwd_dest": ["10.0.0.9", 22],
+        }},
+        "venue_shapes": {"local": [{"id": "local", "label": "Local machine"}]},
+    }))
+    if state is not None:
+        Path(str(pin) + ".state.json").write_text(json.dumps(state))
+    return fx
+
+
+def test_forwarder_exhaustion_replaces_pulse_failing(tmp_path):
+    fx = _fwd_fx(tmp_path, _fwd_state())
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "forwarder-credential-exhaustion" in r.stdout
+    open_now = fx.state()["open"]
+    assert "forwarder-credential-exhaustion" in open_now
+    assert "pulse-failing" not in open_now
+    r2 = fx.run(SESSION)
+    assert r2.returncode == 0 and r2.stdout == "", "a persisting finding must not re-speak"
+
+
+def test_forwarder_recent_established_clears_the_pulse_finding(tmp_path):
+    state = _fwd_state(
+        last_outcome="established",
+        last_at=iso(now() - timedelta(minutes=2)),
+        consecutive_failures=0,
+        failing_since=None,
+    )
+    fx = _fwd_fx(tmp_path, state)
+    r = fx.run(SESSION)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert fx.state()["open"] == {}
+
+
+def test_forwarder_fresh_streak_is_not_yet_exhaustion(tmp_path):
+    state = _fwd_state(
+        last_at=iso(now() - timedelta(minutes=2)),
+        consecutive_failures=2,
+        failing_since=iso(now() - timedelta(minutes=2)),
+    )
+    fx = _fwd_fx(tmp_path, state)
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "pulse-failing" in r.stdout
+    assert "forwarder-credential-exhaustion" not in r.stdout
+    assert "forwarder-credential-exhaustion" not in fx.state()["open"]
+
+
+def test_local_pulse_failing_stands_without_a_forwarder_state(tmp_path):
+    fx = _fwd_fx(tmp_path, None)
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "pulse-failing" in r.stdout
+    assert "forwarder-credential-exhaustion" not in r.stdout
+
+
 def test_host_divergence(tmp_path):
     fx = healthy(tmp_path)
     fx.bind(host="8080-m-hm-test-zzzz.prod.r.colab.dev")

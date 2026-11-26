@@ -37,7 +37,16 @@ from the gate state (contact_ok false since first_seen),
 and the funnel's served binding state (var/binding-state
 .json): a damaged CLI session-binding store serves as
 binding-damaged, so a fleet-wide blindness reads as its
-own finding rather than as every session missing.
+own finding rather than as every session missing. For a
+local record whose target is a forwarder, the forwarder's
+own state file (<pin>.state.json, written by the forwarder
+beside its pin) is read too: every credential source
+failing over a sustained window serves as
+forwarder-credential-exhaustion in place of the bare
+pulse-failing it explains, and a recently established
+tunnel in that record is positive evidence the route is
+alive, clearing the pulse finding the tunnel's health
+contradicts.
 Runner-side work facts (runs in flight on the session, a
 pending demand) are recorded in the state file for the
 escalation body's context; judging whether the owning
@@ -60,6 +69,12 @@ writer = _load.platform_writer()
 
 APPROVAL_ESCALATE_S = int(os.environ.get("COLAB_LIVENESS_APPROVAL_ESCALATE_S", "1800"))
 PULSE_STALE_S = int(os.environ.get("COLAB_LIVENESS_PULSE_STALE_S", "1800"))
+# The forwarder window: on the order of the beacon cadence
+# (the beacon restocks forwarder pins every ten minutes), so
+# a credential-exhaustion reading must outlast one restock
+# cycle before it speaks, and an established tunnel counts
+# as recent route evidence for the same span.
+FWD_EXHAUSTION_S = int(os.environ.get("COLAB_LIVENESS_FWD_EXHAUSTION_S", "600"))
 SESSION_GRACE_S = int(os.environ.get("COLAB_LIVENESS_SESSION_GRACE_S", "900"))
 TERMINAL_RUN_STATES = {"complete", "failed", "orphaned"}
 
@@ -107,17 +122,17 @@ def binding_host(session: str):
     return urlparse(url if "://" in url else f"https://{url}").hostname, True
 
 
-def local_target_present(rec) -> bool:
-    """A local-venue record's binding is its configured SSH
-    target, not the CLI session binding: present when a target
-    resolves for the record — its own target id, its shape's
-    `target` binding, or the venue's only target. The lease
-    config is a local file (derived from the var dir's parent,
-    the same root the record lives under), so the checker's
-    no-dial rule holds."""
+def local_target_for(rec):
+    """The configured SSH target a local-venue record binds
+    through, or None: the record's own target id, else its
+    shape's `target` binding, else the venue's only target
+    (or the "local" one). The lease config is a local file
+    (derived from the var dir's parent, the same root the
+    record lives under), so the checker's no-dial rule
+    holds."""
     cfg = _load(liveness_entry.var_dir(REPO).parent / "config" / "lease.json", {})
     if not isinstance(cfg, dict):
-        return False
+        return None
     block = (cfg.get("venue_targets") or {}).get("local")
     targets = {}
     if isinstance(block, dict) and block.get("host") and block.get("user"):
@@ -125,14 +140,78 @@ def local_target_present(rec) -> bool:
     elif isinstance(block, dict):
         targets = {k: v for k, v in block.items() if isinstance(v, dict) and v.get("host") and v.get("user")}
     if not targets:
-        return False
+        return None
     if rec.get("target") in targets:
-        return True
+        return targets[rec.get("target")]
     shapes = (cfg.get("venue_shapes") or {}).get("local") or []
     for entry in shapes:
         if isinstance(entry, dict) and entry.get("id") == rec.get("shape") and entry.get("target") in targets:
-            return True
-    return len(targets) == 1 or "local" in targets
+            return targets[entry.get("target")]
+    if len(targets) == 1:
+        return next(iter(targets.values()))
+    return targets.get("local")
+
+
+def local_target_present(rec) -> bool:
+    """A local-venue record's binding is its configured SSH
+    target, not the CLI session binding: present when a target
+    resolves for the record."""
+    return local_target_for(rec) is not None
+
+
+def forwarder_reading(now, rec):
+    """(exhaustion detail or None, route-alive flag) from the
+    forwarder state file of the record's target — the
+    `<pin>.state.json` the forwarder writes beside its pin
+    (local_compute_fwd.py). Exhaustion: a failing streak is
+    open, every credential source the instance has attempted
+    last failed (proxy-407 or connect-error), and the streak
+    has run at least FWD_EXHAUSTION_S. Route-alive: the
+    record's last overall outcome is an established tunnel
+    inside the same window — positive evidence from the
+    forwarder's own record, read as a local file, never a
+    dial."""
+    target = local_target_for(rec)
+    pin = target.get("fwd_pin") if isinstance(target, dict) else None
+    if not pin:
+        return None, False
+    state = _load(Path(str(pin) + ".state.json"), {})
+    if not isinstance(state, dict) or not state:
+        return None, False
+    last_at = _dt(state.get("last_at"))
+    alive = (
+        state.get("last_outcome") == "established"
+        and last_at is not None
+        and 0 <= _age_s(now, last_at) <= FWD_EXHAUSTION_S
+    )
+    failing_since = _dt(state.get("failing_since"))
+    sources = state.get("sources") if isinstance(state.get("sources"), dict) else {}
+    attempted = [
+        entry for entry in sources.values()
+        if isinstance(entry, dict) and (entry.get("attempts") or 0) > 0
+    ]
+    all_failing = bool(attempted) and all(
+        entry.get("last_outcome") in ("proxy-407", "connect-error") for entry in attempted
+    )
+    if (
+        not alive
+        and all_failing
+        and failing_since is not None
+        and (state.get("consecutive_failures") or 0) > 0
+        and _age_s(now, failing_since) >= FWD_EXHAUSTION_S
+    ):
+        outcomes = ", ".join(
+            f"{name}={entry.get('last_outcome')}"
+            for name, entry in sorted(sources.items())
+            if isinstance(entry, dict) and (entry.get("attempts") or 0) > 0
+        )
+        detail = (
+            f"forwarder credential exhaustion: every credential source failing "
+            f"for {_age_s(now, failing_since)}s (since {state.get('failing_since')}, "
+            f"{state.get('consecutive_failures')} consecutive failures; {outcomes})"
+        )
+        return detail, False
+    return None, alive
 
 
 def find_record(session: str):
@@ -186,6 +265,18 @@ def compute_findings(now, rec, state) -> dict:
             findings["pulse-stale"] = "no pulse verdict on the record"
     elif _age_s(now, pulse_at) > PULSE_STALE_S and acquired and _age_s(now, acquired) > SESSION_GRACE_S:
         findings["pulse-stale"] = f"no pulse verdict for {_age_s(now, pulse_at)}s (last at {rec.get('last_pulse_at')})"
+    if venue == "local":
+        # The forwarder's own record explains or contradicts
+        # the pulse: exhaustion over the window is the finding
+        # (the pulse failure is its symptom), and a recently
+        # established tunnel is positive route evidence that
+        # clears the pulse finding.
+        exhaustion, route_alive = forwarder_reading(now, rec)
+        if exhaustion is not None:
+            findings.pop("pulse-failing", None)
+            findings["forwarder-credential-exhaustion"] = exhaustion
+        elif route_alive:
+            findings.pop("pulse-failing", None)
     gate = _load(gate_state_path(), {})
     hosts = gate.get("hosts", {}) if isinstance(gate, dict) else {}
     gmeta = hosts.get(rec.get("host") or "")
