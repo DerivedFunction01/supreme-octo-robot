@@ -37,8 +37,22 @@ import sys
 from cli import paths as _paths
 from cli.common import ROOT
 from cli.ops_client import (
-    UNREACHABLE, _ops_caller, _ops_post, _ops_report, _take_flag,
-    resolve_ops_token, store_ops_token)
+    CALLER_FLAG, UNREACHABLE, _ops_post, _ops_report, caller_of,
+    parse_decl, resolve_ops_token, store_ops_token)
+
+TOKEN_DECL = {
+    "name": "sched connector-token",
+    "summary": "mint, re-issue, or revoke a token caller",
+    "flags": {"caller": CALLER_FLAG,
+              "scopes": {"takes_value": True,
+                         "help": "comma-separated scope names"},
+              "save-client": {"help": "also save the token into "
+                                      "this client's ops token home"},
+              "revoke": {"help": "revoke the named caller "
+                                 "instead of minting"}},
+    "positionals": [{"name": "name", "required": True,
+                     "help": "the caller name to mint or revoke"}],
+}
 
 VALID_SCOPES = ("read", "write-state", "send", "bridge", "exec")
 
@@ -139,22 +153,14 @@ def cmd_connector_token(argv):
     (server/serving/connector.py): the raw token prints once here;
     only its SHA-256 reaches the live config, read fresh per
     call, so changes are immediate."""
-    revoke = "--revoke" in argv
-    argv = [a for a in argv if a != "--revoke"]
-    save_client = "--save-client" in argv
-    argv = [a for a in argv if a != "--save-client"]
-    scopes = []
-    if "--scopes" in argv:
-        i = argv.index("--scopes")
-        scopes = [s for s in argv[i + 1].split(",") if s]
-        argv = argv[:i] + argv[i + 2:]
-    caller = _ops_caller(argv)
-    _c, argv = _take_flag(argv, "--caller")
-    if not argv:
-        print("usage: sched connector-token [--caller X] <name> "
-              "--scopes a,b [--save-client] | --revoke")
-        return 2
-    name = argv[0]
+    result, code = parse_decl(TOKEN_DECL, argv)
+    if result is None:
+        return code
+    revoke = result["flags"]["revoke"]
+    save_client = result["flags"]["save-client"]
+    scopes = [s for s in (result["flags"]["scopes"] or "").split(",") if s]
+    caller = caller_of(result)
+    name = result["positionals"]["name"]
     config_path = os.path.join(ROOT, "config.json")
     try:
         with open(config_path, encoding="utf-8") as fh:

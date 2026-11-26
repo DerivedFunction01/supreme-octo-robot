@@ -16,6 +16,17 @@ import subprocess
 import sys
 import time
 
+import importlib.util as _importlib_util
+
+_here = os.path.dirname(os.path.abspath(__file__))
+_paths_spec = _importlib_util.spec_from_file_location(
+    "ops_paths",
+    next(_p for _p in (os.path.join(os.path.dirname(_here), "paths.py"),
+                       os.path.join(_here, "paths.py"))
+         if os.path.isfile(_p)))
+paths = _importlib_util.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(paths)
+
 CORE = ["python_write_new", "python_overwrite", "shell_redirection",
         "git_object_write", "sqlite_row_write"]
 CONTENT = "canary-v1\n"
@@ -182,8 +193,20 @@ MECHANISMS = [
 ]
 
 
+DECL = {
+    "name": "flap_canary",
+    "summary": "Run the write-mechanism matrix against a "
+               "scratch root.",
+    "positionals": [{"name": "root", "required": True,
+                     "help": "scratch root"}],
+}
+
+
 def main():
-    root = sys.argv[1]
+    result, code = paths.parse_argv(DECL, sys.argv[1:])
+    if result is None:
+        return code
+    root = result["positionals"]["root"]
     try:
         os.makedirs(root, exist_ok=True)
         os.listdir(root)

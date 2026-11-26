@@ -21,7 +21,6 @@ an escalation mint prints one DRAIN line.
 
 Stdlib only; paths derived from this file's location.
 """
-import argparse
 import os
 import sys
 from datetime import datetime, timezone
@@ -111,9 +110,15 @@ def run(bridge_dir=BRIDGE_DIR, state_dir=STATE_DIR,
         now=now, outbox=outbox)
 
 
+DECL = {"name": "bridge_wake",
+        "summary": "One bridge-wake minting pass. "
+                   "Takes no arguments."}
+
+
 def main(argv):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.parse_args(argv)
+    _result, code = paths.parse_argv(DECL, argv)
+    if _result is None:
+        return code
     for line in run():
         print(line)
     return 0

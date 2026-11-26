@@ -254,37 +254,37 @@
   {
    "path": "pipeline/scheduling/bin/harness",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/bin/sched",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/cli/adopt.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/cli/connector_token.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/cli/ops_client.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/cli/ops_cmds.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/cli/state_cmds.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/examples/example_daily_report.sh",
@@ -304,27 +304,27 @@
   {
    "path": "pipeline/scheduling/ops/bridge/bridge_wake.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/flap/flap_canary.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/flap/flap_probe.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/flap/flap_series.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/flap/flap_watch.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/paths.sh",
@@ -339,7 +339,7 @@
   {
    "path": "pipeline/scheduling/ops/proof/proof_run.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/server-care/keeper_poller.sh",
@@ -349,7 +349,7 @@
   {
    "path": "pipeline/scheduling/ops/server-care/restart_reconcile.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/server-care/vm_boot_check.sh",
@@ -389,12 +389,12 @@
   {
    "path": "pipeline/scheduling/ops/watches/file_registry.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/watches/local_test_watch.py",
    "family": "scheduling",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/ops/watches/memory_watchdog_check.sh",

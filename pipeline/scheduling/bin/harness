@@ -42,6 +42,7 @@ as this one file:
 Exit codes mirror the request: 0 ok, 3 still queued after the
 wait, 4 unreachable, otherwise the server's refusal/error.
 """
+import importlib.util
 import json
 import os
 import sys
@@ -55,6 +56,83 @@ TRANSPORT = os.environ.get("HARNESS_TRANSPORT") or "http"
 FERRY_OUT = os.environ.get("HARNESS_FERRY_OUT") or ""
 FERRY_IN = os.environ.get("HARNESS_FERRY_IN") or ""
 FERRY_WAIT = int(os.environ.get("HARNESS_FERRY_WAIT") or 120)
+
+
+# The verb surface, declared once for the unified argv
+# parser (pipeline/platform/argv.py, the contract home):
+# both value forms parse identically (--wait= is honoured),
+# an unknown verb or flag is a usage refusal, and the
+# argument-free verbs refuse trailing tokens.
+_POS = lambda name, **kw: dict({"name": name}, **kw)  # noqa: E731
+DECL = {
+    "name": "harness",
+    "summary": "Client for the harness connector.",
+    "verbs": {
+        "tools": {},
+        "call": {
+            "summary": "call a tool (bridged tools are polled "
+                       "to completion)",
+            "flags": {"wait": {"takes_value": True,
+                               "help": "seconds to poll a queued "
+                                       "call (default 150, "
+                                       "0 = no wait)"}},
+            "positionals": [_POS("tool", required=True),
+                            _POS("args", help="args JSON")],
+        },
+        "chat-list": {},
+        "chat-tail": {"positionals": [_POS("chat-id", required=True),
+                                      _POS("limit")]},
+        "chat-send": {"positionals": [_POS("chat-id", required=True),
+                                      _POS("text", required=True)]},
+        "permissions": {},
+        "ack": {"positionals": [_POS("ping-id", required=True)]},
+        "state-read": {},
+        "state-write": {"positionals": [_POS("file", required=True)]},
+        "nudge-append": {"positionals": [_POS("table", required=True),
+                                         _POS("record", required=True)]},
+        "reference": {},
+        "workbench": {"positionals": [_POS("path", required=True)]},
+        "result": {"positionals": [_POS("request-id", required=True)]},
+        "bridge-poll": {},
+        "bridge-list": {},
+        "bridge-send": {"positionals": [_POS("id", required=True)]},
+        "bridge-fulfill": {"positionals": [_POS("id", required=True),
+                                           _POS("result", required=True)]},
+        "bridge-fail": {"positionals": [_POS("id", required=True),
+                                        _POS("error", required=True)]},
+    },
+}
+
+
+def _parse(argv):
+    """(result, None) on a real parse; (None, exit_code)
+    when the invocation settles at the parse layer — the
+    generated help printed (0) or the refusal printed with
+    the generated usage (2). The unified module is loaded
+    by path from the platform layer."""
+    path = os.path.normpath(os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        "..", "..", "platform", "argv.py"))
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", path)
+    if spec is None or not os.path.isfile(path):
+        sys.stderr.write(
+            "harness: the unified argv module is absent "
+            f"({path}); this client requires the pipeline "
+            "tree\n")
+        return None, 2
+    uargv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(uargv)
+    try:
+        result = uargv.parse(DECL, list(argv))
+    except uargv.UsageError as exc:
+        sys.stderr.write(f"{exc}\n")
+        sys.stderr.write(uargv.help_text(DECL))
+        return None, 2
+    if "help" in result:
+        sys.stdout.write(result["help"])
+        return None, 0
+    return result, None
 
 
 def _ferry_request(method, path, payload=None):
@@ -137,18 +215,27 @@ def main(argv):
     if not argv:
         sys.stderr.write(__doc__)
         return 2
-    cmd, rest = argv[0], argv[1:]
+    result, code = _parse(argv)
+    if result is None:
+        return code
+    cmd = result["verb"]
+    pos = result["positionals"]
+    flags = result["flags"]
     if cmd == "tools":
         code, payload = request("GET", "/tools")
         return emit(payload.get("ok", False), payload)
     if cmd == "call":
         wait = 150
-        if "--wait" in rest:
-            i = rest.index("--wait")
-            wait = int(rest[i + 1])
-            rest = rest[:i] + rest[i + 2:]
-        args = json.loads(rest[1]) if len(rest) > 1 else {}
-        ok, payload = call(rest[0], args, wait=wait)
+        if flags.get("wait") is not None:
+            try:
+                wait = int(flags["wait"])
+            except ValueError:
+                sys.stderr.write(
+                    f"harness call: --wait must be an int: "
+                    f"{flags['wait']}\n")
+                return 2
+        args = json.loads(pos["args"]) if pos.get("args") else {}
+        ok, payload = call(pos["tool"], args, wait=wait)
         if payload.get("error") == "still_queued":
             sys.stdout.write(json.dumps(payload, indent=2) + "\n")
             return 3
@@ -157,41 +244,50 @@ def main(argv):
         ok, payload = call("chat_list", {})
         return emit(ok, payload)
     if cmd == "chat-tail":
-        args = {"chat_id": rest[0]}
-        if len(rest) > 1:
-            args["limit"] = int(rest[1])
+        args = {"chat_id": pos["chat-id"]}
+        if pos.get("limit") is not None:
+            try:
+                args["limit"] = int(pos["limit"])
+            except ValueError:
+                sys.stderr.write(
+                    f"harness chat-tail: limit must be an int: "
+                    f"{pos['limit']}\n")
+                return 2
         ok, payload = call("chat_tail", args)
         return emit(ok, payload)
     if cmd == "chat-send":
         ok, payload = call(
-            "chat_send", {"chat_id": rest[0], "text": read_arg(rest[1])})
+            "chat_send", {"chat_id": pos["chat-id"],
+                          "text": read_arg(pos["text"])})
         return emit(ok, payload)
     if cmd == "permissions":
         ok, payload = call("permissions_list", {})
         return emit(ok, payload)
     if cmd == "ack":
-        ok, payload = call("ping_ack", {"ping_id": rest[0]}, wait=0)
+        ok, payload = call("ping_ack", {"ping_id": pos["ping-id"]}, wait=0)
         return emit(ok, payload)
     if cmd == "state-read":
         ok, payload = call("sweeper_state_read", {}, wait=0)
         return emit(ok, payload)
     if cmd == "state-write":
         ok, payload = call(
-            "sweeper_state_write", {"state_text": read_arg(rest[0])}, wait=0)
+            "sweeper_state_write",
+            {"state_text": read_arg(pos["file"])}, wait=0)
         return emit(ok, payload)
     if cmd == "nudge-append":
         ok, payload = call(
             "nudge_append",
-            {"table": rest[0], "record": json.loads(read_arg(rest[1]))}, wait=0)
+            {"table": pos["table"],
+             "record": json.loads(read_arg(pos["record"]))}, wait=0)
         return emit(ok, payload)
     if cmd == "reference":
         ok, payload = call("sweeper_reference_read", {}, wait=0)
         return emit(ok, payload)
     if cmd == "workbench":
-        ok, payload = call("workbench_read", {"path": rest[0]}, wait=0)
+        ok, payload = call("workbench_read", {"path": pos["path"]}, wait=0)
         return emit(ok, payload)
     if cmd == "result":
-        code, payload = request("GET", f"/tools/result/{rest[0]}")
+        code, payload = request("GET", f"/tools/result/{pos['request-id']}")
         return emit(payload.get("status") == "done", payload)
     if cmd == "bridge-poll":
         ok, payload = call("bridge_poll", {}, wait=0)
@@ -242,7 +338,7 @@ def main(argv):
         # mismatch exits 5.
         import hashlib
         import subprocess
-        request_id = rest[0]
+        request_id = pos["id"]
         repo = os.path.dirname(os.path.dirname(
             os.path.realpath(__file__)))
         record_path = os.path.join(
@@ -343,13 +439,14 @@ def main(argv):
     if cmd == "bridge-fulfill":
         ok, payload = call(
             "bridge_fulfill",
-            {"request_id": rest[0], "ok": True,
-             "result": json.loads(read_arg(rest[1]))}, wait=0)
+            {"request_id": pos["id"], "ok": True,
+             "result": json.loads(read_arg(pos["result"]))}, wait=0)
         return emit(ok, payload)
     if cmd == "bridge-fail":
         ok, payload = call(
             "bridge_fulfill",
-            {"request_id": rest[0], "ok": False, "error": rest[1]}, wait=0)
+            {"request_id": pos["id"], "ok": False,
+             "error": pos["error"]}, wait=0)
         return emit(ok, payload)
     sys.stderr.write(f"harness: unknown command {cmd}\n")
     return 2

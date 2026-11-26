@@ -67,29 +67,36 @@ def tail_line(path):
     return lines[-1] if lines else None
 
 
+DECL = {
+    "name": "flap_series",
+    "summary": "Append-only sample series for the flap probe.",
+    "flags": {"file": {"takes_value": True,
+                       "help": "series file (default: "
+                               "state/flap-series.jsonl)"}},
+    "verbs": {
+        "append": {"summary": "validate and append one sample line",
+                   "positionals": [{"name": "line", "required": True}]},
+        "tail": {"summary": "print the last sample line"},
+    },
+}
+
+
 def main(argv=None):
-    argv = list(sys.argv[1:] if argv is None else argv)
-    path = DEFAULT_PATH
-    if argv[:1] == ["--file"]:
-        path = argv[1]
-        argv = argv[2:]
-    if not argv:
-        print(__doc__)
-        return 2
-    verb = argv[0]
-    if verb == "append" and len(argv) == 2:
-        error = append_line(path, argv[1])
+    result, code = paths.parse_argv(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if result is None:
+        return code
+    path = result["flags"]["file"] or DEFAULT_PATH
+    if result["verb"] == "append":
+        error = append_line(path, result["positionals"]["line"])
         if error:
             print(f"flap_series: {error}")
             return 2
         return 0
-    if verb == "tail" and len(argv) == 1:
-        line = tail_line(path)
-        if line:
-            print(line)
-        return 0
-    print(__doc__)
-    return 2
+    line = tail_line(path)
+    if line:
+        print(line)
+    return 0
 
 
 if __name__ == "__main__":

@@ -32,11 +32,19 @@ from server.firing import executor  # noqa: E402
 ROOT = paths.REPO_ROOT
 
 
+DECL = {
+    "name": "proof_run",
+    "summary": "Proof run for one registry entry, in "
+               "whatever context invokes this script.",
+    "positionals": [{"name": "job-id", "required": True}],
+}
+
+
 def main(argv):
-    if len(argv) != 2:
-        print("usage: proof_run.py <job-id>", file=sys.stderr)
-        return 2
-    job_id = argv[1]
+    result, code = paths.parse_argv(DECL, argv[1:])
+    if result is None:
+        return code
+    job_id = result["positionals"]["job-id"]
     entries, errors = registry.load_dir(
         paths.JOBS_DIR, ROOT, anchors=registry.derive_anchors(ROOT)
     )
