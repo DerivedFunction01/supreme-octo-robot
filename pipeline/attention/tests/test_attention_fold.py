@@ -1,4 +1,4 @@
-"""The attention fold (plan 2026-11-26): dispatch
+"""The attention fold: dispatch
 retired, supervision folded to wb + gap-closure.
 
 Pins:

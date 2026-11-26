@@ -56,7 +56,7 @@ DEFAULT_DRAIN_TAIL = (
 
 # The edgar staffing contract, verbatim as data from
 # the programme GOAL.md's class 2 in its cured form
-# (owner order, 2026-11-26): the staffing measure is
+# (owner order): the staffing measure is
 # work-denominated, with a numeric floor — at least
 # 8 distinct register families in active work at all
 # times. The expected count is set by the register's

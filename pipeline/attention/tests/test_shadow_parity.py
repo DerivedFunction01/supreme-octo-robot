@@ -164,7 +164,7 @@ def cron_serial(now):
     """The staffing measure's serial defect at `now`:
     (defect, families, carrying sessions), in the
     cured work-denominated form (owner order,
-    2026-11-26): open family work stands in every
+    cured form): open family work stands in every
     specimen (two edgar-sec todos armed), so the
     defect condition applies directly — fewer
     distinct register families in flight than the
@@ -382,7 +382,7 @@ class StaffingParity(unittest.TestCase):
         # seeded (floor 2) neither side raised a
         # defect; under the cured floor (8 distinct
         # register families in active work at all
-        # times, owner order 2026-11-26) both sides
+        # times, owner order) both sides
         # raise the same defect on the same count:
         # parity is agreement, and the specimen now
         # pins agreement at the cured band. The queue

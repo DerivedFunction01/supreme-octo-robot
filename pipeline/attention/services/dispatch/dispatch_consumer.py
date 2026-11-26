@@ -1,4 +1,4 @@
-"""RETIRED (attention fold, 2026-11-26): the service's
+"""RETIRED (attention fold): the service's
 own dispatch consumer. The tick no longer runs it —
 sends are born settled retired in the waits engine and
 nothing is claimable or enqueueable — and this module

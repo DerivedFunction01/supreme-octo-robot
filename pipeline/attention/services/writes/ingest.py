@@ -244,7 +244,7 @@ def _owner_tail(state: dict, entry: dict) -> bool:
 
 
 def promote_tail_items(state: dict, now: datetime) -> bool:
-    """RETIRED (attention fold, 2026-11-26): the tick no
+    """RETIRED (attention fold): the tick no
     longer calls this — handler-status tails are a frozen
     legacy source, and items copied from wb-owned records
     are not minted here anymore (wb is the record of
@@ -332,7 +332,7 @@ def _ping_since(ping: dict, now: datetime) -> datetime:
 
 
 def ingest_report_pings(state: dict, pings: list, now: datetime) -> bool:
-    """RETIRED (attention fold, 2026-11-26): the tick no
+    """RETIRED (attention fold): the tick no
     longer calls this — scheduler report pings are the
     scheduler's own record, and attention items copied
     from them are not minted here anymore (the fold

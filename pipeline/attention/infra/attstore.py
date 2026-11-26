@@ -122,7 +122,7 @@ def backfill(state: dict) -> dict:
     return state
 
 
-# --- the attention fold (2026-11-26): dispatch retired,
+# --- the attention fold: dispatch retired,
 # supervision folded to wb + gap-closure ---
 
 _FOLD_DEAD_THREAD_IDS = frozenset(
@@ -158,7 +158,7 @@ neither prefix and are untouched."""
 
 def _backfill_attention_fold(state: dict) -> None:
     """One-time, idempotent migration for the attention
-    fold (plan 2026-11-26, steps 1/3/5), riding the load
+    fold (steps 1/3/5), riding the load
     path like every backfill: each leg keys on the
     un-migrated shape, so a second load changes nothing.
 

@@ -125,7 +125,7 @@ class SpecimenWindows(unittest.TestCase):
         # flight at 11:00. Under the first-seeded floor
         # (2) the bands read staffed; under the cured
         # floor (8 distinct register families in active
-        # work at all times, owner order 2026-11-26)
+        # work at all times, owner order)
         # the same window reads as a defect on the
         # floor condition alone. The queue stands
         # nothing here either: its one remaining work

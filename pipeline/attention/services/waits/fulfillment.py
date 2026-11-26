@@ -50,8 +50,8 @@ def _send_state(item: dict, state: dict, decision: dict, now: datetime) -> str:
 
 def _send_terminal(state: dict, decision: dict) -> bool:
     """The decision's send is terminal on the ledger:
-    settled at the dispatch retirement (attention fold,
-    2026-11-26) or suppressed before it. There is no
+    settled at the dispatch retirement (the attention
+    fold) or suppressed before it. There is no
     fulfillment left to await or stall on — the decision
     stands as recorded, terminally."""
     send = next(

@@ -575,7 +575,7 @@ def _tick_pass(store: Store, settings: Settings, lock) -> None:
                 presence["mode"] = "active"
                 presence["expires_at"] = None
                 expired = True
-            # The attention fold (2026-11-26): the tick no
+            # The attention fold: the tick no
             # longer mints shadow items from wb/scheduler
             # records (promote_tail_items / ingest_report_pings
             # are retired — wb is the record of truth), and

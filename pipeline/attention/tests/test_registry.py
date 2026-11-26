@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from attention.services.measure import registry  # noqa: E402
 
 # The edgar staffing contract as ruled in its
-# cured form (owner order, 2026-11-26, in the
+# cured form (owner order, in the
 # programme GOAL.md's class 2: the numeric floor of
 # at least 8 distinct register families in active
 # work at all times; the measure work-denominated —

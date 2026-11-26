@@ -126,7 +126,7 @@ def _deliver_send(state, settings_, now, send, ref="chat:test:1"):
     """Deliver one send by id: stamp the delivery on
     the record, so the next cadence window may re-post
     that row. (The claim+ack path this once drove is
-    retired — attention fold, 2026-11-26: sends are
+    retired — attention fold: sends are
     born settled and nothing claims them. The stamp
     stands the record in the same delivered read state
     these pins measure the actuation ledger against.)"""

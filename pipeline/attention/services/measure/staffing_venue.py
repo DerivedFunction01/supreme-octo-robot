@@ -345,7 +345,7 @@ def _family_rows(state: dict, now: datetime, live: list, idle_since: dict) -> li
     """The family-concurrency measure (owner
     enforcement ruling, carried as the registry's
     staffing contract, cured work-denominated form,
-    2026-11-26): fewer families in flight than the
+    form): fewer families in flight than the
     contract's floor, or one-deep-per-session
     staffing while staffable families wait, or
     prerequisite-due queue work standing unstaffed,
