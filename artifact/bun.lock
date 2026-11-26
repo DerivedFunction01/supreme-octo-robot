@@ -38,7 +38,7 @@
 
     "@chevrotain/types": ["@chevrotain/types@11.1.2", "", {}, "sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw=="],
 
-    "@hatch/space-sdk": ["@hatch/space-sdk@/opt/hatch/skills/spaces/ts-runtime/dist/space-sdk.tgz", { "dependencies": { "bun-plugin-tailwind": "0.0.15", "zod": "4.4.3" }, "peerDependencies": { "@libsql/client": "^0.14", "@tanstack/react-query": "^5", "drizzle-orm": "^0.45", "react": "^18 || ^19", "typescript": "^5" } }, "sha512-JZU1G0pJpFKhpvhh1brgF9NQyowYmqWSS/dqlDhadzlQTsmTlgN65yBX++7iIksJpbwg5vMttD/yI12k83UNkQ=="],
+    "@hatch/space-sdk": ["@hatch/space-sdk@/opt/hatch/skills/spaces/ts-runtime/dist/space-sdk.tgz", { "dependencies": { "bun-plugin-tailwind": "0.0.15", "zod": "4.4.3" }, "peerDependencies": { "@libsql/client": "^0.14", "@tanstack/react-query": "^5", "drizzle-orm": "^0.45", "react": "^18 || ^19", "typescript": "^5" } }, "sha512-4nOoMbuz4vlprD9u+58yjot5pOhz1tlHmgUm1WRp+JNVv0VgyANNQYAfHL1DNSI2uXrEIH5aZ6WgWHVjKgSu8Q=="],
 
     "@iconify/types": ["@iconify/types@2.0.0", "", {}, "sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg=="],
 
