@@ -4,77 +4,77 @@
   {
    "path": "apps/runner/frontend/scripts/check-truncation.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/runner/frontend/scripts/smoke-adapter.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/runner/frontend/scripts/smoke-api-base.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/runner/frontend/scripts/smoke-live.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/runner/frontend/scripts/smoke-relay.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/runner/frontend/scripts/validate-mocks.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/scripts/smoke-api-base.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/check-live.ts",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/check-schemas.ts",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/check-truncation.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/gen-seeds.py",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/live/diff_served.py",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/scheduler/frontend/tools/live/dump_served.py",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/workbench/frontend/scripts/check-truncation.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "apps/workbench/frontend/scripts/validate-mocks.mjs",
    "family": "frontend-scripts",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "check.py",
@@ -89,12 +89,12 @@
   {
    "path": "kit/tools/contrast/core.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "kit/tools/gen-tokens.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "kit/tools/verify-contrast.mjs",
@@ -104,7 +104,7 @@
   {
    "path": "kit/tools/verify-log-payload.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/attention/cli.py",
@@ -154,62 +154,62 @@
   {
    "path": "pipeline/platform/ops/cutover/assemble_registry.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/export_ledger.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/migrate_venue.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/migrate_workrecord.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/mint_tokens.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/preflight.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/provision_config.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/render_units.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/verify_argv_targets.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/verify_endpoints.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/cutover/verify_todo_slugs.py",
    "family": "cutover",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/healthcheck.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/install-links.sh",
@@ -224,12 +224,12 @@
   {
    "path": "pipeline/platform/ops/kit_drift.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/publish_prep.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/publish_proof.py",
@@ -239,7 +239,7 @@
   {
    "path": "pipeline/platform/ops/publish_sync.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/platform/ops/watchdog.sh",
@@ -249,7 +249,7 @@
   {
    "path": "pipeline/registry/seed.py",
    "family": "platform",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/scheduling/bin/harness",
@@ -604,7 +604,7 @@
   {
    "path": "pipeline/venue/ui/server.py",
    "family": "venue",
-   "migrated": false
+   "migrated": true
   },
   {
    "path": "pipeline/venue/ui/ui.sh",
@@ -659,7 +659,7 @@
   {
    "path": "tools/e2e-shard.mjs",
    "family": "js",
-   "migrated": false
+   "migrated": true
   }
  ]
 }

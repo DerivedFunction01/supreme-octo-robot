@@ -16,11 +16,29 @@
 // plus the split the venue layer serves natively. Exits
 // non-zero on any failure.
 
+import { parseOnly, USAGE_EXIT } from "../../../../tools/argv.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
+
+// The unified argv guard (tools/argv.mjs): this tool
+// takes no arguments — any argument is a usage refusal
+// (exit 2) and --help prints the generated help, so an
+// invocation can never fall through to the full job on
+// a stray or mistyped flag.
+const _argvOutcome = parseOnly({ name: "validate-mocks" }, process.argv.slice(2));
+if (!_argvOutcome.ok) {
+  console.error(_argvOutcome.error);
+  console.error(_argvOutcome.usage);
+  process.exit(USAGE_EXIT);
+}
+if ("help" in _argvOutcome) {
+  console.log(_argvOutcome.help);
+  process.exit(0);
+}
+
 
 const here = dirname(fileURLToPath(import.meta.url));
 const frontend = join(here, "..");

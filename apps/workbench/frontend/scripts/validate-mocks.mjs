@@ -23,12 +23,30 @@
 //
 // Run: npm run validate:mocks   (exit 1 on any failure)
 
+import { parseOnly, USAGE_EXIT } from "../../../../tools/argv.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import Ajv2020 from "ajv/dist/2020.js";
+
+// The unified argv guard (tools/argv.mjs): this tool
+// takes no arguments — any argument is a usage refusal
+// (exit 2) and --help prints the generated help, so an
+// invocation can never fall through to the full job on
+// a stray or mistyped flag.
+const _argvOutcome = parseOnly({ name: "validate-mocks" }, process.argv.slice(2));
+if (!_argvOutcome.ok) {
+  console.error(_argvOutcome.error);
+  console.error(_argvOutcome.usage);
+  process.exit(USAGE_EXIT);
+}
+if ("help" in _argvOutcome) {
+  console.log(_argvOutcome.help);
+  process.exit(0);
+}
+
 
 const here = dirname(fileURLToPath(import.meta.url));
 const appRoot = join(here, "..");

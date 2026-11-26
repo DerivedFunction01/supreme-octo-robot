@@ -29,6 +29,7 @@ touched: the store lives in a scratch home, the live service
 on 8796 is never contacted.
 """
 import glob
+import importlib.util
 import json
 import os
 import shutil
@@ -168,8 +169,45 @@ def serve(tree):
     return payloads
 
 
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): the tree and the
+# output path are required positionals; a short or
+# surplus argv is a usage refusal at exit 2, never an
+# IndexError.
+DECL = {
+    "name": "dump-served",
+    "positionals": [
+        {"name": "tree", "required": True},
+        {"name": "out", "required": True},
+    ],
+}
+
+
+def _load_argv():
+    """The unified argv module, loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv",
+        os.path.join(REPO, "pipeline", "platform", "argv.py"))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+
+
 def main():
-    tree, out_path = sys.argv[1], sys.argv[2]
+    outcome = uargv.parse_only(DECL, sys.argv[1:])
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    positionals = outcome["result"]["positionals"]
+    tree, out_path = positionals["tree"], positionals["out"]
     if tree == "pinned" and not PINNED_REPO:
         raise SystemExit(
             "DUMP_SERVED_PINNED_REPO is not set — the pinned "

@@ -9,10 +9,39 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseArgv, UsageError, USAGE_EXIT, helpText } from "../../../tools/argv.mjs";
 
 export const here = join(dirname(fileURLToPath(import.meta.url)), "..");
 export const tokens = JSON.parse(readFileSync(join(here, "..", "tokens", "tokens.json"), "utf8"));
-export const verbose = process.argv.includes("--verbose");
+
+// The entry surface (verify-contrast.mjs, this module's
+// only consumer), parsed by the unified argv adapter:
+// --verbose is the one declared flag; anything else is
+// a usage refusal at exit 2, never silently ignored.
+const DECL = {
+  name: "verify-contrast",
+  flags: {
+    verbose: { help: "print per-pair detail" },
+  },
+};
+function entryVerbose() {
+  try {
+    const parsed = parseArgv(DECL, process.argv.slice(2));
+    if ("help" in parsed) {
+      console.log(helpText(DECL));
+      process.exit(0);
+    }
+    return parsed.flags.verbose;
+  } catch (exc) {
+    if (exc instanceof UsageError) {
+      console.error(exc.message);
+      console.error(helpText(DECL));
+      process.exit(USAGE_EXIT);
+    }
+    throw exc;
+  }
+}
+export const verbose = entryVerbose();
 export const SURFACES = ["canvas", "1", "2", "3", "sunken"];
 
 function lin(channel) {

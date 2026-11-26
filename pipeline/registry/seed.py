@@ -32,8 +32,8 @@ Run from the pipeline root:
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
+
 import json
 import os
 import sys
@@ -231,19 +231,76 @@ def export_forms(registry, out_dir) -> list:
 
 # -- CLI ---------------------------------------------------------
 
+def _load_argv():
+    """The unified argv module, located through the
+    registry paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _paths.PLATFORM_ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration. The export verb's --from flag lands on
+# the namespace as `source`, as argparse's dest did.
+DECL = {
+    "name": "registry.seed",
+    "verbs": {
+        "seed-capture": {
+            "flags": {
+                "holding": {"takes_value": True, "required": True},
+                "to": {"takes_value": True, "required": True},
+            },
+        },
+        "seed-examples": {
+            "flags": {
+                "fixtures": {"takes_value": True, "required": True},
+                "to": {"takes_value": True, "required": True},
+            },
+        },
+        "export": {
+            "flags": {
+                "from": {"takes_value": True, "required": True},
+                "out": {"takes_value": True, "required": True},
+            },
+        },
+    },
+}
+
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    if result["verb"] is not None:
+        merged["verb"] = result["verb"]
+    if "from" in merged:
+        merged["source"] = merged.pop("from")
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(prog="registry.seed")
-    sub = parser.add_subparsers(dest="verb", required=True)
-    cap = sub.add_parser("seed-capture")
-    cap.add_argument("--holding", required=True)
-    cap.add_argument("--to", required=True)
-    ex = sub.add_parser("seed-examples")
-    ex.add_argument("--fixtures", required=True)
-    ex.add_argument("--to", required=True)
-    exp = sub.add_parser("export")
-    exp.add_argument("--from", dest="source", required=True)
-    exp.add_argument("--out", required=True)
-    args = parser.parse_args(argv)
+    args = _parse(argv)
 
     if args.verb == "seed-capture":
         registry = store_mod.Registry(seed_from_capture(args.holding))

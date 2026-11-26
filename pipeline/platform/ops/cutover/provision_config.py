@@ -27,7 +27,6 @@ Prints one SUMMARY line (JSON). The values file's contents
 are never printed.
 """
 
-import argparse
 import importlib.util
 import json
 import os
@@ -94,15 +93,68 @@ def _write_config(path, rendered):
     _writer.staged_write(path, rendered.encode("utf-8"))
 
 
+def _load_paths():
+    """The platform paths spine, loaded by path (the
+    package's standing bootstrap form)."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_paths",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "..", "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "provision-config",
+    "flags": {
+        "sched-home": {"takes_value": True, "required": True, "help": 'the mega scheduling package dir'},
+        "values": {"takes_value": True, "help": 'JSON of carried top-level config values (default: none)'},
+        "dry-run": {"safety": True},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--sched-home", required=True,
-                    help="the mega scheduling package dir")
-    ap.add_argument("--values",
-                    help="JSON of carried top-level config "
-                    "values (default: none)")
-    ap.add_argument("--dry-run", action="store_true")
-    args = ap.parse_args(argv)
+    args = _parse(argv)
 
     home = os.path.abspath(args.sched_home)
     config_path = os.path.join(home, "config.json")

@@ -25,7 +25,6 @@ The rebuild's step-5 publish pipeline calls this check; a
 drifted kit does not publish.
 """
 
-import argparse
 import hashlib
 import importlib.util
 import json
@@ -84,18 +83,56 @@ def diff_trees(label, expected, actual):
     return lines
 
 
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "kit-drift",
+    "flags": {
+        "kit": {"takes_value": True, "help": "kit home (default: the repo's kit/)"},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--kit",
-        type=Path,
-        default=None,
-        help="kit home (default: the repo's kit/)",
-    )
-    args = parser.parse_args(argv)
+    args = _parse(argv)
 
     if args.kit is not None:
-        kit_home = args.kit
+        kit_home = Path(args.kit)
     else:
         # The kit's home, from the platform paths spine:
         # REPO_ROOT / kit.

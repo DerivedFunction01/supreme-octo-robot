@@ -50,6 +50,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseOnly, USAGE_EXIT } from "../../../../tools/argv.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "src");
 // Vendored kit output and other generated trees are not
@@ -205,7 +206,28 @@ function selftest() {
   return failed ? 1 : 0;
 }
 
-if (process.argv.includes("--selftest")) {
+// The declared surface, parsed by the unified argv
+// adapter (tools/argv.mjs): an unknown argument refuses
+// at exit 2 instead of being silently ignored, and
+// --help prints the generated help.
+const DECL = {
+  name: "check-truncation",
+  summary: "the truncation / border-touch guard",
+  flags: {
+    selftest: { help: "run the fixture self-test instead of scanning" },
+  },
+};
+const outcome = parseOnly(DECL, process.argv.slice(2));
+if (!outcome.ok) {
+  console.error(outcome.error);
+  console.error(outcome.usage);
+  process.exit(USAGE_EXIT);
+}
+if ("help" in outcome) {
+  console.log(outcome.help);
+  process.exit(0);
+}
+if (outcome.result.flags.selftest) {
   process.exit(selftest());
 }
 

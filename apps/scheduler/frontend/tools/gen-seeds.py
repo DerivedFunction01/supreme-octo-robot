@@ -179,4 +179,26 @@ def main():
 
 
 if __name__ == "__main__":
+    # The unified argv guard (pipeline/platform/argv.py):
+    # this tool takes no arguments — any argument is a
+    # usage refusal (exit 2) and --help prints the
+    # generated help; a stray flag never falls through
+    # to the regeneration.
+    import importlib.util
+
+    _spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv",
+        ROOT / "pipeline" / "platform" / "argv.py")
+    uargv = importlib.util.module_from_spec(_spec)
+    sys.modules["pipeline_platform_argv"] = uargv
+    _spec.loader.exec_module(uargv)
+
+    _outcome = uargv.parse_only({"name": "gen-seeds"}, sys.argv[1:])
+    if not _outcome["ok"]:
+        print(_outcome["error"], file=sys.stderr)
+        print(_outcome["usage"], file=sys.stderr)
+        sys.exit(uargv.USAGE_EXIT)
+    if "help" in _outcome:
+        print(_outcome["help"], end="")
+        sys.exit(0)
     sys.exit(main())

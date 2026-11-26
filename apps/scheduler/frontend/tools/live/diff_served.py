@@ -31,9 +31,28 @@ failed: the process pid (an environment fact, not a shape)
 and the ledger store's byte size (a storage measurement whose
 event content is compared exactly elsewhere in the payload).
 """
+import importlib.util
 import json
+import os
 import re
 import sys
+
+
+def _load_argv():
+    """The unified argv module, loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "..", "..", "..", "..",
+            "pipeline", "platform", "argv.py"))
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
 
 MISSING = object()
 
@@ -79,10 +98,32 @@ def show(value):
     return text if len(text) <= 120 else text[:117] + "..."
 
 
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): the two capture
+# paths are required positionals; a short or surplus
+# argv is a usage refusal at exit 2, never an IndexError.
+DECL = {
+    "name": "diff-served",
+    "positionals": [
+        {"name": "pinned", "required": True},
+        {"name": "pipeline", "required": True},
+    ],
+}
+
+
 def main():
-    with open(sys.argv[1], encoding="utf-8") as fh:
+    outcome = uargv.parse_only(DECL, sys.argv[1:])
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        return uargv.USAGE_EXIT
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        return 0
+    positionals = outcome["result"]["positionals"]
+    with open(positionals["pinned"], encoding="utf-8") as fh:
         pinned = json.load(fh)
-    with open(sys.argv[2], encoding="utf-8") as fh:
+    with open(positionals["pipeline"], encoding="utf-8") as fh:
         pipeline = json.load(fh)
     for key in ("tree", "pin", "served_at",
                 "seed_ledger_events", "seed_ledger_sha256"):

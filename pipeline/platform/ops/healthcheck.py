@@ -29,7 +29,6 @@ them, with WORKHORSE_HEALTH_TIMEOUT_S as the probe
 budget.
 """
 
-import argparse
 import json
 import os
 import sys
@@ -100,14 +99,69 @@ def surfaces_for(unit=None):
             if surface[0] in names]
 
 
+import importlib.util  # noqa: E402
+
+
+def _load_paths():
+    """The platform paths spine, loaded by path (the
+    package's standing bootstrap form)."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_paths",
+        os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "..", "paths.py"))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_argv():
+    """The unified argv module, located through the
+    paths spine and loaded by path."""
+    spec = importlib.util.spec_from_file_location(
+        "pipeline_platform_argv", _load_paths().ARGV)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["pipeline_platform_argv"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+uargv = _load_argv()
+from types import SimpleNamespace  # noqa: E402
+
+
+# The declared surface, parsed by the unified argv
+# module (pipeline/platform/argv.py): both value forms
+# are one flag, unknown flags and surplus positionals
+# refuse at exit 2, and help is generated from this
+# declaration.
+DECL = {
+    "name": "healthcheck",
+    "flags": {
+        "unit": {"takes_value": True, "choices": sorted(UNIT_SURFACES), "help": 'probe only the surfaces this unit serves'},
+    },
+}
+
+def _parse(argv):
+    outcome = uargv.parse_only(
+        DECL, sys.argv[1:] if argv is None else argv)
+    if not outcome["ok"]:
+        print(outcome["error"], file=sys.stderr)
+        print(outcome["usage"], file=sys.stderr)
+        raise SystemExit(uargv.USAGE_EXIT)
+    if "help" in outcome:
+        print(outcome["help"], end="")
+        raise SystemExit(0)
+    result = outcome["result"]
+    merged = dict(result["flags"])
+    merged.update(result["positionals"])
+    return SimpleNamespace(
+        **{key.replace("-", "_"): value
+           for key, value in merged.items()})
+
+
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Workhorse surface health probe")
-    parser.add_argument(
-        "--unit", choices=sorted(UNIT_SURFACES),
-        default=None,
-        help="probe only the surfaces this unit serves")
-    args = parser.parse_args(argv)
+    args = _parse(argv)
     verdicts = [_probe(*surface)
                 for surface in surfaces_for(args.unit)]
     ok = all(v["ok"] for v in verdicts)

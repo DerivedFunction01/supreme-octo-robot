@@ -27,5 +27,6 @@ VAR_DIR = os.path.join(PACKAGE_DIR, "var")
 
 # The by-path loads the registry performs.
 PLATFORM_WRITER = os.path.join(PIPELINE_ROOT, "platform", "writer.py")
+PLATFORM_ARGV = os.path.join(PIPELINE_ROOT, "platform", "argv.py")
 SCHEDULING_REGISTRY = os.path.join(
     PIPELINE_ROOT, "scheduling", "server", "registry.py")

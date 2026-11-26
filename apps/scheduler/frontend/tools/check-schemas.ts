@@ -25,6 +25,29 @@ import { MockSchedulerAdapter } from "../src/mock/mock-adapter";
 import entriesJson from "../src/mock/seed-entries.json";
 import { CLASSIFICATION, ENTRY_CONFIG } from "../src/mock/seeds";
 
+// The unified argv guard (tools/argv.mjs): this tool
+// takes no arguments — any argument is a usage refusal
+// (exit 2) and --help prints the generated help. The
+// specifier rides a variable because the adapter is
+// untyped ESM and a literal specifier would fail the
+// app's strict tsc.
+const argvSpec = "../../../../tools/argv.mjs";
+const argvAdapter = (await import(argvSpec)) as any;
+const _argvOutcome = argvAdapter.parseOnly(
+  { name: "check-schemas" },
+  process.argv.slice(2),
+);
+if (!_argvOutcome.ok) {
+  console.error(_argvOutcome.error);
+  console.error(_argvOutcome.usage);
+  process.exit(argvAdapter.USAGE_EXIT);
+}
+if ("help" in _argvOutcome) {
+  console.log(_argvOutcome.help);
+  process.exit(0);
+}
+
+
 const CONTRACTS = new URL("../../../../contracts/", import.meta.url);
 const readJson = (rel: string) =>
   JSON.parse(readFileSync(new URL(rel, CONTRACTS), "utf8"));

@@ -26,7 +26,25 @@
 // and the snapshot is cross-checked against direct panel
 // reads. No mutation runs in this leg.
 
+import { parseOnly, USAGE_EXIT } from "../../../../tools/argv.mjs";
 import { createRequire } from "node:module";
+
+// The unified argv guard (tools/argv.mjs): this tool
+// takes no arguments — any argument is a usage refusal
+// (exit 2) and --help prints the generated help, so an
+// invocation can never fall through to the full job on
+// a stray or mistyped flag.
+const _argvOutcome = parseOnly({ name: "smoke-relay" }, process.argv.slice(2));
+if (!_argvOutcome.ok) {
+  console.error(_argvOutcome.error);
+  console.error(_argvOutcome.usage);
+  process.exit(USAGE_EXIT);
+}
+if ("help" in _argvOutcome) {
+  console.log(_argvOutcome.help);
+  process.exit(0);
+}
+
 const require = createRequire(import.meta.url);
 const { RelayVenueAdapter, createRelayFetch } = require("../dist-relay/relay-adapter.js");
 
