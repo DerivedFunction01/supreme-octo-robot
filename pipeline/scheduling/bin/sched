@@ -26,9 +26,6 @@
                             write events to disk as JSONL (the
                             export format), print path + SHA-256
   sched logs verify         integrity check on the log store
-  sched logs import-jsonl <path>
-                            one-time migration into an empty store,
-                            with the count + hash proof
   sched adopt <example-id>  adopt a catalog entry into the live
     [--param k=v]...        overlay: substitute the declared +
     [--dry-run]             standard parameters, refuse machine

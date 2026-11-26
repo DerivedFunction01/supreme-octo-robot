@@ -45,34 +45,22 @@ class LedgerSqliteTests(unittest.TestCase):
         remaining = self.ledger.read_all()
         self.assertEqual(len(remaining), 2)  # unparseable kept, fresh kept
 
-    def test_export_hash_matches_canonical_source(self):
-        source = os.path.join(self.tmp, "source.jsonl")
+    def test_export_hash_matches_canonical_records(self):
         recs = [{"ts": "2026-10-31T00:00:00+00:00", "kind": "run",
                  "job_id": "job-a", "status": "ok"},
                 {"ts": "2026-10-31T01:00:00+00:00", "kind": "run",
                  "job_id": "job-a", "status": "failure", "exit_code": 3}]
-        with open(source, "w", encoding="utf-8") as fh:
-            for rec in recs:
-                fh.write(json.dumps(rec) + "\n")  # NOT canonical order
         other = Ledger(os.path.join(self.tmp, "fresh"))
-        imported, source_hash = other.import_jsonl(source)
-        self.assertEqual(imported, 2)
+        for rec in recs:
+            other._insert(rec)
         canonical = "".join(canonical_line(r) + "\n" for r in recs).encode()
-        self.assertEqual(source_hash, hashlib.sha256(canonical).hexdigest())
+        expected_hash = hashlib.sha256(canonical).hexdigest()
         out = other.export_to(os.path.join(self.tmp, "out.jsonl"))
         self.assertEqual(out["rows"], 2)
-        self.assertEqual(out["sha256"], source_hash)
+        self.assertEqual(out["sha256"], expected_hash)
         one = other.export_to(os.path.join(self.tmp, "one.jsonl"),
                               job_id="job-b")
         self.assertEqual(one["rows"], 0)
-
-    def test_import_refuses_non_empty(self):
-        self.ledger.record("run", job_id="job-a", status="ok")
-        source = os.path.join(self.tmp, "s.jsonl")
-        with open(source, "w", encoding="utf-8") as fh:
-            fh.write('{"ts": "2026-01-01T00:00:00+00:00", "kind": "run"}\n')
-        with self.assertRaises(ValueError):
-            self.ledger.import_jsonl(source)
 
     def test_verify_and_stats(self):
         self.ledger.record("run", job_id="job-a", status="ok")

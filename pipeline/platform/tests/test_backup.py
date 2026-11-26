@@ -72,12 +72,16 @@ def seed_registry(root):
 
 
 def seed_ledger(root, extra_kinds=("run", "ping_created")):
-    """A ledger fixture: the S0 specimen lines imported
-    through the Ledger's own one-time import, plus a few
-    records written through its record() path."""
+    """A ledger fixture: the S0 specimen lines inserted
+    through the Ledger's row path, plus a few records
+    written through its record() path."""
     Ledger = _load_ledger_class()
     ledger = Ledger(str(root))
-    ledger.import_jsonl(str(FIXTURES / "ledger-events.jsonl"))
+    specimen = (FIXTURES / "ledger-events.jsonl").read_text(
+        encoding="utf-8")
+    for line in specimen.splitlines():
+        if line.strip():
+            ledger._insert(json.loads(line))
     for kind in extra_kinds:
         ledger.record(kind, job_id="fixture-job", status="ok")
     return root

@@ -251,31 +251,3 @@ class Ledger:
         finally:
             con.close()
         return {"integrity": integrity, "events": total, "ok": integrity == "ok"}
-
-    # ---------------------------------------------------------- import
-
-    def import_jsonl(self, source_path):
-        """One-time migration: load a JSONL ledger file into an
-        EMPTY events table. Returns (imported, source_sha256) where
-        the hash is over the canonical lines, so it can be checked
-        against export_to() of the imported store. Refuses a
-        non-empty table — a half-migrated store is never extended."""
-        con = self._connect()
-        try:
-            existing = con.execute("SELECT COUNT(*) FROM events").fetchone()[0]
-        finally:
-            con.close()
-        if existing:
-            raise ValueError(f"events table already holds {existing} rows; "
-                             "import is one-time into an empty store")
-        records = []
-        with open(source_path, "r", encoding="utf-8") as fh:
-            for line in fh:
-                line = line.strip()
-                if line:
-                    records.append(json.loads(line))
-        blob = "".join(canonical_line(rec) + "\n"
-                       for rec in records).encode("utf-8")
-        for rec in records:
-            self._insert(rec)
-        return len(records), hashlib.sha256(blob).hexdigest()

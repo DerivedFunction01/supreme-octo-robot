@@ -1,6 +1,6 @@
 """State-store commands: ack (the outbox) and the logs
-family (the ledger store) — stats, prune, export, verify,
-import-jsonl. Each logs verb's surface is a unified-argv
+family (the ledger store) — stats, prune, export, verify.
+Each logs verb's surface is a unified-argv
 declaration: both value forms parse identically, a flag
 in last position is a usage refusal, never a traceback."""
 import os
@@ -30,11 +30,6 @@ LOGS_DECLS = {
                                  "help": "output path"}}},
     "verify": {"name": "sched logs verify",
                "summary": "integrity check on the log store"},
-    "import-jsonl": {"name": "sched logs import-jsonl",
-                     "summary": "one-time migration into an "
-                                "empty store",
-                     "positionals": [{"name": "path",
-                                      "required": True}]},
 }
 
 
@@ -120,21 +115,4 @@ def cmd_logs(argv):
         result = ledger.verify()
         print(f"integrity: {result['integrity']}  events: {result['events']}")
         return 0 if result["ok"] else 1
-    if sub == "import-jsonl":
-        path = result["positionals"]["path"]
-        try:
-            imported, source_hash = ledger.import_jsonl(path)
-        except (ValueError, OSError) as exc:
-            print(f"import failed: {exc}")
-            return 1
-        import hashlib
-        lines = ledger.export_lines()
-        blob = "".join(line + "\n" for line in lines).encode("utf-8")
-        export_hash = hashlib.sha256(blob).hexdigest()
-        print(f"imported {imported} events from {path}")
-        print(f"source canonical sha256: {source_hash}")
-        print(f"export check: {len(lines)} rows, sha256 {export_hash}")
-        ok = len(lines) == imported and export_hash == source_hash
-        print("PROOF:", "PASS" if ok else "FAIL")
-        return 0 if ok else 1
     return 2
