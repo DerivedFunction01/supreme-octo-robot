@@ -2,26 +2,33 @@
 Step 1): the per-programme declarations the measures
 read — cadence, staffing band, escalation bound, venue,
 coordinator route, measure classes, drain tail set, and
-the staffing contract where one is ruled. Seeded from
-the live fleet's actual contracts: the edgar family-
-concurrency measure (owner enforcement ruling), the
-gap-closure sweep's programme rows and
-gap classes, and the armed todos' cadences.
+the staffing contract where one is ruled.
+
+The declaration rows are instance data: they live in
+an untracked configuration file (the settings seam's
+supervision_registry_path — env ATTENTION_SUPERVISION_
+REGISTRY first, else var/supervision-registry.json
+under the attention state home), and this module is
+the machinery over them: the loader, the validation
+contract, and the lookups, referencing programmes by
+key only. An absent config file is an empty registry,
+honestly — no row is ever fabricated here. A config
+that is present but malformed, or a declaration that
+is missing a field — or carries an invalid one —
+refuses loudly at load, never silently defaults.
 
 The registry is data the measures read; no measure
-hardcodes a programme, and a declaration that is
-missing a field — or carries an invalid one — refuses
-loudly at load, never silently defaults. The generic
-rule text lives in the spec (docs/supervision-rules.md)
-and passes down to these declarations; it is never
-re-authored here.
+hardcodes a programme. The generic rule text lives in
+the spec (docs/supervision-rules.md) and passes down
+to these declarations; it is never re-authored here.
 """
 
 from __future__ import annotations
 
 import copy
+import json
 
-from attention.services.measure import lane_seed
+from attention.settings import Settings
 
 
 class RegistryError(ValueError):
@@ -53,74 +60,6 @@ DEFAULT_DRAIN_TAIL = (
     {"key": "doc-updates", "title": "Doc updates"},
     {"key": "performance", "title": "Performance pass"},
 )
-
-# The edgar staffing contract, verbatim as data from
-# the programme GOAL.md's class 2 in its cured form
-# (owner order): the staffing measure is
-# work-denominated, with a numeric floor — at least
-# 8 distinct register families in active work at all
-# times. The expected count is set by the register's
-# staffable families, never by the number of sessions
-# up; sessions are capacity, not the denominator,
-# and staffing that runs one-deep-per-session while
-# staffable families wait is a class-2 instance by
-# definition. The unit of staffing is the table
-# family in flight, a family counts on a run in
-# flight or evidence advancing within 30 minutes, a
-# prerequisite-due family sitting unstaffed is a
-# defect, a research delegate does not count toward
-# family concurrency, a no-parallelizable-work claim
-# is void unless verified family by family, the
-# defect closes only on a later measure showing the
-# floor met, and a defect surviving two consecutive
-# runs names the coordinator's non-response.
-EDGAR_STAFFING_CONTRACT = {
-    "unit": "table_family",
-    "evidence_window_minutes": 30,
-    "min_families_in_flight": 8,
-    "defect_conditions": [
-        "fewer_than_min_families_in_flight",
-        "one_deep_per_session_while_staffable_families_wait",
-        "prerequisite_due_family_unstaffed",
-    ],
-    "delegate_counts_toward_concurrency": False,
-    "no_parallel_work_claim": "void_unless_verified_family_by_family",
-    "clearing": "later_measure_only",
-    "non_response_after_consecutive_runs": 2,
-    "reminder_cadence_minutes": 30,
-    # The staffable queue (staffing-commission
-    # amendment): the ordered named work the measure
-    # commissions by name. A work item carries the
-    # family it flies under and the queue key that
-    # gates it (null = staffable now); a marker
-    # carries a precondition that is not itself
-    # staffable work, flipped landed by amendment
-    # when the precondition resolves. Family keys
-    # are the venue measure's workstream stems: the
-    # job name minus the fleet's shared prefix and
-    # its trailing run-kind segments. Landed work
-    # is pruned by amendment: the Round 4
-    # instrument build stood discharged by its
-    # deliverable of record (register-fresh-
-    # verdict-4.md, board sha256 31a1d67d) and is
-    # pruned here — "round4" named the measurement
-    # round, not a scored family, so the pruning
-    # moves no family count.
-    "staffable_queue": [
-        {
-            "key": "segment-register-close",
-            "label": "Segment register close",
-            "marker": True,
-            "landed": False,
-        },
-        {
-            "key": "segment-packet-landing",
-            "label": "Segment packet landing (composed tree settles)",
-            "marker": True,
-            "landed": True,
-        },
-    ],
-}
 
 REQUIRED_FIELDS = (
     "slug",
@@ -413,19 +352,6 @@ def validate_declaration(row) -> dict:
     return row
 
 
-def _tail(*extra: dict) -> list:
-    return [dict(item) for item in DEFAULT_DRAIN_TAIL] + [dict(e) for e in extra]
-
-
-# The seeded declarations: one row per programme the
-# live fleet supervises, mirroring its declared
-# contract in the attention store, plus the registry's
-# own fields — the coordinator route (wb-sent, per the
-# amended Step 3), the measure classes the sweep's
-# rows enable, the drain tail set, and, for the edgar
-# programmes, the staffing contract above. Cadences
-# are the armed todos' cadence: conforming
-# progress-checkpoints every 15 minutes while doing.
 # The lane record's state vocabulary (lane-records
 # plan): a lane is declared, running, waiting in a
 # declared gap, at hand-back, or terminated — and
@@ -439,152 +365,45 @@ LANE_RECORD_STATES = (
     "terminated",
 )
 
-_SEED = (
-    {
-        "slug": "edgar-greenfield",
-        "label": "edgar — greenfield extractor",
-        "handles": ["@xbrl"],
-        "cadence_minutes": 15,
-        "staffing_band": None,
-        "escalation_hours": 1,
-        "venue": "local",
-        "coordinator_route": {"sender": "wb", "kind": "chat", "handle": "@xbrl"},
-        "measure_classes": [
-            "idle",
-            "serial",
-            "stall",
-            "orphan",
-            "unreported",
-            "terminal",
-            "unlanded",
-        ],
-        "drain_tail": _tail(),
-        "staffing_contract": copy.deepcopy(EDGAR_STAFFING_CONTRACT),
-        "wb_projects": ["edgar-sec"],
-        # The lane declaration (lane-records plan):
-        # the coordinator's standing declaration,
-        # seeded in the registry form so it amends by
-        # commit with the contract, as the staffable
-        # queue does. Transcribed from coordinator
-        # successor III's declaration as posted at
-        # the owner's thread close-out:
-        # expected count 11 — ten family lanes and
-        # one formation lane in flight; the 21 family
-        # lanes closed at that close-out and the
-        # spent union v3 formation lane are not
-        # carried. The programme venue is the local
-        # fleet (Colab stood down on an exhausted
-        # monthly budget); per-lane venues ride on
-        # the lane entries themselves. The
-        # declaration-reconcile pass holds this
-        # transcription to the coordinator's posted
-        # declaration and the live fleet. A lane's
-        # record file is its own STATE file in the
-        # lane home the declaration's termination
-        # path names; a lane the declaration names
-        # no home for carries no record until its own
-        # block lands in a declared record file.
-        # Declared-at is the declaration's stated
-        # datetime where it gives one, else its
-        # stated date; an estimate the declaration
-        # leaves unstated stays None.
-        "lane_declared_count": 11,
-        "lane_declarations": lane_seed.edgar_lane_declarations(),
-        "retired": False,
-    },
-    {
-        "slug": "edgar-sec",
-        "label": "edgar — classifier",
-        "handles": ["@xbrl"],
-        "cadence_minutes": 15,
-        "staffing_band": {"min": 10, "max": 12},
-        "escalation_hours": 1,
-        "venue": "colab",
-        "coordinator_route": {"sender": "wb", "kind": "chat", "handle": "@xbrl"},
-        "measure_classes": ["idle", "serial", "stall", "orphan", "unreported"],
-        "drain_tail": _tail(),
-        "staffing_contract": None,
-        "wb_projects": [],
-        "retired": True,
-    },
-    {
-        "slug": "steampowernj",
-        "label": "Steam Power — site rebuild",
-        "handles": ["@steampower"],
-        "cadence_minutes": 15,
-        "staffing_band": None,
-        "escalation_hours": 1,
-        "venue": "none",
-        "coordinator_route": {
-            "sender": "wb",
-            "kind": "chat",
-            "handle": "@steampower",
-        },
-        "measure_classes": [
-            "idle",
-            "serial",
-            "stall",
-            "orphan",
-            "unreported",
-            "register_seam",
-            "terminal",
-            "unlanded",
-        ],
-        # The programme's venue runs ride the caller
-        # prefix "steampower" (steampower-cust and its
-        # lanes), not the slug stem "steampowernj" —
-        # declared so caller attribution stays data.
-        "caller_stems": ["steampower"],
-        "drain_tail": _tail({"key": "tech-debt-paydown", "title": "Tech-debt paydown"}),
-        "staffing_contract": None,
-        "wb_projects": ["steampowernj"],
-        "retired": False,
-    },
-    {
-        "slug": "supreme-octo-robot",
-        "label": "Workhorse superapp — mega app build",
-        "handles": ["@workhorse"],
-        "cadence_minutes": 15,
-        "staffing_band": None,
-        "escalation_hours": 1,
-        "venue": "colab",
-        "coordinator_route": {
-            "sender": "wb",
-            "kind": "chat",
-            "handle": "@workhorse",
-        },
-        "measure_classes": [
-            "idle",
-            "serial",
-            "stall",
-            "orphan",
-            "unreported",
-            "terminal",
-            "unlanded",
-        ],
-        # The programme's venue runs ride the caller
-        # "workhorse", not the slug stem "supreme".
-        "caller_stems": ["workhorse"],
-        "drain_tail": _tail(),
-        "staffing_contract": None,
-        # The programme's workbench surface answers to
-        # two names, one per surface: the wb server
-        # serves the bundle under "workbench-viewer"
-        # (its --project slug) while the armed-row
-        # file drop keys its rows "workrecord" — both
-        # are declared so the frontier attribution and
-        # the armed match read the same programme.
-        "wb_projects": ["workbench-viewer", "workrecord"],
-        "retired": False,
-    },
-)
+# The loaded rows, cached against the config file's
+# identity: an edit to the file (the amendment form —
+# declarations amend by editing the untracked config,
+# never by commit) reloads on the next read.
+_LOAD_CACHE: dict = {}
+
+
+def _load_rows() -> list:
+    """The configured declaration rows, validated whole
+    at load. An absent config file is an empty registry;
+    a present but malformed one refuses loudly."""
+    path = Settings.from_env().supervision_registry_path
+    try:
+        stat = path.stat()
+    except OSError:
+        return []
+    key = (str(path), stat.st_mtime_ns, stat.st_size)
+    if _LOAD_CACHE.get("key") != key:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except ValueError as exc:
+            raise RegistryError(
+                f"supervision registry at {path} is not valid JSON: {exc}"
+            ) from exc
+        if not isinstance(data, list):
+            raise RegistryError(
+                f"supervision registry at {path}: a list of declaration rows"
+            )
+        rows = [validate_declaration(copy.deepcopy(row)) for row in data]
+        _LOAD_CACHE.clear()
+        _LOAD_CACHE.update(key=key, rows=rows)
+    return _LOAD_CACHE["rows"]
 
 
 def declarations() -> list:
-    """Every seeded programme declaration, validated at
-    load and returned as deep copies — a caller mutating
-    a row never corrupts the registry."""
-    return [validate_declaration(copy.deepcopy(row)) for row in _SEED]
+    """Every configured programme declaration, validated
+    at load and returned as deep copies — a caller
+    mutating a row never corrupts the registry."""
+    return copy.deepcopy(_load_rows())
 
 
 def active_declarations() -> list:
@@ -604,7 +423,7 @@ def for_slug(slug: str) -> dict | None:
 def for_handle(handle: str | None) -> dict | None:
     """The declaration owning a handle: an active
     programme wins over a retired one declaring the
-    same handle (the edgar programmes share @xbrl)."""
+    same handle (the field programmes share one)."""
     if not handle:
         return None
     match = None

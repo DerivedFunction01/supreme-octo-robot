@@ -55,6 +55,13 @@ class Settings:
     fulfillment_stall_minutes: float = 120.0
     run_records_dir: Path = PIPELINE_ROOT / "venue" / "results" / "detached"
     armed_dir: Path = ATTENTION_HOME / "var" / "armed"
+    # The supervision registry's declaration rows: instance
+    # data, held in an untracked file under the state home
+    # and read by key (services/measure/registry.py). An
+    # absent file is an empty registry, honestly.
+    supervision_registry_path: Path = (
+        ATTENTION_HOME / "var" / "supervision-registry.json"
+    )
 
     @classmethod
     def from_env(cls) -> Settings:
@@ -135,6 +142,12 @@ class Settings:
             armed_dir=Path(
                 os.environ.get(
                     "ATTENTION_ARMED_DIR", str(ATTENTION_HOME / "var" / "armed")
+                )
+            ),
+            supervision_registry_path=Path(
+                os.environ.get(
+                    "ATTENTION_SUPERVISION_REGISTRY",
+                    str(ATTENTION_HOME / "var" / "supervision-registry.json"),
                 )
             ),
         )

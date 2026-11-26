@@ -165,7 +165,7 @@ def cron_serial(now):
     (defect, families, carrying sessions), in the
     cured work-denominated form (owner order,
     cured form): open family work stands in every
-    specimen (two edgar-sec todos armed), so the
+    specimen (two specimen-repo todos armed), so the
     defect condition applies directly — fewer
     distinct register families in flight than the
     contract's floor of 8. Sessions are capacity,
@@ -230,7 +230,7 @@ def edgar_records(now):
         r
         for r in records
         if venue.attribute_slug(r["caller"], declarations)
-        == "edgar-greenfield"
+        == "edgar-specimen"
     ]
 
 
@@ -244,11 +244,11 @@ def specimen_state(now, idle_minutes=52):
     facts = venue.families_at(edgar_records(now), now, 30)
     armed = [
         {
-            "project": "edgar-sec",
+            "project": "specimen-repo",
             "todo": todo,
             "row": {
-                "project": "edgar-sec",
-                "programme": "edgar-sec",
+                "project": "specimen-repo",
+                "programme": "specimen-repo",
                 "todo": todo,
                 "bundle": "2026-11-17-greenfield-continuous-improvement",
                 "status": "doing",
@@ -272,7 +272,7 @@ def specimen_state(now, idle_minutes=52):
         "specs": [],
     }
     state["venue_snapshot"] = {
-        "edgar-greenfield": {
+        "edgar-specimen": {
             "at": now,
             "jobs": len(edgar_records(now)),
             **facts,
@@ -285,23 +285,23 @@ def orphan_state(now):
     """The specimen state with the venue collector's
     orphan facts attached, as venue.collect does."""
     state = specimen_state(now)
-    state["venue_snapshot"]["edgar-greenfield"]["orphans"] = \
+    state["venue_snapshot"]["edgar-specimen"]["orphans"] = \
         venue.orphans_at(edgar_records(now), now, 30)
     return state
 
 
 def stall_state(now, lane, checkpoint_at):
     """A lane-record specimen: the registry's
-    edgar-greenfield declaration with one lane record
+    field declaration with one lane record
     whose latest conforming checkpoint is
     `checkpoint_at`."""
     declaration = next(
         d for d in registry.active_declarations()
-        if d["slug"] == "edgar-greenfield")
+        if d["slug"] == "edgar-specimen")
     state = store_mod.empty_state()
     state["programmes"] = [declaration]
     state["record_snapshot"] = {
-        "edgar-greenfield": {
+        "edgar-specimen": {
             "at": now,
             "records": {
                 lane: {
@@ -334,12 +334,12 @@ def packet_unlanded(slug):
     stood in the recorded specimen window, before
     the packet landing flipped the marker by
     amendment. The window is measured under the
-    contract as it stood in the window; the live
-    seed now carries the flip."""
+    contract as it stood in the window; the configured
+    rows now carry the flip."""
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
         for entry in contract.get("staffable_queue") or []:
-            if entry["key"] == "segment-packet-landing":
+            if entry["key"] == "specimen-packet-landing":
                 entry["landed"] = False
     return contract
 
@@ -567,7 +567,7 @@ class SweepActuationParity(unittest.TestCase):
         sends = sweep_sends(state)
         self.assertEqual(len(sends), 1)
         send = sends[0]
-        self.assertEqual(send["handle"], "@xbrl")
+        self.assertEqual(send["handle"], "@specimen-field")
         self.assertIn("venue-staffing-measure", send["text"])
         self.assertIn("checkpoint", send["text"])
         self.assertFalse(
@@ -596,7 +596,7 @@ class SweepActuationParity(unittest.TestCase):
                 state, settings(), at19(14)))
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 1)
-        self.assertEqual(sends[0]["handle"], "@xbrl")
+        self.assertEqual(sends[0]["handle"], "@specimen-field")
         self.assertIn("cocisep", sends[0]["text"])
         self.assertIn(SCARLET, sends[0]["text"])
 
@@ -627,11 +627,11 @@ class DrainParity(unittest.TestCase):
 
     def test_drain_leg_hands_the_registry_tail(self):
         # The drain leg hands the registry's own tail
-        # set — supreme-octo-robot's three items — to
+        # set — the platform programme's three items — to
         # each of its workbench projects, per project.
         declaration = next(
             d for d in registry.active_declarations()
-            if d["slug"] == "supreme-octo-robot")
+            if d["slug"] == "specimen-platform")
         state = store_mod.empty_state()
         state["programmes"] = [declaration]
         seen = []
@@ -639,7 +639,7 @@ class DrainParity(unittest.TestCase):
         def fake_run_drain(url, project, declarations, timeout):
             seen.append((project, declarations))
             return {"drain": [{
-                "programme": "supreme-octo-robot",
+                "programme": "specimen-platform",
                 "raised": ["Consolidation"], "archived": []}]}
 
         with tempfile.TemporaryDirectory() as tmp, \
@@ -653,7 +653,7 @@ class DrainParity(unittest.TestCase):
         self.assertTrue(changed)
         self.assertEqual(
             [project for project, _ in seen],
-            ["workbench-viewer", "workrecord"])
+            ["specimen-record", "specimen-viewer"])
         for _, declarations in seen:
             self.assertEqual(len(declarations), 1)
             self.assertEqual(

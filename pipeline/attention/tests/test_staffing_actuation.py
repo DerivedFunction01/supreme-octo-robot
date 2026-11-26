@@ -51,7 +51,7 @@ def edgar_records(now):
     return [
         r
         for r in records
-        if venue.attribute_slug(r["caller"], declarations) == "edgar-greenfield"
+        if venue.attribute_slug(r["caller"], declarations) == "edgar-specimen"
     ]
 
 
@@ -62,11 +62,11 @@ def defect_state(now, frontier=None):
     facts = venue.families_at(edgar_records(now), now, 30)
     armed = [
         {
-            "project": "edgar-sec",
+            "project": "specimen-repo",
             "todo": todo,
             "row": {
-                "project": "edgar-sec",
-                "programme": "edgar-sec",
+                "project": "specimen-repo",
+                "programme": "specimen-repo",
                 "todo": todo,
                 "bundle": "2026-11-17-greenfield-continuous-improvement",
                 "status": "doing",
@@ -88,14 +88,14 @@ def defect_state(now, frontier=None):
         "specs": [],
     }
     state["venue_snapshot"] = {
-        "edgar-greenfield": {"at": now, "jobs": len(edgar_records(now)), **facts}
+        "edgar-specimen": {"at": now, "jobs": len(edgar_records(now)), **facts}
     }
     if frontier is not None:
         state["frontier_snapshot"] = {BUNDLE: frontier}
     return state
 
 
-def frontier_entry(slug, project="workbench-viewer"):
+def frontier_entry(slug, project="specimen-viewer"):
     return {
         "bundle": BUNDLE,
         "project": project,
@@ -160,7 +160,7 @@ def packet_unlanded(slug):
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
         for entry in contract.get("staffable_queue") or []:
-            if entry["key"] == "segment-packet-landing":
+            if entry["key"] == "specimen-packet-landing":
                 entry["landed"] = False
     return contract
 
@@ -172,8 +172,8 @@ class StaffingActuationTests(unittest.TestCase):
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 1)
         send = sends[0]
-        self.assertEqual(send["handle"], "@xbrl")
-        self.assertEqual(send["target"], "@xbrl")
+        self.assertEqual(send["handle"], "@specimen-field")
+        self.assertEqual(send["target"], "@specimen-field")
         self.assertIn("cocisep", send["text"])
         self.assertIn("amber-cliff-23", send["text"])
         # A second pass on the same tick mints no twin.
@@ -181,7 +181,7 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertEqual(len(staffing_sends(state)), 1)
 
     def test_repost_after_reminder_cadence_not_before(self):
-        # The edgar contract's reminder cadence is 30m.
+        # The field contract's reminder cadence is 30m.
         state = defect_state(at(14))
         continuation.run_staffing_pass(state, settings(), at(14))
         _deliver(state, settings(), at(14))
@@ -220,7 +220,7 @@ class StaffingActuationTests(unittest.TestCase):
         # pass still reports the ledger clear as a
         # change).
         staffed = defect_state(at(11))
-        families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+        families = staffed["venue_snapshot"]["edgar-specimen"]["families"]
         for name in ("fam-a", "fam-b", "fam-c"):
             families[name] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
         state["venue_snapshot"] = staffed["venue_snapshot"]
@@ -234,7 +234,7 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertEqual(state.get(continuation.STAFFING_LEDGER), {})
 
     def test_escalation_at_the_bound_not_before(self):
-        # The edgar registry bound is 1h past first sight.
+        # The field registry bound is 1h past first sight.
         state = defect_state(at(14))
         continuation.run_staffing_pass(state, settings(), at(14))
         _deliver(state, settings(), at(14))
@@ -243,7 +243,7 @@ class StaffingActuationTests(unittest.TestCase):
         _deliver(state, settings(), at(14, 31), ref="chat:test:2")
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 2)
-        self.assertEqual(sends[1]["target"], "@xbrl")
+        self.assertEqual(sends[1]["target"], "@specimen-field")
         self.assertNotIn("escalated", sends[1]["text"])
         _refresh_capacity(state, at(15, 1))
         continuation.run_staffing_pass(state, settings(), at(15, 1))
@@ -252,10 +252,10 @@ class StaffingActuationTests(unittest.TestCase):
         escalated = sends[2]
         self.assertEqual(escalated["target"], "main")
         self.assertIn("escalated to main", escalated["text"])
-        self.assertIn("@xbrl has not responded", escalated["text"])
+        self.assertIn("@specimen-field has not responded", escalated["text"])
 
     def test_frontier_shortfall_steers_naming_prerequisite_due(self):
-        state = defect_state(at(14), frontier=frontier_entry("edgar-greenfield"))
+        state = defect_state(at(14), frontier=frontier_entry("edgar-specimen"))
         continuation.run_staffing_pass(state, settings(), at(14))
         sends = staffing_sends(state)
         # One steer per standing row: the serial row and
@@ -263,7 +263,7 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertEqual(len(sends), 2)
         frontier = [s for s in sends if "frontier shortfall" in s["text"]]
         self.assertEqual(len(frontier), 1)
-        self.assertEqual(frontier[0]["handle"], "@xbrl")
+        self.assertEqual(frontier[0]["handle"], "@specimen-field")
         self.assertIn(BUNDLE, frontier[0]["text"])
         self.assertIn("lane-b", frontier[0]["text"])
 
@@ -279,10 +279,10 @@ class StaffingActuationTests(unittest.TestCase):
         sends = staffing_sends(state)
         frontier = [s for s in sends if "frontier shortfall" in s["text"]]
         self.assertEqual(len(frontier), 1)
-        self.assertEqual(frontier[0]["handle"], "workbench-viewer")
-        self.assertEqual(frontier[0]["target"], "workbench-viewer")
+        self.assertEqual(frontier[0]["handle"], "specimen-viewer")
+        self.assertEqual(frontier[0]["target"], "specimen-viewer")
         self.assertIn(BUNDLE, frontier[0]["text"])
-        self.assertNotIn("supreme-octo-robot", frontier[0]["text"])
+        self.assertNotIn("specimen-platform", frontier[0]["text"])
         # Past any bound, the row still never escalates:
         # no registry declaration names a coordinator to
         # hold to it. Deliver its steer first, so the
@@ -303,7 +303,7 @@ class StaffingActuationTests(unittest.TestCase):
             r for r in view["rows"] if r["kind"] == "serial_staffing"
         ][0]
         poisoned = dict(
-            serial, kind="permission_card", _key="permission_card:edgar"
+            serial, kind="permission_card", _key="permission_card:specimen"
         )
         with mock.patch.object(
             staffing, "build_staffing",
@@ -315,26 +315,26 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertTrue(changed)
         sends = staffing_sends(state)
         self.assertEqual(len(sends), 1)
-        self.assertEqual(sends[0]["handle"], "@xbrl")
+        self.assertEqual(sends[0]["handle"], "@specimen-field")
 
     def test_todo_route_targets_the_bundle(self):
         row = {
             "kind": "serial_staffing",
-            "topic": "edgar-greenfield",
-            "handle": "@xbrl",
-            "handler_label": "edgar — greenfield extractor",
+            "topic": "edgar-specimen",
+            "handle": "@specimen-field",
+            "handler_label": "Specimen — field extractor",
         }
         route = {"sender": "wb", "kind": "todo", "bundle": "b-1"}
         with mock.patch.object(
             registry, "coordinator_route_for", return_value=route
         ):
-            handle, target = continuation._staffing_route(row, "edgar-greenfield")
-        self.assertEqual(handle, "@xbrl")
+            handle, target = continuation._staffing_route(row, "edgar-specimen")
+        self.assertEqual(handle, "@specimen-field")
         self.assertEqual(target, "b-1")
 
     def test_retired_handler_gets_no_steer(self):
         state = defect_state(at(14))
-        state["handlers"] = [{"handle": "@xbrl", "retired": True}]
+        state["handlers"] = [{"handle": "@specimen-field", "retired": True}]
         self.assertFalse(continuation.run_staffing_pass(state, settings(), at(14)))
         self.assertEqual(staffing_sends(state), [])
 
@@ -455,7 +455,7 @@ class CommissionSteerTests(unittest.TestCase):
             # flight, bands met, clears it: no third
             # steer, and the ledger entry leaves.
             staffed = defect_state(at(11))
-            families = staffed["venue_snapshot"]["edgar-greenfield"]["families"]
+            families = staffed["venue_snapshot"]["edgar-specimen"]["families"]
             families["tracefam"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
             # Topped up to the cured floor of 8: the
             # specimen's five families plus tracefam
@@ -475,8 +475,8 @@ class CommissionSteerTests(unittest.TestCase):
         row = {
             "kind": "serial_staffing",
             "topic": None,
-            "handle": "@xbrl",
-            "handler_label": "edgar — greenfield extractor",
+            "handle": "@specimen-field",
+            "handler_label": "Specimen — field extractor",
             "families": [{"name": "cocisep", "sessions": [CALM], "runs": 1}],
             "idle_sessions": [{"name": SCARLET, "idle_minutes": 52}],
             "conditions": ["fewer_than_min_families_in_flight"],

@@ -1,0 +1,326 @@
+[
+ {
+  "slug": "edgar-specimen",
+  "label": "Specimen — field extractor",
+  "handles": [
+   "@specimen-field"
+  ],
+  "cadence_minutes": 15,
+  "staffing_band": null,
+  "escalation_hours": 1,
+  "venue": "local",
+  "coordinator_route": {
+   "sender": "wb",
+   "kind": "chat",
+   "handle": "@specimen-field"
+  },
+  "measure_classes": [
+   "idle",
+   "serial",
+   "stall",
+   "orphan",
+   "unreported",
+   "terminal",
+   "unlanded"
+  ],
+  "drain_tail": [
+   {
+    "key": "consolidation",
+    "title": "Consolidation"
+   },
+   {
+    "key": "doc-updates",
+    "title": "Doc updates"
+   },
+   {
+    "key": "performance",
+    "title": "Performance pass"
+   }
+  ],
+  "staffing_contract": {
+   "unit": "table_family",
+   "evidence_window_minutes": 30,
+   "min_families_in_flight": 8,
+   "defect_conditions": [
+    "fewer_than_min_families_in_flight",
+    "one_deep_per_session_while_staffable_families_wait",
+    "prerequisite_due_family_unstaffed"
+   ],
+   "delegate_counts_toward_concurrency": false,
+   "no_parallel_work_claim": "void_unless_verified_family_by_family",
+   "clearing": "later_measure_only",
+   "non_response_after_consecutive_runs": 2,
+   "reminder_cadence_minutes": 30,
+   "staffable_queue": [
+    {
+     "key": "specimen-register-close",
+     "label": "Specimen register close",
+     "marker": true,
+     "landed": false
+    },
+    {
+     "key": "specimen-packet-landing",
+     "label": "Specimen packet landing (composed tree settles)",
+     "marker": true,
+     "landed": true
+    },
+    {
+     "key": "specimen-instrument-build",
+     "label": "Specimen instrument build",
+     "family": "specimenbuild",
+     "staffable_when": "specimen-packet-landing"
+    }
+   ]
+  },
+  "wb_projects": [
+   "specimen-repo"
+  ],
+  "lane_declared_count": 11,
+  "lane_declarations": [
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-a",
+    "label": "Specimen family A",
+    "record": "specimen-ci/specimen-family-a/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-a/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-b",
+    "label": "Specimen family B",
+    "record": "specimen-ci/specimen-family-b/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-b/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-c",
+    "label": "Specimen family C",
+    "record": "specimen-ci/specimen-family-c/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-c/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-d",
+    "label": "Specimen family D",
+    "record": "specimen-ci/specimen-family-d/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-d/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-hp"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-e",
+    "label": "Specimen family E",
+    "record": "specimen-ci/specimen-family-e/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-e/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-f",
+    "label": "Specimen family F",
+    "record": "specimen-ci/specimen-family-f/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-f/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-hp"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-g",
+    "label": "Specimen family G",
+    "record": "specimen-ci/specimen-family-g/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-g/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-h",
+    "label": "Specimen family H",
+    "record": "specimen-ci/specimen-family-h/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-h/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "local-main"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-i",
+    "label": "Specimen family I",
+    "record": "specimen-ci/specimen-family-i/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-i/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "none"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-family-j",
+    "label": "Specimen family J",
+    "record": "specimen-ci/specimen-family-j/STATE.md",
+    "termination_condition": "Register delivered at specimen-ci/specimen-family-j/register-*.md with a BUILD-READY or NOT verdict",
+    "venue": "none"
+   },
+   {
+    "declared_at": "2026-11-25",
+    "estimate_minutes": null,
+    "key": "specimen-formation",
+    "label": "Specimen formation",
+    "record": "specimen-ci/specimen-formation/STATE.md",
+    "termination_condition": "Composed tree settles at the gate",
+    "venue": "local-main",
+    "seat": "coordinator"
+   }
+  ],
+  "retired": false
+ },
+ {
+  "slug": "specimen-classifier",
+  "label": "Specimen — classifier",
+  "handles": [
+   "@specimen-field"
+  ],
+  "cadence_minutes": 15,
+  "staffing_band": {
+   "min": 10,
+   "max": 12
+  },
+  "escalation_hours": 1,
+  "venue": "colab",
+  "coordinator_route": {
+   "sender": "wb",
+   "kind": "chat",
+   "handle": "@specimen-field"
+  },
+  "measure_classes": [
+   "idle",
+   "serial",
+   "stall",
+   "orphan",
+   "unreported"
+  ],
+  "drain_tail": [
+   {
+    "key": "consolidation",
+    "title": "Consolidation"
+   },
+   {
+    "key": "doc-updates",
+    "title": "Doc updates"
+   },
+   {
+    "key": "performance",
+    "title": "Performance pass"
+   }
+  ],
+  "staffing_contract": null,
+  "wb_projects": [],
+  "retired": true
+ },
+ {
+  "slug": "specimen-tenant",
+  "label": "Specimen — tenant site rebuild",
+  "handles": [
+   "@specimen-tenant"
+  ],
+  "cadence_minutes": 15,
+  "staffing_band": null,
+  "escalation_hours": 1,
+  "venue": "none",
+  "coordinator_route": {
+   "sender": "wb",
+   "kind": "chat",
+   "handle": "@specimen-tenant"
+  },
+  "measure_classes": [
+   "idle",
+   "serial",
+   "stall",
+   "orphan",
+   "unreported",
+   "register_seam",
+   "terminal",
+   "unlanded"
+  ],
+  "caller_stems": [
+   "speciment"
+  ],
+  "drain_tail": [
+   {
+    "key": "consolidation",
+    "title": "Consolidation"
+   },
+   {
+    "key": "doc-updates",
+    "title": "Doc updates"
+   },
+   {
+    "key": "performance",
+    "title": "Performance pass"
+   },
+   {
+    "key": "specimen-debt-paydown",
+    "title": "Specimen debt paydown"
+   }
+  ],
+  "staffing_contract": null,
+  "wb_projects": [
+   "specimen-tenant"
+  ],
+  "retired": false
+ },
+ {
+  "slug": "specimen-platform",
+  "label": "Specimen — platform build",
+  "handles": [
+   "@specimen-platform"
+  ],
+  "cadence_minutes": 15,
+  "staffing_band": null,
+  "escalation_hours": 1,
+  "venue": "colab",
+  "coordinator_route": {
+   "sender": "wb",
+   "kind": "chat",
+   "handle": "@specimen-platform"
+  },
+  "measure_classes": [
+   "idle",
+   "serial",
+   "stall",
+   "orphan",
+   "unreported",
+   "terminal",
+   "unlanded"
+  ],
+  "caller_stems": [
+   "specimenwork"
+  ],
+  "drain_tail": [
+   {
+    "key": "consolidation",
+    "title": "Consolidation"
+   },
+   {
+    "key": "doc-updates",
+    "title": "Doc updates"
+   },
+   {
+    "key": "performance",
+    "title": "Performance pass"
+   }
+  ],
+  "staffing_contract": null,
+  "wb_projects": [
+   "specimen-viewer",
+   "specimen-record"
+  ],
+  "retired": false
+ }
+]
