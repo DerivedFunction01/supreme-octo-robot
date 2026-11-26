@@ -642,8 +642,8 @@ def run_package(pkg: Package, *, repo_root: Path,
         kind = leg["leg"]
         name = leg.get("name", kind)
         if kind in ("foldercensus", "rootportability", "repolinecap",
-                    "repowriteruniqueness", "repoimportisolation",
-                    "reposcanners"):
+                    "repowriteruniqueness", "repoargvidioms",
+                    "repoimportisolation", "reposcanners"):
             # Repo-scoped: executed once per run by the
             # root check, never per package.
             result.skipped.append(name)

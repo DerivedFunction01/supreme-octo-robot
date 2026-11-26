@@ -67,6 +67,10 @@
     },
     {
      "kind": "gate component CLI default: the invocation directory is the default scan root; the runner always passes the root explicitly",
+     "path": "pipeline/gate/argvidioms.py"
+    },
+    {
+     "kind": "gate component CLI default: the invocation directory is the default scan root; the runner always passes the root explicitly",
      "path": "pipeline/gate/dateuniqueness.py"
     },
     {
