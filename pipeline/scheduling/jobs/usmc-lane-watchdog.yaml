@@ -2,7 +2,7 @@ id: usmc-lane-watchdog
 title: USMC Pay Monitor v2 — venue lane watchdog
 kind: scripted
 status: suspended
-suspend_reason: Owner ruling 2026-11-08 — the venue lane stays down (its Standard session is dead and the owner declined to revive or re-point it); gates and probes only. Suspension lifts on the owner's word when the lane is revived.
+suspend_reason: Ruling 2026-11-08 — the venue lane stays down (its Standard session is dead and revival or re-pointing was declined); gates and probes only. Suspension lifts by decision when the lane is revived.
 suspended_on: 2026-11-08
 cadence:
   type: interval

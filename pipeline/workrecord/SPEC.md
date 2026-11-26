@@ -12,7 +12,7 @@ for the workbench harness as consolidated in this repo at
 workbench-viewer repo's `SPEC.md` — the sole copy after
 that repo's retirement at the cutover —
 recovered verbatim from its GitHub mirror
-(`redacted/workbench-viewer`, blob
+(the standalone repo's mirror, blob
 `4c6dd403db4a807d38c3517a5d93febfaf708c16`). The port
 keeps the approved text verbatim except for this header
 and the two closing sections (§19, §20), which record

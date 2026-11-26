@@ -13,13 +13,13 @@ active jobs only; nothing here runs.
   **git-repo-viewer-digest** — a disabled pair, deleted
   under the inactive-schedules ruling; never
   registered.
-- **recruiter-reply-drafter** — retired at the owner's
-  direction (unneeded until he decides to re-enable).
+- **recruiter-reply-drafter** — retired by direction
+  (unneeded until a decision re-enables it).
   Its registry entry is deleted under the
   inactive-schedules ruling; its body and member state
   are untouched, and the deleted entry is preserved in
-  the owning goal's files, so re-registration on his
-  word is a restore, not a rebuild. The body file is
+  the owning goal's files, so re-registration on a
+  decision is a restore, not a rebuild. The body file is
   not carried in this tracked tree under the genericity
   ruling — it serves a per-deployment programme and
   its content is that programme's own record.
@@ -35,7 +35,7 @@ active jobs only; nothing here runs.
   **sweeper-deliver**, **sweeper-derive** — the
   sweeper apparatus (the agentic cycle and its scripted
   checker, delivery, and approvals-derivation tiers),
-  retired at the apparatus's closeout under the owner's
+  retired at the apparatus's closeout under the
   commission as boundary-corrected. The successor
   system is owner-attention.
 - **Five per-deployment entries** serving programmes

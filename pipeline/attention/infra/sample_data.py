@@ -104,10 +104,10 @@ def sample_state(now: datetime) -> dict:
             ],
         ),
         _item(
-            "demo-drill",
+            "demo-calendar",
             "calendar",
             "action",
-            "Confirm FY27 drill weekend",
+            "Confirm the quarterly planning review",
             "BLOCKED-OWNER",
             now,
             due_at=now + timedelta(days=4),

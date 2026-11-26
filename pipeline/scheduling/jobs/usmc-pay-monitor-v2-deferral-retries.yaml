@@ -1,9 +1,9 @@
 # ## Goal contract — USMC pay monitoring
 #
-# - **Objective** — The pay monitor v2's standing automation — the daily scheduling host, the deferral retries, and the venue lane watchdog — runs the drill-pay verification cycle unattended around each redacted-472 training weekend, checking that expected pay landed in window and in full and flagging any change.
-# - **Complete when** — Every FY27 drill period in the programme record shows a completed verification cycle in the jobs' run records — the deposit confirmed in window and in full, or a discrepancy flagged — with zero periods needing a manual drive.
+# - **Objective** — The registered application's standing automation — the daily scheduling host, the deferral retries, and the venue lane watchdog — runs its verification cycle unattended on its schedule, checking that expected results landed in window and in full and flagging any change.
+# - **Complete when** — Every scheduled period in the programme record shows a completed verification cycle in the jobs' run records — the result confirmed in window and in full, or a discrepancy flagged — with zero periods needing a manual drive.
 # - **Blocked only when** — a named hard stop, a genuine owner-only decision, or a verified external blocker. The claim carries its cited basis, with its time, and a verification stamp; an uncited or unverified claim is void — the work resumes under its standing authorization and the claim is surfaced as a defect. Sequencing choices, agent-clearable waits, and matters already decided are never blocked states.
-# - **Work record** — The programme record in the usmc-pay-monitoring goal workspace, and the three jobs' run records in the scheduler ledger.
+# - **Work record** — The programme record in the application's goal workspace, and the three jobs' run records in the scheduler ledger.
 # - **Cadence** — conforming progress-checkpoints every 15 minutes while doing; two missed intervals is a stall.
 # - **Continuation** — a step landing staffs the next in the same movement; a turn ends only with work in flight, a complete report, or a blocked report satisfying the Blocked only when clause. An acknowledgement does not clear a stall; measured movement does.
 #
