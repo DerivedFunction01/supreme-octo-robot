@@ -104,6 +104,14 @@ done
 HEAD=$(git rev-parse HEAD)
 echo "union head: $HEAD"
 export TMPDIR="$PWD/../tmp-$RUN_ID"
+export STARTER_DENYLIST_FILE=/home/agent/workspace/denylist.txt
+# Divided thread budget: this gate's envelope is bounded to
+# half the venue's pid ceiling. Library pools are capped per
+# process, so the footprint is workers x capped pools, never
+# workers sized as if each owned the whole machine.
+export OMP_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
+export MKL_NUM_THREADS=2 NUMEXPR_NUM_THREADS=2
+export POLARS_MAX_THREADS=2 RAYON_NUM_THREADS=2
 mkdir -p "$TMPDIR"
 python3 init_venv.py || exit 2
 GATE_WORKERS=$(nproc) python3 check.py "${CHECK_PATHS[@]}" > "../check-output-$RUN_ID.txt" 2>&1
