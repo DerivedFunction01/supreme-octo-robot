@@ -37,10 +37,8 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
-import importlib.util
 import json
 import os
-import sys
 from pathlib import Path
 
 MAGIC = b"SORSEAL1"
@@ -110,26 +108,34 @@ def is_sealed_blob(data: bytes) -> bool:
     return data.startswith(MAGIC)
 
 
-_WRITER = None
-
-
 def staged_write(path: Path, data: bytes, mode: int | None = None) -> None:
-    """Every staged write in this module rides the venue
-    sync tree's one writer home (writer_route, the
-    funnel's writer): this module performs no staged
-    protocol of its own. The sibling loads by path, the
-    same standalone form this module itself is loaded
-    under."""
-    global _WRITER
-    if _WRITER is None:
-        spec = importlib.util.spec_from_file_location(
-            "writer_route", Path(__file__).resolve().parent / "writer_route.py"
-        )
-        module = importlib.util.module_from_spec(spec)
-        sys.modules.setdefault("writer_route", module)
-        spec.loader.exec_module(module)
-        _WRITER = module.staged_write
-    _WRITER(path, data, mode=mode)
+    """The staged protocol inline (contract 15): stage
+    to a fresh sibling, fsync, read back and compare,
+    stamp the mode, rename over; a failure at any stage
+    unlinks the staging file and leaves the target
+    byte-identical. This module is a declared standalone
+    seam (the writer-uniqueness EXCEPTIONS table): it is
+    loaded by path by the dispatcher, outside the server
+    context the writer route's /ops leg needs, and its
+    writes are the dispatcher's own store — the key,
+    the blobs, the register. The protocol, not the
+    module, is the invariant."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(f".{path.name}.sched-tmp-{os.getpid()}")
+    try:
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        with open(tmp, "rb") as fh:
+            if fh.read() != data:
+                raise SealError(f"staged write read-back mismatch for {path}")
+        if mode is not None:
+            os.chmod(tmp, mode)
+        os.replace(tmp, path)
+    except BaseException:
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 def key_path(venue_root: Path) -> Path:
