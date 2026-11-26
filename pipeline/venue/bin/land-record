@@ -22,33 +22,40 @@ gates-per-landing and phase-wall-clock rows. A landing
 with gate runs but no green verdict run is refused:
 the record is written for a landed, gated change, and
 a red or never-ran gate is a different fact.
+
+Paths and date handling ride their homes: the paths
+spine (paths.py at the package root) owns the results
+derivation, and the lease core foundation owns the
+stamp parsing and epoch arithmetic — both bound by
+path, the bootstrap form the bin tools use.
 """
 
 from __future__ import annotations
 
 import argparse
+import importlib.util as _ilu
 import json
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 
-def _parse_stamp(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    try:
-        stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    if stamp.tzinfo is None:
-        stamp = stamp.replace(tzinfo=UTC)
-    return stamp
+def _load(name: str, path: Path):
+    spec = _ilu.spec_from_file_location(name, path)
+    module = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-def _minutes(start: datetime | None, end: datetime | None) -> float | None:
-    if start is None or end is None:
+_PATHS = _load(
+    "venue_paths", Path(__file__).resolve().parent.parent / "paths.py"
+)
+_FOUNDATION = _load("venue_lease_foundation", _PATHS.LEASE_FOUNDATION)
+
+
+def _minutes(start_epoch: float | None, end_epoch: float | None) -> float | None:
+    if start_epoch is None or end_epoch is None:
         return None
-    return round((end - start).total_seconds() / 60, 1)
+    return round((end_epoch - start_epoch) / 60, 1)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -72,12 +79,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    results = args.results_dir or Path(__file__).resolve().parent.parent / "results"
-    landed_at = _parse_stamp(args.now) or datetime.now(UTC)
+    runs_dir = args.results_dir / "runs" if args.results_dir else _PATHS.RUNS_DIR
+    epoch = _FOUNDATION.epoch
+
+    if args.now:
+        landed_at = _FOUNDATION.iso_utc(_FOUNDATION.parse_dt(args.now))
+    else:
+        landed_at = _FOUNDATION.stamp()
+    landed_epoch = epoch(landed_at)
 
     runs = []
     for run_id in args.gate_run:
-        path = results / "runs" / f"{run_id}.json"
+        path = runs_dir / f"{run_id}.json"
         if not path.is_file():
             print(f"land-record: no run record {run_id}", file=sys.stderr)
             return 2
@@ -87,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     for record in runs:
         if record.get("state") == "complete" and record.get("exit_code") == 0:
             verdict = record
-    gate_green_at = _parse_stamp(verdict.get("finished_at")) if verdict else None
+    gate_green_at = verdict.get("finished_at") if verdict else None
     if runs and gate_green_at is None:
         print(
             "land-record: no gate run completed green — a landing record "
@@ -96,22 +109,24 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    formation_opened = _parse_stamp(args.formation_at)
+    formation_opened = args.formation_at
     if formation_opened is None and runs:
         starts = [
-            stamp
-            for stamp in (_parse_stamp(r.get("started_at")) for r in runs)
-            if stamp is not None
+            (epoch(record.get("started_at")), record.get("started_at"))
+            for record in runs
         ]
-        formation_opened = min(starts) if starts else None
+        starts = [pair for pair in starts if pair[0] is not None]
+        if starts:
+            formation_opened = min(starts)[1]
     if formation_opened is None:
         formation_opened = landed_at
+    formation_epoch = epoch(formation_opened)
+    gate_epoch = epoch(gate_green_at)
 
     venue_minutes = 0.0
     for record in runs:
         span = _minutes(
-            _parse_stamp(record.get("started_at")),
-            _parse_stamp(record.get("finished_at")),
+            epoch(record.get("started_at")), epoch(record.get("finished_at"))
         )
         if span is not None:
             venue_minutes += span
@@ -125,23 +140,23 @@ def main(argv: list[str] | None = None) -> int:
     record = {
         "landed_sha": args.sha,
         "change": args.change,
-        "landed_at": landed_at.isoformat(),
-        "formation_opened_at": formation_opened.isoformat(),
-        "gate_green_at": gate_green_at.isoformat() if gate_green_at else None,
+        "landed_at": landed_at,
+        "formation_opened_at": formation_opened,
+        "gate_green_at": gate_green_at,
         "gate_runs": list(args.gate_run),
         "fires": len(runs),
         "venue_minutes": round(venue_minutes, 1),
         "constituent_count": constituents if constituents else 1,
         "phases_minutes": {
-            "formation_to_gate": _minutes(formation_opened, gate_green_at),
-            "gate_to_landed": _minutes(gate_green_at, landed_at),
-            "formation_to_landed": _minutes(formation_opened, landed_at),
+            "formation_to_gate": _minutes(formation_epoch, gate_epoch),
+            "gate_to_landed": _minutes(gate_epoch, landed_epoch),
+            "formation_to_landed": _minutes(formation_epoch, landed_epoch),
         },
     }
 
-    out_dir = results / "landings"
+    out_dir = runs_dir.parent / "landings"
     out_dir.mkdir(parents=True, exist_ok=True)
-    stamp = landed_at.strftime("%Y%m%dT%H%M%SZ")
+    stamp = landed_at.replace(":", "").replace("-", "")[:15]
     out = out_dir / f"{args.sha[:12]}-{stamp}.json"
     out.write_text(json.dumps(record, indent=1) + "\n", encoding="utf-8")
     phases = record["phases_minutes"]

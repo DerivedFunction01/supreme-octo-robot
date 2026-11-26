@@ -18,17 +18,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from statistics import median
 
+from .staffing_rows import _as_dt
+
 WINDOW_DAYS = 7
-
-
-def _parse_stamp(value) -> datetime | None:
-    if not isinstance(value, str) or not value:
-        return None
-    try:
-        stamp = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return stamp
 
 
 def _read_records(landings_dir: Path, now: datetime) -> list:
@@ -41,7 +33,7 @@ def _read_records(landings_dir: Path, now: datetime) -> list:
             record = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        landed_at = _parse_stamp(record.get("landed_at"))
+        landed_at = _as_dt(record.get("landed_at"))
         if landed_at is None or landed_at < cutoff or landed_at > now:
             continue
         records.append(record)

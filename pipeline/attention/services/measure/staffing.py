@@ -285,7 +285,11 @@ def build_staffing(
     age_minutes = (now - snapshot["at"]).total_seconds() / 60
     if age_minutes > settings.capacity_stale_minutes:
         return _unavailable(
-            state, snapshot, "Capacity snapshot is stale.", rows=prefix + owait, landings=landing_summary
+            state,
+            snapshot,
+            "Capacity snapshot is stale.",
+            rows=prefix + owait,
+            landings=landing_summary,
         )
     sessions = snapshot.get("sessions") or []
     live = [s["session"] for s in sessions]
@@ -308,7 +312,9 @@ def build_staffing(
     try:
         recent = run_records.read_recent(settings.run_records_dir, now)
     except run_records.RunRecordsUnavailable as err:
-        return _unavailable(state, snapshot, str(err), rows=prefix + owait, landings=landing_summary)
+        return _unavailable(
+            state, snapshot, str(err), rows=prefix + owait, landings=landing_summary
+        )
     running = [r for r in recent if r["state"] == "running" and not r["finished_at"]]
     live_runs = {name: 0 for name in live}
     for run in running:
