@@ -46,6 +46,16 @@ its targeting layout, and its legs in order. Leg kinds:
                  modules instead of the whole suite
 - isolation-unittest — a unittest suite wrapped in the
                  test-isolation state hash (gate.isolation)
+- pytest       — a pytest suite declared by the package's
+                 `suite` key (argv with {python} /
+                 {workers}, requirement pins, the
+                 scratch-venv interpreter story): the leg
+                 builds the venv through the gate
+                 venvbuild, resolves the argv against it
+                 and the derived worker count, and
+                 verdicts on pytest's exit code; under
+                 targeting it runs the resolved test
+                 files instead of the whole suite
 - ruff-format / ruff-lint / scanners — the static legs
                  (gate.staticlegs)
 - frontend     — a leg the app suites serve (declared,
@@ -156,8 +166,9 @@ from pathlib import Path
 from . import foldercensus, isolation, linecap, pathdiscipline
 from . import importisolation, portability, staticlegs
 from . import dateuniqueness, livingdates, writeruniqueness
+from . import pytestleg
 
-TEST_LEG_KINDS = ("unittest", "isolation-unittest")
+TEST_LEG_KINDS = ("unittest", "isolation-unittest", "pytest")
 SCANNER_LEG_KINDS = ("portability", "scanners", "livingdates")
 INTERPRETER_LEG_KINDS = (
     "command", "unittest", "isolation-unittest",
@@ -597,6 +608,10 @@ def run_leg(pkg: Package, leg: dict, *, repo_root: Path,
         code = 1 if failures else 0
     elif kind == "unittest":
         code = _run_unittest(pkg, leg, targeted_files, repo_root)
+    elif kind == "pytest":
+        code = pytestleg.run_pytest(
+            pkg, leg, targeted_files, repo_root,
+            derive_workers(pkg.decl, leg), _run_argv)
     elif kind == "isolation-unittest":
         state = leg.get("state", {})
         guard = isolation.IsolationGuard(

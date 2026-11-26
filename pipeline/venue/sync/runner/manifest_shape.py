@@ -208,11 +208,21 @@ def preflight_error(job, *, script_path=None, uploads_base=None, claim_error=Non
 
 
 def parse_transport(job) -> "dict | None":
-    """The manifest's validated branch-transport declaration
-    as a plain dict, or None when the job names no transport
-    (the bundle path). Call only after transport_error has
-    cleared the manifest."""
+    """The manifest's branch-transport declaration as a plain
+    dict, or None when the job names no transport (the bundle
+    path) or the declaration is incomplete — a branch
+    declaration missing a field, or carrying a non-string
+    one, parses to None here, and transport_error names the
+    defect in the composed pass. The parse never raises on
+    the declaration's shape: the dispatch entries compute
+    the pin verdict through this function while composing
+    the pass, before transport_error's own verdict lands,
+    so an incomplete declaration must reach that verdict as
+    data, not die here as a KeyError."""
     declared = job.get("transport")
     if not isinstance(declared, dict) or declared.get("kind") != "branch":
         return None
-    return {"kind": "branch", "repo": declared["repo"], "branch": declared["branch"], "sha": declared["sha"]}
+    fields = {name: declared.get(name) for name in ("repo", "branch", "sha")}
+    if any(not isinstance(value, str) or not value for value in fields.values()):
+        return None
+    return {"kind": "branch", **fields}

@@ -10,13 +10,54 @@ timeout).
 
 import importlib.util
 import subprocess
+import sys
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
+sys.path.insert(0, str(REPO / "tests" / "fixtures"))
+import repo_fixture  # noqa: E402
+
 spec = importlib.util.spec_from_loader("colab_sh", SourceFileLoader("colab_sh", str(REPO / "bin" / "colab-sh")))
 sh = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(sh)
+
+
+def load_fixture_sh(tmp_path):
+    """colab-sh loaded from the fixture repo copy (the
+    cli_repo form), with the fixture root it derives:
+    bin scripts derive their repo root from their own
+    file location, so the copy's root is the fixture
+    root and its detached-record registry
+    (results/detached under the root) lives in scratch.
+    The detached-record tests run against the copy —
+    never against the checkout's own registry, whose
+    writer route cannot reach outside the suite's
+    scratch roots."""
+    root = repo_fixture.cli_repo(tmp_path / "repo", tmp_path)
+    bin_dir = root / "bin"
+    # The entry point binds its root from the sibling
+    # _load module at exec time (REPO = _load.REPO), and
+    # _load is already in sys.modules from the checkout
+    # load above — the fixture copy's _load must be the
+    # registered one while the copy execs, or the copy
+    # silently roots at the checkout. The copy keeps its
+    # own reference after; the registry entry is restored.
+    saved = sys.modules.get("_load")
+    fload_spec = importlib.util.spec_from_loader("_load", SourceFileLoader("_load", str(bin_dir / "_load.py")))
+    fload = importlib.util.module_from_spec(fload_spec)
+    sys.modules["_load"] = fload
+    fload_spec.loader.exec_module(fload)
+    try:
+        fspec = importlib.util.spec_from_loader("colab_sh_fixture", SourceFileLoader("colab_sh_fixture", str(bin_dir / "colab-sh")))
+        mod = importlib.util.module_from_spec(fspec)
+        fspec.loader.exec_module(mod)
+    finally:
+        if saved is None:
+            sys.modules.pop("_load", None)
+        else:
+            sys.modules["_load"] = saved
+    return mod, root
 
 
 def test_proxy_command_uses_cli_venv_python_and_oauth2():
@@ -107,13 +148,14 @@ class FakeRun:
         return subprocess.CompletedProcess(cmd, self.rc)
 
 
-def run_main(monkeypatch, fake, argv, tmp_path, live_state=None):
-    monkeypatch.setattr(sh.subprocess, "run", fake)
+def run_main(monkeypatch, fake, argv, tmp_path, live_state=None, mod=None):
+    mod = mod or sh
+    monkeypatch.setattr(mod.subprocess, "run", fake)
     # The main() scenarios below target a live session; the connect
     # guard's own refusal paths are pinned by the tests after them.
     # The fake takes the budget kwargs too: the async path passes
     # the reduced read budget through this seam.
-    monkeypatch.setattr(sh, "live_state", live_state or (lambda session, **kw: "alive"))
+    monkeypatch.setattr(mod, "live_state", live_state or (lambda session, **kw: "alive"))
     # main() refuses before connecting when the local identity or
     # the CLI venv python is absent; point both seams at scratch
     # files so the scenarios never depend on the real HOME's key
@@ -122,9 +164,9 @@ def run_main(monkeypatch, fake, argv, tmp_path, live_state=None):
     identity.write_text("fake-test-identity")
     venv_python = tmp_path / "venv-python"
     venv_python.write_text("")
-    monkeypatch.setattr(sh, "DEFAULT_IDENTITY", identity)
-    monkeypatch.setattr(sh, "CLI_VENV_PYTHON", venv_python)
-    return sh.main(argv)
+    monkeypatch.setattr(mod, "DEFAULT_IDENTITY", identity)
+    monkeypatch.setattr(mod, "CLI_VENV_PYTHON", venv_python)
+    return mod.main(argv)
 
 
 def test_main_propagates_remote_exit_code(tmp_path, monkeypatch):
@@ -331,8 +373,8 @@ def _ssh_calls(fake):
     return [(c, k) for c, k in fake.calls if c[0] == "ssh"]
 
 
-def _detached_path(did):
-    return REPO / "results" / "detached" / f"{did}.json"
+def _detached_path(did, root=None):
+    return (root or REPO) / "results" / "detached" / f"{did}.json"
 
 
 def test_over_cap_sync_refuses_before_any_dial(tmp_path, monkeypatch, capsys):
@@ -420,12 +462,13 @@ def test_detach_launch_retries_busy_then_succeeds(tmp_path, monkeypatch, capsys)
     a success is a successful launch, three ssh attempts."""
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
     monkeypatch.delenv("COLAB_CALLER", raising=False)
-    monkeypatch.setattr(sh, "BUSY_BACKOFF_S", (0, 0))
+    fsh, froot = load_fixture_sh(tmp_path)
+    monkeypatch.setattr(fsh, "BUSY_BACKOFF_S", (0, 0))
     fake = SeqRun([BUSY, BUSY, (0, "", "")])
-    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path)
+    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path, mod=fsh)
     assert rc == 0 and len(_ssh_calls(fake)) == 3
     did = json.loads(capsys.readouterr().out.strip())["id"]
-    _detached_path(did).unlink(missing_ok=True)
+    _detached_path(did, froot).unlink(missing_ok=True)
 
 
 def test_detach_launch_busy_exhaustion_is_a_named_verdict(tmp_path, monkeypatch, capsys):
@@ -461,14 +504,15 @@ def test_async_path_uses_the_reduced_read_budget(tmp_path, monkeypatch, capsys):
     var2 = tmp_path / "v2"
     var2.mkdir()
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
+    fsh, froot = load_fixture_sh(tmp_path)
     fake = FakeRun(rc=0)
-    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path, live_state=recording)
+    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path, live_state=recording, mod=fsh)
     assert rc == 0 and calls == [("alpha", 2, 45)]
     did = json.loads(capsys.readouterr().out.strip())["id"]
-    _detached_path(did).unlink(missing_ok=True)
+    _detached_path(did, froot).unlink(missing_ok=True)
     calls.clear()
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(var2))
-    assert run_main(monkeypatch, FakeRun(rc=0), ["-s", "alpha", "echo", "hi"], tmp_path, live_state=recording) == 0
+    assert run_main(monkeypatch, FakeRun(rc=0), ["-s", "alpha", "echo", "hi"], tmp_path, live_state=recording, mod=fsh) == 0
     assert calls == [("alpha", None, 120)]
 
 
@@ -499,15 +543,16 @@ def test_mirror_restore_skips_while_fresh(tmp_path, monkeypatch, capsys):
     stamp skips it for the next attach inside the window."""
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
     monkeypatch.delenv("COLAB_CALLER", raising=False)
+    fsh, froot = load_fixture_sh(tmp_path)
     fake = FakeRun(rc=0)
     dids = []
     for _ in range(2):
-        assert run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path) == 0
+        assert run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "echo hi"], tmp_path, mod=fsh) == 0
         dids.append(json.loads(capsys.readouterr().out.strip())["id"])
     restores = [c for c, _ in fake.calls if any("mirror_transient" in str(part) for part in c)]
     assert len(restores) == 1
     for did in dids:
-        _detached_path(did).unlink(missing_ok=True)
+        _detached_path(did, froot).unlink(missing_ok=True)
 
 
 def test_orphan_advisory_names_the_adopt_verb(tmp_path, monkeypatch, capsys):
@@ -533,30 +578,31 @@ def test_detach_launch_registers_and_poll_unregisters(tmp_path, monkeypatch, cap
     monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
     monkeypatch.delenv("COLAB_CALLER", raising=False)
     _plant_record(tmp_path, "alpha", "2026-11-08T12:00:00+00:00")
+    fsh, froot = load_fixture_sh(tmp_path)
     fake = FakeRun(rc=0)
-    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "--caller", "lease", "echo hi"], tmp_path)
+    rc = run_main(monkeypatch, fake, ["-s", "alpha", "--detach", "--caller", "lease", "echo hi"], tmp_path, mod=fsh)
     assert rc == 0
     did = json.loads(capsys.readouterr().out.strip())["id"]
     try:
-        rec = json.loads(_detached_path(did).read_text())
+        rec = json.loads(_detached_path(did, froot).read_text())
         assert rec["id"] == did and rec["session"] == "alpha" and rec["caller"] == "lease"
         assert rec["state"] == "running" and rec["exit_code"] is None and rec["finished_at"] is None
         record = json.loads((tmp_path / "lease-alpha.json").read_text())
         assert record["jobs"] == [f"detached:{did}"]
         meta = json.dumps({"id": did, "session": "alpha", "caller": "lease", "started_at": rec["started_at"], "state": "running"})
         done = StdoutRun(meta + "\nSTATE done\nEXIT 7\n---LOG---\nfinished\n")
-        rc = run_main(monkeypatch, done, ["-s", "alpha", "--poll", did], tmp_path)
+        rc = run_main(monkeypatch, done, ["-s", "alpha", "--poll", did], tmp_path, mod=fsh)
         assert rc == 7
-        rec = json.loads(_detached_path(did).read_text())
+        rec = json.loads(_detached_path(did, froot).read_text())
         assert rec["state"] == "complete" and rec["exit_code"] == 7 and rec["finished_at"] is not None
         record = json.loads((tmp_path / "lease-alpha.json").read_text())
         assert record["jobs"] == []
     finally:
-        _detached_path(did).unlink(missing_ok=True)
+        _detached_path(did, froot).unlink(missing_ok=True)
 
 
-def _plant_detached(did, state, exit_code=None):
-    path = _detached_path(did)
+def _plant_detached(did, state, exit_code=None, root=None):
+    path = _detached_path(did, root)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({
         "id": did, "session": "alpha", "caller": "lease", "state": state,
@@ -571,14 +617,15 @@ def test_wait_reads_only_the_local_record(tmp_path, monkeypatch):
     record alone — the channel seams are rigged to explode, and
     a missing record is a failed outcome (1), a running one at
     the bound is 3."""
-    monkeypatch.setattr(sh.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("channel used")))
-    monkeypatch.setattr(sh, "live_state", lambda session, **kw: (_ for _ in ()).throw(AssertionError("dialed")))
-    paths = [_plant_detached("waitdone1", "complete", 0), _plant_detached("waitfail1", "failed", 3), _plant_detached("waitrun1", "running")]
+    fsh, froot = load_fixture_sh(tmp_path)
+    monkeypatch.setattr(fsh.subprocess, "run", lambda *a, **k: (_ for _ in ()).throw(AssertionError("channel used")))
+    monkeypatch.setattr(fsh, "live_state", lambda session, **kw: (_ for _ in ()).throw(AssertionError("dialed")))
+    paths = [_plant_detached("waitdone1", "complete", 0, froot), _plant_detached("waitfail1", "failed", 3, froot), _plant_detached("waitrun1", "running", root=froot)]
     try:
-        assert sh.main(["--wait", "waitdone1"]) == 0
-        assert sh.main(["--wait", "waitfail1"]) == 1
-        assert sh.main(["--wait", "waitrun1", "--max", "0"]) == 3
-        assert sh.main(["--wait", "waitgone1"]) == 1
+        assert fsh.main(["--wait", "waitdone1"]) == 0
+        assert fsh.main(["--wait", "waitfail1"]) == 1
+        assert fsh.main(["--wait", "waitrun1", "--max", "0"]) == 3
+        assert fsh.main(["--wait", "waitgone1"]) == 1
     finally:
         for path in paths:
             path.unlink(missing_ok=True)

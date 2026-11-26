@@ -318,7 +318,7 @@ def test_attach_unknown_target_fails_without_dispatch(tmp_path, monkeypatch, cap
     assert rc == 2
     assert "attach to an existing run" in err
     assert finalized == []
-    assert sorted(p.name for p in runs_dir.iterdir()) == [f"{NEW_ID}.json", f"{OLD_ID}.json"]
+    assert sorted(p.name for p in runs_dir.iterdir()) == [f"{OLD_ID}.json", f"{NEW_ID}.json"]
 
 
 def test_poll_running_and_unreachable_readings(tmp_path, monkeypatch, capsys):

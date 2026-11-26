@@ -1,0 +1,1 @@
+{"entries":[],"note":"The tooling layer's enumeration: one entry per genuinely live-requiring check, in the form {id, module, reach, job} — the check's module in this package, the live surface it reaches for, and the job manifest it dispatches as. The layer stands empty: no check is registered until a live need commissions one."}
