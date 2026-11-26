@@ -22,6 +22,12 @@ The confirmation pins: every terminal verdict — a poll's
 finalize, a reader-pass re-derive — stands on two
 independent reads of the run's own exit file agreeing on
 the code; a contested read serves no verdict.
+
+The attach pins: an invocation carrying --poll/--wait
+attaches to an existing run (a run id, or a job name's
+newest run) wherever the flag sits, and never dispatches
+— the job-first form that once re-fired the job is the
+headline case.
 """
 
 import json
@@ -206,6 +212,110 @@ def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, ca
     assert rc == 0 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
     assert finalized == []
     assert len(reads) == len(mod.READ_BACKOFF_S) + 1
+
+
+def load_local_run_jobs(monkeypatch, tmp_path, records, readings):
+    """The attach-resolution harness: records is a
+    {run_id: rec} dict the stubbed loader reads, the
+    module's RUNS is a real directory holding one file
+    per record (the job scan globs it), and the container
+    reader serves the readings sequence like the poll
+    harness. Returns (mod, finalized, runs_dir)."""
+    mod = load_module("local_run_attach_unit", REPO / "bin" / "local-run")
+    runs_dir = tmp_path / "runs"
+    runs_dir.mkdir()
+    for rid in records:
+        (runs_dir / f"{rid}.json").write_text("{}")
+    finalized = []
+    reads = []
+
+    def fake_finalize(r, rd):
+        finalized.append((r["run_id"], rd["exit_code"]))
+        state = "complete" if rd["exit_code"] == 0 else "failed"
+        r.update(state=state, exit_code=rd["exit_code"], finished_at=rd.get("finished_at"))
+        return state
+
+    def fake_read(repo, r, target=None):
+        reads.append(r["run_id"])
+        return readings[min(len(reads) - 1, len(readings) - 1)]
+
+    monkeypatch.setattr(mod, "RUNS", runs_dir)
+    monkeypatch.setattr(mod, "load_run_record", lambda run_id: records.get(run_id))
+    monkeypatch.setattr(mod, "_record_target", lambda r: TARGET)
+    monkeypatch.setattr(mod, "finalize_local_record", fake_finalize)
+    monkeypatch.setattr(mod.local_venue, "ensure_transport", lambda target: True)
+    monkeypatch.setattr(mod.local_venue, "read_run_state", fake_read)
+    monkeypatch.setattr(mod.time, "sleep", lambda s: None)
+    return mod, finalized, runs_dir
+
+
+JOB = "jobx"
+OLD_ID = "jobx-20261126T010000Z"
+NEW_ID = "jobx-20261126T020000Z"
+EXIT0 = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-26T02:05:00+00:00", "output_tail": "ok\n"}
+
+
+def _job_records():
+    return {
+        OLD_ID: {"run_id": OLD_ID, "job": JOB, "venue": "local", "state": "complete", "exit_code": 0,
+                 "started_at": "2026-11-26T01:00:00+00:00"},
+        NEW_ID: {"run_id": NEW_ID, "job": JOB, "venue": "local", "state": "running",
+                 "started_at": "2026-11-26T02:00:00+00:00"},
+    }
+
+
+def test_job_first_wait_attaches_to_newest_and_dispatches_nothing(tmp_path, monkeypatch, capsys):
+    """The re-dispatch defect's pin: `local-run <job>
+    --wait` attaches to the job's newest run and settles
+    it — no new run is minted (the runs dir's file set is
+    byte-identical after the call)."""
+    mod, finalized, runs_dir = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    before = sorted(p.name for p in runs_dir.iterdir())
+    monkeypatch.setattr(sys, "argv", ["local-run", JOB, "--wait", "--max", "60"])
+    rc = mod.main()
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert out == {"run_id": NEW_ID, "state": "complete", "exit_code": 0}
+    assert finalized == [(NEW_ID, 0)]
+    assert sorted(p.name for p in runs_dir.iterdir()) == before
+
+
+def test_wait_with_job_name_attaches_to_newest(tmp_path, monkeypatch, capsys):
+    """`--wait <job>` resolves the job's newest run the
+    same way — the flag-first form and the job-first form
+    are the one attach."""
+    mod, finalized, _runs = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    monkeypatch.setattr(sys, "argv", ["local-run", "--wait", JOB, "--max", "60"])
+    rc = mod.main()
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert out == {"run_id": NEW_ID, "state": "complete", "exit_code": 0}
+    assert finalized == [(NEW_ID, 0)]
+
+
+def test_job_first_poll_attaches(tmp_path, monkeypatch, capsys):
+    """`local-run <job> --poll` is the same attach in its
+    one-shot form."""
+    mod, finalized, _runs = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    monkeypatch.setattr(sys, "argv", ["local-run", JOB, "--poll"])
+    rc = mod.main()
+    out = json.loads(capsys.readouterr().out)
+    assert rc == 0
+    assert out == {"run_id": NEW_ID, "state": "complete", "exit_code": 0}
+    assert finalized == [(NEW_ID, 0)]
+
+
+def test_attach_unknown_target_fails_without_dispatch(tmp_path, monkeypatch, capsys):
+    """An attach naming nothing resolvable fails with
+    the attach contract — and dispatches nothing."""
+    mod, finalized, runs_dir = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0])
+    monkeypatch.setattr(sys, "argv", ["local-run", "--wait", "no-such-run-or-job"])
+    rc = mod.main()
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "attach to an existing run" in err
+    assert finalized == []
+    assert sorted(p.name for p in runs_dir.iterdir()) == [f"{NEW_ID}.json", f"{OLD_ID}.json"]
 
 
 def test_poll_running_and_unreachable_readings(tmp_path, monkeypatch, capsys):

@@ -3,6 +3,12 @@
 
 Usage: local-run <job-name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
 
+--poll and --wait ATTACH to an existing run and never
+dispatch, wherever the flag sits: the attach target is a
+run id, or a job name, which attaches to that job's newest
+run. A dispatch is spelled as a bare job name with no
+attach flag.
+
 A job named in adapters/local/sealed-register.json is
 sealed: its script files stand in the tree only as
 <name>.sealed blobs under the runner's server-side key
@@ -317,6 +323,26 @@ def _record_target(rec):
     return target or local_venue.venue_target(REPO)
 
 
+def _newest_record_for_job(job_name: str) -> dict | None:
+    """The newest local run record for a job name — the
+    attach target when a --poll/--wait names the job rather
+    than a run id. Run ids are <job>-<UTC timestamp>, so
+    the job's records are the <job>-*.json files; the
+    newest is the greatest started_at among them."""
+    best = None
+    try:
+        files = sorted(RUNS.glob(f"{job_name}-*.json"))
+    except OSError:
+        return None
+    for f in files:
+        rec = load_run_record(f.stem)
+        if rec is None or rec.get("job") != job_name or rec.get("venue") != "local":
+            continue
+        if best is None or str(rec.get("started_at") or "") >= str(best.get("started_at") or ""):
+            best = rec
+    return best
+
+
 def _seal_job(job_name: str, args: list) -> int:
     """Seal one job's script files in place: every file
     beside the manifest except job.json and existing
@@ -427,10 +453,26 @@ def main() -> int:
         if len(args) < 2:
             return _fail("usage: local-run --verify-sealed <job-name>")
         return _verify_sealed(args[1])
-    if args[0] in ("--poll", "--wait"):
-        rec = load_run_record(args[1]) if len(args) > 1 else None
+    if "--poll" in args or "--wait" in args:
+        # Attach, never dispatch: an invocation carrying an
+        # attach flag resolves to an existing run record or
+        # fails here — it can never fall through to the job
+        # path below, whose bare job name is the only dispatch
+        # spelling. (The defect this closes: `local-run <job>
+        # --wait` read as a dispatch and re-fired the job —
+        # a second execution of work believed to be a poll.)
+        mode = "--wait" if "--wait" in args else "--poll"
+        flag_at = args.index(mode)
+        target_token = None
+        if flag_at + 1 < len(args) and not args[flag_at + 1].startswith("--"):
+            target_token = args[flag_at + 1]
+        elif args[0] != mode:
+            target_token = args[0]
+        rec = load_run_record(target_token) if target_token else None
+        if rec is None and target_token:
+            rec = _newest_record_for_job(target_token)
         if rec is None:
-            return _fail("a run id is required and must name a run record")
+            return _fail("--poll/--wait attach to an existing run: name a run id, or a job name that has at least one run")
         if rec.get("venue") != "local":
             return _fail(f"run {rec['run_id']} is not a local-venue run")
         if rec.get("state") in TERMINAL_STATES:
@@ -451,7 +493,7 @@ def main() -> int:
         if target is None:
             return _fail("no local venue target resolves for this run (config/lease.json venue_targets.local)")
         local_venue.ensure_transport(target)
-        if args[0] == "--poll":
+        if mode == "--poll":
             out = _poll(rec, target)
             print(json.dumps({"run_id": rec["run_id"], **out}, indent=2))
             return 0
