@@ -1,7 +1,7 @@
 """Venue-transport specimens for the worktree trim, under
-the no-held-set ruling (owner, 2026-11-26): a branch a
+the no-held-set ruling (owner): a branch a
 venue run record names as its transport base gets NO
-exemption from the cap in any phase. The 2026-11-23 cure
+exemption from the cap in any phase. A prior cure
 held such branches (the PPE packet's pperb-base-pin,
 deleted twice mid-flight); the ruling retired every hold
 that outranks the cap — a claimed in-flight state is
@@ -30,8 +30,7 @@ def _iso(epoch):
 
 
 class TestVenueTransportNoExemption(Fixture):
-    """Run records exempt nothing (owner ruling,
-    2026-11-26). The specimens keep the old cure's exact
+    """Run records exempt nothing (owner ruling). The specimens keep the old cure's exact
     shapes — a contained pin, a live family cycling on
     it — and assert the ordinary outcomes."""
 

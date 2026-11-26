@@ -10,7 +10,7 @@ The archive is a folder holding the worktree directory itself
 with it, so a move-back restores the tree whole), and a
 manifest. Restoration is mechanical: ops/worktree_restore.sh.
 
-No held set (owner ruling, 2026-11-26): the cap binds the
+No held set (owner ruling): the cap binds the
 whole population — no state exempts a tree or a branch,
 not uncommitted or unlanded work, not a live process, not
 a run record, not an explicit hold. A dirty tree is
@@ -299,8 +299,7 @@ class TestTrim(Fixture):
         self.assertTrue(self.branch_exists("feat/x"))
 
     def test_dirty_tree_is_autocommitted_then_archived(self):
-        # Work state never holds a tree (owner ruling,
-        # 2026-11-26): the trim commits the dirty state in
+        # Work state never holds a tree (owner ruling): the trim commits the dirty state in
         # place — tracked change and untracked file alike —
         # with a message naming the trim as the actor, and
         # the tree re-enters the same pass clean, so at
@@ -599,7 +598,7 @@ class TestTrimSecondRepo(Fixture):
 
     def test_stale_transport_bundles_are_cut_young_stand(self):
         # Bundles are inside the trim regime (owner
-        # ruling, 2026-11-26): a transport bundle is a
+        # ruling): a transport bundle is a
         # copy, never a preservation claim. The parent
         # pass censuses the scratch roots and cuts every
         # bundle older than the grace, by name; a bundle

@@ -1,4 +1,4 @@
-"""Venue-form trim specimens (owner ruling, 2026-11-26:
+"""Venue-form trim specimens (owner ruling:
 the same trim system maintains the local venues' disk
 under the identical rules). The fixture builds a fake
 venue home — run trees, clones, bundles — and runs

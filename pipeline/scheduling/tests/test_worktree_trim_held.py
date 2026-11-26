@@ -14,14 +14,13 @@ from tests.test_worktree_trim import (
 
 
 class TestNoHeldSet(Fixture):
-    """No held set (owner ruling, 2026-11-26): the cap
+    """No held set (owner ruling): the cap
     binds the whole population — one specimen per former
     hold class, each pinning that the class exempts
     nothing now."""
 
     def test_unlanded_tree_archives_and_its_branch_stands(self):
-        # Unlanded state holds nothing (owner ruling,
-        # 2026-11-26): the DF-NEXT-101 specimen shape — a
+        # Unlanded state holds nothing (owner ruling): the DF-NEXT-101 specimen shape — a
         # formation tree ahead of base, unmerged — archives
         # at cap 0 in the ordinary pass, exactly like the
         # landed elder. What protects in-flight work now is
@@ -132,7 +131,7 @@ class TestNoHeldSet(Fixture):
 
 
 class TestAutoCommit(Fixture):
-    """The auto-commit path (owner ruling, 2026-11-26):
+    """The auto-commit path (owner ruling):
     work state is committed by the trim, never held for."""
 
     def test_detached_dirty_tree_gets_the_trim_branch(self):
@@ -281,7 +280,7 @@ class TestPurgeBranch(Fixture):
     def _hand_branch_cap_package(self, expiry):
         """A branch-cap archive package written by hand,
         as the cap phase leaves it: the bundle, its rows,
-        and — the 2026-11-26 cure — the purge manifest
+        and, since the cure, the purge manifest
         carrying the package's expiry. Before the cure
         the package carried no expiry the clean script
         reads, so branch-cap bundles accumulated past
