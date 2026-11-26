@@ -15,9 +15,9 @@
 # example stays inside the repo so a fresh install runs it
 # unchanged.
 set -euo pipefail
-export PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 # Argument surface: none. The empty declaration is
 # parsed by the unified argv contract's bash adapter

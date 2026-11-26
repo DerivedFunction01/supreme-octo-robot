@@ -10,7 +10,8 @@
 #   touch state/flaky-on    # the check starts failing
 #   rm state/flaky-on       # the check passes again
 set -euo pipefail
-export PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../ops" && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 

@@ -35,9 +35,9 @@
 # Exit 0: server healthy. Exit 1: server down and the
 # ladder failed or was already spent for this episode.
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 # Argument surface: none. The empty declaration is
 # parsed by the unified argv contract's bash adapter

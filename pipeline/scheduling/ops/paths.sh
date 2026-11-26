@@ -12,7 +12,8 @@
 # back to the original one-level-up derivations.
 #
 # Exports: SCHED_OPS_DIR, SCHED_REPO_ROOT, SCHED_WS_ROOT,
-# SCHED_USER_HOME_DIR, SCHED_STATE_DIR, SCHED_REGISTRY_DIR.
+# SCHED_USER_HOME_DIR, SCHED_STATE_DIR, SCHED_REGISTRY_DIR,
+# SCHED_PATH.
 
 SCHED_OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -53,6 +54,14 @@ fi
 SCHED_USER_HOME_DIR="$(dirname "$SCHED_WS_ROOT")"
 SCHED_STATE_DIR="$SCHED_REPO_ROOT/state"
 SCHED_REGISTRY_DIR="$SCHED_REPO_ROOT/registry"
+
+# The one PATH anchor for the ops tree: a sourcing script
+# exports PATH="$SCHED_PATH" instead of restating a literal.
+# The home bin dir leads — the platform's own tools install
+# there (uv and its tool shims) and are unfindable under the
+# bare system default in non-login shells, the recorded
+# failure class this anchor exists to cure.
+SCHED_PATH="$SCHED_USER_HOME_DIR/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # Direct-execution guard: sourced (the intended use),
 # this file declares no argument surface of its own —

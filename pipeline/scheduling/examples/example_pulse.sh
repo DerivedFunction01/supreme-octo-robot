@@ -3,7 +3,8 @@
 # timestamped line and exits 0. The simplest possible entry
 # in the registry — copy it when admitting a real job.
 set -euo pipefail
-export PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../ops" && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 # Argument surface: none. The empty declaration is
 # parsed by the unified argv contract's bash adapter

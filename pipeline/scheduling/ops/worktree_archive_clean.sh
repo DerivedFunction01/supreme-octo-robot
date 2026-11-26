@@ -44,11 +44,11 @@
 # the fake-clock seam), --dry-run prints WOULD-PURGE lines
 # and removes nothing (and enqueues nothing).
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=paths.sh
 . "$OPS_DIR/paths.sh"
+export PATH="$SCHED_PATH"
 
 ARCHIVE_ROOT="${WORKTREE_ARCHIVE_ROOT:-$SCHED_WS_ROOT/worktree-archive}"
 STATE_DIR="${WORKTREE_TRIM_STATE_DIR:-$SCHED_STATE_DIR/worktree-trim}"

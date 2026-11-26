@@ -4,7 +4,8 @@
 # output is delivered as a report ping after every run —
 # the pattern for jobs whose output IS the product.
 set -euo pipefail
-export PATH="/usr/local/bin:/usr/bin:/bin:${PATH}"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../ops" && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 

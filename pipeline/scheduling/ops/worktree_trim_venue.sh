@@ -54,11 +54,15 @@
 # WORKTREE_TRIM_BUNDLE_GRACE_SECS (default 86400),
 # WORKTREE_TRIM_NOW (epoch seconds, the fake-clock seam).
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 GIT="git -c core.fsync=none"
 NOW="${WORKTREE_TRIM_NOW:-$(date +%s)}"
 VENUE_HOME="${WORKTREE_TRIM_VENUE_HOME:-$HOME}"
+# The PATH anchor's value (ops/paths.sh SCHED_PATH), derived
+# from this script's own home seam: the venue job copies this
+# file out of the tree and runs it detached, so the shared
+# module cannot be sourced here.
+export PATH="$VENUE_HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 RUN_CAP="${WT_TRIM_VENUE_RUN_CAP:-300}"
 CLONE_CAP="${WT_TRIM_VENUE_CLONE_CAP:-40}"
 BUNDLE_GRACE="${WORKTREE_TRIM_BUNDLE_GRACE_SECS:-86400}"

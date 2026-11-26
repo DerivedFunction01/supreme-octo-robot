@@ -42,9 +42,9 @@
 # rule: no hardcoded home/workspace paths in tracked files);
 # SCHEDULER_MEMORY_FILE / SCHEDULER_BASELINE_FILE override.
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 # Argument surface: none. The empty declaration is
 # parsed by the unified argv contract's bash adapter

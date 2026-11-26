@@ -63,9 +63,9 @@
 # SCHEDULER_HEALTH_URL, SCHEDULER_POLL_SECS, SCHEDULER_FRESH_POLL_SECS,
 # SCHEDULER_PROBE_SECS, SCHEDULER_PROBE_BUDGET_SECS.
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+export PATH="$SCHED_PATH"
 
 # Argument surface: none. The empty declaration is
 # parsed by the unified argv contract's bash adapter

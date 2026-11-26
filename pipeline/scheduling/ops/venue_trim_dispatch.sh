@@ -19,11 +19,11 @@
 # 3 = partial (a venue unreachable, unreported, or its
 # pass partial).
 set -uo pipefail
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=paths.sh
 . "$OPS_DIR/paths.sh"
+export PATH="$SCHED_PATH"
 REPO_ROOT="$(cd "$OPS_DIR/../../.." && pwd)"
 LOCAL_RUN="$REPO_ROOT/pipeline/venue/bin/local-run"
 # The report read rides the runner's own SSH transport.
