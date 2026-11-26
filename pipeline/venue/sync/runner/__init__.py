@@ -39,6 +39,9 @@ from . import foundation
 from . import dispatch, execute, launch, pull, reader, records, replace, sweep, verbs
 
 from .foundation import REPO, RUNS, cli, colab, colab_bin, colab_env, TOKEN, lease, mirror, now, repo_registry, transfer
+from .claims import ManifestUnreadable, load_manifest
+from .manifest_shape import preflight_error
+from .outcome import classify_outcome
 from .records import TERMINAL_STATES, claim_first_save, emit_terminal_event, load_run_record, mark_terminal, outbox_path, save_record
 from .reader import LAUNCH_ABSENCE_GRACE_S, POLL_FAILURE_BOUND, _absence_grace_s, _launch_age_s, read_reader, register_poll_failure, write_reader
 from .pull import SINGLE_FILE_CEILING_BYTES, finalize_run, pull_outputs
@@ -54,6 +57,7 @@ __all__ = [
     "mirror", "now",
     "TERMINAL_STATES", "save_record", "claim_first_save", "load_run_record",
     "outbox_path", "emit_terminal_event", "mark_terminal",
+    "ManifestUnreadable", "load_manifest", "preflight_error", "classify_outcome",
     "POLL_FAILURE_BOUND", "LAUNCH_ABSENCE_GRACE_S",
     "_absence_grace_s", "_launch_age_s",
     "write_reader", "read_reader", "register_poll_failure",

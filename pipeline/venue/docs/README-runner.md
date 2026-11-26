@@ -9,6 +9,12 @@ Runs compute-bound work from this 2-vCPU machine on a Colab Pro high-RAM CPU run
 3. The job executes detached on the VM (never as a kernel cell — the kill matrix measured that cells die with the local CLI); the wrapper polls and pushes checkpoints off the VM at the job's cadence.
 4. Results return as artifacts plus a hash manifest. The session stays up for the next job; a script-level reaper hook (2-minute poll) enforces the lease deadline. Colab is compute-only: code is authored on this machine, never on the VM.
 
+## Dispatch routes
+
+Gate dispatches ride pre-authorized routes: the scheduler ops route (`bin/sched exec`) and the venue runner's own entries (`bin/colab-run`, `bin/local-run` — the `--daemonize` form when the firing context is bounded, so the fire survives it). Both routes execute without a per-fire approval, so a dispatch's outcome is the run's own: a record, a verdict, or a named refusal from the pre-dispatch validation.
+
+The anti-form is a bare agent-shell exec of a dispatch. Each such fire mints a runtime approval card, and an unanswered card kills the fire with no run performed — the dispatch dies before launch and leaves nothing to reconcile. Twenty cards timed out unanswered in one day of the wall-clock measurement, ≈7h44m of card-pending time, inside dispatch windows that produced no runs at all. A fire that needs a route it does not have stops and names the route; it never falls back to a bare-shell dispatch.
+
 ## Job manifests: transport
 
 The manifest declares the tree's form; the runner holds the preference. Every run record stamps the transport used (`transport` on `results/runs/<run_id>.json`), the bytes the runner moved, and the claim→launch span, so adoption is measured from records — `ops/transport_report.py` reads the records back as per-programme branch / bundle / never-launched counts over a day or a rolling window.

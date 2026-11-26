@@ -66,6 +66,16 @@ managed transport still coming up, the venue healthy
 minutes later — retries with bounded backoff inside the
 same fire, and a refusal after the bound names the warmup,
 never the venue.
+
+Pre-dispatch validation is the one pass the Colab entries
+consume (sync/runner/manifest_shape.py's preflight_error),
+folded over this entry's seams at the dispatch below: the
+manifest loads through the runner's retrying reader, and
+its field shapes, the script's presence (a sealed job's:
+its blob), the declared uploads' presence, and the caller
+claim's registration all settle before the lease
+registration or any SSH step — a defect refuses in
+seconds, naming itself.
 """
 
 import importlib.util
@@ -509,13 +519,48 @@ def main() -> int:
     manifest_path = JOBS / job_name / "job.json"
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
-    job = json.loads(manifest_path.read_text())
+    try:
+        job = load_manifest(manifest_path)
+    except ManifestUnreadable as exc:
+        return _fail(f"no job manifest at {manifest_path}" if exc.missing else str(exc))
     if job.get("venue") not in (None, "local"):
         return _fail(f"job {job_name}: venue {job.get('venue')!r} is not the local venue — dispatch it on its own venue's runner")
     script_name = job.get("script") or "run.sh"
     script_path = manifest_path.parent / script_name
     script_bytes = None
     seal_entry = sealed.entry_for(sealed.load_register(REPO), job_name)
+    caller_flag = None
+    if "--caller" in args:
+        try:
+            caller_flag = args[args.index("--caller") + 1]
+        except IndexError:
+            return _fail("--caller needs a value")
+    claim_raw = caller_flag if caller_flag is not None else job.get("caller")
+    # Pre-dispatch validation (wall-clock plan, step 2): the
+    # one pass the Colab entries consume (manifest_shape.
+    # preflight_error), folded over this entry's seams — the
+    # script beside the manifest (a sealed job: its blob),
+    # the uploads against the venue root, the caller claim's
+    # registration. A defect refuses here, in seconds, before
+    # the lease registration or any SSH step; the staging
+    # rules below keep their own refusals (basenames, the
+    # sealed plaintext ban) as the staging seam's, and the
+    # pass owns presence. This entry's divergence from the
+    # Colab form: local manifests declare no transport, so
+    # there is no pin leg — the pass's transport verdict
+    # still shapes a stray declaration.
+    field_err = None
+    if "script" in job and not isinstance(job.get("script"), str):
+        field_err = f"manifest script must be a string, got {job.get('script')!r}"
+    preflight = preflight_error(
+        job,
+        script_path=(manifest_path.parent / (script_name + ".sealed")) if seal_entry is not None else script_path,
+        uploads_base=REPO,
+        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER")),
+        shape_error=field_err,
+    )
+    if preflight:
+        return _fail(f"job {job_name}: {preflight}")
     if seal_entry is not None:
         # A sealed job dispatches from its blob, opened in
         # memory under the runner's server-side key; the
@@ -530,8 +575,6 @@ def main() -> int:
                     "a sealed job is never dispatched from plaintext"
                 )
         blob_path = manifest_path.parent / (script_name + ".sealed")
-        if not blob_path.exists():
-            return _fail(f"job {job_name} is sealed but {blob_path.name} is missing beside the manifest")
         try:
             script_bytes = sealed.open_bytes(sealed.load_key(REPO), blob_path.read_bytes())
         except sealed.SealError as exc:
@@ -541,8 +584,6 @@ def main() -> int:
         )
         if registered is None or sealed.sha256_hex(script_bytes) != registered:
             return _fail(f"job {job_name}: the opened script does not match the register's hash — refusing to dispatch")
-    elif not script_path.exists():
-        return _fail(f"job {job_name}: script {script_name} not found beside the manifest")
     uploads = []
     seen = {script_name}
     for rel in job.get("uploads") or []:
@@ -551,20 +592,8 @@ def main() -> int:
         if rel_path.is_absolute() or ".." in rel_path.parts or not name or name in seen:
             return _fail(f"job {job_name}: upload {rel!r} does not stage under a fresh basename inside the venue root")
         src = REPO / rel
-        if not src.is_file():
-            return _fail(f"job {job_name}: declared upload {rel} not found at {src}")
         seen.add(name)
         uploads.append((name, src.read_bytes()))
-    caller_flag = None
-    if "--caller" in args:
-        try:
-            caller_flag = args[args.index("--caller") + 1]
-        except IndexError:
-            return _fail("--caller needs a value")
-    claim_raw = caller_flag if caller_flag is not None else job.get("caller")
-    claim_err = lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
-    if claim_err:
-        return _fail(claim_err)
     caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
     shape_id = job.get("shape") or "local"
     acquired = lease.acquire_local(REPO, shape_id, caller=caller, hours=job.get("hours"))
