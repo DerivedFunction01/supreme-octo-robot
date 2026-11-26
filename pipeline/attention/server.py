@@ -76,11 +76,10 @@ from pathlib import Path
 
 from attention.capacity import _capacity_loop
 from attention.errors import AppError, NotFound, problem_details
-from attention.infra import scheduler_client
 from attention.infra.attstore import _Encoder
 from attention.infra.store import JsonFileStore, Store
 from attention.services import programmes
-from attention.services.dispatch import dispatch, dispatch_consumer
+from attention.services.dispatch import dispatch
 from attention.services.measure import continuation
 from attention.services.reads import derive, digest, model
 from attention.services.waits import (
@@ -576,34 +575,21 @@ def _tick_pass(store: Store, settings: Settings, lock) -> None:
                 presence["mode"] = "active"
                 presence["expires_at"] = None
                 expired = True
-            promoted = ingest.promote_tail_items(state, now)
-            # S-5: scheduler report pings ingest as
-            # agent-clearable items. A failed fetch skips
-            # the leg — it clears nothing.
-            try:
-                pings = scheduler_client.fetch_pending_pings(settings)
-                pinged_items = ingest.ingest_report_pings(state, pings, now)
-            except scheduler_client.SchedulerUnavailable:
-                pinged_items = False
+            # The attention fold (2026-11-26): the tick no
+            # longer mints shadow items from wb/scheduler
+            # records (promote_tail_items / ingest_report_pings
+            # are retired — wb is the record of truth), and
+            # dispatch is retired: sends are born settled in
+            # the waits engine, so no consumer pass runs and
+            # nothing is ever claimed or enqueued. Supervision
+            # actuation lives in wb + the gap-closure sweep.
             armed = programmes.ingest_armed(state, settings.armed_dir, now)
             cleared = facts.clear_resolved(state, now)
             fired = engine.evaluate_waits(state, settings, now)
             lapsed = engine.evaluate_expiry(state, now)
             acted = action_rules.evaluate_action_rules(state, settings, now)
             pinged = continuation.run_pass(state, settings, now)
-            _, consumed = dispatch_consumer.run_pass(state, settings, now)
-            if (
-                fired
-                or lapsed
-                or acted
-                or promoted
-                or expired
-                or cleared
-                or consumed
-                or armed
-                or pinged
-                or pinged_items
-            ):
+            if fired or lapsed or acted or expired or cleared or armed or pinged:
                 store.save_state(state)
     except Exception:
         pass  # a failed tick never kills the serve

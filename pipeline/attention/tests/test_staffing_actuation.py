@@ -123,19 +123,22 @@ def _refresh_capacity(state, now):
 
 
 def _deliver_send(state, settings_, now, send, ref="chat:test:1"):
-    """Deliver one send by id: the dispatch consumer
-    claims and acks it, so the next cadence window
-    may re-post that row."""
-    dispatch.claim(state, send["id"], {"consumer": "test"}, settings_, now)
-    dispatch.ack(
-        state, send["id"], {"consumer": "test", "delivery_ref": ref}, now
-    )
+    """Deliver one send by id: stamp the delivery on
+    the record, so the next cadence window may re-post
+    that row. (The claim+ack path this once drove is
+    retired — attention fold, 2026-11-26: sends are
+    born settled and nothing claims them. The stamp
+    stands the record in the same delivered read state
+    these pins measure the actuation ledger against.)"""
+    record = send.setdefault("dispatch", {})
+    record["delivered_at"] = now
+    record["delivery_ref"] = ref
 
 
 def _deliver(state, settings_, now, ref="chat:test:1"):
-    """The live loop's delivery leg: the dispatch
-    consumer claims and acks the steer, so the next
-    cadence window may re-post."""
+    """The delivery leg, as a record stamp: the steer
+    stands delivered, so the next cadence window may
+    re-post."""
     _deliver_send(state, settings_, now, state["sends"][-1], ref)
 
 

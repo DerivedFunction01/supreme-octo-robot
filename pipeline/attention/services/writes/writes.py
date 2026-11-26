@@ -147,6 +147,11 @@ def apply_triage(state: dict, item_id: str, payload: dict, now: datetime) -> dic
         _mark_acted(state, item)
     elif action == "done":
         item["triage"] = "done"
+        # The zombie cure (attention fold, step 3):
+        # closing clears the presentation in the same
+        # write.
+        item["status_code"] = None
+        item["due_at"] = None
         _mark_acted(state, item)
     elif action == "mute_type":
         item["triage"] = "muted"

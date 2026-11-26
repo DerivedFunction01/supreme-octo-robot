@@ -34,7 +34,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 from attention import paths as _paths
 
@@ -118,7 +118,104 @@ def backfill(state: dict) -> dict:
         r for r in seeds["action_rules"] if r["id"] not in have
     )
     _backfill_staleness(state, seeds)
+    _backfill_attention_fold(state)
     return state
+
+
+# --- the attention fold (2026-11-26): dispatch retired,
+# supervision folded to wb + gap-closure ---
+
+_FOLD_DEAD_THREAD_IDS = frozenset(
+    {
+        "f4899f83-3fd4-4d97-822b-ff9b508f2b33",  # venue-lane
+        "c157ad7b-23e3-49b5-a704-4a30eb1fb451",  # scheduling-lane
+        "2450e23d-6613-4d4c-8a3c-bd620a3ea508",  # attention-lane
+        "e02a0d3e-4a51-4324-b1a2-9319b26bb874",  # workbench-lane
+        "6ef5fb96-172f-4bcb-a950-425b2d5f3a8a",  # platform-lane
+        "ebff9fb6-480f-4d9a-91ad-35f0c7f4ae12",  # @attention
+        "89ff5156-8d9d-4980-b50c-f16b3b0404e0",  # edgar-secforms
+    }
+)
+"""Handlers bound to chats retired in the 2026-11-24
+cleanup: marked retired so no surface presents them as
+live. Handles are matched by their bound thread id —
+the binding is the dead fact, not the name."""
+
+_FOLD_FROZEN_STATUS_HANDLES = ("@checker", "@sweeper")
+"""Retired handlers whose frozen legacy handler_status
+summaries are removed outright (the status-code post
+transport is retired; the summaries are not a live
+projection of anything)."""
+
+_FOLD_SHADOW_REFS = ("tail:", "ping:")
+"""Item source_ref prefixes minted as copies of records
+wb/scheduler own (handler-status tails, scheduler report
+pings): wb is the record of truth, so the open copies
+settle done. Genuine owner/commission items — provenance
+commission/owner, and wait-surfaced approvals — carry
+neither prefix and are untouched."""
+
+
+def _backfill_attention_fold(state: dict) -> None:
+    """One-time, idempotent migration for the attention
+    fold (plan 2026-11-26, steps 1/3/5), riding the load
+    path like every backfill: each leg keys on the
+    un-migrated shape, so a second load changes nothing.
+
+    - Every send neither delivered nor already suppressed
+      is settled retired (the engine's settle_retired, so
+      the born-retired and migrated shapes are one shape);
+      delivered/suppressed history is untouched.
+    - Frozen legacy handler_status entries for retired
+      handlers are removed; handlers bound to dead chats
+      are marked retired.
+    - Triage-open shadow items copied from wb/scheduler
+      records settle done with the reason on the record.
+    - An item already triage-done has its presentation
+      cleared (status_code, due_at) — the zombie cure for
+      items closed before the action path learned to
+      clear them in the same write.
+    - The edgar-greenfield programme declaration's venue
+      is "local" (the tracked registry seed already says
+      so; the live store's frozen copy is what lagged)."""
+    # Deferred: the waits engine is a services module;
+    # the composition binds at call time, never at import
+    # time (the store seam loads under every service).
+    from attention.services.waits import engine
+
+    fallback_at = datetime(2026, 11, 26, tzinfo=UTC)
+    for send in state.get("sends", []):
+        record = send.get("dispatch") or {}
+        if record.get("delivered_at") is not None:
+            continue
+        if record.get("suppressed_at") is not None:
+            continue
+        at = send.get("at")
+        engine.settle_retired(send, at if isinstance(at, datetime) else fallback_at)
+    statuses = state.get("handler_status")
+    if isinstance(statuses, dict):
+        for handle in _FOLD_FROZEN_STATUS_HANDLES:
+            statuses.pop(handle, None)
+    for handler in state.get("handlers", []):
+        if handler.get("thread_id") in _FOLD_DEAD_THREAD_IDS:
+            handler["retired"] = True
+    for item in state.get("items", []):
+        if item.get("triage") == "done":
+            item["status_code"] = None
+            item["due_at"] = None
+        elif item.get("triage") == "open" and str(
+            item.get("source_ref") or ""
+        ).startswith(_FOLD_SHADOW_REFS):
+            item["triage"] = "done"
+            item["status_code"] = None
+            item["due_at"] = None
+            item["settled_reason"] = (
+                "wb is the record of truth — shadow copy settled "
+                "at the attention fold (2026-11-26)"
+            )
+    for programme in state.get("programmes", []):
+        if programme.get("slug") == "edgar-greenfield":
+            programme["venue"] = "local"
 
 
 def _backfill_staleness(state: dict, seeds: dict) -> None:
