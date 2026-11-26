@@ -7,6 +7,20 @@
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home). This script executes from
+# inside a checkout (its root derives from its own
+# location), so the adapter resolves from the script's
+# own location — no Python dependency is taken. Any
+# argument is a usage refusal (exit 2); --help prints
+# the generated usage.
+. "$REPO_ROOT/../platform/argv.sh"
+argv_tool bootstrap_local.sh "Restore transient state, ensure the colab CLI is installed at the pinned floor, and report login state."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 find_uv() {
   if command -v uv >/dev/null 2>&1; then command -v uv; return; fi
   for c in "$HOME/.local/bin/uv" "$HOME/.cargo/bin/uv"; do

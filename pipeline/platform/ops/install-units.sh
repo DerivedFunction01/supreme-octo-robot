@@ -106,15 +106,27 @@ fi
 : "${HOME:?install-units: HOME is not set}"
 ATTENTION_DATA="$ROOT/pipeline/platform/var/attention-state.json"
 
+# Argument surface, declared once and parsed by the
+# unified argv contract's bash adapter (contract home:
+# pipeline/platform/argv.py; adapter: argv.sh in the
+# same home). This script executes from inside a
+# checkout (the watchdog and the units invoke it by its
+# in-tree path), so the adapter resolves from the
+# script's own location — no Python dependency is
+# taken. An unknown flag or a second positional is a
+# usage refusal (exit 2); --help prints the usage
+# generated from this declaration.
+. "$OPS_DIR/../argv.sh"
+argv_tool install-units.sh "Install the platform's systemd units from their tracked templates."
+argv_global_flag check bool
+argv_global_positional unit
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 MODE=install
+[ "${ARGV_FLAGS[check]}" = true ] && MODE=check
 ONLY=""
-ONLY_CANDIDATE=""
-for arg in "$@"; do
-    case "$arg" in
-        --check) MODE=check ;;
-        *) ONLY_CANDIDATE="$arg" ;;
-    esac
-done
+ONLY_CANDIDATE="${ARGV_POSITIONALS[unit]}"
 
 SCRATCH="$(mktemp -d)" || exit 1
 trap 'rm -rf "$SCRATCH"' EXIT

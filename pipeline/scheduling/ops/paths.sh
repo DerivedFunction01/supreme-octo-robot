@@ -53,3 +53,20 @@ fi
 SCHED_USER_HOME_DIR="$(dirname "$SCHED_WS_ROOT")"
 SCHED_STATE_DIR="$SCHED_REPO_ROOT/state"
 SCHED_REGISTRY_DIR="$SCHED_REPO_ROOT/registry"
+
+# Direct-execution guard: sourced (the intended use),
+# this file declares no argument surface of its own —
+# argv belongs to the consuming script, which parses
+# it under the unified argv contract after sourcing, so
+# no guard can stand here on a consumer's behalf.
+# Executed directly, it takes no arguments: the empty
+# declaration is parsed by the contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home), and any argument is a
+# usage refusal (exit 2).
+if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+  . "$SCHED_OPS_DIR/../../platform/argv.sh"
+  argv_tool paths.sh "Shared path derivation for the ops tree (sourced, never executed)."
+  argv_parse "$@" || exit 2
+  if [ "$ARGV_HELP" = 1 ]; then exit 0; fi
+fi

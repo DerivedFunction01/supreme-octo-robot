@@ -18,8 +18,22 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Argument surface: one optional positional, declared
+# and parsed by the unified argv contract's bash
+# adapter (contract home: pipeline/platform/argv.py;
+# adapter: argv.sh in the same home, resolved from this
+# script's own location). A surplus argument or any
+# flag is a usage refusal (exit 2); --help prints the
+# usage generated from this declaration.
+. "$repo_root/../platform/argv.sh"
+argv_tool bootstrap-staging.sh "Create the staging project if it does not exist yet."
+argv_global_positional target-dir
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 seed_dir="$repo_root/templates/staging"
-target="$(realpath -m "${1:-$repo_root/../staging}")"
+target="$(realpath -m "${ARGV_POSITIONALS[target-dir]:-$repo_root/../staging}")"
 
 if [[ -f "$target/workbench.yaml" ]]; then
     echo "staging already exists at $target — nothing to do"

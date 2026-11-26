@@ -1,5 +1,30 @@
 #!/bin/bash
 set -e
+# Argument surface: none — the image's CMD invokes this
+# script with no arguments, and it reads no operator
+# argv. This is the vendored refuse-any-argument guard
+# of the unified argv contract (contract home:
+# pipeline/platform/argv.py; bash adapter: argv.sh in
+# the same home) — vendored, not sourced, because the
+# Dockerfile copies this file OUT of the checkout into
+# the image, where no adapter stands beside it. Any
+# argument is a usage refusal (exit 2); --help prints
+# usage. Sync obligation: if the contract's
+# no-argument guard form changes in argv.sh, this
+# block changes with it.
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --help|-h)
+      echo "usage: entrypoint.sh"
+      exit 0
+      ;;
+    *)
+      echo "entrypoint: unexpected argument: $1" >&2
+      echo "usage: entrypoint.sh" >&2
+      exit 2
+      ;;
+  esac
+fi
 # Authorized keys are mounted read-only at /run/secrets/authorized_keys.
 # Copy (never symlink) so sshd StrictModes ownership checks pass.
 if [ -f /run/secrets/authorized_keys ]; then

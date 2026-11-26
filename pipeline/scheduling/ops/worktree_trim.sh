@@ -443,21 +443,30 @@ fi
 GIT="git -c core.fsync=none"
 export GIT_AUTHOR_DATE="@$NOW +0000" GIT_COMMITTER_DATE="@$NOW +0000"
 
-TIER="soft"
-DRY_RUN=0
-WORKER_REPO=""
-RESULT_FILE=""
-LEDGER_FILE=""
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --tier) TIER="$2"; shift 2 ;;
-    --dry-run) DRY_RUN=1; shift ;;
-    --worker) WORKER_REPO="$2"; shift 2 ;;
-    --result-file) RESULT_FILE="$2"; shift 2 ;;
-    --ledger-file) LEDGER_FILE="$2"; shift 2 ;;
-    *) echo "unknown arg: $1" >&2; exit 2 ;;
-  esac
-done
+# Argument surface, declared once and parsed by the
+# unified argv contract's bash adapter (contract home:
+# pipeline/platform/argv.py; adapter: argv.sh in the
+# same home, resolved from this script's own location).
+# Both --flag value and --flag=value are the same flag;
+# an unknown flag or a value flag missing its value is
+# a usage refusal (exit 2); --dry-run is a safety flag
+# and is honoured in any position; --help prints the
+# usage generated from this declaration.
+. "$OPS_DIR/../../platform/argv.sh"
+argv_tool worktree_trim.sh "Worktree trim: the deterministic, scripted worktree cap job."
+argv_global_flag tier value default=soft
+argv_global_flag dry-run bool safety
+argv_global_flag worker value
+argv_global_flag result-file value
+argv_global_flag ledger-file value
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
+TIER="${ARGV_FLAGS[tier]}"
+DRY_RUN=0; [ "${ARGV_FLAGS[dry-run]}" = true ] && DRY_RUN=1
+WORKER_REPO="${ARGV_FLAGS[worker]}"
+RESULT_FILE="${ARGV_FLAGS[result-file]}"
+LEDGER_FILE="${ARGV_FLAGS[ledger-file]}"
 
 cap_for() {
   # Per-repo cap: env override wins; then the deployment

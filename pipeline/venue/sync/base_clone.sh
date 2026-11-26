@@ -5,10 +5,52 @@
 # [branch] [sha] — fetch the named branch and pin the clone to its tip; a
 # named sha is the announced tip, and a fetched tip that differs refuses.
 set -euo pipefail
-URL="${1:-${COLAB_REPO_URL:-}}"
-DEST="${2:-}"
-BRANCH="${3:-}"
-SHA="${4:-}"
+# Argument surface: four optional positionals, no flags.
+# The parse below is a vendored positional core of the
+# unified argv contract (contract home:
+# pipeline/platform/argv.py; bash adapter: argv.sh in
+# the same home) — vendored, not sourced, because the
+# runner uploads this file ALONE to the VM (sync/runner/
+# launch.py) and runs it from the upload directory,
+# where no checkout stands beside it. It carries the
+# contract's clauses for a flags-free declaration: a
+# flag-shaped token before `--` is a usage refusal, a
+# fifth positional is a usage refusal, --help prints
+# usage, and positionals after `--` are taken literally.
+# Sync obligation: if the contract's positional clauses
+# change in argv.sh, this block changes with them.
+_argv_positionals=()
+_argv_after_sep=0
+for _argv_token in "$@"; do
+  if [ "$_argv_after_sep" = 0 ] && [ "$_argv_token" = "--" ]; then
+    _argv_after_sep=1
+    continue
+  fi
+  if [ "$_argv_after_sep" = 0 ]; then
+    if [ "$_argv_token" = "--help" ] || [ "$_argv_token" = "-h" ]; then
+      echo "usage: base_clone.sh [repo_url] [dest] [branch] [sha]"
+      exit 0
+    fi
+    case "$_argv_token" in
+      --*|-*)
+        echo "base_clone: unknown flag $_argv_token" >&2
+        echo "usage: base_clone.sh [repo_url] [dest] [branch] [sha]" >&2
+        exit 2
+        ;;
+    esac
+  fi
+  _argv_positionals+=("$_argv_token")
+done
+if [ "${#_argv_positionals[@]}" -gt 4 ]; then
+  echo "base_clone: surplus positional ${_argv_positionals[4]}" >&2
+  echo "usage: base_clone.sh [repo_url] [dest] [branch] [sha]" >&2
+  exit 2
+fi
+URL="${_argv_positionals[0]:-${COLAB_REPO_URL:-}}"
+DEST="${_argv_positionals[1]:-}"
+BRANCH="${_argv_positionals[2]:-}"
+SHA="${_argv_positionals[3]:-}"
+unset _argv_positionals _argv_after_sep _argv_token
 if [ -z "$URL" ]; then
   echo "base_clone: no repo URL given (arg 1 or COLAB_REPO_URL)" >&2; exit 2
 fi

@@ -41,30 +41,48 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE="$HERE/template"
-TARGET="${HOME}/agent-workspace"
-VENUE_NAME="${TS_HOSTNAME:-}"
-AUTHKEY="${TS_AUTHKEY:-}"
-CPUS=4; MEM=8g; WORKSPACE_GB=96; TOTAL_GB=128
-AUTH_KEY_LINE=""; GH_KEY_FILE=""; VERCEL_AUTH_FILE=""; SKIP_MOUNT=0; SKIP_DOCKER=0; ASSUME_YES=0
 
-while [ $# -gt 0 ]; do
-  case "$1" in
-    --target) TARGET="$2"; shift 2 ;;
-    --name) VENUE_NAME="$2"; shift 2 ;;
-    --authkey) AUTHKEY="$2"; shift 2 ;;
-    --cpus) CPUS="$2"; shift 2 ;;
-    --mem) MEM="$2"; shift 2 ;;
-    --workspace-gb) WORKSPACE_GB="$2"; shift 2 ;;
-    --total-gb) TOTAL_GB="$2"; shift 2 ;;
-    --authorized-key) AUTH_KEY_LINE="$2"; shift 2 ;;
-    --github-key-file) GH_KEY_FILE="$2"; shift 2 ;;
-    --vercel-auth-file) VERCEL_AUTH_FILE="$2"; shift 2 ;;
-    --skip-mount) SKIP_MOUNT=1; shift ;;
-    --skip-docker) SKIP_DOCKER=1; shift ;;
-    --yes) ASSUME_YES=1; shift ;;
-    *) echo "unknown option: $1" >&2; exit 2 ;;
-  esac
-done
+# Argument surface, declared once and parsed by the
+# unified argv contract's bash adapter (contract home:
+# pipeline/platform/argv.py; adapter: argv.sh in the
+# same home). This script executes from inside a
+# checkout (its usage form), so the adapter resolves
+# from the script's own location — no Python dependency
+# is taken. Both --flag value and --flag=value are the
+# same flag; an unknown flag or a value flag missing
+# its value is a usage refusal (exit 2); --help prints
+# the usage generated from this declaration.
+. "$HERE/../../../platform/argv.sh"
+argv_tool setup.sh "One-command setup for a local compute venue host (WSL2 + Docker)."
+argv_global_flag target value "default=${HOME}/agent-workspace"
+argv_global_flag name value
+argv_global_flag authkey value
+argv_global_flag cpus value default=4
+argv_global_flag mem value default=8g
+argv_global_flag workspace-gb value default=96
+argv_global_flag total-gb value default=128
+argv_global_flag authorized-key value
+argv_global_flag github-key-file value
+argv_global_flag vercel-auth-file value
+argv_global_flag skip-mount bool
+argv_global_flag skip-docker bool
+argv_global_flag yes bool
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
+TARGET="${ARGV_FLAGS[target]}"
+VENUE_NAME="${TS_HOSTNAME:-}"
+[ -n "${ARGV_PRESENT[name]:-}" ] && VENUE_NAME="${ARGV_FLAGS[name]}"
+AUTHKEY="${TS_AUTHKEY:-}"
+[ -n "${ARGV_PRESENT[authkey]:-}" ] && AUTHKEY="${ARGV_FLAGS[authkey]}"
+CPUS="${ARGV_FLAGS[cpus]}"; MEM="${ARGV_FLAGS[mem]}"
+WORKSPACE_GB="${ARGV_FLAGS[workspace-gb]}"; TOTAL_GB="${ARGV_FLAGS[total-gb]}"
+AUTH_KEY_LINE="${ARGV_FLAGS[authorized-key]}"
+GH_KEY_FILE="${ARGV_FLAGS[github-key-file]}"
+VERCEL_AUTH_FILE="${ARGV_FLAGS[vercel-auth-file]}"
+SKIP_MOUNT=0; [ "${ARGV_FLAGS[skip-mount]}" = true ] && SKIP_MOUNT=1
+SKIP_DOCKER=0; [ "${ARGV_FLAGS[skip-docker]}" = true ] && SKIP_DOCKER=1
+ASSUME_YES=0; [ "${ARGV_FLAGS[yes]}" = true ] && ASSUME_YES=1
 
 prompt() { # prompt VAR "label" [silent]
   local var="$1" label="$2" silent="${3:-}"

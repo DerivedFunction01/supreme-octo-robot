@@ -12,6 +12,18 @@ set -uo pipefail
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/paths.sh"
+
+# Argument surface: none. The empty declaration is
+# parsed by the unified argv contract's bash adapter
+# (contract home: pipeline/platform/argv.py; adapter:
+# argv.sh in the same home, resolved from this script's
+# own location): any argument is a usage refusal
+# (exit 2); --help prints the generated usage.
+. "$SCHED_OPS_DIR/../../platform/argv.sh"
+argv_tool colab_transient_restore.sh "Composed command for the colab-runner-transient-restore entry."
+argv_parse "$@" || exit 2
+[ "$ARGV_HELP" = 1 ] && exit 0
+
 REPO_ROOT="$SCHED_REPO_ROOT"
 WS_ROOT="${SCHEDULER_WORKSPACE:-$SCHED_WS_ROOT}"
 
