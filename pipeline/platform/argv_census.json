@@ -1,0 +1,665 @@
+{
+ "note": "The audited operator entry-point census for the unified argv programme: every entry point parses through the unified implementations (pipeline/platform/argv.py, pipeline/platform/argv.sh, tools/argv.mjs) or stands excepted here with migrated false. The census test asserts every path exists; a migration flips its record to true.",
+ "entries": [
+  {
+   "path": "apps/runner/frontend/scripts/check-truncation.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/runner/frontend/scripts/smoke-adapter.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/runner/frontend/scripts/smoke-api-base.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/runner/frontend/scripts/smoke-live.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/runner/frontend/scripts/smoke-relay.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/runner/frontend/scripts/validate-mocks.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/scripts/smoke-api-base.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/check-live.ts",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/check-schemas.ts",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/check-truncation.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/gen-seeds.py",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/live/diff_served.py",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/scheduler/frontend/tools/live/dump_served.py",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/workbench/frontend/scripts/check-truncation.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "apps/workbench/frontend/scripts/validate-mocks.mjs",
+   "family": "frontend-scripts",
+   "migrated": false
+  },
+  {
+   "path": "check.py",
+   "family": "root",
+   "migrated": false
+  },
+  {
+   "path": "init_venv.py",
+   "family": "root",
+   "migrated": false
+  },
+  {
+   "path": "kit/tools/contrast/core.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "kit/tools/gen-tokens.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "kit/tools/verify-contrast.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "kit/tools/verify-log-payload.mjs",
+   "family": "js",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/attention/cli.py",
+   "family": "attention",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/attention/init_venv.py",
+   "family": "attention",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/attention/register_caller.py",
+   "family": "attention",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/dateuniqueness.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/importisolation.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/linecap.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/livingdates.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/portability.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/gate/writeruniqueness.py",
+   "family": "gate",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/assemble_registry.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/export_ledger.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/migrate_venue.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/migrate_workrecord.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/mint_tokens.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/preflight.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/provision_config.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/render_units.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/verify_argv_targets.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/verify_endpoints.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/cutover/verify_todo_slugs.py",
+   "family": "cutover",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/healthcheck.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/install-links.sh",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/install-units.sh",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/kit_drift.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/publish_prep.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/publish_proof.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/publish_sync.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/platform/ops/watchdog.sh",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/registry/seed.py",
+   "family": "platform",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/bin/harness",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/bin/sched",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/cli/adopt.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/cli/connector_token.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/cli/ops_client.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/cli/ops_cmds.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/cli/state_cmds.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/examples/example_daily_report.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/examples/example_flaky.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/examples/example_pulse.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/bridge/bridge_wake.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/flap/flap_canary.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/flap/flap_probe.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/flap/flap_series.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/flap/flap_watch.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/paths.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/proof/example_member_check.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/proof/proof_run.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/server-care/keeper_poller.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/server-care/restart_reconcile.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/server-care/vm_boot_check.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/server-care/watchdog.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/***REMOVED***",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/***REMOVED***",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/***REMOVED***",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/venue/colab_transient_restore.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/watches/clone_sweep.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/watches/file_registry.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/watches/local_test_watch.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/watches/memory_watchdog_check.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/worktree_archive_clean.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/worktree_restore.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/ops/worktree_trim.sh",
+   "family": "shell",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/server/main.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/scheduling/tools/portability_scan.py",
+   "family": "scheduling",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/adapters/local/local_compute_fwd.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/adapters/local/setup.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/adapters/local/template/disk-guard.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/adapters/local/template/entrypoint.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-bridge",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-check",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-down",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-extend-guard",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-fs",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-harness-bootstrap",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-harness-relay",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-lease",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-liveness",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-run",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-sh",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-status",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-up",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-venue-migrate",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/colab-xfer",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/local-fwd-beacon",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/bin/local-run",
+   "family": "venue-bin",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ops/bootstrap_local.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ops/mirror_transient.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ops/store_prune.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ops/transport_report.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/apply_bundle_remote.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/base_clone.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/cli.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/data_manifest.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/make_snapshot_bundle.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/pull_results.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/runner/main.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/sync/venue_migrate.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ui/deploy.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ui/make-icon-png.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ui/server.py",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/venue/ui/ui.sh",
+   "family": "venue",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/init_venv.py",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/lib/writes/todo_rename.py",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/ops/bootstrap-staging.sh",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/ops/doctor.sh",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/run.py",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/tools/length.py",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/wb",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "pipeline/workrecord/wbcli/parser.py",
+   "family": "workrecord",
+   "migrated": false
+  },
+  {
+   "path": "run.py",
+   "family": "root",
+   "migrated": false
+  },
+  {
+   "path": "tools/e2e-shard.mjs",
+   "family": "js",
+   "migrated": false
+  }
+ ]
+}
