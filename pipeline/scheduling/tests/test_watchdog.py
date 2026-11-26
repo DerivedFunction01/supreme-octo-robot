@@ -62,6 +62,13 @@ class WatchdogCase(unittest.TestCase):
                         os.path.join(self.root, "ops", "server-care", name))
         shutil.copy(os.path.join(REPO, "ops", "paths.sh"),
                     os.path.join(self.root, "ops", "paths.sh"))
+        # The script sources the argv adapter beside paths.sh
+        # (ops/../../platform/argv.sh); the fixture carries the
+        # script's full source set or the copy cannot parse its
+        # (empty) argument surface and exits 2 before rung 1.
+        os.makedirs(os.path.join(self.tmp, "platform"))
+        shutil.copy(os.path.join(REPO, "..", "platform", "argv.sh"),
+                    os.path.join(self.tmp, "platform", "argv.sh"))
         with open(os.path.join(self.root, "config.json"), "w") as fh:
             fh.write('{"port": 8796}')
         self.unit_dir = os.path.join(self.tmp, "units")
