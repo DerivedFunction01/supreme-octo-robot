@@ -427,10 +427,6 @@
    "migrated": true
   },
   {
-   "family": "venue-bin",
-   "migrated": true
-  },
-  {
    "path": "pipeline/venue/bin/colab-sh",
    "family": "venue-bin",
    "migrated": true
