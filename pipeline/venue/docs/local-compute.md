@@ -209,22 +209,14 @@ invisible to jobs by construction:
   from the instance folder, on every start), the SSH host keys
   (their volume), the tailnet identity (the tailscale-state
   volume), and the workspace (its disk image).
-- **App tooling is instance provisioning, never template:**
-  the template carries no single-workload tooling. The one
-  standing case is the Vercel CLI and its login, which belong
-  to the one instance whose workload deploys through Vercel:
-  that instance provisions both from its own state with
-  `adapters/local/provision-vercel.sh`, run inside the
-  container — the pinned CLI installs into the container
-  home, and the login is planted from the instance's
-  persistent auth copy at `/workspace/vercel-auth.json`,
-  created once by the script's `login` mode (a device login
-  a human approves). A rebuild loses both with the container
-  home; re-running the script's `apply` mode restores them
-  from instance state. The login restored is the one the
-  state copy carries, so a copy taken before a token
-  rotation restores a stale login. No other instance
-  carries either the CLI or the login.
+- **App tooling is not template:** the template carries no
+  single-workload tooling. A workload-specific CLI and its
+  login (the standing case was the Vercel CLI and its deploy
+  login, removed from the template on that basis) belong to
+  the workload's own seat and are provisioned outside the
+  venue machinery; no instance carries them by virtue of
+  the template, and a rebuild neither restores nor loses
+  them on the venue side.
 - **Lost, by accepted disposition:** the rest of the container
   filesystem — including the agent home's `runs` directory with
   any run outputs not yet collected, and anything installed by
