@@ -1,26 +1,20 @@
-"""Venue staffing measure pins (the superapp
-supervision plan, Step 2): the family-concurrency
-measure and the plan-frontier comparison, proven on
-recorded specimens.
+"""Venue staffing measure pins (the superapp supervision plan,
+Step 2): the family-concurrency measure and the plan-frontier
+comparison, proven on recorded specimens.
 
-The specimen records are a synthesized set of venue
-run records in the live store's shape, standing in for
-one working day of a multi-family fleet
-(fixtures/venue-results/runs — synthetic, immutable:
-read, never written). The windows
-are the plan's, as measured: 10:00–12:25Z reads
-staffed (several families across sessions); from
-12:30Z the fleet narrows to one carrying session and
-the measure reads a serial defect — one family on
-one session from 13:10Z, so the plan's 13:30Z
-defect-window start reads defect as claimed. The
-13:30Z instant was first probed staffed only
-because four launch-lost records (their terminal
-events standing in for a finish) manufactured the
-second family and the second session; with the
-derivation cured it reads defect. The measure is
-evaluated at instants inside each window from the
-records alone.
+The specimen records are a synthesized set of venue run records
+in the live store's shape, standing in for one working day of a
+multi-family fleet (fixtures/venue-results/runs — synthetic,
+immutable: read, never written). The windows are the plan's, as
+measured: 10:00–12:25Z reads staffed (several families across
+sessions); from 12:30Z the fleet narrows to one carrying session
+and the measure reads a serial defect — one family on one session
+from 13:10Z, so the plan's 13:30Z defect-window start reads defect
+as claimed. The 13:30Z instant was first probed staffed only
+because four launch-lost records (their terminal events standing
+in for a finish) manufactured the second family and the second
+session; with the derivation cured it reads defect. The measure
+is evaluated at instants inside each window from the records alone.
 """
 
 import sys
