@@ -27,11 +27,11 @@ in order:
      archives beside it (by precedent);
   7. launch-staging tree tarballs in named var/ subdirs
      (var/*/*-tree*.tar.gz — the plain and suffixed forms,
-     e.g. hc01-tree-<hash>.tar.gz) and snapshot bundles in
+     e.g. lane01-tree-<hash>.tar.gz) and snapshot bundles in
      the same staging subdirs (var/*/*.bundle), past the
      same 48 h floor — formation staging a lane dropped
-     in the store's own namespace (the steampower-gates
-     pattern); class 2's rationale (every launch rebuilds
+     in the store's own namespace (a programme's
+     gate-staging pattern); class 2's rationale (every launch rebuilds
      its own from the source repo, which holds the truth)
      applies to the bundles, and the top-level class's
      shorter floor does not apply here, where formations
@@ -47,9 +47,15 @@ in order:
      candidates even there: job.json, any *.json or
      *.jsonl file, files git tracks, and protected
      names. A job with no run records, a job with any
-     live record, and the named excluded job dirs
-     (shared input stores for in-flight lanes) are
-     never entered.
+     live record, and the job dirs the store's
+     untracked config names as excluded
+     (var/store-prune-excluded-dirs.json — shared
+     input stores for in-flight lanes) are never
+     entered. This class does not run at all when
+     that config is not provisioned, and the report
+     says so: without the operator's own exclusion
+     list the class cannot prove a payload dir is
+     not a shared store.
 
 Protected staging: a var/ subdir a live job declares as
 its gate staging is never a candidate, whatever the
@@ -166,20 +172,29 @@ OUTPUT_GRACE_S = 24 * 3600
 TERMINAL_JOB_EVIDENCE_GRACE_S = 6 * 3600
 
 # Job dirs the terminal-job payload class never enters:
-# shared input stores for in-flight lanes (the segment
-# finish lane and the PPE recall build read them as live
-# inputs). Named exactly; the set empties when those
-# lanes hand back.
-TERMINAL_JOB_EXCLUDED_DIRS = frozenset(
-    {
-        "specimen-ci-segform-payload",
-        "specimen-ci-ppeform-payload",
-        "specimen-ci-pperes-payload",
-        "specimen-ci-pperes2-payload",
-        "specimen-ci-ppesucc-payload",
-        "specimen-ci-ppev1-payload",
-    }
-)
+# shared input stores for in-flight lanes, named by the
+# operator in the store's untracked config (the sealed
+# register's form: a name list in the var store, never
+# tracked). The live names are operational data; tracked
+# code carries none of them.
+EXCLUDED_DIRS_REL = ("var", "store-prune-excluded-dirs.json")
+
+
+def _terminal_job_excluded_dirs() -> frozenset | None:
+    """The excluded job dirs from the untracked config,
+    or None when it is not provisioned (absent,
+    unreadable, or not a JSON list of names). None is
+    the honest degradation: without the operator's
+    list the terminal-job payload class cannot prove
+    a payload dir is not a shared input store, so the
+    class does not run — never a baked-in fallback."""
+    try:
+        data = json.loads(REPO.joinpath(*EXCLUDED_DIRS_REL).read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, list) or not all(isinstance(name, str) for name in data):
+        return None
+    return frozenset(data)
 
 
 _foundation_spec = _ilu.spec_from_file_location(
@@ -365,6 +380,7 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         return None
 
     candidates: list = []  # (order, path, bytes, class)
+    skipped_classes: list = []
 
     def add(order: int, path: Path, cls: str):
         try:
@@ -442,13 +458,19 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
                 continue
             if now - staging_bundle.stat().st_mtime > ARCHIVE_AGE_FLOOR_S:
                 add(7, staging_bundle, "staging-subdir snapshot bundles past the 48h floor")
-    if jobs_root.exists():
+    excluded_dirs = _terminal_job_excluded_dirs() if jobs_root.exists() else None
+    if jobs_root.exists() and excluded_dirs is None:
+        skipped_classes.append(
+            "job payload files of terminal jobs "
+            "(excluded-dirs config not provisioned)"
+        )
+    if jobs_root.exists() and excluded_dirs is not None:
         tracked = _tracked_job_paths(jobs_root)
         already = {p for _o, p, _s, _c in candidates}
         for job_dir in sorted(jobs_root.iterdir()):
             if not job_dir.is_dir():
                 continue
-            if job_dir.name in TERMINAL_JOB_EXCLUDED_DIRS:
+            if job_dir.name in excluded_dirs:
                 continue
             if job_dir.name not in job_activity or job_dir.name in job_live:
                 continue
@@ -488,6 +510,7 @@ def plan(target_free_gb: float) -> tuple[list, dict]:
         "free_before": free_now,
         "projected_free": projected,
         "classes": summary,
+        "skipped_classes": skipped_classes,
         "payload_dirs": payload_dirs[:100],
         "payload_dirs_total": len(payload_dirs),
     }

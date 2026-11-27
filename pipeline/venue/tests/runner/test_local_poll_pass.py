@@ -2,7 +2,7 @@
 bin/local-run accepts no record face — not even a terminal
 one — before the container's exit file has had its say.
 
-The specimen is the decxc shape: the record face reads
+The specimen shape: the record face reads
 "orphaned" while the run dir holds exit 0; the poll pass
 finalizes it complete. The negative halves: a face the
 exit file confirms stands untouched (no second finalize),
@@ -38,7 +38,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO / "tests" / "fixtures"))
 from module_loader import load_module  # noqa: E402
 
-RID = "greenfield-ci-decxc-lcheck-local-20261124T161808Z"
+RID = "greenfield-ci-proofform-lcheck-local-20261124T161808Z"
 TARGET = {"host": "machine.invalid", "user": "agent"}
 
 
@@ -82,11 +82,11 @@ def _poll(monkeypatch, mod, capsys):
     return rc, json.loads(capsys.readouterr().out)
 
 
-def test_decxc_shape_orphan_face_rederived_complete(tmp_path, monkeypatch, capsys):
+def test_specimen_shape_orphan_face_rederived_complete(tmp_path, monkeypatch, capsys):
     """Face "orphaned", run dir holding exit 0: the poll
     re-derives the record complete from the container and
     serves the derived state, not the face."""
-    rec = {"run_id": RID, "job": "greenfield-ci-decxc-lcheck", "venue": "local", "state": "orphaned"}
+    rec = {"run_id": RID, "job": "greenfield-ci-proofform-lcheck", "venue": "local", "state": "orphaned"}
     reading = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "ok\n"}
     mod, finalized = load_local_run(monkeypatch, rec, reading)
     rc, out = _poll(monkeypatch, mod, capsys)
