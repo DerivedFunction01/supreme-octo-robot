@@ -57,7 +57,6 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 
-from dispatch import sends as dispatch_sends
 from attention.infra import attstore
 from registry.cards import cardsource, cardwatch
 from registry.cards import cardwatch_fakes as fakes
@@ -613,11 +612,20 @@ class SpineVerificationTests(SpineCase):
         self.approve_chat()
         self.watch("2026-11-14T15:33:00Z", pending=[])
         state = self.state()
-        send_id = state["sends"][0]["id"]
-        dispatch_sends.claim(state["sends"], send_id, "consumer-a",
-                             _at("2026-11-14T15:34:00Z"))
-        dispatch_sends.ack(state["sends"], send_id, "consumer-a",
-                           "submission-1", _at("2026-11-14T15:35:00Z"))
+        send = state["sends"][0]
+        # Delivered, unanswered — evidenced the post-fold
+        # way. The claim+ack lifecycle this pin once drove
+        # is retired: the fold's load backfill settles
+        # every standing undelivered send retired, so a
+        # claim on the minted send is refused by design.
+        # Delivery stands as a stamp on the record — the
+        # history the backfill leaves untouched (its leg
+        # skips delivered sends) and the state the
+        # watcher's delivered branch reads, through
+        # state_of, on the next pass.
+        dispatch = send.setdefault("dispatch", {})
+        dispatch["delivered_at"] = _at("2026-11-14T15:35:00Z")
+        dispatch["delivery_ref"] = "submission-1"
         self.store.save_state(state)
         self.watch("2026-11-14T15:45:00Z", pending=[])
         self.assertEqual(self.entry()["state"], "verifying")
