@@ -151,12 +151,12 @@ const CANNED = {
     }
   },
   getLeaseOutbox: () => ({ status: 200, payload: { events: [], last_seq: 0 }, error: null }),
-  extendLease: () => ({
+  extend: () => ({
     status: 200,
     payload: { action: "extended", new_deadline: "2999-01-02T00:00:00Z" },
     error: null,
   }),
-  adoptLease: () => ({
+  adoptOrphan: () => ({
     status: 200,
     payload: {
       action: "adopted",
@@ -189,21 +189,21 @@ await fetchA("/api/outbox?after=0");
 ok("A: GET /api/outbox?after=0 → getLeaseOutbox {after:0}", calls.at(-1).action === "getLeaseOutbox" && calls.at(-1).args.after === 0);
 
 const POST_ROUTES = {
-  "/api/lease/start": "startLease",
-  "/api/lease/stop": "stopLease",
-  "/api/lease/extend": "extendLease",
-  "/api/lease/adopt": "adoptLease",
-  "/api/lease/shorten": "shortenLease",
+  "/api/lease/start": "acquire",
+  "/api/lease/stop": "release",
+  "/api/lease/extend": "extend",
+  "/api/lease/adopt": "adoptOrphan",
+  "/api/lease/shorten": "shorten",
   "/api/access/release": "releaseAccess",
-  "/api/grant": "grant",
+  "/api/grant": "startGrant",
   "/api/grant/extend": "extendGrant",
   "/api/ungrant": "ungrant",
-  "/api/config/budget": "setBudget",
+  "/api/config/budget": "setBudgetCaps",
   "/api/server/restart": "restartServer",
 };
 let postsOk = true;
 for (const [path, action] of Object.entries(POST_ROUTES)) {
-  // extendLease is the one canned POST; the rest are
+  // extend is the one canned POST; the rest are
   // translated by the same table — exercise translation
   // through a per-route canned envelope instead.
   const before = calls.length;
@@ -241,8 +241,8 @@ const snapA = adapterA.snapshot();
 ok("A: adapter over the stub serves the canned lease",
   snapA.leases.length === 1 && snapA.leases[0].session === "rig-session-1" && snapA.degraded === false);
 const ext = await adapterA.extend("rig-session-1", 2);
-const extCall = calls.find((c) => c.action === "extendLease");
-ok("A: extend verb → extendLease {body:{session,hours}} and the extended note",
+const extCall = calls.find((c) => c.action === "extend");
+ok("A: extend verb → extend {body:{session,hours}} and the extended note",
   extCall?.args.body.session === "rig-session-1" && extCall?.args.body.hours === 2 &&
   ext.note.startsWith("Extended — new deadline"));
 
@@ -261,8 +261,8 @@ ok("A: nameless view carries the endpoint identity + honest name",
   namelessView?.shapeCandidates.length === 5);
 const adoptedNameless = await adapterA.adoptNamelessOrphan(
   "m-hm-use1d0-1uj7tzpjz04km", "rig", "cpu-highram");
-const adoptCall = calls.find((c) => c.action === "adoptLease");
-ok("A: nameless adopt → adoptLease {body:{endpoint,shape}}, no session key, minted lease view",
+const adoptCall = calls.find((c) => c.action === "adoptOrphan");
+ok("A: nameless adopt → adoptOrphan {body:{endpoint,shape}}, no session key, minted lease view",
   adoptCall?.args.body.endpoint === "m-hm-use1d0-1uj7tzpjz04km" &&
   adoptCall?.args.body.shape === "cpu-highram" &&
   !("session" in (adoptCall?.args.body ?? {})) &&

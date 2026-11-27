@@ -139,7 +139,7 @@ function BudgetCard({ model }: { model: CardModel }) {
     }
     void act(async () => {
       const res = await callApi<{ caps?: BudgetCaps }>(() =>
-        api.setBudget({ body }),
+        api.setBudgetCaps({ body }),
       );
       setEditOpen(false);
       const c = res.caps || {};

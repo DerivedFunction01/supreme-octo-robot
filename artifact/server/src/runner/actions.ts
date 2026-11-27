@@ -2,8 +2,10 @@
 // (design §1) — the state reads (the whole /api/state
 // document or one named part, the outbox) and the panel's
 // mutations, which are KEPT in the published app by the
-// owner's ruling (design §6.1): lease start/stop/extend/
-// adopt/shorten, access release, grant, grant extend,
+// owner's ruling (design §6.1). The mutation names are
+// the canonical VenueAdapter verb names (the lease-card
+// unification): acquire/release/extend/shorten/
+// adoptOrphan, access release, startGrant, grant extend,
 // ungrant, budget config, server restart. There was no
 // original server set to port — the runner's original was
 // a static panel on its own server, the same defect class
@@ -64,8 +66,8 @@ export const runnerActions = {
     },
   }),
 
-  startLease: defineAction({
-    description: "Start a lease (the panel's lease/start mutation).",
+  acquire: defineAction({
+    description: "Acquire a lease (the panel's lease/start mutation).",
     request: bodyArg,
     response: rawResult,
     privileged: [privileged.runnerApi],
@@ -74,8 +76,8 @@ export const runnerActions = {
     },
   }),
 
-  stopLease: defineAction({
-    description: "Stop a lease (the panel's lease/stop mutation).",
+  release: defineAction({
+    description: "Release a lease (the panel's lease/stop mutation).",
     request: bodyArg,
     response: rawResult,
     privileged: [privileged.runnerApi],
@@ -84,7 +86,7 @@ export const runnerActions = {
     },
   }),
 
-  extendLease: defineAction({
+  extend: defineAction({
     description: "Extend a lease (the panel's lease/extend mutation).",
     request: bodyArg,
     response: rawResult,
@@ -94,8 +96,8 @@ export const runnerActions = {
     },
   }),
 
-  adoptLease: defineAction({
-    description: "Adopt an existing session as a lease (the panel's lease/adopt mutation).",
+  adoptOrphan: defineAction({
+    description: "Adopt an orphaned session as a lease (the panel's lease/adopt mutation).",
     request: bodyArg,
     response: rawResult,
     privileged: [privileged.runnerApi],
@@ -104,7 +106,7 @@ export const runnerActions = {
     },
   }),
 
-  shortenLease: defineAction({
+  shorten: defineAction({
     description: "Shorten a lease (the panel's lease/shorten mutation).",
     request: bodyArg,
     response: rawResult,
@@ -124,8 +126,8 @@ export const runnerActions = {
     },
   }),
 
-  grant: defineAction({
-    description: "Grant venue access (the panel's grant mutation).",
+  startGrant: defineAction({
+    description: "Start the venue access grant (the panel's grant mutation).",
     request: bodyArg,
     response: rawResult,
     privileged: [privileged.runnerApi],
@@ -154,8 +156,8 @@ export const runnerActions = {
     },
   }),
 
-  setBudget: defineAction({
-    description: "Set the venue budget config (the panel's config/budget mutation).",
+  setBudgetCaps: defineAction({
+    description: "Set an account's budget caps (the panel's config/budget mutation).",
     request: bodyArg,
     response: rawResult,
     privileged: [privileged.runnerApi],

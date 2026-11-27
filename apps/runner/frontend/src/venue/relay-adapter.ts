@@ -62,21 +62,25 @@ type RelayFetchResponse = {
   json: () => Promise<unknown>;
 };
 
-/** POST route → runnerApi action. The sets are the
+/** POST route → runnerApi action. The action names are
+ *  the canonical VenueAdapter verb names (the lease-card
+ *  unification) — the same names the adapter's methods
+ *  carry, so no verb-name translation remains; the table
+ *  is only the route-to-action binding. The sets are the
  *  panel's own contracts: the action takes the posted
  *  body as a record and the panel validates it, exactly
  *  as the live adapter posts it today. */
 const POST_ACTIONS: Record<string, string> = {
-  "/api/lease/start": "startLease",
-  "/api/lease/stop": "stopLease",
-  "/api/lease/extend": "extendLease",
-  "/api/lease/adopt": "adoptLease",
-  "/api/lease/shorten": "shortenLease",
+  "/api/lease/start": "acquire",
+  "/api/lease/stop": "release",
+  "/api/lease/extend": "extend",
+  "/api/lease/adopt": "adoptOrphan",
+  "/api/lease/shorten": "shorten",
   "/api/access/release": "releaseAccess",
-  "/api/grant": "grant",
+  "/api/grant": "startGrant",
   "/api/grant/extend": "extendGrant",
   "/api/ungrant": "ungrant",
-  "/api/config/budget": "setBudget",
+  "/api/config/budget": "setBudgetCaps",
   "/api/server/restart": "restartServer",
 };
 

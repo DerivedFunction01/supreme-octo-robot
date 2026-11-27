@@ -85,12 +85,12 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
   const chosen = specById(specs, shape);
   const rate = chosen ? chosen.rate_cu_per_hour : null;
 
-  const startLease = () => {
+  const beginLease = () => {
     if (!shape || starting) return;
     setStarting(true);
     let ok = false;
     void act(async () => {
-      await callApi(() => api.startLease({ body: { shape, hours: normalHours } }));
+      await callApi(() => api.acquire({ body: { shape, hours: normalHours } }));
       ok = true;
     }).then(() => {
       setStarting(false);
@@ -98,12 +98,12 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
     });
   };
 
-  const startGrant = () => {
+  const beginGrant = () => {
     if (!burst || starting) return;
     setStarting(true);
     let ok = false;
     void act(async () => {
-      await callApi(() => api.grant({ body: { hours: grantHours, burst } }));
+      await callApi(() => api.startGrant({ body: { hours: grantHours, burst } }));
       ok = true;
     }).then(() => {
       setStarting(false);
@@ -150,7 +150,7 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
                 {rate == null ? "Cost unconfirmed" : `${fmtNum(rate * normalHours)} CU`}
               </strong>
             </p>
-            <Button disabled={starting || !shape} onClick={startLease}>
+            <Button disabled={starting || !shape} onClick={beginLease}>
               {starting ? "Starting…" : "Start lease"}
             </Button>
           </div>
@@ -176,7 +176,7 @@ export function NewLeaseView({ navigate }: { navigate: (hash: string) => void })
                   <DurationChips hours={grantHours} onPick={setGrantHours} />
                   <CustomHoursInput ariaLabel="Custom grant hours" onHours={setGrantHours} />
                 </div>
-                <Button disabled={starting || !burst} onClick={startGrant}>
+                <Button disabled={starting || !burst} onClick={beginGrant}>
                   {starting ? "Starting…" : "Start grant"}
                 </Button>
               </>

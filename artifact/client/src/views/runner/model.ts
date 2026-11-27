@@ -43,6 +43,81 @@ export interface LeaseEntry {
   channel?: { verdict?: string };
   keepalive_heartbeat_age_s?: number | null;
   sync_claim?: { caller?: string; expires_at?: string } | null;
+  /** The served lease card (Step 1 of the lease-card
+   *  unification): every records entry with a deadline
+   *  carries one. The lease views render it as served —
+   *  no client-side lease derivation beside it. */
+  card?: LeaseCard | null;
+}
+
+/** One verb's served capability: whether the lease core
+ *  would accept the action on this lease, and the reason
+ *  class where it would refuse. The lease views disable
+ *  from it (Step 4 of the unification): a not-applicable
+ *  action renders disabled, never removed. */
+export interface LeaseCardCapability {
+  applicable: boolean;
+  reason: string | null;
+}
+
+/** One verb's capability on a lease's card, or null
+ *  where the card serves none (an entry without a card,
+ *  or a card served before the verb joined the set):
+ *  no served statement disables nothing — the core's
+ *  refusal remains the backstop. */
+export function leaseCapability(
+  card: LeaseCard | null | undefined,
+  verb: string,
+): LeaseCardCapability | null {
+  return card?.capabilities?.[verb] ?? null;
+}
+
+export interface LeaseCardDiagnostics {
+  heartbeat_label: string;
+  pulse_label?: string | null;
+  burn_label: string;
+  sync_claim: { caller?: string | null; until_label: string } | null;
+}
+
+/** The served lease card, exactly as the backend's card
+ *  assembly serves it (snake_case, verbatim): identity,
+ *  state, deadline presentation, rate, diagnostics and
+ *  the capability set — all labels derived server-side. */
+export interface LeaseCard {
+  session?: string | null;
+  display_name: string;
+  venue: string;
+  venue_label: string;
+  target?: string | null;
+  shape?: string | null;
+  shape_label?: string | null;
+  shape_descriptor: string;
+  caller?: string | null;
+  account?: string | null;
+  state: string;
+  state_label: string;
+  state_tone: string;
+  action?: string | null;
+  standing: boolean;
+  acquired_at?: string | null;
+  /** The acquired stamp's served label (the card's
+   *  fmt_time form), or null when the stamp is absent
+   *  or unparseable — honest absence: the detail's
+   *  Acquired row renders the label, never a
+   *  client-side formatting of the raw stamp. */
+  acquired_label: string | null;
+  deadline?: string | null;
+  deadline_label: string;
+  ends_label: string;
+  expired: boolean;
+  remaining_ms: number;
+  remaining_label: string;
+  rate_cu_per_hour?: number | null;
+  rate_label: string;
+  reserved_cu: number;
+  envelope_id?: string | null;
+  diagnostics: LeaseCardDiagnostics | null;
+  capabilities: Record<string, LeaseCardCapability>;
 }
 
 export interface AccessEntry {
@@ -232,7 +307,9 @@ export function fmtDur(hours: number): string {
   return h >= 24 && h % 24 === 0 ? `${h / 24}d` : `${h}h`;
 }
 
-/** Countdown to a served deadline, minute-granular. */
+/** Countdown to a served deadline, minute-granular.
+ *  Non-card duties only (the orphans view): the lease
+ *  card family renders the served remaining_label. */
 export function countdownText(iso: string | undefined | null, now: number): string {
   if (!iso) return "—";
   const ms = new Date(iso).getTime() - now;
@@ -302,6 +379,24 @@ export function specRateText(spec: Spec): string {
 }
 
 /* ---------------- verdict refusal texts (panel tables) ---------------- */
+
+/** A capability's served reason class in plain voice —
+ *  the form a disabled control states (the ArmConfirm
+ *  disabledReason idiom). The vocabulary is the card
+ *  assembly's closed set; an unknown class states
+ *  nothing rather than echoing the class string. */
+export function capabilityReasonText(reason: string | null): string | null {
+  switch (reason) {
+    case "grant-managed":
+      return "the standing lease is grant-managed";
+    case "venue":
+      return "this venue registers its sessions directly";
+    case "unserved":
+      return "no route serves this action";
+    default:
+      return null;
+  }
+}
 
 export function extendRefusalText(res: Record<string, unknown>): string {
   const budget = (res.budget ?? {}) as Record<string, unknown>;
