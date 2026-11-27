@@ -31,6 +31,11 @@ sentinel carrying neither fanout= nor serial=, or
 both; a step missing a closing files: / verify: /
 done when: / est: line; a sentinel with no est=, or
 whose est= disagrees with the closing est: line; a
+sentinel whose position= names no fan-out position
+(the timing ledger's position field — one of serial,
+branch, fan-in when declared; an undeclared position
+is no finding, the field is additive like the minted
+front-matter it feeds); a
 prerequisite no step in the plan mints and nothing
 in the project resolves; a cycle in the requires
 graph; a wb-step block naming no parsed step, or a
@@ -104,7 +109,7 @@ import re
 from pathlib import Path
 
 from .bundles import _closeout_error, all_todo_ids
-from .parser import (extract_step_blocks,
+from .parser import (FANOUT_POSITIONS, extract_step_blocks,
                      first_duration_minutes, parse_plan)
 
 _EST_LINE_RE = re.compile(r"^\s*est:\s*(.*)$")
@@ -479,6 +484,16 @@ def check_plan(text, *, name="", plans_dir=None,
                 f"disagreement — the wb-step block "
                 f"declares est={block['est']} but the "
                 f"closing line reads est: {line_est}")
+        if block["position"] is not None \
+                and block["position"] not in FANOUT_POSITIONS:
+            findings.append(
+                f"step {n} ({title}): the wb-step block "
+                f"declares position={block['position']!r} "
+                f"— a fan-out position is one of "
+                f"{', '.join(FANOUT_POSITIONS)} "
+                f"(grammar.FANOUT_POSITIONS, the set the "
+                f"timing ledger's mint carries into the "
+                f"todo's fanout_position front-matter)")
 
     for block in blocks:
         for req in block["requires"]:

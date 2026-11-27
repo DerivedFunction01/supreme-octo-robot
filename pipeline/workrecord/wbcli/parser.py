@@ -15,6 +15,7 @@ from wbcli.bundles import cmd_todo_file_set  # noqa: E402
 from wbcli.bundles import cmd_todo_import_db  # noqa: E402
 from wbcli.bundles import cmd_todo_migrate_names  # noqa: E402
 from wbcli.bundles import cmd_todo_new  # noqa: E402
+from wbcli.bundles import cmd_todo_timing  # noqa: E402
 from wbcli.drivers import cmd_activate  # noqa: E402
 from wbcli.drivers import cmd_doctor  # noqa: E402
 from wbcli.drivers import cmd_goal_check  # noqa: E402
@@ -308,6 +309,13 @@ def build_parser():
                     help="record the explicit opt-out "
                          "instead: progress_check off, "
                          "no schedule, never monitored")
+    st.add_argument("--worktree",
+                    help="the acting worktree this move "
+                         "runs in: stamped on the todo's "
+                         "worktree field and carried on "
+                         "the move's transition line "
+                         "(timing ledger — the activation "
+                         "move names it)")
     st.set_defaults(fn=cmd_todo_file_set)
 
     lt = tsub.add_parser("list")
@@ -315,6 +323,23 @@ def build_parser():
     lt.add_argument("--status",
                     choices=list(bundle_mod.TODO_STATUSES))
     lt.set_defaults(fn=cmd_todo_file_list)
+
+    tt = tsub.add_parser(
+        "timing",
+        help="the timing report (timing-ledger "
+             "Step 4), read-only: with a bundle, one "
+             "plan's per-step estimate vs actual from "
+             "the todos' transition ledger, with the "
+             "ruled wall-clock (serial prefix + "
+             "longest branch + fan-in) beside the "
+             "serial sum; without one, the project's "
+             "price book across plans — per-kind "
+             "actual-vs-estimate distributions with "
+             "the two lazy shapes flagged")
+    tt.add_argument("bundle", nargs="?",
+                    help="bundle id or slug (omit for "
+                         "the cross-plan price book)")
+    tt.set_defaults(fn=cmd_todo_timing)
 
     mt = tsub.add_parser(
         "migrate-names",

@@ -16,6 +16,11 @@ from .bundle_core import (
     _today,
     find_bundle_dir,
 )
+from .transitions import (
+    append_transition,
+    append_transition_line,
+    block_lines,
+)
 
 # Bundle creation (§3.4)
 # ----------------------------------------------------------------
@@ -59,10 +64,19 @@ def create_bundle(plans_dir, slug, *, plan: bool = False,
     (bundle_dir / "todos").mkdir(parents=True)
     plan_written = False
     if plan:
+        # The skeleton write carries the creation's
+        # transition (timing-ledger Step 2) in its
+        # transitions block, in the same write. A
+        # bundle created without a plan writes no file
+        # at all, so there is no write for a transition
+        # to ride — that form records nothing.
         write_text(
             bundle_dir / "plan.md",
-            _plan_skeleton(slug, feature=feature,
-                           today=today))
+            append_transition(
+                _plan_skeleton(slug, feature=feature,
+                               today=today),
+                verb="create-bundle", field="bundle",
+                old=None, new=bundle_id))
         plan_written = True
     return {
         "id": bundle_id,
@@ -128,11 +142,27 @@ def set_bundle_contract(plans_dir, bundle_ref, *,
         raise BundleError(
             f"unknown bundle: {bundle_ref!r} "
             f"(no such bundle under {plans_dir})")
-    write_text(
-        bundle_dir / bundle_parser.CONTRACT_FILE,
-        bundle_parser.render_contract(
-            programme.strip(), objective.strip(),
-            complete_when.strip(), work_record.strip()))
+    contract_path = bundle_dir / bundle_parser.CONTRACT_FILE
+    # The contract renders wholesale, so its transitions
+    # block (timing-ledger Step 2) is carried over from
+    # the standing file before this write's own
+    # transition is appended — the ledger survives the
+    # regeneration, in the same write.
+    carried = []
+    if contract_path.is_file():
+        carried = block_lines(
+            contract_path.read_text(encoding="utf-8"))
+    text = bundle_parser.render_contract(
+        programme.strip(), objective.strip(),
+        complete_when.strip(), work_record.strip())
+    for line in carried:
+        text = append_transition_line(text, line)
+    text = append_transition(
+        text, verb="set-contract", field="contract",
+        old=None, new=bundle_dir.name)
+    if not text.endswith("\n"):
+        text += "\n"
+    write_text(contract_path, text)
     return {
         "bundle": bundle_dir.name,
         "contract": bundle_parser.parse_contract(

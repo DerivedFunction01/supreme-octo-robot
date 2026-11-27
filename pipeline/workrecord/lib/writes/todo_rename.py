@@ -48,6 +48,7 @@ import re
 from pathlib import Path
 
 from . import bundles as bundle_mod
+from .transitions import append_transition, is_transition_line
 from ..plans import bundles as bundle_parser
 from ..progress import attention as attention_mod
 from ..progress import schedule as schedule_mod
@@ -129,10 +130,13 @@ def plan_renames(plans_dir) -> dict:
 def _repoint_text(text: str, mapping: dict):
     """(new_text, replacements): every mapped legacy
     token in `text` rewritten to its name, line-wise.
-    Two front-matter lines are never rewritten: the
-    `id:` line (the rewrite pass owns it — counting it
-    would also inflate the reference count) and the
-    `legacy_id:` line (the record of the old token)."""
+    Three lines are never rewritten: the `id:` line
+    (the rewrite pass owns it — counting it
+    would also inflate the reference count), the
+    `legacy_id:` line (the record of the old token),
+    and transition lines (timing-ledger Step 2: a
+    transition records the old token as its `old`
+    value — rewriting it would falsify the ledger)."""
     if not mapping:
         return text, 0
     total = 0
@@ -156,6 +160,9 @@ def _repoint_text(text: str, mapping: dict):
             out_lines.append(line)
             continue
         if not in_fm and line.startswith("legacy_id:"):
+            out_lines.append(line)
+            continue
+        if is_transition_line(line):
             out_lines.append(line)
             continue
         out_lines.append(_TOKEN_SCAN_RE.sub(_sub, line))
@@ -189,7 +196,9 @@ def _leftover_references(plans_dir: Path, mapping: dict):
     """Legacy-form tokens still mentioned in the corpus
     after the rename that belong to no renamed todo:
     {token: [relpaths]}. `legacy_id:` lines excluded —
-    they are records, not references."""
+    they are records, not references; transition lines
+    excluded on the same ground (their `old` value is
+    the record of the token the todo carried)."""
     leftovers = {}
     for path in _corpus_files(plans_dir):
         try:
@@ -199,6 +208,8 @@ def _leftover_references(plans_dir: Path, mapping: dict):
         rel = path.relative_to(plans_dir).as_posix()
         for line in text.split("\n"):
             if line.startswith("legacy_id:"):
+                continue
+            if is_transition_line(line):
                 continue
             for token in _LEGACY_TOKEN_RE.findall(line):
                 if token not in mapping:
@@ -212,7 +223,12 @@ def _rewrite_todo_file(path: Path, todo, name: str):
     """The todo file's new text: `id:` takes the name,
     `legacy_id:` records the old token beneath it (an
     existing legacy_id line is kept, never duplicated),
-    everything else byte-identical."""
+    everything else byte-identical — except the one
+    addition the timing ledger requires (Step 2): the
+    rename's own transition, appended to the body's
+    transitions block through the one helper, in this
+    same write. No caller supplies an actor, so the
+    helper records the verb's name."""
     text = path.read_text(encoding="utf-8")
     fields, body, fm_lines = \
         bundle_parser.split_front_matter(text)
@@ -231,6 +247,9 @@ def _rewrite_todo_file(path: Path, todo, name: str):
                     f"legacy_id: {todo['id']}")
         else:
             out.append(line)
+    body = append_transition(
+        body, verb="rename", field="id",
+        old=todo["id"], new=name)
     rendered = "---\n" + "\n".join(out) + "\n---\n"
     if body.strip():
         rendered += "\n" + body.strip("\n") + "\n"

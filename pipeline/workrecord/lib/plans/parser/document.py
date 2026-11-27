@@ -44,7 +44,12 @@ def extract_step_blocks(text):
     step, todos (|-separated), requires (|-separated
     prerequisite todos), est (the step's declared
     estimate, the machine form of its closing est:
-    line, raw — None when the block declares none), and
+    line, raw — None when the block declares none),
+    position (the step's fan-out position — serial,
+    branch, or fan-in; raw, None when undeclared;
+    plan-check validates a declared value against
+    grammar.FANOUT_POSITIONS and the timing ledger's
+    mint carries it into the todo's front-matter), and
     exactly one of fanout / serial. `requires_present`
     records whether the block carries a requires= field
     at all: an empty requires and an undeclared one
@@ -77,6 +82,7 @@ def extract_step_blocks(text):
              "requires": requires,
              "requires_present": "requires" in fields,
              "est": fields.get("est"),
+             "position": fields.get("position"),
              "fanout": fields.get("fanout"),
              "serial": fields.get("serial")})
     return steps

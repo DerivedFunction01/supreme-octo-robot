@@ -19,6 +19,7 @@ from .bundle_core import (
 )
 from .bundle_create import _check_contract_gate
 from .todo_create import _check_progress
+from .transitions import append_transition, is_block_line
 
 
 def _find_todo_file(plans_dir: Path, todo_id: str):
@@ -43,7 +44,9 @@ def set_todo_status(plans_dir, todo_id, status, *,
                     today: str = None,
                     progress: str = None,
                     no_progress: bool = False,
-                    armed_at: str = None) -> dict:
+                    armed_at: str = None,
+                    worktree: str = None,
+                    actor: str = None) -> dict:
     """Move one todo's status (todo|doing|blocked|done
     only — anything else refused), stamping `updated:`.
     An optional note is appended to the body (deploy
@@ -63,7 +66,20 @@ def set_todo_status(plans_dir, todo_id, status, *,
     (progress_check: off, no armed stamp), disarming a
     live schedule. A move to a stop status
     (done/blocked) clears both progress fields in the
-    same write. Arming onto a stop status is refused."""
+    same write. Arming onto a stop status is refused.
+
+    Worktree at activation (timing-ledger Step 3): a
+    caller that knows the acting worktree — the CLI's
+    --worktree, the server action's worktree field —
+    passes it, and the move stamps the front-matter
+    `worktree:` field (replacing any earlier stamp)
+    and carries the worktree on the move's transition
+    line, in the same write. Editor identity (the
+    transition's actor) and the worktree are
+    independent fields: N editors over M worktrees,
+    and a step's record names the one worktree it ran
+    in beside the editors who acted on it. A caller
+    supplying none leaves both untouched."""
     if status not in TODO_STATUSES:
         raise BundleError(
             f"todo status must be one of {TODO_STATUSES}, "
@@ -121,6 +137,9 @@ def set_todo_status(plans_dir, todo_id, status, *,
         if key == "status":
             new_lines.append(f"status: {status}")
             seen.add("status")
+        elif key == "worktree" and worktree is not None:
+            new_lines.append(f"worktree: {worktree}")
+            seen.add("worktree")
         elif key == "updated":
             new_lines.append(f"updated: {today}")
             seen.add("updated")
@@ -146,6 +165,8 @@ def set_todo_status(plans_dir, todo_id, status, *,
             new_lines.append(line)
     if "status" not in seen:
         new_lines.append(f"status: {status}")
+    if worktree is not None and "worktree" not in seen:
+        new_lines.append(f"worktree: {worktree}")
     if "updated" not in seen:
         new_lines.append(f"updated: {today}")
     if opt_out and "progress_check" not in seen:
@@ -163,6 +184,15 @@ def set_todo_status(plans_dir, todo_id, status, *,
         body = body.rstrip("\n")
         body = (body + "\n\n" if body else "") \
             + note.strip("\n") + "\n"
+    # The move itself is the ledger's transition
+    # (timing-ledger Step 2): appended through the one
+    # helper into the body's transitions block, in this
+    # same write. No caller supplies an actor today, so
+    # the helper records the verb's name.
+    body = append_transition(
+        body, verb="set-status", actor=actor,
+        field="status", old=fields.get("status"),
+        new=status, worktree=worktree)
     out = "---\n" + "\n".join(new_lines) + "\n---\n"
     if body.strip():
         out += "\n" + body.strip("\n") + "\n"
@@ -192,7 +222,8 @@ _CHECKPOINT_LINE = "progress-checkpoint: "
 
 
 def set_todo_fields(plans_dir, todo_id, *, title=None,
-                    notes=None, today: str = None) -> dict:
+                    notes=None, today: str = None,
+                    actor: str = None) -> dict:
     """Edit one todo's title and/or notes (the viewer's
     title+notes save). Surgical, in set_todo_status's
     style: the title front-matter line is replaced in
@@ -201,7 +232,12 @@ def set_todo_fields(plans_dir, todo_id, *, title=None,
     non-checkpoint lines: checkpoint lines
     (`progress-checkpoint: ...`) are record lines, not
     notes, and are preserved verbatim after the new
-    notes — the feed projection splits them back out."""
+    notes — the feed projection splits them back out.
+    The transitions block (timing-ledger Step 2) is a
+    record of the same kind: its lines are preserved
+    verbatim on the same terms, and this edit appends
+    its own transition through the one helper, in this
+    same write."""
     plans_dir = Path(plans_dir)
     found = _find_todo_file(plans_dir, todo_id)
     if found is None:
@@ -238,12 +274,24 @@ def set_todo_fields(plans_dir, todo_id, *, title=None,
         new_lines.append(f"updated: {today}")
     if notes is not None:
         kept = [ln for ln in body.split("\n")
-                if ln.startswith(_CHECKPOINT_LINE)]
+                if ln.startswith(_CHECKPOINT_LINE)
+                or is_block_line(ln)]
         parts = []
         if str(notes).strip():
             parts.append(str(notes).strip("\n"))
         parts.extend(kept)
         body = "\n".join(parts)
+    changed = []
+    old_value = new_value = None
+    if title is not None:
+        changed.append("title")
+        old_value, new_value = fields.get("title"), title
+    if notes is not None:
+        changed.append("notes")
+    body = append_transition(
+        body, verb="set-fields", actor=actor,
+        field="+".join(changed) if changed else "fields",
+        old=old_value, new=new_value)
     out = "---\n" + "\n".join(new_lines) + "\n---\n"
     if body.strip():
         out += "\n" + body.strip("\n") + "\n"
@@ -278,7 +326,8 @@ COMMISSION_FIELDS = ("commissioned_by", "commissioned_at")
 def plant_commission(plans_dir, todo_id, *,
                      commissioned_by: str,
                      commissioned_at: str = None,
-                     today: str = None) -> dict:
+                     today: str = None,
+                     actor: str = None) -> dict:
     """Plant commission provenance on one todo: the
     write that makes it a commission of record.
 
@@ -341,6 +390,10 @@ def plant_commission(plans_dir, todo_id, *,
     new_lines.append(f"commissioned_at: {commissioned_at}")
     if "updated" not in seen:
         new_lines.append(f"updated: {today}")
+    body = append_transition(
+        body, verb="plant-commission", actor=actor,
+        field="commissioned_by", old=None,
+        new=commissioned_by)
     out = "---\n" + "\n".join(new_lines) + "\n---\n"
     if body.strip():
         out += "\n" + body.strip("\n") + "\n"

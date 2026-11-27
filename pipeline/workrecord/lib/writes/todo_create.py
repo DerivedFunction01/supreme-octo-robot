@@ -6,7 +6,8 @@ surface.
 from pathlib import Path
 
 from ..plans import bundles as bundle_parser
-from ..plans.parser import parse_plan
+from ..plans.parser import (FANOUT_POSITIONS,
+                            extract_step_blocks, parse_plan)
 from ..progress import attention as attention_mod
 from ..progress import schedule as progress_schedule_mod
 from ..util import now_iso, write_text
@@ -21,15 +22,27 @@ from .bundle_core import (
     find_bundle_dir,
 )
 from .bundle_create import _check_contract_gate
+from .transitions import append_transition
 
 # Todo creation (§3.4)
 # ----------------------------------------------------------------
 
 _FRONT_MATTER_ORDER = ("id", "legacy_id", "title",
                        "status", "feature",
-                       "plan", "plan_step", "worktree",
+                       "plan", "plan_step", "est",
+                       "fanout_position", "worktree",
                        "created", "updated",
                        "progress_check", "progress_armed")
+
+# The fan-out positions a step's record may carry
+# (timing-ledger plan): serial prefix, fan-out branch,
+# fan-in. The set's one home is the plan grammar
+# (lib/plans/parser/grammar.FANOUT_POSITIONS, imported
+# above and re-exported here for this module's existing
+# importers): the grammar validates the same set on the
+# wb-step block's position= field; the writer refuses
+# anything else at the mint, like every other field
+# rule here.
 
 
 def _check_progress(progress, status, *,
@@ -83,6 +96,24 @@ def _bundle_feature(bundle_dir: Path):
     return None
 
 
+def _step_block(bundle_dir: Path, plan, step: int):
+    """The bundle plan's wb-step block for one step
+    number, or None (timing-ledger Step 3, the
+    mint-time read). The plan file is the bundle's own
+    plan.md unless the mint names another plan. A
+    bundle without that file, or a plan whose blocks
+    name no such step, mints exactly as before — the
+    carried fields stay absent rather than guessed."""
+    plan_file = bundle_dir / (plan or "plan.md")
+    if not plan_file.is_file():
+        return None
+    for block in extract_step_blocks(
+            plan_file.read_text(encoding="utf-8")):
+        if block["step"] == step:
+            return block
+    return None
+
+
 def create_todo(plans_dir, bundle_ref, title, *, step=None,
                 worktree=None, plan=None, feature=None,
                 status: str = "todo", body: str = "",
@@ -91,7 +122,11 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
                 progress: str = None,
                 no_progress: bool = False,
                 armed_at: str = None,
-                name: str = None) -> dict:
+                name: str = None,
+                est: str = None,
+                fanout_position: str = None,
+                actor: str = None,
+                verb: str = "create") -> dict:
     """Write one todo file into a bundle's todos/ dir,
     with complete §3.2 front-matter. The todo's name —
     its id, a GitHub-like slug — is assigned here: an
@@ -110,7 +145,41 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
     `doing` with neither is armed at the default
     cadence — monitored by default, like the doing
     move in set_todo_status.
+
+    Timing ledger (Step 2): `est` and `fanout_position`
+    are additive front-matter — carried when a caller
+    supplies them, absent otherwise, and a file without
+    them reads exactly as before. The creation itself
+    is recorded as the body's first transition line
+    through the one helper (lib/writes/transitions.py),
+    in the same write as the file. `verb` names the
+    creating path (the drain's tail raise and the DB
+    import mint through here and say so); `actor` is
+    the caller identity when one is supplied — none
+    is today, so the helper records the verb's name.
+
+    Mint-time carrying (Step 3): when `step` is given
+    and the caller left `est` or `fanout_position`
+    open, the bundle plan's wb-step block for that
+    step fills them (its est= and position=) — the
+    `wb todo new --step N` path, whose verb passes no
+    figures of its own, mints a todo carrying
+    everything the timing report traces against.
     """
+    if not title or not title.strip() \
+            or "\n" in title:
+        raise BundleError(
+            "todo title must be a single non-empty line")
+    title = title.strip()
+    if est is not None and (not str(est).strip()
+                            or "\n" in str(est)):
+        raise BundleError(
+            "est must be a single non-empty line")
+    if fanout_position is not None \
+            and fanout_position not in FANOUT_POSITIONS:
+        raise BundleError(
+            f"fanout_position must be one of "
+            f"{FANOUT_POSITIONS}, got {fanout_position!r}")
     if not title or not title.strip() \
             or "\n" in title:
         raise BundleError(
@@ -163,6 +232,28 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
         plan = "plan.md"
     if feature is None:
         feature = _bundle_feature(bundle_dir)
+    if step is not None and (est is None
+                             or fanout_position is None):
+        # Mint-time carrying (timing-ledger Step 3):
+        # the step's wb-step block in the bundle's plan
+        # declares the estimate and the fan-out
+        # position the minted todo is traced against.
+        # An explicit est= / fanout_position= from the
+        # caller wins; the block fills only what the
+        # caller left open — and the minted figure is
+        # immutable from here (a re-price is a new plan
+        # or a named amendment, never an edit).
+        block = _step_block(bundle_dir, plan, step)
+        if block is not None:
+            if est is None:
+                est = block["est"]
+            if fanout_position is None:
+                fanout_position = block["position"]
+    if fanout_position is not None \
+            and fanout_position not in FANOUT_POSITIONS:
+        raise BundleError(
+            f"fanout_position must be one of "
+            f"{FANOUT_POSITIONS}, got {fanout_position!r}")
     taken = bundle_parser.all_todo_ids(plans_dir)
     if name is not None:
         check_todo_name(name)
@@ -182,6 +273,8 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
         "feature": feature,
         "plan": plan,
         "plan_step": step,
+        "est": est,
+        "fanout_position": fanout_position,
         "worktree": worktree,
         "created": created or today,
         "updated": updated or created or today,
@@ -195,6 +288,9 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
     if todo_path.exists():
         raise BundleError(
             f"todo file already exists: {todo_path}")
+    body = append_transition(
+        body, verb=verb, actor=actor, field="status",
+        old=None, new=status)
     write_text(todo_path, _render_todo(fields, body))
     rel = todo_path.relative_to(plans_dir).as_posix()
     result = bundle_parser.parse_todo(

@@ -46,10 +46,18 @@ from .bundle_create import (  # noqa: F401
 )
 from .todo_create import (  # noqa: F401
     _FRONT_MATTER_ORDER,
+    FANOUT_POSITIONS,
     _bundle_feature,
     _check_progress,
     _render_todo,
     create_todo,
+)
+from .transitions import (  # noqa: F401
+    TRANSITION_PREFIX,
+    TRANSITIONS_HEADER,
+    append_transition,
+    parse_transition,
+    transitions_in,
 )
 from .todo_edit import (  # noqa: F401
     COMMISSION_FIELDS,
@@ -108,7 +116,7 @@ def import_db_todos(plans_dir, db_path, *,
             status=db_todo["status"],
             body=db_todo.get("notes") or "",
             created=created_date, updated=updated_date,
-            name=keep_name)
+            name=keep_name, verb="import-db")
         taken.add(todo["id"])
         imported.append({
             "db_id": db_todo["id"],
