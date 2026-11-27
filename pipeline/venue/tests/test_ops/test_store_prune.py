@@ -29,6 +29,11 @@ def _sandbox(tmp_path: Path) -> Path:
     core.mkdir(parents=True)
     shutil.copy(REPO / "sync" / "lease" / "core" / "foundation.py", core / "foundation.py")
     shutil.copy(REPO / "paths.py", root / "paths.py")
+    # The terminal-job class's exclusion config,
+    # provisioned with no exclusions: the class runs in
+    # the sandbox by default, and the named-exclusion
+    # test writes its own list over it.
+    (root / "var" / "store-prune-excluded-dirs.json").write_text("[]")
     return root
 
 
@@ -131,18 +136,18 @@ def test_job_payload_archives_and_staging_tarballs_past_48h(tmp_path):
     _write(job / "payload-old.tar.gz", age_s=49 * 3600)        # past the 48h floor: prunable
     _write(job / "payload-fresh.tar.gz", age_s=3600)           # inside the floor: kept
     _write(job / "seed-old.bundle", age_s=49 * 3600)           # bundles ride the same class
-    staging = root / "var" / "steampower-gates"
+    staging = root / "var" / "program-gates"
     _write(staging / "run1-tree.tar.gz", age_s=49 * 3600)      # launch staging past the floor: prunable
     _write(staging / "run2-tree.tar.gz", age_s=3600)           # fresh staging: kept
     _write(root / "var" / "loose-tree.tar.gz", age_s=49 * 3600)  # top-level var is not the subdir class
     chosen = _plan_paths(root)
     assert "adapters/colab/jobs/some-job/payload-old.tar.gz" in chosen
     assert "adapters/colab/jobs/some-job/seed-old.bundle" in chosen
-    assert "var/steampower-gates/run1-tree.tar.gz" in chosen
+    assert "var/program-gates/run1-tree.tar.gz" in chosen
     assert "adapters/colab/jobs/some-job/job.json" not in chosen
     assert "adapters/colab/jobs/some-job/wrap.py" not in chosen
     assert "adapters/colab/jobs/some-job/payload-fresh.tar.gz" not in chosen
-    assert "var/steampower-gates/run2-tree.tar.gz" not in chosen
+    assert "var/program-gates/run2-tree.tar.gz" not in chosen
     assert "var/loose-tree.tar.gz" not in chosen
 
 
@@ -150,27 +155,27 @@ def test_staging_subdir_bundles_and_suffixed_tree_tarballs_past_48h(tmp_path):
     # The measured store gap: formations staging in a named
     # var/ subdir drop snapshot bundles beside their tree
     # tarballs, and the tarballs often carry a suffixed name
-    # (hc01-tree-<hash>.tar.gz). Neither matched a class:
+    # (lane01-tree-<hash>.tar.gz). Neither matched a class:
     # class 2 globs only the var/ top level, and class 7's
     # glob reached only the plain *-tree.tar.gz form.
     root = _sandbox(tmp_path)
-    staging = root / "var" / "steampower-gates"
-    _write(staging / "df-next-085.bundle", age_s=85 * 3600)         # staging bundle past the floor: prunable
-    _write(staging / "df-next-999.bundle", age_s=3600)              # inside the floor: kept
-    _write(staging / "hc01-tree-deadbeef.tar.gz", age_s=61 * 3600)  # suffixed tree tarball past the floor: prunable
-    _write(staging / "hc01-tree-fresh.tar.gz", age_s=3600)          # suffixed, inside the floor: kept
+    staging = root / "var" / "program-gates"
+    _write(staging / "task-next-085.bundle", age_s=85 * 3600)         # staging bundle past the floor: prunable
+    _write(staging / "task-next-999.bundle", age_s=3600)              # inside the floor: kept
+    _write(staging / "lane01-tree-deadbeef.tar.gz", age_s=61 * 3600)  # suffixed tree tarball past the floor: prunable
+    _write(staging / "lane01-tree-fresh.tar.gz", age_s=3600)          # suffixed, inside the floor: kept
     _write(staging / "lease-some-session.json", age_s=200 * 3600)   # records are never candidates, at any age
     _write(staging / "run-record.json", age_s=200 * 3600)           # likewise
     _record(root, "runs", "run-live.json", {"state": "running", "bundle_seed": {"bundle": "staging-seed.bundle"}})
     _write(staging / "staging-seed.bundle", age_s=85 * 3600)        # an in-flight run's seed: protected, kept
     chosen = _plan_paths(root)
-    assert "var/steampower-gates/df-next-085.bundle" in chosen
-    assert "var/steampower-gates/hc01-tree-deadbeef.tar.gz" in chosen
-    assert "var/steampower-gates/df-next-999.bundle" not in chosen
-    assert "var/steampower-gates/hc01-tree-fresh.tar.gz" not in chosen
-    assert "var/steampower-gates/lease-some-session.json" not in chosen
-    assert "var/steampower-gates/run-record.json" not in chosen
-    assert "var/steampower-gates/staging-seed.bundle" not in chosen
+    assert "var/program-gates/task-next-085.bundle" in chosen
+    assert "var/program-gates/lane01-tree-deadbeef.tar.gz" in chosen
+    assert "var/program-gates/task-next-999.bundle" not in chosen
+    assert "var/program-gates/lane01-tree-fresh.tar.gz" not in chosen
+    assert "var/program-gates/lease-some-session.json" not in chosen
+    assert "var/program-gates/run-record.json" not in chosen
+    assert "var/program-gates/staging-seed.bundle" not in chosen
 
 
 def _job_record(root: Path, run_id: str, job: str, state: str, age_s: int = 0) -> None:
@@ -227,15 +232,46 @@ def test_job_with_any_live_record_is_untouched(tmp_path):
 
 def test_named_excluded_payload_dir_untouched_other_payload_dirs_reclaim(tmp_path):
     root = _sandbox(tmp_path)
-    _job_record(root, "seg-20260101T000000Z", "specimen-ci-segform-payload", "complete", age_s=72 * 3600)
-    excluded = root / "adapters" / "colab" / "jobs" / "specimen-ci-segform-payload"
+    # The exclusion list is the store's untracked
+    # config: the sandbox's copy names the fixture's
+    # shared input store.
+    (root / "var" / "store-prune-excluded-dirs.json").write_text(
+        json.dumps(["greenfield-ci-sampleform-payload"]))
+    _job_record(root, "sample-20260101T000000Z", "greenfield-ci-sampleform-payload", "complete", age_s=72 * 3600)
+    excluded = root / "adapters" / "colab" / "jobs" / "greenfield-ci-sampleform-payload"
     _write(excluded / "store.bin", age_s=72 * 3600)      # a named shared input store: never entered
     _job_record(root, "unclaimed-20260101T000000Z", "greenfield-ci-unclaimed-payload", "failed", age_s=72 * 3600)
     ordinary = root / "adapters" / "colab" / "jobs" / "greenfield-ci-unclaimed-payload"
     _write(ordinary / "store.bin", age_s=72 * 3600)      # a closed lane's payload store: ordinary
     chosen = _plan_paths(root)
-    assert "adapters/colab/jobs/specimen-ci-segform-payload/store.bin" not in chosen
+    assert "adapters/colab/jobs/greenfield-ci-sampleform-payload/store.bin" not in chosen
     assert "adapters/colab/jobs/greenfield-ci-unclaimed-payload/store.bin" in chosen
+
+
+def test_terminal_job_class_does_not_run_without_the_exclusion_config(tmp_path):
+    # The honest degradation: with the exclusion
+    # config not provisioned the class cannot prove a
+    # payload dir is not a shared input store, so it
+    # does not run at all — and the report says so.
+    import importlib.util
+
+    root = _sandbox(tmp_path)
+    (root / "var" / "store-prune-excluded-dirs.json").unlink()
+    _job_record(root, "old-job-20260101T000000Z", "old-job", "complete", age_s=49 * 3600)
+    job = root / "adapters" / "colab" / "jobs" / "old-job"
+    _write(job / "data.bin", age_s=49 * 3600)            # would be a candidate with the config provisioned
+    os.environ["COLAB_RUNNER_HOME"] = str(root)
+    try:
+        spec = importlib.util.spec_from_file_location("store_prune_under_test", SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        chosen, report = module.plan(1e15)
+    finally:
+        os.environ.pop("COLAB_RUNNER_HOME", None)
+    paths = {str(p.relative_to(root)) for _o, p, _s, _c in chosen}
+    assert "adapters/colab/jobs/old-job/data.bin" not in paths
+    assert report["skipped_classes"] == [
+        "job payload files of terminal jobs (excluded-dirs config not provisioned)"]
 
 
 def test_job_with_no_records_and_terminal_job_inside_the_grace_are_untouched(tmp_path):
