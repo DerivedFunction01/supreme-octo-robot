@@ -287,11 +287,6 @@ export const ENV_KEYS = [
   "ATTENTION_PORT",
   "VENUE_LEASE_UI_HOST",
   "VENUE_LEASE_UI_PORT",
-  // step6-retire: the COLAB_ pair rides the allowlist only so the
-  // runner bridge's dual-read fallback can see them; both entries
-  // are deleted in Step 6 (separation plan).
-  "COLAB_LEASE_UI_HOST",
-  "COLAB_LEASE_UI_PORT",
 ] as const;
 
 function socketCall(args: {

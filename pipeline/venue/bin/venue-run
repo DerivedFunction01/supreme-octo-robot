@@ -471,7 +471,7 @@ def _envelope_seams() -> dict:
         "ssh": _ssh,
         "launch_step": _launch_step,
         "wait": _wait,
-        "caller_env": os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")),  # step6-retire: COLAB_ dual-read fallback
+        "caller_env": os.environ.get("VENUE_CALLER"),
     }
 
 
@@ -584,7 +584,7 @@ def _local_main() -> int:
         job,
         script_path=(manifest_path.parent / (script_name + ".sealed")) if seal_entry is not None else script_path,
         uploads_base=REPO,
-        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))),  # step6-retire: COLAB_ dual-read fallback
+        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER")),
         shape_error=field_err,
     )
     if preflight:
@@ -600,7 +600,7 @@ def _local_main() -> int:
     shape_entry, target_id, _shape_target = local_venue.shape_target(REPO, shape_id)
     venue_state = None
     if target_id:
-        var_dir = Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
+        var_dir = Path(os.environ.get("VENUE_RUNNER_VAR", REPO / "var"))
         venue_state = venue_actuate.load_state(var_dir, target_id)
         saturation = venue_actuate.saturation_refusal(venue_state, now_epoch=time.time())
         if saturation:
@@ -661,7 +661,7 @@ def _local_main() -> int:
                 (json.dumps(staged_payload, indent=1) + "\n").encode(),
             )
         )
-    caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER"))
     shape_id = job.get("shape") or "local"
     acquired = lease.acquire_local(REPO, shape_id, caller=caller, hours=job.get("hours"))
     if acquired.get("action") not in ("created", "adopted"):

@@ -41,7 +41,7 @@ gate_check() { # shape id -> the session shape gate's admission verdict JSON; ex
   # CLI call. Prints the verdict JSON either way. The driver-set
   # $VENUE_CALLER claim rides the consult when present, so the
   # verdict and its journal entry name the thread.
-  CALLER_CLAIM="${VENUE_CALLER:-${COLAB_CALLER:-}}"  # step6-retire: COLAB_ dual-read fallback
+  CALLER_CLAIM="${VENUE_CALLER:-}"
   if [ -n "$CALLER_CLAIM" ]; then
     "$REPO_ROOT/bin/venue-lease" admission --shape "$1" --caller "$CALLER_CLAIM"
   else

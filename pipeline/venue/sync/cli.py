@@ -161,7 +161,7 @@ def _var_dir() -> Path:
     # VENUE_RUNNER_VAR override, else this repo's var/. Mirrored
     # here so the funnel carries no lease import; the auth-required
     # marker is the only var/ state the guard touches.
-    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
+    return Path(os.environ.get("VENUE_RUNNER_VAR", REPO / "var"))
 
 
 def _token_bytes() -> bytes | None:

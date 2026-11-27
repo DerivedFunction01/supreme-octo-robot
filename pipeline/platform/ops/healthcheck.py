@@ -81,7 +81,7 @@ def _surfaces():
          "/health",
          lambda p: p.get("status") == "ok"),
         ("lease-panel",
-         f"http://127.0.0.1:{os.environ.get('VENUE_LEASE_UI_PORT', os.environ.get('COLAB_LEASE_UI_PORT', '8793'))}"  # step6-retire: COLAB_ dual-read fallback
+         f"http://127.0.0.1:{os.environ.get('VENUE_LEASE_UI_PORT', '8793')}"
          "/api/outbox",
          lambda p: "events" in p),
     ]

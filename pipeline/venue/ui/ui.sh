@@ -21,13 +21,13 @@ REPO="$(dirname "$UI_DIR")"
 # The panel's actor identity for the core's session shape gate
 # (the systemd unit carries the same claim in its Environment).
 export VENUE_LEASE_ACTOR=panel
-VAR_DIR="${VENUE_RUNNER_VAR:-${COLAB_RUNNER_VAR:-$REPO/var}}"  # step6-retire: COLAB_ dual-read fallback
+VAR_DIR="${VENUE_RUNNER_VAR:-$REPO/var}"
 PIDFILE="$VAR_DIR/lease-ui.pid"
 LOG="$VAR_DIR/lease-ui.log"
-PORT="${VENUE_LEASE_UI_PORT:-${COLAB_LEASE_UI_PORT:-8793}}"  # step6-retire: COLAB_ dual-read fallback
+PORT="${VENUE_LEASE_UI_PORT:-8793}"
 UNIT_NAME="venue.service"
-UNIT_DIR="${VENUE_UI_UNIT_DIR:-${COLAB_UI_UNIT_DIR:-/etc/systemd/system}}"  # step6-retire: COLAB_ dual-read fallback
-SYSTEMCTL="${VENUE_UI_SYSTEMCTL:-${COLAB_UI_SYSTEMCTL:-systemctl}}"  # step6-retire: COLAB_ dual-read fallback
+UNIT_DIR="${VENUE_UI_UNIT_DIR:-/etc/systemd/system}"
+SYSTEMCTL="${VENUE_UI_SYSTEMCTL:-systemctl}"
 
 unit_installed() {
   [[ -f "$UNIT_DIR/$UNIT_NAME" ]]

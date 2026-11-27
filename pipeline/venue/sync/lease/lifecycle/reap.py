@@ -35,7 +35,7 @@ _REAP_BUDGET_DEFAULT_S = 300.0
 
 
 def _budget_s() -> float:
-    raw = os.environ.get("VENUE_LEASE_REAP_BUDGET_S", os.environ.get("COLAB_LEASE_REAP_BUDGET_S"))  # step6-retire: COLAB_ dual-read fallback
+    raw = os.environ.get("VENUE_LEASE_REAP_BUDGET_S")
     try:
         return float(raw) if raw else _REAP_BUDGET_DEFAULT_S
     except ValueError:

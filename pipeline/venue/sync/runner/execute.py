@@ -247,7 +247,7 @@ def execute(ctx: dict) -> int:
         # footprint (pids, log, checkpoint, or exit stamp) on
         # the first reader pass; total absence is a lost launch.
         launch_error = None
-        launch_timeout = int(os.environ.get("VENUE_RUN_LAUNCH_TIMEOUT_S", os.environ.get("COLAB_RUN_LAUNCH_TIMEOUT_S", "300")))  # step6-retire: COLAB_ dual-read fallback
+        launch_timeout = int(os.environ.get("VENUE_RUN_LAUNCH_TIMEOUT_S", "300"))
         try:
             lr = colab("exec", "-s", session, "--timeout", "120", "-f", str(launcher), timeout=launch_timeout)
             if lr.returncode != 0 or "launched" not in lr.stdout:
@@ -274,7 +274,7 @@ def execute(ctx: dict) -> int:
         # timeout's discipline (a test that shrinks poll timeouts
         # shrinks this one too), capped at 120 s so a wedged
         # channel cannot hold the launcher for a full poll bound.
-        confirm_timeout = int(os.environ.get("VENUE_RUN_CONFIRM_TIMEOUT_S", os.environ.get("COLAB_RUN_CONFIRM_TIMEOUT_S")) or min(int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300"))), 120))  # step6-retire: COLAB_ dual-read fallback
+        confirm_timeout = int(os.environ.get("VENUE_RUN_CONFIRM_TIMEOUT_S") or min(int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", "300")), 120))
         cstate, _confirm_error = read_reader(session, reader, confirm_timeout)
         footprint = bool(cstate) and bool(cstate.get("job_pids") or cstate.get("exit_stamp") is not None or cstate.get("job_log_tail") or cstate.get("checkpoint"))
         if footprint:
@@ -365,7 +365,7 @@ def execute(ctx: dict) -> int:
         # stranded the record at polling while the payload
         # completed). The timeout is env-tunable for the same
         # reason the cadence is a manifest value: tests shrink it.
-        poll_timeout = int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300")))  # step6-retire: COLAB_ dual-read fallback
+        poll_timeout = int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", "300"))
         state = {}
         while time.time() < deadline:
             time.sleep(cadence)
@@ -431,7 +431,7 @@ def execute(ctx: dict) -> int:
             # without the hold and names the collection failure
             # on the record — closing is honest there because
             # the teardown ends collection either way.
-            hold_deadline = time.time() + int(os.environ.get("VENUE_RUN_COLLECTION_HOLD_S", os.environ.get("COLAB_RUN_COLLECTION_HOLD_S", "900")))  # step6-retire: COLAB_ dual-read fallback
+            hold_deadline = time.time() + int(os.environ.get("VENUE_RUN_COLLECTION_HOLD_S", "900"))
             while result.get("state") == "collecting" and time.time() < hold_deadline:
                 time.sleep(cadence)
                 state2, _hold_error = read_reader(session, reader, poll_timeout)

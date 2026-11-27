@@ -15,7 +15,7 @@ _paths_spec.loader.exec_module(_paths)
 
 
 def var_dir(repo: Path) -> Path:
-    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", repo / "var")))  # step6-retire: COLAB_ dual-read fallback
+    return Path(os.environ.get("VENUE_RUNNER_VAR", repo / "var"))
 
 
 def load_json(path: Path, default):

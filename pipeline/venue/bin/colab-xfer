@@ -116,11 +116,11 @@ def remote_name(raw: str) -> str | None:
 
 
 def run_move(args) -> int:
-    claim_err = lease.caller_claim_error(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    claim_err = lease.caller_claim_error(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER"))
     if claim_err:
         print(f"colab-xfer: {claim_err}", file=sys.stderr)
         return 2
-    caller = lease.resolve_caller(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    caller = lease.resolve_caller(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER"))
     name = remote_name(args.remote)
     if name is None:
         print(f"colab-xfer: remote must be a bare file name at /content, got {args.remote!r}", file=sys.stderr)
