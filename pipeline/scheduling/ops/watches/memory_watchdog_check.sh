@@ -23,7 +23,8 @@
 # 8 = a denylisted literal (the untracked denylist, same
 # pattern as tools/portability_scan.py: env
 # STARTER_DENYLIST_FILE or the repo's one home,
-# pipeline/platform/state/denylist.txt;
+# pipeline/platform/state/denylist.txt, unioned with the
+# repo layer beside it, denylist.repo.txt, when present;
 # one literal per line, #-comments ignored) appears in a topic
 # file, in ${HOME}/AGENTS.md, in MAINTENANCE.md, or in
 # MEMORY.md itself, with the index matching (rule 0b in
@@ -121,6 +122,7 @@ if [[ -d "$TOPICS_DIR" ]]; then
 fi
 
 DENYLIST_FILE="${STARTER_DENYLIST_FILE:-$REPO_ROOT/../platform/state/denylist.txt}"
+DENYLIST_LAYER="$(dirname "$DENYLIST_FILE")/denylist.repo.txt"
 AGENTS_FILE="${SCHEDULER_AGENTS_FILE:-$USER_HOME_DIR/AGENTS.md}"
 MAINTENANCE_FILE="$WS_ROOT/memory-watch/MAINTENANCE.md"
 denylist_hits=""
@@ -128,6 +130,9 @@ denylist_missing=""
 if [[ -r "$DENYLIST_FILE" ]]; then
   deny_tmp="$(mktemp)"
   grep -v '^[[:space:]]*#' "$DENYLIST_FILE" | grep -v '^[[:space:]]*$' > "$deny_tmp" || true
+  if [[ -r "$DENYLIST_LAYER" ]]; then
+    grep -v '^[[:space:]]*#' "$DENYLIST_LAYER" | grep -v '^[[:space:]]*$' >> "$deny_tmp" || true
+  fi
   if [[ -s "$deny_tmp" ]]; then
     deny_files=()
     if [[ -d "$TOPICS_DIR" ]]; then

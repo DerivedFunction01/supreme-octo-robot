@@ -1,0 +1,19 @@
+{
+  "run_id": "specimen-ci-cobalt-price-20260806T114515Z",
+  "job": "specimen-ci-cobalt-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T11:45:15.461435+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T11:45:15.461435+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "uploading",
+  "launch_lost": true,
+  "error": "record still 'starting' 122 min after its freshest stamp: the launcher died before the launch landed; relaunch with --resume specimen-ci-cobalt-price-20260806T114515Z to retry",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-08-06T13:47:40.145136+00:00"
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Job dispatch to the local venue, over SSH.
 
-Usage: local-run <job-name> [--caller TAG] [--detach]|local-run <job-name> --union BRANCH=SHA --union BRANCH=SHA [--check-path PATH ...] [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
+Usage: local-run <job-name> [--caller TAG] [--detach]|local-run <job-name> --union BRANCH=SHA --union BRANCH=SHA [--check-path PATH ...] [--caller TAG] [--detach]|local-run --envelope <name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
 --poll exits 0 complete, 1 failed, 3 still running; --wait the
 same at its bound (--max default 3600) — the still-running
 exit the two run twins share.
@@ -10,6 +10,15 @@ A union dispatch names at least two gate-ready constituents
 and at least one scoped check path. The dispatcher stages a
 generated constituents.json beside the job's script and stamps
 the constituents, in the order given, on the run record.
+
+An envelope dispatch (--envelope <name>) composes the jobs
+declared in adapters/local/jobs/<name>/envelope.json into
+ONE launch on the declaration's venue: one envelope run
+record carrying its constituents in order, one run dir per
+job under the envelope's run dir, per-job exit files, the
+jobs running concurrently under one divided thread budget
+(budget leaf sync/runner/envelope.py; dispatch composition
+sync/runner/envelope_dispatch.py).
 
 --poll and --wait ATTACH to an existing run and never
 dispatch, wherever the flag sits: the attach target is a
@@ -130,9 +139,10 @@ DECL = {
         "detach": {"help": "dispatch and return at once (dispatch is detached on the venue either way)"},
         "caller": {"takes_value": True, "help": "caller tag"},
         "union": {"takes_value": True, "repeatable": True, "help": "union dispatch constituent as BRANCH=SHA (repeatable; at least two, with at least one --check-path)"},
+        "envelope": {"takes_value": True, "help": "grouped envelope dispatch: the envelope declaration's name under adapters/local/jobs"},
         "check-path": {"takes_value": True, "repeatable": True, "help": "scoped check path for a union dispatch (repeatable)"},
         "max": {"takes_value": True, "help": "--wait bound in seconds (default 3600)"},
-        "evidence": {"takes_value": True, "help": "the flag report that classes a job for --seal"},
+        "evidence": {"takes_value": True, "help": "the flag class and count that class a job for --seal (function only)"},
     },
     "positionals": [{"name": "target"}],
     "mode_groups": [{"name": "mode", "flags": ["poll", "wait", "seal", "verify-sealed"]}],
@@ -147,6 +157,17 @@ sys.modules["lease"] = lease
 _spec_l.loader.exec_module(lease)
 local_venue = lease.local_venue
 sealed = _load.sync("sealed")
+
+
+def _load_runner_leaf(name):
+    spec = importlib.util.spec_from_file_location(name, REPO / "sync" / "runner" / f"{name}.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+envelope = _load_runner_leaf("envelope")
+envelope_dispatch = _load_runner_leaf("envelope_dispatch")
 JOBS = REPO / "adapters" / "local" / "jobs"
 POLL_S = 5
 
@@ -462,6 +483,19 @@ def _union_payload(union_values, check_paths):
     return {"constituents": constituents, "check_paths": checked}, None
 
 
+def _clone_src() -> str:
+    """The dispatching checkout's own origin URL — the union
+    gate's clone source, read at dispatch time. Dispatch
+    material only: it rides the generated constituents file
+    into the run dir and is never a tracked literal."""
+    origin = subprocess.run(
+        ["git", "-C", str(REPO), "remote", "get-url", "origin"],
+        capture_output=True,
+        text=True,
+    )
+    return origin.stdout.strip() if origin.returncode == 0 else ""
+
+
 def _seal_job(job_name: str, evidence: str | None) -> int:
     """Seal one job's script files in place: every file
     beside the manifest except job.json and existing
@@ -474,7 +508,7 @@ def _seal_job(job_name: str, evidence: str | None) -> int:
     if not manifest_path.exists():
         return _fail(f"no job manifest at {manifest_path}")
     if not evidence:
-        return _fail("--seal needs --evidence \"<the flag report that classes this job>\"")
+        return _fail("--seal needs --evidence \"<the flag class and count that classes this job>\"")
     job_dir = manifest_path.parent
     candidates = sorted(
         p
@@ -554,6 +588,31 @@ def _verify_sealed(job_name: str) -> int:
     return 0 if ok else 1
 
 
+def _envelope_seams() -> dict:
+    """The seams the envelope dispatch composition consumes,
+    bound from this entry's own machinery at call time."""
+    return {
+        "fail": _fail,
+        "envelope": envelope,
+        "jobs_dir": JOBS,
+        "repo": REPO,
+        "load_manifest": load_manifest,
+        "manifest_unreadable": ManifestUnreadable,
+        "preflight_error": preflight_error,
+        "lease": lease,
+        "sealed": sealed,
+        "save_record": save_record,
+        "mark_terminal": mark_terminal,
+        "now": now,
+        "record_target": _record_target,
+        "ensure_transport": local_venue.ensure_transport,
+        "ssh": _ssh,
+        "launch_step": _launch_step,
+        "wait": _wait,
+        "caller_env": os.environ.get("COLAB_CALLER"),
+    }
+
+
 def main() -> int:
     try:
         parsed = argv_mod.parse(DECL, sys.argv[1:])
@@ -568,7 +627,7 @@ def main() -> int:
     target_token = parsed["positionals"].get("target")
     if flags["seal"]:
         if target_token is None:
-            return _fail("usage: local-run --seal <job-name> --evidence \"<flag report>\"")
+            return _fail("usage: local-run --seal <job-name> --evidence \"<flag class and count>\"")
         return _seal_job(target_token, flags.get("evidence"))
     if flags["verify-sealed"]:
         if target_token is None:
@@ -623,6 +682,14 @@ def main() -> int:
             except ValueError:
                 return _fail("--max must be an integer number of seconds")
         return _wait(rec, target, max_s, int(rec.get("timeout_s") or 18000))
+
+    if flags.get("envelope") is not None:
+        # The envelope form names its whole dispatch; nothing rides it.
+        if target_token is not None:
+            return _fail("--envelope names the whole dispatch; a job positional does not ride it")
+        if flags["union"] or flags["check-path"]:
+            return _fail("--union does not ride an envelope dispatch")
+        return envelope_dispatch.dispatch(flags["envelope"], flags, _envelope_seams())
 
     if target_token is None:
         print(argv_mod.help_text(DECL), file=sys.stderr)
@@ -718,10 +785,20 @@ def main() -> int:
         # upload already claiming its basename refuses.
         if "constituents.json" in seen:
             return _fail(f"job {job_name}: declared upload constituents.json collides with the generated union file")
+        # The clone source is dispatch material: the
+        # dispatching checkout's own origin, read at dispatch
+        # time — no tracked file names the account or the
+        # target repo. A checkout with no readable origin
+        # cannot form a union gate.
+        clone_src = _clone_src()
+        if not clone_src:
+            return _fail("union dispatch needs the dispatching checkout's origin remote as the clone source")
+        staged_payload = dict(union_payload)
+        staged_payload["clone_src"] = clone_src
         uploads.append(
             (
                 "constituents.json",
-                (json.dumps(union_payload, indent=1) + "\n").encode(),
+                (json.dumps(staged_payload, indent=1) + "\n").encode(),
             )
         )
     caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))

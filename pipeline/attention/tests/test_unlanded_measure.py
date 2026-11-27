@@ -213,7 +213,7 @@ class UnlandedRowsCase(unittest.TestCase):
     def _state(self, claimed, landed=False):
         return {
             "unlanded_snapshot": {
-                "supreme-octo-robot": {
+                "specimen-platform": {
                     "at": claimed,
                     "claims": [
                         {

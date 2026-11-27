@@ -1,14 +1,16 @@
 """Supervision registry pins (the superapp supervision
-plan, Step 1): every live programme's seeded row loads
-and validates, a missing or invalid field refuses
-loudly naming the field, the edgar row reproduces the
-family-concurrency staffing contract
-verbatim as data, the sweep's measure classes are
-seeded per programme, the coordinator routes are
-wb-sent, and the drain tail carries the standing
-defaults plus each programme's baked-in extras.
-Fixture data only — the module's own seed, no live
-store or workspace reads.
+plan, Step 1): every specimen programme's configured
+row loads and validates, a missing or invalid field
+refuses loudly naming the field, the field programme's
+row reproduces the family-concurrency staffing
+contract verbatim as data, the sweep's measure
+classes are seeded per programme, the coordinator
+routes are wb-sent, and the drain tail carries the
+standing defaults plus each programme's baked-in
+extras. Fixture data only — the specimen declarations
+the harness seeds (tests/__init__), no live store or
+workspace reads. The live rows are instance data in
+an untracked config and are never pinned here.
 """
 
 import copy
@@ -20,18 +22,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from attention.services.measure import registry  # noqa: E402
 
-# The edgar staffing contract as ruled in its
-# cured form (owner order, in the
-# programme GOAL.md's class 2: the numeric floor of
-# at least 8 distinct register families in active
-# work at all times; the measure work-denominated —
-# the expected count set by the register's staffable
-# families, sessions capacity and never the
-# denominator; one-deep-per-session while families
-# wait a class-2 instance by definition): written
-# out here from the ruling, so the seed is checked
-# against the source, not against itself.
-EXPECTED_EDGAR_CONTRACT = {
+# The field programme's staffing contract in its
+# specimen form, written out here from the ruling's
+# shape (the numeric floor of at least 8 distinct
+# register families in active work at all times; the
+# measure work-denominated — the expected count set
+# by the register's staffable families, sessions
+# capacity and never the denominator;
+# one-deep-per-session while families wait a defect
+# by definition): the configured row is checked
+# against this source, not against itself. The
+# specimen queue keeps the gated work item so the
+# validation pins exercise that shape; family keys
+# are the venue measure's workstream stems.
+EXPECTED_SPECIMEN_CONTRACT = {
     "unit": "table_family",
     "evidence_window_minutes": 30,
     "min_families_in_flight": 8,
@@ -45,44 +49,33 @@ EXPECTED_EDGAR_CONTRACT = {
     "clearing": "later_measure_only",
     "non_response_after_consecutive_runs": 2,
     "reminder_cadence_minutes": 30,
-    # The staffable queue in its recorded
-    # specimen form: the two precondition markers
-    # and the Round 4 instrument build gated on
-    # the segment packet's landing, its marker
-    # flipped landed. The specimen keeps the
-    # gated work item so the validation pins
-    # exercise that shape; the live contract has
-    # since discharged the Round 4 build by its
-    # deliverable of record and pruned it, and
-    # carries the markers only. Family keys are
-    # the venue measure's workstream stems.
     "staffable_queue": [
         {
-            "key": "segment-register-close",
-            "label": "Segment register close",
+            "key": "specimen-register-close",
+            "label": "Specimen register close",
             "marker": True,
             "landed": False,
         },
         {
-            "key": "segment-packet-landing",
-            "label": "Segment packet landing (composed tree settles)",
+            "key": "specimen-packet-landing",
+            "label": "Specimen packet landing (composed tree settles)",
             "marker": True,
             "landed": True,
         },
         {
-            "key": "round4-instrument-build",
-            "label": "Round 4 instrument build",
-            "family": "round4",
-            "staffable_when": "segment-packet-landing",
+            "key": "specimen-instrument-build",
+            "label": "Specimen instrument build",
+            "family": "specimenbuild",
+            "staffable_when": "specimen-packet-landing",
         },
     ],
 }
 
 EXPECTED_SLUGS = {
-    "edgar-greenfield",
-    "edgar-sec",
-    "steampowernj",
-    "supreme-octo-robot",
+    "edgar-specimen",
+    "specimen-classifier",
+    "specimen-tenant",
+    "specimen-platform",
 }
 
 
@@ -96,21 +89,21 @@ class SeedLoads(unittest.TestCase):
     def test_active_declarations_exclude_the_retired_row(self):
         active = {r["slug"] for r in registry.active_declarations()}
         self.assertEqual(
-            active, {"edgar-greenfield", "steampowernj", "supreme-octo-robot"}
+            active, {"edgar-specimen", "specimen-tenant", "specimen-platform"}
         )
 
     def test_returned_rows_are_copies(self):
-        row = registry.for_slug("edgar-greenfield")
+        row = registry.for_slug("edgar-specimen")
         row["cadence_minutes"] = 999
         row["measure_classes"].append("register_seam")
-        fresh = registry.for_slug("edgar-greenfield")
+        fresh = registry.for_slug("edgar-specimen")
         self.assertEqual(fresh["cadence_minutes"], 15)
         self.assertNotIn("register_seam", fresh["measure_classes"])
 
 
 class LoudRefusal(unittest.TestCase):
     def _row(self):
-        return copy.deepcopy(registry.for_slug("supreme-octo-robot"))
+        return copy.deepcopy(registry.for_slug("specimen-platform"))
 
     def test_each_missing_field_refuses_loudly(self):
         for field in registry.REQUIRED_FIELDS:
@@ -142,7 +135,7 @@ class LoudRefusal(unittest.TestCase):
         row["coordinator_route"] = {
             "sender": "cron",
             "kind": "chat",
-            "handle": "@workhorse",
+            "handle": "@specimen-platform",
         }
         with self.assertRaises(registry.RegistryError) as caught:
             registry.validate_declaration(row)
@@ -167,41 +160,41 @@ class LoudRefusal(unittest.TestCase):
         self.assertIs(registry.validate_declaration(row), row)
 
 
-class EdgarContract(unittest.TestCase):
-    def test_edgar_row_reproduces_the_cured_contract_verbatim(self):
-        contract = registry.staffing_contract_for("edgar-greenfield")
-        self.assertEqual(contract, EXPECTED_EDGAR_CONTRACT)
+class SpecimenContract(unittest.TestCase):
+    def test_field_row_reproduces_the_contract_verbatim(self):
+        contract = registry.staffing_contract_for("edgar-specimen")
+        self.assertEqual(contract, EXPECTED_SPECIMEN_CONTRACT)
 
     def test_no_other_programme_carries_a_staffing_contract(self):
-        for slug in ("edgar-sec", "steampowernj", "supreme-octo-robot"):
+        for slug in ("specimen-classifier", "specimen-tenant", "specimen-platform"):
             self.assertIsNone(registry.staffing_contract_for(slug))
 
 
 class StaffableQueue(unittest.TestCase):
     def _row(self):
-        return copy.deepcopy(registry.for_slug("edgar-greenfield"))
+        return copy.deepcopy(registry.for_slug("edgar-specimen"))
 
     def _queue(self, row):
         return row["staffing_contract"]["staffable_queue"]
 
     def test_seeded_queue_loads_in_order(self):
-        contract = registry.staffing_contract_for("edgar-greenfield")
+        contract = registry.staffing_contract_for("edgar-specimen")
         queue = contract["staffable_queue"]
-        # The queue as discharged: the Round 4
-        # instrument build stood discharged by its
-        # deliverable of record and is pruned; the
-        # two markers remain.
+        # The specimen queue in full: the two
+        # precondition markers and the instrument
+        # build gated on the packet marker's landing.
         self.assertEqual(
             [entry["key"] for entry in queue],
             [
-                "segment-register-close",
-                "segment-packet-landing",
+                "specimen-register-close",
+                "specimen-packet-landing",
+                "specimen-instrument-build",
             ],
         )
         markers = {e["key"]: e["landed"] for e in queue if e.get("marker")}
         self.assertEqual(
             markers,
-            {"segment-register-close": False, "segment-packet-landing": True},
+            {"specimen-register-close": False, "specimen-packet-landing": True},
         )
 
     def test_valid_queue_amendments_load(self):
@@ -277,7 +270,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
                 registry.measure_classes_for(row["slug"]),
                 f"{row['slug']} missing terminal",
             )
-        self.assertNotIn("terminal", registry.measure_classes_for("edgar-sec"))
+        self.assertNotIn("terminal", registry.measure_classes_for("specimen-classifier"))
 
     def test_unlanded_class_is_enabled_for_every_active_programme(self):
         # The unlanded class: seeded with
@@ -290,24 +283,24 @@ class SweepClassesAndRoutes(unittest.TestCase):
                 registry.measure_classes_for(row["slug"]),
                 f"{row['slug']} missing unlanded",
             )
-        self.assertNotIn("unlanded", registry.measure_classes_for("edgar-sec"))
+        self.assertNotIn("unlanded", registry.measure_classes_for("specimen-classifier"))
 
     def test_caller_stems_are_declared_where_the_caller_is_not_the_slug(self):
         self.assertEqual(
-            registry.for_slug("steampowernj").get("caller_stems"), ["steampower"]
+            registry.for_slug("specimen-tenant").get("caller_stems"), ["speciment"]
         )
         self.assertEqual(
-            registry.for_slug("supreme-octo-robot").get("caller_stems"),
-            ["workhorse"],
+            registry.for_slug("specimen-platform").get("caller_stems"),
+            ["specimenwork"],
         )
-        bad = registry.for_slug("steampowernj")
-        bad["caller_stems"] = "steampower"
+        bad = registry.for_slug("specimen-tenant")
+        bad["caller_stems"] = "speciment"
         with self.assertRaises(registry.RegistryError):
             registry.validate_declaration(bad)
 
-    def test_register_seam_is_steam_powers_alone(self):
-        self.assertIn("register_seam", registry.measure_classes_for("steampowernj"))
-        for slug in ("edgar-greenfield", "edgar-sec", "supreme-octo-robot"):
+    def test_register_seam_is_the_tenants_alone(self):
+        self.assertIn("register_seam", registry.measure_classes_for("specimen-tenant"))
+        for slug in ("edgar-specimen", "specimen-classifier", "specimen-platform"):
             self.assertNotIn("register_seam", registry.measure_classes_for(slug))
 
     def test_coordinator_routes_are_wb_sent_chat_routes(self):
@@ -326,50 +319,49 @@ class DrainTail(unittest.TestCase):
             keys = {item["key"] for item in registry.drain_tail_for(slug)}
             self.assertTrue(default_keys <= keys, slug)
 
-    def test_steam_powers_baked_in_extra_is_declared(self):
-        keys = {item["key"] for item in registry.drain_tail_for("steampowernj")}
-        self.assertIn("tech-debt-paydown", keys)
-        for slug in ("edgar-greenfield", "edgar-sec", "supreme-octo-robot"):
+    def test_tenants_baked_in_extra_is_declared(self):
+        keys = {item["key"] for item in registry.drain_tail_for("specimen-tenant")}
+        self.assertIn("specimen-debt-paydown", keys)
+        for slug in ("edgar-specimen", "specimen-classifier", "specimen-platform"):
             keys = {item["key"] for item in registry.drain_tail_for(slug)}
-            self.assertNotIn("tech-debt-paydown", keys)
+            self.assertNotIn("specimen-debt-paydown", keys)
 
 
 class Accessors(unittest.TestCase):
     def test_for_handle_prefers_the_active_programme(self):
-        self.assertEqual(registry.for_handle("@xbrl")["slug"], "edgar-greenfield")
+        self.assertEqual(registry.for_handle("@specimen-field")["slug"], "edgar-specimen")
         self.assertEqual(
-            registry.for_handle("@workhorse")["slug"], "supreme-octo-robot"
+            registry.for_handle("@specimen-platform")["slug"], "specimen-platform"
         )
         self.assertIsNone(registry.for_handle("@nobody"))
         self.assertIsNone(registry.for_handle(None))
 
     def test_cadence_and_escalation_fall_back_to_the_default(self):
-        self.assertEqual(registry.cadence_for("@workhorse", 99), 15)
+        self.assertEqual(registry.cadence_for("@specimen-platform", 99), 15)
         self.assertEqual(registry.cadence_for("@nobody", 99), 99)
-        self.assertEqual(registry.escalation_for("@steampower", 7), 1)
+        self.assertEqual(registry.escalation_for("@specimen-tenant", 7), 1)
         self.assertEqual(registry.escalation_for(None, 7), 7)
 
     def test_wb_projects_linkage(self):
-        row = registry.for_slug("edgar-greenfield")
-        self.assertEqual(registry.wb_projects_for(row), ["edgar-sec"])
+        row = registry.for_slug("edgar-specimen")
+        self.assertEqual(registry.wb_projects_for(row), ["specimen-repo"])
         # An undeclared list falls back to the slug, the
         # harness's own keying (programmes.wb_projects).
-        row = registry.for_slug("edgar-sec")
-        self.assertEqual(registry.wb_projects_for(row), ["edgar-sec"])
+        row = registry.for_slug("specimen-classifier")
+        self.assertEqual(registry.wb_projects_for(row), ["specimen-classifier"])
 
-    def test_workhorse_wb_projects_name_both_surfaces(self):
-        # The supervision programme's workbench surface
+    def test_platform_wb_projects_name_both_surfaces(self):
+        # The platform programme's workbench surface
         # answers to two names, one per surface: the wb
-        # server serves the bundle under
-        # "workbench-viewer" (its --project slug) while
-        # the armed-row file drop keys its rows
-        # "workrecord". Both are declared, so the
+        # server serves the bundle under one project
+        # slug while the armed-row file drop keys its
+        # rows by the other. Both are declared, so the
         # frontier attribution and the armed match read
         # the same programme.
-        row = registry.for_slug("supreme-octo-robot")
+        row = registry.for_slug("specimen-platform")
         self.assertEqual(
             registry.wb_projects_for(row),
-            ["workbench-viewer", "workrecord"],
+            ["specimen-viewer", "specimen-record"],
         )
 
 

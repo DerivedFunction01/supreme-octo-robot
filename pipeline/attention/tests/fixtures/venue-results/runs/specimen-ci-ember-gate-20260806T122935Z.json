@@ -1,0 +1,99 @@
+{
+  "run_id": "specimen-ci-ember-gate-20260806T122935Z",
+  "job": "specimen-ci-ember-gate",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T12:29:35.012960+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T12:36:12.633972+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-ember-gate-out-specimen-ci-ember-gate-20260806T122935Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T12:30:24.605918+00:00",
+  "launch_confirmed_at": "2026-08-06T12:30:33.289018+00:00",
+  "collector_at": "2026-08-06T12:36:26.533717+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T12:30:33.289018+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.08 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "last_poll_error": "checkpoint poll timed out at 2026-08-06T12:35:56.894754+00:00",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "ember-gate-out.json",
+      "bytes": 1787,
+      "sha256": "91b92575b9c7719566072b7b259beaddb4ac9aaac68b0a3a6b8436dd79dc01c5",
+      "route": "misplaced"
+    },
+    {
+      "path": "ember-gate-log.txt",
+      "bytes": 154563,
+      "sha256": "16b36b1df8f88f094d40c66364e1a8fb68b9a1943b1e0c96167b4d4b519f2851",
+      "route": "misplaced"
+    },
+    {
+      "path": "ember-gate-result.json",
+      "bytes": 3583,
+      "sha256": "958fd47752910dc3086e011cf5e29c997b70dd154351ddf1955bbce31353cdd0",
+      "route": "misplaced"
+    },
+    {
+      "path": "ember-gate-check.txt",
+      "bytes": 1697,
+      "sha256": "6da9f976958f01eff92b93576114cc1ef503ca7fc0b78f958d5e0dba15de1d09",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "ember-gate-out.json",
+      "path": "/content/ember-gate-out.json",
+      "bytes": 1787,
+      "mtime": 1786019469.7887309,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "ember-gate-log.txt",
+      "path": "/content/ember-gate-log.txt",
+      "bytes": 154563,
+      "mtime": 1786019469.7887309,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "ember-gate-result.json",
+      "path": "/content/ember-gate-result.json",
+      "bytes": 3583,
+      "mtime": 1786019469.7887309,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "ember-gate-check.txt",
+      "path": "/content/ember-gate-check.txt",
+      "bytes": 1697,
+      "mtime": 1786019469.7877307,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T12:38:10.315108+00:00",
+  "usage_after": "Current balance: 402.95 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T12:38:10.481766+00:00"
+}

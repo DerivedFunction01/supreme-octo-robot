@@ -52,6 +52,7 @@ lands because an unreachable proxy is not proof of death.
 """
 
 import base64
+import ipaddress
 import os
 import re
 import socket
@@ -258,11 +259,46 @@ def _connect_verifies(proxy_url: str, dest: tuple[str, int]) -> bool:
     return _connect_verdict(proxy_url, dest) == "established"
 
 
+def _route_candidate(candidate: str, dest: tuple[str, int]) -> str:
+    """The candidate rewritten onto the target's route. The
+    credential is the caller's own, but the proxy port selects
+    the route: for a tailnet destination (100.64.0.0/10) the
+    port is the tailnet route port, while the caller's
+    verbatim value carries the general-egress port, whose
+    route silently closes tailnet CONNECTs — so a verbatim
+    stocking verifies (the verdict itself connects on the
+    tailnet port) yet leaves the forwarder dialing a route
+    that can never carry its traffic. A non-tailnet
+    destination's candidate stands verbatim, as does an
+    unparseable one (the verdict judges it)."""
+    u = urllib.parse.urlparse(candidate or "")
+    if not u.hostname:
+        return candidate
+    try:
+        tailnet = ipaddress.ip_address(dest[0]) in ipaddress.ip_network("100.64.0.0/10")
+        port = u.port
+    except ValueError:
+        return candidate
+    if not tailnet or port == _PROXY_TAILNET_PORT:
+        return candidate
+    auth = ""
+    if u.username:
+        auth = u.username
+        if u.password:
+            auth += f":{u.password}"
+        auth += "@"
+    return urllib.parse.urlunparse(u._replace(netloc=f"{auth}{u.hostname}:{_PROXY_TAILNET_PORT}"))
+
+
 def refresh_pin(target: dict, env: dict | None = None) -> bool:
     """Restock a forwarder target's pin from the calling
     process's own HTTPS_PROXY — the refresh-on-dispatch writer.
 
-    The stocking rule: the candidate is CONNECT-verified
+    The candidate is first rewritten onto the target's route
+    (see `_route_candidate`): for a tailnet destination the
+    stocked value carries the tailnet route port, never the
+    caller's verbatim general-egress port. The stocking rule:
+    the candidate is CONNECT-verified
     against the target's `fwd_dest` and the verdict decides.
     A 407 is a definite dead credential — the proxy itself
     rejected it — and is never stocked. An established
@@ -282,6 +318,7 @@ def refresh_pin(target: dict, env: dict | None = None) -> bool:
     candidate = (os.environ if env is None else env).get("HTTPS_PROXY", "")
     if not candidate:
         return False
+    candidate = _route_candidate(candidate, dest)
     if candidate == _pin_value(pin):
         return True
     if _connect_verdict(candidate, dest) == "refused":

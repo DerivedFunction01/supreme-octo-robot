@@ -25,11 +25,14 @@ dispatch process at dispatch time, which decrypts in
 memory and ships the bytes to the venue — the
 plaintext is never written locally.
 
-The register (adapters/local/sealed-register.json) is
-the tracked record: one entry per sealed job, naming
-its sealed files, each plaintext's SHA-256 (a hash is
-not content; it is the verify-sealed proof), the
-sealing stamp, and the flag report as evidence.
+The register (var/sealed-register.json) is untracked
+working state in the runner's var store, beside the key:
+one entry per sealed job, naming its sealed files, each
+plaintext's SHA-256 (a hash is not content; it is the
+verify-sealed proof), the sealing stamp, and the flag
+report as evidence — the evidence names the flag's
+function only (its class and count), never seat, owner,
+or narrative detail.
 """
 
 from __future__ import annotations
@@ -46,7 +49,7 @@ NONCE_LEN = 16
 TAG_LEN = 32
 KEY_LEN = 32
 
-REGISTER_REL = ("adapters", "local", "sealed-register.json")
+REGISTER_REL = ("var", "sealed-register.json")
 KEY_REL = ("var", "sealed.key")
 
 

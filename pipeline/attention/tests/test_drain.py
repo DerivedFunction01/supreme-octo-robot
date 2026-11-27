@@ -90,10 +90,10 @@ class DrainLegTests(unittest.TestCase):
     def test_registry_tail_binds_over_the_store_row(self):
         # The Step 1 supervision registry is the tail
         # set's home: a programme the registry declares
-        # hands over its registry tail — steampowernj's
+        # hands over its registry tail — the tenant's
         # baked-in tech-debt item included — whatever
         # the store row itself carries.
-        programme = dict(PROGRAMME, slug="steampowernj",
+        programme = dict(PROGRAMME, slug="specimen-tenant",
                          drain_tail=["Store row tail"])
         seen = []
 
@@ -111,7 +111,7 @@ class DrainLegTests(unittest.TestCase):
             entry.get("title") if isinstance(entry, dict)
             else entry
             for entry in seen[0]["drain_tail"]]
-        self.assertIn("Tech-debt paydown", titles)
+        self.assertIn("Specimen debt paydown", titles)
         self.assertNotIn("Store row tail", titles)
 
     def test_quiet_drain_changes_nothing(self):

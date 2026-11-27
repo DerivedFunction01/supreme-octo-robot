@@ -5,8 +5,9 @@ fresh clone resolves.
 The pipeline gate's portability/denylist component (plan
 §4.10, completed by §4.16): lifted whole from the scheduler's
 tools/portability_scan.py, which now re-points here. One
-component serves every package; one untracked denylist per
-deployment feeds the personal-literal leg.
+component serves every package; one untracked denylist
+ground per deployment (with its repo layer beside it)
+feeds the personal-literal leg.
 
 Legs, all generic and always on (a finding fails the gate):
 
@@ -22,10 +23,15 @@ Legs, all generic and always on (a finding fails the gate):
 Plus the personal-literal leg:
 
 - denylist: personal literals (the owner's name included)
-  from an untracked file, resolved env-first
-  (STARTER_DENYLIST_FILE), else the repo's one home,
-  pipeline/platform/state/denylist.txt, when present.
-  Matching is case-insensitive:
+  from untracked files in the layered form: a ground
+  resolved env-first (STARTER_DENYLIST_FILE), else the
+  repo's one home, pipeline/platform/state/denylist.txt,
+  when present — plus the repo layer beside the resolved
+  ground (denylist.repo.txt in the ground's directory),
+  unioned with the ground on read when present.
+  Ground-only provisioning is legitimate; a layer never
+  rescues a set-but-unreadable ground. Matching is
+  case-insensitive:
   the matching and list-parsing semantics live in
   denylist_match.py beside this component (the one home,
   a synced mirror of the starter scanner's module); this
@@ -35,8 +41,9 @@ Plus the personal-literal leg:
   under --fail-on-denylist, which the gate passes whenever
   a denylist is provisioned — so an installation that has
   one gates on it, and a fresh clone without one stays
-  green. The list file itself is never scanned. No personal
-  literal ever appears in tracked source, split or otherwise.
+  green. The list files themselves are never scanned. No
+  personal literal ever appears in tracked source, split
+  or otherwise.
 
 Exceptions: only files named in EXCEPTION_FILES may carry
 directive lines of the form
@@ -229,18 +236,32 @@ def scan_generic(root, files):
     return findings
 
 
-def _denylist_path(root):
-    """(path, notice) — the one provisioning convention: the
-    STARTER_DENYLIST_FILE env var wins (a set-but-unreadable
-    env path reports a NOTICE rather than falling through);
+def _with_layer(ground):
+    """The ground plus its repo layer, when one is
+    provisioned beside it (denylist.repo.txt in the
+    ground's own directory)."""
+    layer = os.path.join(os.path.dirname(ground), "denylist.repo.txt")
+    if os.path.isfile(layer):
+        return [ground, layer]
+    return [ground]
+
+
+def _denylist_paths(root):
+    """(paths, notice) — the layered provisioning form: the
+    ground resolves by the one convention (the
+    STARTER_DENYLIST_FILE env var wins — a set-but-unreadable
+    env path reports a NOTICE rather than falling through;
     else the repo's one home, pipeline/platform/state/
-    denylist.txt, resolved from the scan root's repo (the
-    first ancestor carrying a .git entry). No per-package
-    list copies exist."""
+    denylist.txt, resolved from the scan root's repo, the
+    first ancestor carrying a .git entry), and the repo
+    layer beside the resolved ground unions with it on
+    read when present. Ground-only provisioning is
+    legitimate, and no layer rescues an unreadable ground.
+    No per-package list copies exist."""
     env = os.environ.get("STARTER_DENYLIST_FILE")
     if env:
         if os.path.isfile(env):
-            return env, None
+            return _with_layer(env), None
         return None, (
             "denylist: NOTICE - STARTER_DENYLIST_FILE is set but "
             "unreadable; personal-literal leg skipped"
@@ -251,7 +272,7 @@ def _denylist_path(root):
             candidate = os.path.join(
                 here, "pipeline", "platform", "state", "denylist.txt")
             if os.path.isfile(candidate):
-                return candidate, None
+                return _with_layer(candidate), None
             break
         parent = os.path.dirname(here)
         if parent == here:
@@ -267,16 +288,18 @@ def _denylist_path(root):
 def scan_denylist(root, files):
     """(findings, notice, provisioned) — findings carry rule,
     path, line; the literal itself is never reported."""
-    path, notice = _denylist_path(root)
-    if path is None:
+    paths, notice = _denylist_paths(root)
+    if paths is None:
         return [], notice, False
-    with open(path, encoding="utf-8") as fh:
-        literals = denylist_match.parse_literals(fh)
-    list_real = os.path.realpath(path)
+    literals = []
+    for path in paths:
+        with open(path, encoding="utf-8") as fh:
+            literals += denylist_match.parse_literals(fh)
+    list_reals = {os.path.realpath(path) for path in paths}
     findings = []
     for relpath in files:
         full = os.path.join(root, relpath)
-        if os.path.realpath(full) == list_real:
+        if os.path.realpath(full) in list_reals:
             continue
         lines = _read_lines(full)
         if lines is None:
@@ -292,8 +315,8 @@ def denylist_provisioned(root):
     uses it for the declaration's fail_on_denylist: auto form
     (the retired check.sh passed --fail-on-denylist exactly
     when a denylist was provisioned)."""
-    path, _notice = _denylist_path(root)
-    return path is not None
+    paths, _notice = _denylist_paths(root)
+    return paths is not None
 
 
 def main(argv):

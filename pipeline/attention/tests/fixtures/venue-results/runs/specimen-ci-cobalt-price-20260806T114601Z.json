@@ -1,0 +1,84 @@
+{
+  "run_id": "specimen-ci-cobalt-price-20260806T114601Z",
+  "job": "specimen-ci-cobalt-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T11:46:01.692922+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T11:50:35.511968+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-cobalt-price-out-specimen-ci-cobalt-price-20260806T114601Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T11:48:01.941493+00:00",
+  "launch_confirmed_at": "2026-08-06T11:48:13.347077+00:00",
+  "collector_at": "2026-08-06T11:51:15.050124+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T11:48:13.347077+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 403.60 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "output_name_warnings": [
+    {
+      "name": "cobalt-parta.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price-log.txt",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price-result.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "extract-b-cur.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "extract-d-cur.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    }
+  ],
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "cobalt-parta.json",
+      "path": "/content/cobalt-parta.json",
+      "bytes": 15240,
+      "mtime": 1786013253.4373386,
+      "fresh": false,
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "cobalt-price.json",
+    "cobalt-parta.json",
+    "extract-b-cur.json",
+    "extract-d-cur.json",
+    "cobalt-price-log.txt",
+    "cobalt-price-result.json"
+  ],
+  "finished_at": "2026-08-06T11:51:37.564564+00:00",
+  "error": "job payload exited 1",
+  "pulled": [],
+  "usage_after": "Current balance: 403.53 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-08-06T11:51:37.964768+00:00"
+}

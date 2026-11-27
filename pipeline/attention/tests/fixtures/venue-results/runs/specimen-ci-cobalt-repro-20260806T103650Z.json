@@ -1,0 +1,100 @@
+{
+  "run_id": "specimen-ci-cobalt-repro-20260806T103650Z",
+  "job": "specimen-ci-cobalt-repro",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T10:36:50.665496+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T10:59:44.263095+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-cobalt-repro-out-specimen-ci-cobalt-repro-20260806T103650Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T10:40:09.568902+00:00",
+  "launch_confirmed_at": "2026-08-06T10:40:29.913688+00:00",
+  "collector_at": "2026-08-06T11:00:44.734522+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T10:40:29.913688+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.51 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "last_poll_error": "checkpoint poll timed out at 2026-08-06T10:45:43.119375+00:00",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "cobalt-repro.json",
+      "bytes": 3318,
+      "sha256": "27c096f7961a16f73cfc39d2e0e0cbe101676126009e74c901256a39f9aef8f0",
+      "route": "misplaced"
+    },
+    {
+      "path": "cobalt-parta.json",
+      "bytes": 15240,
+      "sha256": "024d31394cc6bb7ad95efd7f61e1b0243418466869a41eb9da0fee23d474026b",
+      "route": "misplaced"
+    },
+    {
+      "path": "cobalt-repro-log.txt",
+      "bytes": 92974,
+      "sha256": "ae9eecf59affee166e2878ad925ea51df85670635c103dfb8a7f85232a260d26",
+      "route": "misplaced"
+    },
+    {
+      "path": "cobalt-repro-result.json",
+      "bytes": 232,
+      "sha256": "2e4c55fceff9e677e7dc51c34c384c5fe086ea58e586567252520223e2a32a79",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "cobalt-repro.json",
+      "path": "/content/cobalt-repro.json",
+      "bytes": 3318,
+      "mtime": 1786013253.4373386,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cobalt-parta.json",
+      "path": "/content/cobalt-parta.json",
+      "bytes": 15240,
+      "mtime": 1786013253.4373386,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cobalt-repro-log.txt",
+      "path": "/content/cobalt-repro-log.txt",
+      "bytes": 92974,
+      "mtime": 1786013253.4373386,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "cobalt-repro-result.json",
+      "path": "/content/cobalt-repro-result.json",
+      "bytes": 232,
+      "mtime": 1786013253.4373386,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T11:02:33.663327+00:00",
+  "error": "job payload exited 2",
+  "usage_after": "Current balance: 404.18 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-08-06T11:02:33.735777+00:00"
+}

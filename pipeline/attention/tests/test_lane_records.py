@@ -73,7 +73,7 @@ def write_record(path: Path, text: str, mtime: datetime) -> None:
 
 class SeedDeclaration(unittest.TestCase):
     def test_edgar_seed_carries_the_declaration(self):
-        count, entries = registry.lane_declarations_for("edgar-greenfield")
+        count, entries = registry.lane_declarations_for("edgar-specimen")
         self.assertEqual(count, 11)
         self.assertEqual(len(entries), 11)
         self.assertEqual(len({e["key"] for e in entries}), 11)
@@ -317,7 +317,7 @@ class CollectorLifecycle(unittest.TestCase):
 
     def test_record_block_supersedes_the_seed(self):
         text = block(
-            "restructuring",
+            "specimen-family-a",
             venue="storm-mosaic-17",
             state="running",
             declared_at=iso(NOW - timedelta(minutes=30)),
@@ -328,15 +328,15 @@ class CollectorLifecycle(unittest.TestCase):
         write_record(path, text, NOW)
         state = {
             "programmes": [
-                programme("edgar-greenfield", [str(path)])
+                programme("edgar-specimen", [str(path)])
             ]
         }
         lanes.collect(state, NOW)
-        entry = state["lane_snapshot"]["edgar-greenfield"]
+        entry = state["lane_snapshot"]["edgar-specimen"]
         self.assertEqual(entry["declared"], 11)
         lane = [
             lane for lane in entry["lanes"]
-            if lane["key"] == "restructuring"
+            if lane["key"] == "specimen-family-a"
         ][0]
         self.assertEqual(lane["source"], "record")
         self.assertEqual(lane["state"], "running")
@@ -344,19 +344,19 @@ class CollectorLifecycle(unittest.TestCase):
 
 
 def queue_state(families: dict) -> tuple:
-    """A synthetic venue snapshot for the edgar
+    """A synthetic venue snapshot for the field
     programme, in the served shape (the venue
     measure specimens' form)."""
     state = {
         "armed_rows": [
             {
-                "project": "edgar-sec",
+                "project": "specimen-repo",
                 "todo": "ci-corefin-coci-build",
-                "row": {"project": "edgar-sec", "programme": "edgar-sec"},
+                "row": {"project": "specimen-repo", "programme": "specimen-repo"},
             }
         ],
         "venue_snapshot": {
-            "edgar-greenfield": {
+            "edgar-specimen": {
                 "at": NOW,
                 "jobs": 4,
                 "families": {
@@ -375,7 +375,7 @@ def queue_state(families: dict) -> tuple:
 
 def lane_snapshot_entry(lanes_facts: list) -> dict:
     return {
-        "edgar-greenfield": {
+        "edgar-specimen": {
             "at": NOW,
             "declared": 20,
             "lanes": lanes_facts,
@@ -402,27 +402,15 @@ def counted_lane(key: str, family: str) -> dict:
 _REAL_CONTRACT_FOR = registry.staffing_contract_for
 
 
-# The recorded specimen queue entry: the Round 4
-# instrument build as it stood in the queue before
-# its discharge pruned it from the live contract.
-# The fixture rebuilds the specimen contract —
-# live queue plus this entry — so the
+# The specimen contract is the configured one: its
+# queue carries the gated instrument build, so the
 # reconciliation pins exercise the gated-item form
-# without the live queue carrying discharged work.
-_SPECIMEN_WORK_ITEM = {
-    "key": "round4-instrument-build",
-    "label": "Round 4 instrument build",
-    "family": "round4",
-    "staffable_when": "segment-packet-landing",
-}
-
-
+# by flipping the packet marker's landed flag alone.
 def packet_landed(slug):
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
-        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract["staffable_queue"]:
-            if entry["key"] == "segment-packet-landing":
+            if entry["key"] == "specimen-packet-landing":
                 entry["landed"] = True
     return contract
 
@@ -453,12 +441,12 @@ class MeasureReconciliation(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(
             [e["key"] for e in rows[0]["queue_unstaffed"]],
-            ["round4-instrument-build"],
+            ["specimen-instrument-build"],
         )
         # The counted lane covering the due item's
         # family staffs it: the row clears.
         state["lane_snapshot"] = lane_snapshot_entry(
-            [counted_lane("round4-lane", "round4")]
+            [counted_lane("specimenbuild-lane", "specimenbuild")]
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_venue._family_rows(state, NOW, live, idle)
@@ -519,7 +507,7 @@ class MeasureReconciliation(unittest.TestCase):
         self.assertNotIn("lane_records", rows[0])
         self.assertNotIn("lane_shortfall", rows[0]["conditions"])
         self.assertEqual(lanes._lane_rows(state, NOW), [])
-        self.assertIsNone(lanes.record_facts(state, "edgar-greenfield"))
+        self.assertIsNone(lanes.record_facts(state, "edgar-specimen"))
 
 
 TWO_ITEM_QUEUE = [
@@ -572,9 +560,9 @@ class LaneServeShape(unittest.TestCase):
         # The defect row clears at full staffing; the
         # block the standing row renders from stands.
         self.assertEqual(rows, [])
-        block = blocks["edgar-greenfield"]
-        self.assertEqual(block["slug"], "edgar-greenfield")
-        self.assertEqual(block["label"], "edgar — greenfield extractor")
+        block = blocks["edgar-specimen"]
+        self.assertEqual(block["slug"], "edgar-specimen")
+        self.assertEqual(block["label"], "Specimen — field extractor")
         self.assertEqual(block["declared"], 20)
         self.assertEqual(block["expected"], 2)
         self.assertEqual(block["actual"], 2)
@@ -587,9 +575,9 @@ class LaneServeShape(unittest.TestCase):
     def test_no_named_queue_serves_no_block(self):
         state, _live, _idle = queue_state({"cocisep": [CALM]})
         blocks = staffing_venue.lane_blocks(state)
-        # Only the edgar programme's contract names a
+        # Only the field programme's contract names a
         # queue; every other programme is absent.
-        self.assertEqual(sorted(blocks), ["edgar-greenfield"])
+        self.assertEqual(sorted(blocks), ["edgar-specimen"])
 
         def no_queue_contract(slug):
             contract = _REAL_CONTRACT_FOR(slug)
@@ -610,7 +598,7 @@ class LaneServeShape(unittest.TestCase):
         with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
             blocks = staffing_venue.lane_blocks(state)
             rows = staffing_venue._family_rows(state, NOW, live, idle)
-        block = blocks["edgar-greenfield"]
+        block = blocks["edgar-specimen"]
         self.assertEqual(block["expected"], 2)
         self.assertEqual(block["actual"], 1)
         self.assertEqual(
@@ -640,7 +628,7 @@ class LaneServeShape(unittest.TestCase):
         )
         with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
             blocks = staffing_venue.lane_blocks(state)
-        block = blocks["edgar-greenfield"]
+        block = blocks["edgar-specimen"]
         by_key = {lane["key"]: lane for lane in block["lanes"]}
         self.assertEqual(sorted(by_key), ["fama-lane", "famb-lane"])
         self.assertTrue(by_key["fama-lane"]["stale"])
@@ -682,14 +670,14 @@ class LaneServeShape(unittest.TestCase):
             ):
                 payload = digest_mod.build_digest(state, settings, NOW)
         entries = {p["slug"]: p for p in payload["programmes"]}
-        block = entries["edgar-greenfield"]["lane_block"]
+        block = entries["edgar-specimen"]["lane_block"]
         self.assertEqual(block["actual"], 2)
         self.assertEqual(block["expected"], 2)
         self.assertEqual(block["queue_unstaffed"], [])
         # A programme with no queue named carries no
         # block key at all — honest absence.
-        self.assertNotIn("lane_block", entries["steampowernj"])
-        self.assertNotIn("lane_block", entries["supreme-octo-robot"])
+        self.assertNotIn("lane_block", entries["specimen-tenant"])
+        self.assertNotIn("lane_block", entries["specimen-platform"])
 
 
 if __name__ == "__main__":

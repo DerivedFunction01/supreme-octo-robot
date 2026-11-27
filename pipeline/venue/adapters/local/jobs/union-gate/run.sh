@@ -26,6 +26,9 @@ try:
     data = json.load(open(sys.argv[1], encoding="utf-8"))
     constituents = data["constituents"]
     check_paths = data["check_paths"]
+    clone_src = data["clone_src"]
+    if not isinstance(clone_src, str) or not clone_src:
+        raise ValueError("the payload must carry a clone source")
     if len(constituents) < 2:
         raise ValueError("at least two constituents are required")
     if not check_paths or not all(isinstance(p, str) and p for p in check_paths):
@@ -51,15 +54,19 @@ except Exception as exc:
 print("BRANCHES=(" + " ".join(shlex.quote(v) for v in branches) + ")")
 print("SHAS=(" + " ".join(shlex.quote(v) for v in shas) + ")")
 print("CHECK_PATHS=(" + " ".join(shlex.quote(v) for v in check_paths) + ")")
+print("CLONE_SRC=" + shlex.quote(clone_src))
 PY
 [ $? -eq 0 ] || exit 2
 # shellcheck disable=SC1091
 . ./constituents.sh
 
-# The clone rides the container's planted git config
-# (the plant script's insteadOf + core.sshCommand), the
-# form every in-container clone of this repo takes.
-git clone -q git@github.com:redacted/supreme-octo-robot.git src || exit 2
+# The clone source arrives in the dispatcher's generated
+# constituents.json — dispatch material read from the
+# dispatching checkout's own remote at dispatch time, never
+# a tracked literal. The clone itself rides the container's
+# planted git config (the plant script's insteadOf +
+# core.sshCommand), the form every in-container clone takes.
+git clone -q "$CLONE_SRC" src || exit 2
 cd src || exit 2
 # No identity is set here: the clone inherits the venue's
 # configured global identity (the one approved pair). A
@@ -104,7 +111,7 @@ done
 HEAD=$(git rev-parse HEAD)
 echo "union head: $HEAD"
 export TMPDIR="$PWD/../tmp-$RUN_ID"
-export STARTER_DENYLIST_FILE=/home/agent/workspace/denylist.txt
+export STARTER_DENYLIST_FILE="$HOME/workspace/denylist.txt"
 # Divided thread budget: this gate's envelope is bounded to
 # half the venue's pid ceiling. Library pools are capped per
 # process, so the footprint is workers x capped pools, never

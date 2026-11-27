@@ -1,0 +1,18 @@
+{
+  "run_id": "specimen-ci-tier-level-price-20260806T155053Z",
+  "job": "specimen-ci-tier-level-price",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T15:50:53.108625+00:00",
+  "resumed": true,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T15:50:53.108625+00:00",
+  "venue": "colab",
+  "session_pin": "brisk-dune-37",
+  "lease_action": "adopted",
+  "health_degraded": true,
+  "session": "brisk-dune-37",
+  "launch_phase": "uploading",
+  "error": "runner script upload: upload failed (rc 1): [colab] Upload failed: File or directory not found: /content/specimen-ci-tier-level-price-20260806T155053Z-issl-price-wrap.py",
+  "resumed_at": "2026-08-06T15:53:23.408175+00:00"
+}
