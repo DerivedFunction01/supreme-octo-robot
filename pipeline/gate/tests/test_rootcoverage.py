@@ -135,8 +135,12 @@ class RootLegTests(unittest.TestCase):
 
     def test_denylist_leg_applies_at_the_root_auto(self):
         root = _scratch_repo()
-        state = root / "state"
-        state.mkdir()
+        # The provisioning convention the resolution reads:
+        # the one home at pipeline/platform/state/ inside
+        # the repo (or STARTER_DENYLIST_FILE) — never a
+        # repo-root state/ copy.
+        state = root / "pipeline" / "platform" / "state"
+        state.mkdir(parents=True)
         shutil.copy(FIXTURE_DENYLIST, state / "denylist.txt")
         (root / "docs" / "carrier.md").write_text(
             f"a note naming {_fixture_literal()}\n",

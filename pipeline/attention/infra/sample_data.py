@@ -10,20 +10,20 @@ from datetime import datetime, timedelta
 
 HANDLERS = [
     {
-        "handle": "@workbench-viewer",
-        "label": "workbench — viewer",
+        "handle": "@specimen-viewer",
+        "label": "specimen — viewer",
         "color_slot": 1,
         "icon": "grid",
     },
     {
-        "handle": "@xbrl",
-        "label": "edgar-sec — XBRL engine",
+        "handle": "@specimen-field",
+        "label": "Specimen — field extractor",
         "color_slot": 2,
         "icon": "table",
     },
     {
-        "handle": "@panel",
-        "label": "colab-runner — panel",
+        "handle": "@specimen-panel",
+        "label": "specimen — panel",
         "color_slot": 3,
         "icon": "server",
     },
@@ -71,7 +71,7 @@ def sample_state(now: datetime) -> dict:
     items = [
         _item(
             "demo-lease",
-            "@panel",
+            "@specimen-panel",
             "approval",
             "Lease expiring — renew or release",
             "BLOCKED-HARD",
@@ -81,7 +81,7 @@ def sample_state(now: datetime) -> dict:
         ),
         _item(
             "demo-push",
-            "@workbench-viewer",
+            "@specimen-viewer",
             "action",
             "Push the wedge fix",
             "BLOCKED-OWNER",
@@ -91,7 +91,7 @@ def sample_state(now: datetime) -> dict:
         ),
         _item(
             "demo-denominator",
-            "@xbrl",
+            "@specimen-field",
             "decision",
             "Rule the labelled-only denominator",
             "BLOCKED-OWNER",
@@ -115,7 +115,7 @@ def sample_state(now: datetime) -> dict:
         ),
         _item(
             "demo-wedge",
-            "@workbench-viewer",
+            "@specimen-viewer",
             "defect",
             "Wedge: health queue stalls",
             "WORKING",
@@ -132,7 +132,7 @@ def sample_state(now: datetime) -> dict:
             waiting_since=now - timedelta(hours=1),
         ),
     ]
-    allowlist = [["@panel", "approval"]]
+    allowlist = [["@specimen-panel", "approval"]]
     for item in items:
         item["need"] = classify_need(item["status_code"])
         item["tier"] = assign_tier(item, allowlist, now)
@@ -143,7 +143,7 @@ def sample_state(now: datetime) -> dict:
         "waits": [
             {
                 "id": "w0001",
-                "handle": "@panel",
+                "handle": "@specimen-panel",
                 "wait_class": "lease_renewal",
                 "summary": "Lease expiring — renew or release",
                 "decision": "surfaced",
@@ -158,10 +158,10 @@ def sample_state(now: datetime) -> dict:
                 "last_good_at": now - timedelta(hours=1),
             }
         },
-        "muted": [["@workbench-viewer", "fyi"]],
+        "muted": [["@specimen-viewer", "fyi"]],
         "allowlist": allowlist,
         "handler_status": {
-            "@workbench-viewer": {
+            "@specimen-viewer": {
                 "status_code": "BLOCKED-OWNER",
                 "summary": "Push awaiting the tap",
                 "at": now - timedelta(minutes=20),
