@@ -1095,6 +1095,61 @@ a follow-up, improvement, or consolidation proposed in
 prose alone does not exist, and a prose-only offer is a
 reporting defect.
 
+A lane's stop is a claim, read from its stated cause. A
+stop whose stated cause matches a ruled agent-clearable
+class is void as a stop: the supervising sweep applies
+the class's standing disposition in the same pass that
+detects the stop, and the stop never becomes an owner
+item. The class register is closed: a class enters it
+only by an owner ruling, recorded with its matching
+form, its disposition, and its proof. The register
+itself is deployment data, held beside the supervising
+machinery in the form this text fixes; its content
+changes only by the ruling that admits a class. The
+ruled dispositions are the standing forms — an
+execution-risk flag re-routes its flagged output in the
+same movement and the lane continues; an agent-clearable
+wait clears within the original approved scope; a missed
+progress interval staffs its successor in the same
+movement. Actuation requires a positive exact match of
+the stated cause against a register form; an
+unrecognized cause surfaces and is never actuated on a
+guess. The hard-stop register bounds the mechanism
+absolutely: a stated cause naming a hard-stop class is
+refused before any class match is attempted, so no
+actuation path exists from an owner-class stop. Every
+actuation carries its proof — the lane's next conforming
+progress record naming the disposition's effect — and an
+unmet proof escalates; it never retries silently, and it
+never converts the stop into an owner item.
+
+## The record never verifies itself
+
+An owner-block claim is verified against owner traffic
+and the hard-stop register only. The claiming lane's own
+records — its status records, its checkpoints, and every
+cadence copy of them — are the claim restating itself
+and carry no evidentiary weight, however many files
+repeat them. The default verdict on an owner-block claim
+is false: it is true only when it cites the owner's
+actual message, identified by thread and time, and that
+citation verifies against owner traffic the system
+holds, or when it names a hard-stop-floor act that
+exists. An uncited or unverifiable claim is void on
+detection: the lane resumes under standing authorization
+in the same pass, the frozen interval is priced and
+recorded as a defect against the stamping seat, and the
+voiding is never posed to the owner as a question nor
+left standing as true pending review. A stop's state
+string parses by exact match against the canonical
+status vocabulary; a near-miss string is an unrecognized
+signal that escalates to judgment, never a guess toward
+an owner block, and an absent or corrupt signal never
+reads as one. A struck classification restated as
+present-tense fact in derived or standing context is the
+same void claim, not corroboration, and is struck or
+flagged in the same pass that voids the claim.
+
 ## Handler freshness
 
 A handler registry's rows carry a served currency
