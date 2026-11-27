@@ -208,34 +208,169 @@ RULED_CLASSES = (
     "stall_hold",
     "redrive",
     "ruling_propagation",
+    "execution_risk_flag",
 )
+
+
+# The stop-reason enumeration (the stopped-lane plan,
+# Step 3): the wait-class register is the enumeration.
+# Each row carries the fields a stop verdict reads —
+# the standing disposition (the act when the row's
+# verdict fires), the evidence form the verdict reads,
+# the proof the actuation records, and the ruling that
+# admitted the row. A row may carry approval-reference
+# flags (requires_plan / requires_goal / requires_todo):
+# a stop declaring the reason must carry a reference of
+# a named kind, and the verdict validates the
+# reference's recorded approval — validated, the row's
+# disposition fires; unvalidated, the stop stands. The
+# flags are present only where the reference kind rides
+# the stop line's form (plan / goal / todo): the
+# permission card's own record and the purchase
+# preapproval's are not stop-line references, so those
+# rows carry no flag and verdict as plain hard stops.
+# form_submit's evidence is None by ruling: sensitivity
+# is a property of the content submitted, no registered
+# artifact decides it — the row is judgment-only.
+def _stop_row(name, hard_stop, disposition, evidence, proof, admitted_by, flags=None):
+    entry = {
+        "name": name,
+        "hard_stop": hard_stop,
+        "stale_after_hours": None if hard_stop else 48,
+        "on_stale": "expire_blocked" if hard_stop else "expire",
+        "disposition": disposition,
+        "evidence": evidence,
+        "proof": proof,
+        "admitted_by": admitted_by,
+    }
+    if flags:
+        entry.update(flags)
+    return entry
+
+
+_INCUMBENT = "incumbent wait-class register"
+_STOP_ROWS = (
+    _stop_row(
+        "settled_continue", False, "continue", "the ruling of record",
+        "the lane's next conforming checkpoint, work resumed "
+        "inside the ruling's scope", _INCUMBENT,
+    ),
+    _stop_row(
+        "program_step", False, "commission_next_step",
+        "the plan of record and landed state",
+        "the lane's next conforming checkpoint naming the "
+        "commissioned step", _INCUMBENT,
+    ),
+    _stop_row(
+        "defect_fix", False, "fix_proceeds", "the diagnosis on record",
+        "the lane's next conforming checkpoint naming the fix "
+        "under way", _INCUMBENT,
+    ),
+    _stop_row(
+        "result_preserving", False, "proceed_with_proof",
+        "the change and its equivalence check",
+        "the equivalence check's record, then the lane's next "
+        "conforming checkpoint", _INCUMBENT,
+    ),
+    _stop_row(
+        "followup_worktree", False, "build_in_worktree",
+        "the plan's closeout record",
+        "the follow-up worktree standing, then the lane's next "
+        "conforming checkpoint", _INCUMBENT,
+    ),
+    _stop_row(
+        "stall_hold", False, "successor_actuation",
+        "checkpoints and run records",
+        "the successor's first checkpoint on the same todo", _INCUMBENT,
+    ),
+    _stop_row(
+        "redrive", False, "redrive", "the lane's own records",
+        "a new run record or a moved checkpoint inside the "
+        "interval", _INCUMBENT,
+    ),
+    _stop_row(
+        "ruling_propagation", False, "propagate_ruling",
+        "the landed ruling and the carrier states",
+        "the carriers' synced state at the next pass", _INCUMBENT,
+    ),
+    _stop_row(
+        "execution_risk_flag", False, "reroute_and_continue",
+        "the flag's own record — its named output — and the "
+        "commission of record",
+        "the re-routed artifact's venue verification, then the "
+        "lane's next conforming checkpoint",
+        "stopped-lane actuation commission",
+    ),
+    _stop_row(
+        "permission_card", True, "owner_item",
+        "the card record in the permission store",
+        "the card's resolution record in the permission store",
+        _INCUMBENT,
+    ),
+    _stop_row(
+        "scope_expansion", True, "proceed_within_approved_scope",
+        "the plan or goal of record against the claimed scope",
+        "the validated reference's record, then the lane's next "
+        "conforming checkpoint", _INCUMBENT, {"requires_plan": True},
+    ),
+    _stop_row(
+        "login", True, "owner_item", "the target service's auth state",
+        "the target service's auth state reading signed-in", _INCUMBENT,
+    ),
+    _stop_row(
+        "external_send", True, "proceed_under_recorded_approval",
+        "the programme's recorded send rulings",
+        "the validated reference's record, then the lane's next "
+        "conforming checkpoint", _INCUMBENT,
+        {"requires_plan": True, "requires_goal": True},
+    ),
+    _stop_row(
+        "purchase", True, "owner_item", "the standing preapproval records",
+        "the owner's act on the digest item", _INCUMBENT,
+    ),
+    _stop_row(
+        "form_submit", True, "owner_item", None,
+        "the owner's act on the digest item", _INCUMBENT,
+    ),
+    _stop_row(
+        "calendar_write", True, "proceed_under_recorded_approval",
+        "the programme's recorded calendar authority",
+        "the validated reference's record, then the lane's next "
+        "conforming checkpoint", _INCUMBENT,
+        {"requires_plan": True, "requires_goal": True},
+    ),
+    _stop_row(
+        "schedule_change", True, "proceed_within_approved_scope",
+        "the cron registry and the plan of record",
+        "the validated reference's record, then the lane's next "
+        "conforming checkpoint", _INCUMBENT, {"requires_plan": True},
+    ),
+)
+
+
+# Candidate reasons the census window showed that no
+# ruling has admitted (the stopped-lane census, §3):
+# named so a stop declaring one reads as a candidate
+# for the register — never as a class. Admission is by
+# owner ruling only, as a row in the enumeration above.
+STOP_REASON_CANDIDATES = ("venue_governance", "external_platform_cap")
+
+# The residue forms are not reasons and never rows: a
+# stop with no declared reason, and a stop whose reason
+# is outside the enumeration. They surface to judgment
+# and are never actuated.
+STOP_RESIDUE_FORMS = ("unreasoned_stop", "unenumerated_reason")
 
 
 def default_wait_classes() -> list:
     """Wait classes with their staleness pair (the
-    decision-staleness plan, Step 1): ruled classes carry
-    the 48 h age cap and expire to record; hard-stop
-    classes carry no age cap and expire only on basis
-    evidence, to the blocked-unruled form."""
-    classes = [
-        {
-            "name": name,
-            "hard_stop": False,
-            "stale_after_hours": 48,
-            "on_stale": "expire",
-        }
-        for name in RULED_CLASSES
-    ]
-    classes += [
-        {
-            "name": name,
-            "hard_stop": True,
-            "stale_after_hours": None,
-            "on_stale": "expire_blocked",
-        }
-        for name in HARD_STOP_CLASSES
-    ]
-    return classes
+    decision-staleness plan, Step 1) and their
+    stop-enumeration fields (the stopped-lane plan,
+    Step 3): ruled classes carry the 48 h age cap and
+    expire to record; hard-stop classes carry no age
+    cap and expire only on basis evidence, to the
+    blocked-unruled form."""
+    return [dict(row) for row in _STOP_ROWS]
 
 
 def class_is_hard_stop(wait_class: str | None, classes: list | None) -> bool:

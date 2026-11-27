@@ -37,7 +37,10 @@ import os
 from datetime import UTC, datetime
 
 from attention import paths as _paths
-from attention.domain.catalogs import default_freshness_registry
+from attention.domain.catalogs import (
+    default_freshness_registry,
+    default_wait_classes,
+)
 
 _SEEDS_PATH = _paths.SEEDS
 
@@ -67,7 +70,7 @@ def empty_state() -> dict:
     registry defaults from the carried seed data (fresh
     copies — callers mutate what they load)."""
     seeds = _seeds()
-    return {
+    state = {
         "handlers": [],
         "items": [],
         "presence": {"mode": "active", "expires_at": None, "expectation": ""},
@@ -105,6 +108,9 @@ def empty_state() -> dict:
         "owner_directed": {},
         "card_watch": {},
     }
+    _apply_stop_fields(state["wait_classes"])
+    _append_catalog_rows(state["wait_classes"])
+    return state
 
 
 def backfill(state: dict) -> dict:
@@ -126,8 +132,54 @@ def backfill(state: dict) -> dict:
         r for r in seeds["action_rules"] if r["id"] not in have
     )
     _backfill_staleness(state, seeds)
+    _apply_stop_fields(state.get("wait_classes", []))
     _backfill_attention_fold(state)
     return state
+
+
+# --- the stop enumeration's fields on the live rows ---
+# The seed JSON does not carry the stop fields (the
+# stopped-lane plan, Step 3): the enumeration is a
+# young vocabulary and the JSON sits at its line cap,
+# so the domain catalog is the seed of record here, as
+# it already is for the freshness registry above.
+
+_STOP_FIELDS = ("disposition", "evidence", "proof", "admitted_by")
+_STOP_FLAG_FIELDS = ("requires_plan", "requires_goal", "requires_todo")
+
+
+def _apply_stop_fields(entries: list) -> None:
+    """Field-level carry for the stop-enumeration
+    fields, in the staleness backfill's discipline: a
+    wait-class entry missing a field gains the domain
+    catalog's value; an entry with no catalog
+    counterpart gains the floor (the scalar fields read
+    as honest absence, the flags stay absent); a field
+    already present — owner-edited included — is never
+    overwritten."""
+    catalog = {c["name"]: c for c in default_wait_classes()}
+    for entry in entries:
+        seed = catalog.get(entry.get("name"), {})
+        for field in _STOP_FIELDS:
+            if field not in entry:
+                entry[field] = seed.get(field)
+        for field in _STOP_FLAG_FIELDS:
+            if field in seed and field not in entry:
+                entry[field] = seed[field]
+
+
+def _append_catalog_rows(entries: list) -> None:
+    """A fresh store's register is the catalog's whole
+    enumeration: rows the frozen seed JSON predates are
+    appended from the catalog. The backfill path does
+    not append — a stored register is operator data,
+    and its rows resolve against the catalog defaults
+    at read time (the registry_entry fallback), as they
+    always have."""
+    have = {entry.get("name") for entry in entries}
+    entries.extend(
+        dict(row) for row in default_wait_classes() if row["name"] not in have
+    )
 
 
 # --- the attention fold: dispatch retired,
