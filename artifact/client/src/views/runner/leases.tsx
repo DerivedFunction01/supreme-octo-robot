@@ -20,9 +20,11 @@ import {
 import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { api } from "../../lib/actions";
 import {
+  capabilityReasonText,
   extendRefusalText,
   fmtNum,
   fmtTime,
+  leaseCapability,
   shortenRefusalText,
   specLabel,
   type AccessEntry,
@@ -187,9 +189,13 @@ function LeaseCard({
 }) {
   // The served card is the whole rendering: identity,
   // state, deadline, rate and diagnostics arrive as
-  // served labels; nothing is derived here. An entry
-  // without a card (no deadline on its record) renders
-  // its identity alone.
+  // served labels; nothing is derived here. Its
+  // capability set decides the actions' enablement
+  // (Step 4): a not-applicable verb renders disabled,
+  // never removed, and an entry without a card (no
+  // deadline on its record) renders its identity
+  // alone with its actions untouched — no served
+  // statement disables nothing.
   const card = entry.card ?? null;
   const session = card?.session || entry.session || entry.record?.session || "";
   const title = card?.shape_label
@@ -197,6 +203,9 @@ function LeaseCard({
     : session || "lease";
   const diag = card?.diagnostics ?? null;
   const key = extKey("lease", session);
+  const extendCap = leaseCapability(card, "extend");
+  const shortenCap = leaseCapability(card, "shorten");
+  const releaseCap = leaseCapability(card, "release");
   return (
     <Card>
       <div className="flex flex-wrap items-center gap-2">
@@ -257,13 +266,25 @@ function LeaseCard({
           confirmLabel="Confirm terminate"
           statement={`Terminate the ${session} lease now. The lease ends immediately and its deadline stops being enforced.`}
           variant="danger"
+          disabled={releaseCap != null && !releaseCap.applicable}
+          disabledReason={
+            capabilityReasonText(releaseCap?.reason ?? null) ?? undefined
+          }
           disarmKey={session}
           onConfirm={() => actions.terminate(session)}
         />
-        <Button variant="ghost" onClick={() => pickers.toggleExt(key)}>
+        <Button
+          variant="ghost"
+          disabled={extendCap != null && !extendCap.applicable}
+          onClick={() => pickers.toggleExt(key)}
+        >
           Extend
         </Button>
-        <Button variant="ghost" onClick={() => pickers.toggleShort(session)}>
+        <Button
+          variant="ghost"
+          disabled={shortenCap != null && !shortenCap.applicable}
+          onClick={() => pickers.toggleShort(session)}
+        >
           Shorten
         </Button>
       </div>
@@ -271,6 +292,7 @@ function LeaseCard({
         <ExtendPicker
           stateKey={key}
           pickers={pickers}
+          capability={extendCap}
           onApply={() => actions.applyExtend("lease", session)}
         />
       ) : null}
@@ -278,6 +300,7 @@ function LeaseCard({
         <ShortenPicker
           session={session}
           pickers={pickers}
+          capability={shortenCap}
           onApply={() => actions.applyShorten(session)}
         />
       ) : null}
@@ -523,6 +546,9 @@ export function LeaseDetailView({ session }: { session: string }) {
   );
   const card = entry?.card ?? null;
   const diag = card?.diagnostics ?? null;
+  const extendCap = leaseCapability(card, "extend");
+  const shortenCap = leaseCapability(card, "shorten");
+  const releaseCap = leaseCapability(card, "release");
   return (
     <div className="flex flex-col gap-4">
       <PartStatus name="records" part={parts.records} />
@@ -565,8 +591,8 @@ export function LeaseDetailView({ session }: { session: string }) {
                 <StatRow label="Session">
                   <span style={MONO}>{card?.session || session}</span>
                 </StatRow>
-                {card?.acquired_at ? (
-                  <StatRow label="Acquired">{fmtTime(card.acquired_at)}</StatRow>
+                {card?.acquired_label ? (
+                  <StatRow label="Acquired">{card.acquired_label}</StatRow>
                 ) : null}
                 <StatRow label="Deadline">
                   {card ? `${card.deadline_label} · ${card.remaining_label}` : "—"}
@@ -596,16 +622,25 @@ export function LeaseDetailView({ session }: { session: string }) {
                 confirmLabel="Confirm terminate"
                 statement={`Terminate the ${session} lease now. The lease ends immediately and its deadline stops being enforced.`}
                 variant="danger"
+                disabled={releaseCap != null && !releaseCap.applicable}
+                disabledReason={
+                  capabilityReasonText(releaseCap?.reason ?? null) ?? undefined
+                }
                 disarmKey={session}
                 onConfirm={() => actions.terminate(session)}
               />
               <Button
                 variant="ghost"
+                disabled={extendCap != null && !extendCap.applicable}
                 onClick={() => pickers.toggleExt(extKey("lease", session))}
               >
                 Extend
               </Button>
-              <Button variant="ghost" onClick={() => pickers.toggleShort(session)}>
+              <Button
+                variant="ghost"
+                disabled={shortenCap != null && !shortenCap.applicable}
+                onClick={() => pickers.toggleShort(session)}
+              >
                 Shorten
               </Button>
             </div>
@@ -613,6 +648,7 @@ export function LeaseDetailView({ session }: { session: string }) {
               <ExtendPicker
                 stateKey={extKey("lease", session)}
                 pickers={pickers}
+                capability={extendCap}
                 onApply={() => actions.applyExtend("lease", session)}
               />
             ) : null}
@@ -620,6 +656,7 @@ export function LeaseDetailView({ session }: { session: string }) {
               <ShortenPicker
                 session={session}
                 pickers={pickers}
+                capability={shortenCap}
                 onApply={() => actions.applyShorten(session)}
               />
             ) : null}

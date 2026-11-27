@@ -52,11 +52,24 @@ export interface LeaseEntry {
 
 /** One verb's served capability: whether the lease core
  *  would accept the action on this lease, and the reason
- *  class where it would refuse. Step 4 wires the
- *  disabling; Step 3 only carries the served shape. */
+ *  class where it would refuse. The lease views disable
+ *  from it (Step 4 of the unification): a not-applicable
+ *  action renders disabled, never removed. */
 export interface LeaseCardCapability {
   applicable: boolean;
   reason: string | null;
+}
+
+/** One verb's capability on a lease's card, or null
+ *  where the card serves none (an entry without a card,
+ *  or a card served before the verb joined the set):
+ *  no served statement disables nothing — the core's
+ *  refusal remains the backstop. */
+export function leaseCapability(
+  card: LeaseCard | null | undefined,
+  verb: string,
+): LeaseCardCapability | null {
+  return card?.capabilities?.[verb] ?? null;
 }
 
 export interface LeaseCardDiagnostics {
@@ -87,6 +100,12 @@ export interface LeaseCard {
   action?: string | null;
   standing: boolean;
   acquired_at?: string | null;
+  /** The acquired stamp's served label (the card's
+   *  fmt_time form), or null when the stamp is absent
+   *  or unparseable — honest absence: the detail's
+   *  Acquired row renders the label, never a
+   *  client-side formatting of the raw stamp. */
+  acquired_label: string | null;
   deadline?: string | null;
   deadline_label: string;
   ends_label: string;
@@ -360,6 +379,24 @@ export function specRateText(spec: Spec): string {
 }
 
 /* ---------------- verdict refusal texts (panel tables) ---------------- */
+
+/** A capability's served reason class in plain voice —
+ *  the form a disabled control states (the ArmConfirm
+ *  disabledReason idiom). The vocabulary is the card
+ *  assembly's closed set; an unknown class states
+ *  nothing rather than echoing the class string. */
+export function capabilityReasonText(reason: string | null): string | null {
+  switch (reason) {
+    case "grant-managed":
+      return "the standing lease is grant-managed";
+    case "venue":
+      return "this venue registers its sessions directly";
+    case "unserved":
+      return "no route serves this action";
+    default:
+      return null;
+  }
+}
 
 export function extendRefusalText(res: Record<string, unknown>): string {
   const budget = (res.budget ?? {}) as Record<string, unknown>;

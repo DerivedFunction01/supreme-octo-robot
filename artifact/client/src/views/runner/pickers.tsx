@@ -15,6 +15,7 @@ import {
   EXT_DURATIONS,
   fmtAgeAgo,
   fmtDur,
+  type LeaseCardCapability,
   type LeaseEntry,
   type Spec,
   specDescriptor,
@@ -159,9 +160,11 @@ export function DurationChips({
 export function CustomHoursInput({
   onHours,
   ariaLabel,
+  disabled,
 }: {
   onHours: (hours: number) => void;
   ariaLabel: string;
+  disabled?: boolean;
 }) {
   const [text, setText] = useState("");
   return (
@@ -171,6 +174,7 @@ export function CustomHoursInput({
       step="0.25"
       placeholder="Custom (hours)"
       ariaLabel={ariaLabel}
+      disabled={disabled}
       value={text}
       onChange={(e) => {
         setText(e.target.value);
@@ -258,14 +262,22 @@ export function ExtendPicker({
   stateKey,
   pickers,
   onApply,
+  capability,
 }: {
   stateKey: string;
   pickers: PickerState;
   onApply: () => void;
+  /** The verb's served capability from the lease's
+   *  card, where the caller renders one (the grant
+   *  flow passes none — no card rides the grant
+   *  portion). A not-applicable capability disables
+   *  the whole flow, as a busy apply does. */
+  capability?: LeaseCardCapability | null;
 }) {
   const { busy } = useRunner();
   const hours = pickers.extHours[stateKey] ?? 8;
   const busyLabel = busy[stateKey];
+  const capOff = capability != null && !capability.applicable;
   return (
     <div
       className="mt-3"
@@ -277,17 +289,18 @@ export function ExtendPicker({
       <div className="flex flex-wrap items-center gap-2">
         <DurationChips
           hours={hours}
-          disabled={Boolean(busyLabel)}
+          disabled={Boolean(busyLabel) || capOff}
           onPick={(h) => pickers.setExtHours(stateKey, h)}
         />
         <CustomHoursInput
           ariaLabel="Custom extend hours"
+          disabled={capOff}
           onHours={(h) => pickers.setExtHours(stateKey, h)}
         />
       </div>
       <Button
         className="mt-2.5 w-full"
-        disabled={Boolean(busyLabel)}
+        disabled={Boolean(busyLabel) || capOff}
         onClick={onApply}
       >
         {busyLabel || `Extend by ${fmtDur(hours)}`}
@@ -302,15 +315,21 @@ export function ShortenPicker({
   session,
   pickers,
   onApply,
+  capability,
 }: {
   session: string;
   pickers: PickerState;
   onApply: () => void;
+  /** The verb's served capability from the lease's
+   *  card. A not-applicable capability disables the
+   *  whole flow, as a busy apply does. */
+  capability?: LeaseCardCapability | null;
 }) {
   const { busy } = useRunner();
   const hours = pickers.shortHours[session] ?? 8;
   const deadline = pickers.shortDeadline[session] || "";
   const busyLabel = busy[`shorten:${session}`];
+  const capOff = capability != null && !capability.applicable;
   return (
     <div
       className="mt-3"
@@ -322,7 +341,7 @@ export function ShortenPicker({
       <div className="flex flex-wrap items-center gap-2">
         <DurationChips
           hours={deadline ? -1 : hours}
-          disabled={Boolean(busyLabel)}
+          disabled={Boolean(busyLabel) || capOff}
           onPick={(h) => {
             pickers.setShortHours(session, h);
             pickers.setShortDeadline(session, null);
@@ -330,6 +349,7 @@ export function ShortenPicker({
         />
         <CustomHoursInput
           ariaLabel="Custom shorten hours"
+          disabled={capOff}
           onHours={(h) => {
             pickers.setShortHours(session, h);
             pickers.setShortDeadline(session, null);
@@ -343,6 +363,7 @@ export function ShortenPicker({
         <Input
           type="datetime-local"
           ariaLabel="Shorten to deadline"
+          disabled={capOff}
           value={deadline}
           onChange={(e) =>
             pickers.setShortDeadline(session, e.target.value || null)
@@ -352,7 +373,7 @@ export function ShortenPicker({
       </div>
       <Button
         className="mt-2.5 w-full"
-        disabled={Boolean(busyLabel)}
+        disabled={Boolean(busyLabel) || capOff}
         onClick={onApply}
       >
         {busyLabel ||
