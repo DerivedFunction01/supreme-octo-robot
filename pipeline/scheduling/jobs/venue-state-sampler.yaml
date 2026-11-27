@@ -1,0 +1,24 @@
+id: venue-state-sampler
+title: Venue-state sampler (every 2m) — one sampling pass over both local venues: bin/venue-state-sample probes each venue through its transport, appends the reading to the venue's sample store, classifies it against the previous sample, and rewrites var/venue-state-<target>.json (classification, pids, per-job tree liveness with CPU deltas, and the disk block against the instance warn/stop lines) — the surface the liveness checker and the actuator read
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 2m
+timezone: America/New_York
+owner: goal:multi-venue-multi-account-venue-runner
+run:
+  argv:
+    - python3
+    - ${REPO}/../venue/bin/venue-state-sample
+    - --once
+timeout_secs: 300
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+state_paths:
+  - ${REPO}/../venue/var/venue-state-msi-hx18.json
+  - ${REPO}/../venue/var/venue-state-hp-envy.json
+classification: 'fixed command (bin/venue-state-sample --once); every outcome branches on enumerable state or exit codes (per-venue probe success or transport failure written as state unreachable with exit 0; exit 1 reserved for the tool''s own classification or write defects, exit 2 a usage refusal); the pass prints one JSON line per target determined entirely by the probe results, and the report rule speaks only on a non-zero exit — no content judgment'
+lifetime: permanent

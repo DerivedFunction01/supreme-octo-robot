@@ -1,0 +1,25 @@
+id: venue-state-actuate
+title: Venue-state actuator (every 5m) — bin/venue-state-actuate --once reads both local venues' state files and reaps job trees the classifier verdicts wedged, plus live trees past their run record's timeout: TERM the tree, KILL survivors, verify no process still names the run dir, write exit 143 venue-side, and settle the record with the decision evidence stamped as its reaped block; each reap prints one REAPJ line, which is this entry's report
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 5m
+timezone: America/New_York
+owner: goal:multi-venue-multi-account-venue-runner
+run:
+  argv:
+    - python3
+    - ${REPO}/../venue/bin/venue-state-actuate
+    - --once
+timeout_secs: 300
+report:
+  when: on_output
+  ok_exit_codes:
+    - 0
+state_paths:
+  - ${REPO}/../venue/var/venue-state-msi-hx18.json
+  - ${REPO}/../venue/var/venue-state-hp-envy.json
+  - ${REPO}/../venue/results/runs
+classification: 'fixed command (bin/venue-state-actuate --once); every outcome branches on enumerable state or exit codes (per-job classifier verdict wedged or record-timeout expiry against the state files and run records, the reap''s TERM/KILL/verify steps, exit 0 on a completed pass, exit 2 a usage refusal); the pass prints one REAPJ line per reap and nothing on a quiet pass, so when it speaks is fully determined by those branches — no content judgment'
+lifetime: permanent
