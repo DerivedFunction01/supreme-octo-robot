@@ -347,6 +347,13 @@ def validate_declaration(row) -> dict:
             f"{slug}.caller_stems: a list of caller stems the "
             "programme's runs ride under, where it declares any"
         )
+    target = row.get("venue_fold_target")
+    if target is not None and not isinstance(target, bool):
+        problems.append(
+            f"{slug}.venue_fold_target: a boolean — the marker "
+            "naming the one programme the attention fold's "
+            "backfill stamps its venue onto"
+        )
     if problems:
         raise RegistryError("supervision declaration refused: " + "; ".join(problems))
     return row
@@ -394,6 +401,12 @@ def _load_rows() -> list:
                 f"supervision registry at {path}: a list of declaration rows"
             )
         rows = [validate_declaration(copy.deepcopy(row)) for row in data]
+        targets = [r["slug"] for r in rows if r.get("venue_fold_target") is True]
+        if len(targets) > 1:
+            raise RegistryError(
+                "supervision registry refused: venue_fold_target "
+                f"marks more than one programme: {targets}"
+            )
         _LOAD_CACHE.clear()
         _LOAD_CACHE.update(key=key, rows=rows)
     return _LOAD_CACHE["rows"]
@@ -499,6 +512,19 @@ def lane_declarations_for(slug: str) -> tuple:
         return None, []
     entries = row.get("lane_declarations") or []
     return row.get("lane_declared_count"), copy.deepcopy(entries)
+
+
+def venue_fold_slug() -> str | None:
+    """The slug of the one programme the attention
+    fold's backfill stamps its venue onto — the
+    declaration carrying venue_fold_target true — or
+    None where no row carries the marker: the
+    migration branch then never fires, the honest
+    degradation an absent marker stands for."""
+    for row in declarations():
+        if row.get("venue_fold_target") is True:
+            return row["slug"]
+    return None
 
 
 def wb_projects_for(row: dict) -> list:

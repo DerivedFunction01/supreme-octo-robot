@@ -7,8 +7,8 @@ Pins:
 - the backfill migration settles the standing ledger
   the same way, removes frozen legacy handler_status
   entries, retires handlers bound to dead chats, settles
-  wb-shadow items, and applies the edgar-greenfield
-  venue declaration — idempotently;
+  wb-shadow items, and applies the venue-fold
+  target's venue declaration — idempotently;
 - the Meta Power Plan zombie shape: picked + done, still
   BLOCKED-OWNER with a past due_at — after the action
   (and after the migration) glance's decision_count
@@ -247,7 +247,8 @@ class MigrationTests(unittest.TestCase):
         genuine = _meta_power_item()
         state["items"].extend([shadow, genuine])
         state["programmes"] = [
-            {"slug": "edgar-greenfield", "venue": "colab", "handles": ["@xbrl"]}
+            {"slug": "edgar-specimen", "venue": "colab",
+             "handles": ["@specimen-field"]}
         ]
         attstore.backfill(state)
         lane = next(h for h in state["handlers"] if h["handle"] == "venue-lane")
