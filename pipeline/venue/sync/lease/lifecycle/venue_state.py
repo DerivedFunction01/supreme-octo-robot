@@ -32,10 +32,20 @@ traffic: every input is a local file or the pass's shared
 snapshot.
 """
 
+import importlib.util as _ilu
 import json
 from pathlib import Path
 
 from ..core import foundation, records
+
+# The paths spine (paths.py at the package root) owns the
+# root derivation; bound by path — the bootstrap form, as
+# the lease core binds it.
+_paths_spec = _ilu.spec_from_file_location(
+    "venue_paths", Path(__file__).resolve().parent.parent.parent.parent / "paths.py"
+)
+_paths = _ilu.module_from_spec(_paths_spec)
+_paths_spec.loader.exec_module(_paths)
 
 _LEAVES = None
 
@@ -51,11 +61,10 @@ def _leaves():
     global _LEAVES
     if _LEAVES is not None:
         return _LEAVES
-    import importlib.util
     import sys
     import types
 
-    runner_dir = Path(__file__).resolve().parents[3] / "sync" / "runner"
+    runner_dir = _paths.RUNNER_DIR
 
     package = types.ModuleType("venue_state_runner")
     package.__path__ = [str(runner_dir)]
@@ -66,10 +75,10 @@ def _leaves():
     sys.modules["venue_state_runner.foundation"] = shim
     leaves = {}
     for name in ("venue_sample", "venue_classify"):
-        spec = importlib.util.spec_from_file_location(
+        spec = _ilu.spec_from_file_location(
             f"venue_state_runner.{name}", runner_dir / f"{name}.py"
         )
-        module = importlib.util.module_from_spec(spec)
+        module = _ilu.module_from_spec(spec)
         sys.modules[f"venue_state_runner.{name}"] = module
         spec.loader.exec_module(module)
         leaves[name] = module

@@ -50,8 +50,8 @@ def _load_actuate():
 
 va = _load_actuate()
 
-RUN_DIR = "/home/agent/runs/job-20261126T200000Z"
-OTHER_DIR = "/home/agent/runs/other-20261126T200000Z"
+RUN_DIR = "venue-runs/job-20261126T200000Z"
+OTHER_DIR = "venue-runs/other-20261126T200000Z"
 NOW = 1_800_000_000.0
 
 
@@ -72,7 +72,7 @@ def test_dead_root_reparented_descendants_match_by_run_dir_name():
         900: _proc(1, 900, f"python shard.py --out {RUN_DIR}/part", "/root"),
         901: _proc(1, 900, "python next-server.py", RUN_DIR),
         950: _proc(
-            1, 950, "python shard.py --out /home/agent/runs/other-x/part", "/root"
+            1, 950, "python shard.py --out venue-runs/other-x/part", "/root"
         ),
     }
     matched = va.matching_pids(procs, 4242, RUN_DIR)
