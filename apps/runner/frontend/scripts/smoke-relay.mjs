@@ -81,6 +81,54 @@ const CANNED = {
                   jobs: [],
                   budget_at_acquire: { projected: 8 },
                 },
+                // The served lease card (state/card.py's
+                // lease_card for this very record, the
+                // specs portion's empty catalog, no
+                // grant, the build clock at the acquired
+                // instant): the records portion rides it
+                // on the entry, and the adapter projects
+                // a lease only from an entry carrying
+                // one — a cardless canned record would
+                // project nothing. Diagnostics serve
+                // null: no heartbeat age, no pulse
+                // result, no claim — nothing known.
+                card: {
+                  session: "rig-session-1",
+                  display_name: "Rig Session 1",
+                  venue: "colab",
+                  venue_label: "Colab",
+                  target: null,
+                  shape: "cpu-highram",
+                  shape_label: "cpu-highram",
+                  shape_descriptor: "cpu-highram",
+                  caller: "rig",
+                  account: null,
+                  state: "running",
+                  state_label: "Running",
+                  state_tone: "ok",
+                  action: "active",
+                  standing: false,
+                  acquired_at: "2026-11-15T20:00:00Z",
+                  acquired_label: "3:00 PM",
+                  deadline: "2999-01-01T00:00:00Z",
+                  deadline_label: "7:00 PM",
+                  ends_label: "ends 7:00 PM",
+                  expired: false,
+                  remaining_ms: 30677371200000,
+                  remaining_label: "7:00 PM · 8521492 h 00 min left",
+                  rate_cu_per_hour: 4,
+                  rate_label: "4 CU/h",
+                  reserved_cu: 8,
+                  envelope_id: null,
+                  diagnostics: null,
+                  capabilities: {
+                    extend: { applicable: true, reason: null },
+                    shorten: { applicable: true, reason: null },
+                    release: { applicable: true, reason: null },
+                    adopt: { applicable: true, reason: null },
+                    exec: { applicable: false, reason: "unserved" },
+                  },
+                },
                 sync_claim: null,
                 keepalive_heartbeat_age_s: null,
                 caller: "rig",
