@@ -41,7 +41,12 @@ def envelope_launcher(jobs) -> bytes:
     envelope order (0 when all are green). Job names are
     declaration-validated path-safe names and every stamp
     value is an integer the leaf computed, so the text is
-    interpolated directly."""
+    interpolated directly. Each job's env also stamps
+    TMPDIR=$PWD/tmp — expanded by the job's subshell after
+    its cd, so it names the job's own run subdir (created
+    by the launch's mkdir step, disk-backed): the solo
+    launch's scratch discipline, per job — a job script's
+    own TMPDIR export overrides it for its children."""
     lines = [
         "#!/bin/bash",
         "# Grouped envelope launcher (generated): every job",
@@ -56,6 +61,7 @@ def envelope_launcher(jobs) -> bytes:
     for job in jobs:
         stamps = job["stamps"]
         env = (
+            f"TMPDIR=$PWD/tmp "
             f"GATE_WORKERS={stamps['workers']} "
             f"ENVELOPE_THREADS={stamps['thread_share']} "
             f"ENVELOPE_JOB_INDEX={job['index']} "
@@ -93,7 +99,9 @@ def launch_envelope(rec, jobs, target, ssh, launch_step) -> "str | None":
     base = f"runs/{rec['run_id']}"
 
     def mkdir() -> "str | None":
-        dirs = " ".join(f"~/{base}/{job['name']}" for job in jobs)
+        dirs = " ".join(
+            f"~/{base}/{job['name']} ~/{base}/{job['name']}/tmp" for job in jobs
+        )
         r = ssh(target, f"mkdir -p {dirs}", timeout=90)
         if r.returncode != 0:
             return f"venue mkdir failed: {r.stderr.decode(errors='replace').strip()[-200:]}"

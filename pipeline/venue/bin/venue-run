@@ -245,7 +245,7 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
     base = f"runs/{rec['run_id']}"
 
     def mkdir() -> str | None:
-        r = _ssh(target, f"mkdir -p ~/{base}", timeout=90)
+        r = _ssh(target, f"mkdir -p ~/{base} ~/{base}/tmp", timeout=90)
         if r.returncode != 0:
             return f"venue mkdir failed: {r.stderr.decode(errors='replace').strip()[-200:]}"
         return None
@@ -283,13 +283,22 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
         # "launched", so the record carries root_pid from
         # this same SSH call; a stamp that never lands is
         # not a launch failure — the record carries none.
-        # The share stamp's run environment: GATE_WORKERS
-        # from the record's share, when the venue-state
-        # surface sized it at dispatch.
+        # The launch environment every job sees: TMPDIR
+        # names the run dir's own tmp subdir (created by
+        # the mkdir step, disk-backed inside the run dir),
+        # so a job's os.tmpdir() scratch lands there by
+        # construction instead of on the container's shared
+        # capped /tmp tmpfs, which one tenant's shard can
+        # exhaust for every tenant. The stamp is a default:
+        # a job whose script exports its own TMPDIR
+        # overrides it for its children, by ordinary shell
+        # semantics. The share stamp rides beside it:
+        # GATE_WORKERS from the record's share, when the
+        # venue-state surface sized it at dispatch.
         share = rec.get("share") or {}
-        env_prefix = ""
+        env_prefix = "TMPDIR=$PWD/tmp "
         if share.get("basis") == "state" and share.get("workers"):
-            env_prefix = f"GATE_WORKERS={share['workers']} "
+            env_prefix += f"GATE_WORKERS={share['workers']} "
         cmd = (
             f"cd ~/{base} && if [ ! -f .launched ]; then touch .launched; "
             f"nohup bash -c '{env_prefix}bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
