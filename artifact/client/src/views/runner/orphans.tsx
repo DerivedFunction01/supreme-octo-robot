@@ -81,7 +81,7 @@ function OrphanCard({
       body.shape = pick;
     }
     void act(async () => {
-      const res = await callVerdict(() => api.adoptLease({ body }));
+      const res = await callVerdict(() => api.adoptOrphan({ body }));
       if (res.action === "adopted") {
         const record = (res.record ?? {}) as Record<string, unknown>;
         const deadline = (record.deadline as string) || o.derived_deadline;

@@ -43,6 +43,62 @@ export interface LeaseEntry {
   channel?: { verdict?: string };
   keepalive_heartbeat_age_s?: number | null;
   sync_claim?: { caller?: string; expires_at?: string } | null;
+  /** The served lease card (Step 1 of the lease-card
+   *  unification): every records entry with a deadline
+   *  carries one. The lease views render it as served —
+   *  no client-side lease derivation beside it. */
+  card?: LeaseCard | null;
+}
+
+/** One verb's served capability: whether the lease core
+ *  would accept the action on this lease, and the reason
+ *  class where it would refuse. Step 4 wires the
+ *  disabling; Step 3 only carries the served shape. */
+export interface LeaseCardCapability {
+  applicable: boolean;
+  reason: string | null;
+}
+
+export interface LeaseCardDiagnostics {
+  heartbeat_label: string;
+  pulse_label?: string | null;
+  burn_label: string;
+  sync_claim: { caller?: string | null; until_label: string } | null;
+}
+
+/** The served lease card, exactly as the backend's card
+ *  assembly serves it (snake_case, verbatim): identity,
+ *  state, deadline presentation, rate, diagnostics and
+ *  the capability set — all labels derived server-side. */
+export interface LeaseCard {
+  session?: string | null;
+  display_name: string;
+  venue: string;
+  venue_label: string;
+  target?: string | null;
+  shape?: string | null;
+  shape_label?: string | null;
+  shape_descriptor: string;
+  caller?: string | null;
+  account?: string | null;
+  state: string;
+  state_label: string;
+  state_tone: string;
+  action?: string | null;
+  standing: boolean;
+  acquired_at?: string | null;
+  deadline?: string | null;
+  deadline_label: string;
+  ends_label: string;
+  expired: boolean;
+  remaining_ms: number;
+  remaining_label: string;
+  rate_cu_per_hour?: number | null;
+  rate_label: string;
+  reserved_cu: number;
+  envelope_id?: string | null;
+  diagnostics: LeaseCardDiagnostics | null;
+  capabilities: Record<string, LeaseCardCapability>;
 }
 
 export interface AccessEntry {
@@ -232,7 +288,9 @@ export function fmtDur(hours: number): string {
   return h >= 24 && h % 24 === 0 ? `${h / 24}d` : `${h}h`;
 }
 
-/** Countdown to a served deadline, minute-granular. */
+/** Countdown to a served deadline, minute-granular.
+ *  Non-card duties only (the orphans view): the lease
+ *  card family renders the served remaining_label. */
 export function countdownText(iso: string | undefined | null, now: number): string {
   if (!iso) return "—";
   const ms = new Date(iso).getTime() - now;

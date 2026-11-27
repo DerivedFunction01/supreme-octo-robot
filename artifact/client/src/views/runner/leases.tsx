@@ -1,7 +1,8 @@
 // Leases — the panel's home section (app.js renderLeases /
 // renderGrant / renderAccess) and the storyboard's lease
-// detail (frame 2), as views of the one client. Records,
-// specs (labels), grant, budget (caps) and listeners are
+// detail (frame 2), as views of the one client. Lease
+// cards render the served card on each records entry;
+// records, grant, budget (caps) and listeners are
 // separate portions; each card renders from the portions
 // landed so far and re-renders as the rest arrive — no
 // section waits on another portion's read.
@@ -19,19 +20,14 @@ import {
 import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
 import { api } from "../../lib/actions";
 import {
-  countdownText,
   extendRefusalText,
   fmtNum,
   fmtTime,
   shortenRefusalText,
-  specById,
   specLabel,
-  specRateText,
-  specTitle,
   type AccessEntry,
   type LeaseEntry,
   type ListenersPayload,
-  type Spec,
 } from "./model";
 import {
   AllStaleBanner,
@@ -115,7 +111,7 @@ function useLeaseActions(pickers: PickerState) {
                 api.extendGrant({ body: { hours } }),
               )
             : await callApi<Record<string, unknown>>(() =>
-                api.extendLease({ body: { session: key, hours } }),
+                api.extend({ body: { session: key, hours } }),
               );
         if (res.action === "extended") {
           pickers.closeExt(stateKey);
@@ -151,7 +147,7 @@ function useLeaseActions(pickers: PickerState) {
       const k = `shorten:${session}`;
       setBusy(k, "Shortening…");
       try {
-        const res = await callVerdict(() => api.shortenLease({ body }));
+        const res = await callVerdict(() => api.shorten({ body }));
         if (res.action === "shortened") {
           pickers.closeShort(session);
           pickers.setShortDeadline(session, null);
@@ -167,7 +163,7 @@ function useLeaseActions(pickers: PickerState) {
 
   const terminate = (session: string) => {
     void act(async () => {
-      await callApi(() => api.stopLease({ body: { session } }));
+      await callApi(() => api.release({ body: { session } }));
     });
   };
 
@@ -178,25 +174,28 @@ function useLeaseActions(pickers: PickerState) {
 
 function LeaseCard({
   entry,
-  specs,
   listeners,
   pickers,
   actions,
   navigate,
 }: {
   entry: LeaseEntry;
-  specs: Spec[];
   listeners: ListenersPayload["listeners"];
   pickers: PickerState;
   actions: ReturnType<typeof useLeaseActions>;
   navigate: (hash: string) => void;
 }) {
-  const { now } = useRunner();
-  const rec = entry.record || {};
-  const session = entry.session || rec.session || "";
-  const spec = specById(specs, rec.shape);
-  const title = spec ? specTitle(spec) : session || "lease";
-  const age = entry.keepalive_heartbeat_age_s;
+  // The served card is the whole rendering: identity,
+  // state, deadline, rate and diagnostics arrive as
+  // served labels; nothing is derived here. An entry
+  // without a card (no deadline on its record) renders
+  // its identity alone.
+  const card = entry.card ?? null;
+  const session = card?.session || entry.session || entry.record?.session || "";
+  const title = card?.shape_label
+    ? `${card.shape_label} · ${card.shape_descriptor}`
+    : session || "lease";
+  const diag = card?.diagnostics ?? null;
   const key = extKey("lease", session);
   return (
     <Card>
@@ -211,37 +210,43 @@ function LeaseCard({
         </button>
         <LeaseStatusChips entry={entry} />
       </div>
-      <p
-        className="mt-2 text-[26px] leading-tight font-semibold"
-        style={{ fontVariantNumeric: "tabular-nums" }}
-      >
-        {countdownText(rec.deadline, now)}
-      </p>
-      {kv(
-        "Deadline",
-        <>
-          {fmtTime(rec.deadline)} · session <span style={MONO}>{rec.session || "—"}</span>
-          {rec.caller ? (
+      {card ? (
+        <p
+          className="mt-2 text-[26px] leading-tight font-semibold"
+          style={{ fontVariantNumeric: "tabular-nums" }}
+        >
+          {card.remaining_label}
+        </p>
+      ) : null}
+      {card
+        ? kv(
+            "Deadline",
             <>
-              {" "}
-              · Caller <b>{rec.caller}</b>
-            </>
-          ) : null}
-        </>,
-      )}
-      {kv(
-        "Heartbeat",
-        <>
-          {age == null ? "unknown" : `${Math.round(age)}s ago`} · Pulse{" "}
-          {rec.last_pulse_result || "—"} · Burn {spec ? specRateText(spec) : "—"}
-        </>,
-      )}
-      {entry.sync_claim
+              {card.deadline_label} · session{" "}
+              <span style={MONO}>{card.session || "—"}</span>
+              {card.caller ? (
+                <>
+                  {" "}
+                  · Caller <b>{card.caller}</b>
+                </>
+              ) : null}
+            </>,
+          )
+        : null}
+      {diag
+        ? kv(
+            "Heartbeat",
+            <>
+              {diag.heartbeat_label} · Pulse {diag.pulse_label || "—"} · Burn{" "}
+              {diag.burn_label}
+            </>,
+          )
+        : null}
+      {diag?.sync_claim
         ? kv(
             "Sync claim",
             <>
-              {entry.sync_claim.caller || "—"} · until{" "}
-              {fmtTime(entry.sync_claim.expires_at)}
+              {diag.sync_claim.caller || "—"} · until {diag.sync_claim.until_label}
             </>,
           )
         : null}
@@ -341,7 +346,6 @@ export function LeasesView({ navigate }: { navigate: (hash: string) => void }) {
   const actions = useLeaseActions(pickers);
   if (allDown) return <DegradedCard />;
   const records = parts.records.data?.records || [];
-  const specs = parts.specs.data?.specs || [];
   const listeners = parts.listeners.data?.listeners;
   const access = parts.records.data?.access || [];
   return (
@@ -356,7 +360,6 @@ export function LeasesView({ navigate }: { navigate: (hash: string) => void }) {
             <LeaseCard
               key={entry.session || entry.record?.session || i}
               entry={entry}
-              specs={specs}
               listeners={listeners}
               pickers={pickers}
               actions={actions}
@@ -510,7 +513,7 @@ function GrantCardInner({
 /* ---------------- lease detail (route /leases/<id>) ---------------- */
 
 export function LeaseDetailView({ session }: { session: string }) {
-  const { parts, allDown, now } = useRunner();
+  const { parts, allDown } = useRunner();
   const pickers = usePickers();
   const actions = useLeaseActions(pickers);
   if (allDown) return <DegradedCard />;
@@ -518,7 +521,8 @@ export function LeaseDetailView({ session }: { session: string }) {
   const entry = records.find(
     (e) => (e.session || e.record?.session || "") === session,
   );
-  const specs = parts.specs.data?.specs || [];
+  const card = entry?.card ?? null;
+  const diag = card?.diagnostics ?? null;
   return (
     <div className="flex flex-col gap-4">
       <PartStatus name="records" part={parts.records} />
@@ -533,56 +537,51 @@ export function LeaseDetailView({ session }: { session: string }) {
           <Card>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[15px] font-semibold">
-                {(() => {
-                  const spec = specById(specs, entry.record?.shape);
-                  return spec ? specTitle(spec) : session;
-                })()}
+                {card?.shape_label
+                  ? `${card.shape_label} · ${card.shape_descriptor}`
+                  : session}
               </span>
               <LeaseStatusChips entry={entry} />
             </div>
-            <p
-              className="mt-2 text-[26px] leading-tight font-semibold"
-              style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-              {countdownText(entry.record?.deadline, now)}
-            </p>
+            {card ? (
+              <p
+                className="mt-2 text-[26px] leading-tight font-semibold"
+                style={{ fontVariantNumeric: "tabular-nums" }}
+              >
+                {card.remaining_label}
+              </p>
+            ) : null}
             <div className="mt-3">
               <GroupedList>
                 <StatRow label="State">
-                  {entry.record?.standing
-                    ? "Standing"
-                    : entry.action || "unknown"}
+                  {card
+                    ? card.standing
+                      ? "Standing"
+                      : card.action || "unknown"
+                    : "unknown"}
                 </StatRow>
-                <StatRow label="Shape">
-                  {specLabel(specs, entry.record?.shape)}
-                </StatRow>
-                <StatRow label="Caller">{entry.record?.caller || "—"}</StatRow>
+                <StatRow label="Shape">{card?.shape_label || "—"}</StatRow>
+                <StatRow label="Caller">{card?.caller || "—"}</StatRow>
                 <StatRow label="Session">
-                  <span style={MONO}>{entry.record?.session || session}</span>
+                  <span style={MONO}>{card?.session || session}</span>
                 </StatRow>
-                {entry.record?.acquired_at ? (
-                  <StatRow label="Acquired">{fmtTime(entry.record.acquired_at)}</StatRow>
+                {card?.acquired_at ? (
+                  <StatRow label="Acquired">{fmtTime(card.acquired_at)}</StatRow>
                 ) : null}
                 <StatRow label="Deadline">
-                  {fmtTime(entry.record?.deadline)} ·{" "}
-                  {countdownText(entry.record?.deadline, now)}
+                  {card ? `${card.deadline_label} · ${card.remaining_label}` : "—"}
                 </StatRow>
-                <StatRow label="Heartbeat">
-                  {entry.keepalive_heartbeat_age_s == null
-                    ? "unknown"
-                    : `${Math.round(entry.keepalive_heartbeat_age_s)}s ago`}
-                </StatRow>
-                <StatRow label="Pulse">{entry.record?.last_pulse_result || "—"}</StatRow>
-                <StatRow label="Burn">
-                  {(() => {
-                    const spec = specById(specs, entry.record?.shape);
-                    return spec ? specRateText(spec) : "—";
-                  })()}
-                </StatRow>
-                {entry.sync_claim ? (
+                {diag ? (
+                  <>
+                    <StatRow label="Heartbeat">{diag.heartbeat_label}</StatRow>
+                    <StatRow label="Pulse">{diag.pulse_label || "—"}</StatRow>
+                    <StatRow label="Burn">{diag.burn_label}</StatRow>
+                  </>
+                ) : null}
+                {diag?.sync_claim ? (
                   <StatRow label="Sync claim">
-                    {entry.sync_claim.caller || "—"} · until{" "}
-                    {fmtTime(entry.sync_claim.expires_at)}
+                    {diag.sync_claim.caller || "—"} · until{" "}
+                    {diag.sync_claim.until_label}
                   </StatRow>
                 ) : null}
               </GroupedList>
