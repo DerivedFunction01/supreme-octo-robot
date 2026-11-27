@@ -9,9 +9,12 @@ paths, and are out of scope here.
 
 Personal literals are never named in tracked code, not even split
 into fragments — a split literal is still readable, so it leaks the
-same. They live only in the untracked denylist (the repo's one
-home, `pipeline/platform/state/denylist.txt`; the
-`STARTER_DENYLIST_FILE` env var overrides the path), matched
+same. They live only in the untracked denylist, in the layered
+form: the ground (the repo's one home,
+`pipeline/platform/state/denylist.txt`; the
+`STARTER_DENYLIST_FILE` env var overrides the ground's path)
+unioned with the repo layer beside it (`denylist.repo.txt`)
+on read when present, matched
 case-insensitively; findings name the
 offending file only, never the literal. With no denylist
 provisioned the personal leg is skipped, so a bare clone stays
@@ -40,20 +43,34 @@ def _tracked_names():
     return subprocess.run(["git", "ls-files"], cwd=REPO, capture_output=True, text=True, check=True).stdout.split()
 
 
-def _personal_literals():
-    """The untracked denylist's literals, or [] when unprovisioned."""
-    env = os.environ.get("STARTER_DENYLIST_FILE")
-    if env:
-        path = Path(env)
-    else:
-        top = subprocess.run(["git", "rev-parse", "--show-toplevel"],
-                             cwd=REPO, capture_output=True, text=True).stdout.strip()
-        path = Path(top or REPO) / "pipeline" / "platform" / "state" / "denylist.txt"
+def _read_literals(path):
+    """One list file's literals, or None when unreadable."""
     try:
         lines = path.read_text().splitlines()
     except OSError:
-        return []
+        return None
     return [line.strip() for line in lines if line.strip() and not line.startswith("#")]
+
+
+def _personal_literals():
+    """The untracked denylist's literals, or [] when
+    unprovisioned: the ground (the STARTER_DENYLIST_FILE
+    env var, else the repo's one home) unioned with the
+    repo layer beside it (denylist.repo.txt) when present.
+    An unreadable ground returns [] as it always has — the
+    layer never rescues it."""
+    env = os.environ.get("STARTER_DENYLIST_FILE")
+    if env:
+        ground = Path(env)
+    else:
+        top = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                             cwd=REPO, capture_output=True, text=True).stdout.strip()
+        ground = Path(top or REPO) / "pipeline" / "platform" / "state" / "denylist.txt"
+    literals = _read_literals(ground)
+    if literals is None:
+        return []
+    layer = _read_literals(ground.parent / "denylist.repo.txt")
+    return literals + (layer or [])
 
 
 def _personal_offenders(root, names, literals):

@@ -109,6 +109,43 @@ class DenylistTests(unittest.TestCase):
         self.assertEqual((rule, relpath, lineno),
                          ("denylist/personal-literal", "a.md", 2))
 
+    def test_layer_beside_ground_unions_on_read(self):
+        # The layered form: a literal carried only by the
+        # repo layer (denylist.repo.txt beside the resolved
+        # ground) convicts exactly like a ground literal.
+        tmp = tempfile.mkdtemp()
+        self._root_with(tmp, f"carries {FAKE_LITERAL} here\n")
+        ground = os.path.join(tmp, "list.txt")
+        with open(ground, "w", encoding="utf-8") as fh:
+            fh.write("some-other-literal\n")
+        with open(os.path.join(tmp, "denylist.repo.txt"),
+                  "w", encoding="utf-8") as fh:
+            fh.write(FAKE_LITERAL + "\n")
+        env = {"STARTER_DENYLIST_FILE": ground}
+        with mock.patch.dict(os.environ, env, clear=True):
+            findings, _notice, provisioned = scan.scan_denylist(tmp, ["a.md"])
+        self.assertTrue(provisioned)
+        self.assertEqual(len(findings), 1)
+        rule, relpath, lineno = findings[0]
+        self.assertEqual((rule, relpath, lineno),
+                         ("denylist/personal-literal", "a.md", 1))
+
+    def test_layer_does_not_rescue_unreadable_ground(self):
+        # A set-but-unreadable ground is a NOTICE with no
+        # fallthrough: a layer sitting beside where the
+        # ground would resolve never rescues it.
+        tmp = tempfile.mkdtemp()
+        self._root_with(tmp, f"carries {FAKE_LITERAL} here\n")
+        with open(os.path.join(tmp, "denylist.repo.txt"),
+                  "w", encoding="utf-8") as fh:
+            fh.write(FAKE_LITERAL + "\n")
+        env = {"STARTER_DENYLIST_FILE": os.path.join(tmp, "missing.txt")}
+        with mock.patch.dict(os.environ, env, clear=True):
+            findings, notice, provisioned = scan.scan_denylist(tmp, ["a.md"])
+        self.assertEqual(findings, [])
+        self.assertFalse(provisioned)
+        self.assertIn("unreadable", notice)
+
     def test_denylist_matching_is_case_insensitive(self):
         # Personal literals are names and identifiers: a
         # provisioned literal fires in any case it appears.

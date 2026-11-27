@@ -19,10 +19,17 @@ tracked file ever carries the list.
   provisioned. The scheduler's
   `pipeline/scheduling/tools/portability_scan.py` re-points
   to this component.
-- **Untracked denylist:** personal literals live only in an
-  untracked file — one provisioning convention per repo:
-  the `STARTER_DENYLIST_FILE` env var, else the repo's one
-  home at `pipeline/platform/state/denylist.txt`. No
+- **Untracked denylist:** personal literals live only in
+  untracked files, in the layered form — one provisioning
+  convention per repo: the `STARTER_DENYLIST_FILE` env
+  var, else the ground at the repo's one home,
+  `pipeline/platform/state/denylist.txt`, with the repo
+  layer beside the resolved ground (`denylist.repo.txt`
+  in the ground's directory) unioned with the ground on
+  read when present. The ground is homed once and
+  inherited; instance-shaped literals live in the repo
+  layer only. Ground-only provisioning is legitimate, and
+  a layer never rescues a set-but-unreadable ground. No
   per-package list copies and no per-component env aliases
   exist; divergent copies converge by union into the one
   home, and a literal leaves the list only by deliberate
