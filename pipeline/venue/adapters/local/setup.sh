@@ -20,6 +20,7 @@
 #   --authkey KEY         Tailscale auth key (or env TS_AUTHKEY)
 #   --cpus N              workspace CPU cap      (default 4)
 #   --mem SIZE            workspace memory cap   (default 8g)
+#   --pids N              workspace pids cap     (default 4096)
 #   --workspace-gb N      workspace image size   (default 96)
 #   --total-gb N          total disk budget      (default 128)
 #   --authorized-key KEY  one SSH public key line for authorized_keys
@@ -59,6 +60,7 @@ argv_global_flag name value
 argv_global_flag authkey value
 argv_global_flag cpus value default=4
 argv_global_flag mem value default=8g
+argv_global_flag pids value default=4096
 argv_global_flag workspace-gb value default=96
 argv_global_flag total-gb value default=128
 argv_global_flag authorized-key value
@@ -75,7 +77,7 @@ VENUE_NAME="${TS_HOSTNAME:-}"
 [ -n "${ARGV_PRESENT[name]:-}" ] && VENUE_NAME="${ARGV_FLAGS[name]}"
 AUTHKEY="${TS_AUTHKEY:-}"
 [ -n "${ARGV_PRESENT[authkey]:-}" ] && AUTHKEY="${ARGV_FLAGS[authkey]}"
-CPUS="${ARGV_FLAGS[cpus]}"; MEM="${ARGV_FLAGS[mem]}"
+CPUS="${ARGV_FLAGS[cpus]}"; MEM="${ARGV_FLAGS[mem]}"; PIDS="${ARGV_FLAGS[pids]}"
 WORKSPACE_GB="${ARGV_FLAGS[workspace-gb]}"; TOTAL_GB="${ARGV_FLAGS[total-gb]}"
 AUTH_KEY_LINE="${ARGV_FLAGS[authorized-key]}"
 GH_KEY_FILE="${ARGV_FLAGS[github-key-file]}"
@@ -122,6 +124,7 @@ chmod +x "$TARGET/entrypoint.sh" "$TARGET/disk-guard.sh"
   echo "TS_HOSTNAME=$VENUE_NAME"
   echo "COMPUTE_MEM=$MEM"
   echo "COMPUTE_CPUS=$CPUS"
+  echo "COMPUTE_PIDS=$PIDS"
   echo "DISK_WARN_GB=$((TOTAL_GB - 8))"
   echo "DISK_STOP_GB=$TOTAL_GB"
 } > "$TARGET/.env"

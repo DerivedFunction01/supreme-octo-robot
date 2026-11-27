@@ -303,7 +303,7 @@ and the container overlay the host's.
   case) bus-error at the default ceiling.
 - Container logs capped (10m x 3, both services).
 - CPU/memory/pids are capped via `deploy.resources.limits` in
-  compose (`COMPUTE_MEM` / `COMPUTE_CPUS` in `.env`). A specific
+  compose (`COMPUTE_MEM` / `COMPUTE_CPUS` / `COMPUTE_PIDS` in `.env`). A specific
   host's allocation is instance state, recorded in the untracked
   `adapters/local/instance/` folder — the tracked template carries
   example values only. The legacy `mem_limit`/`cpus` keys are ignored by Compose

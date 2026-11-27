@@ -65,7 +65,7 @@ services:
         limits:
           memory: ${COMPUTE_MEM:-8g}
           cpus: "${COMPUTE_CPUS:-4}"
-          pids: 4096
+          pids: "${COMPUTE_PIDS:-4096}"
     restart: unless-stopped
     logging:
       driver: json-file
