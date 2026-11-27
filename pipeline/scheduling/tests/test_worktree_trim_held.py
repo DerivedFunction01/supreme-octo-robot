@@ -215,6 +215,13 @@ class TestAutoCommit(Fixture):
         tree = self.add_tree("repo-a-f-wt", "feat/f",
                              [("f.txt", "committed\n")], NOW - 4000)
         (tree / "f.txt").write_text("dirty change\n")
+        # The global scope is pinned to an empty file:
+        # a host can resolve a global config outside
+        # $HOME (the passwd-home / XDG route) carrying an
+        # identity, which would defeat the no-identity
+        # condition no matter where HOME points.
+        empty_global = self.ws / "empty-gitconfig"
+        empty_global.write_text("")
         out = self.run_trim(
             "--tier", "soft",
             extra_env={"WT_TRIM_CAP_REPO_A": "0",
@@ -223,6 +230,7 @@ class TestAutoCommit(Fixture):
                        "GIT_COMMITTER_NAME": None,
                        "GIT_COMMITTER_EMAIL": None,
                        "GIT_CONFIG_NOSYSTEM": "1",
+                       "GIT_CONFIG_GLOBAL": str(empty_global),
                        "HOME": str(self.ws)})
         self.assertEqual(out.returncode, 3,
                          out.stdout + out.stderr)

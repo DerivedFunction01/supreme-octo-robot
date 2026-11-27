@@ -136,8 +136,16 @@ class TestVenueTrim(VenueFixture):
         (b / "f.txt").write_text("unpreservable\n")
         bare = {k: v for k, v in os.environ.items()
                 if not k.startswith("GIT_")}
+        # The global scope is pinned to an empty file:
+        # a host can resolve a global config outside
+        # $HOME (the passwd-home / XDG route) carrying an
+        # identity, which would defeat the no-identity
+        # condition no matter where HOME points.
+        empty_global = self.home / "empty-gitconfig"
+        empty_global.write_text("")
         bare.update({
             "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_CONFIG_GLOBAL": str(empty_global),
             "HOME": str(self.home),
         })
         out = self.run_venue({"WT_TRIM_VENUE_CLONE_CAP": "1"},

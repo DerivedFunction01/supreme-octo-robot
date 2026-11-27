@@ -23,6 +23,7 @@ the repo at census, never a name list
 (test_worktree_trim_principal).
 """
 
+import subprocess
 import unittest
 
 from tests.test_worktree_trim import HOUR, NOW, Fixture, _git
@@ -261,6 +262,46 @@ class TestBranchCap(Fixture):
         remote = self.remote_branches()
         for name in names:
             self.assertIn(name, remote)
+        self.assertEqual(self.queue(), [])
+
+    def test_cap_failure_line_carries_the_command_error(self):
+        # The diagnosability cure: a covered step's
+        # failure records the failing command's own error
+        # text on the BRANCH-CAP-FAIL line (err=), not the
+        # bare reason alone — a contention-class failure
+        # must arrive with its error attached.
+        # Manufacture: a standing bundle that is not a
+        # bundle at all, so the merge step's fetch of it
+        # fails (prior-bundle-unreadable) with git's error
+        # in hand.
+        self.add_origin()
+        names = [f"feat/e{i:02d}" for i in range(12)]
+        for i, name in enumerate(names):
+            self.add_orphan(name, NOW - 120000 + i * 1000)
+        _git(self.main, "push", "origin", "main", *names,
+             env=self.env)
+        today = subprocess.run(
+            ["date", "-d", f"@{NOW}", "+%F"],
+            capture_output=True, text=True).stdout.strip()
+        cap_dir = (self.ws / "worktree-archive" / today
+                   / f"{self.slug}-branch-cap")
+        cap_dir.mkdir(parents=True)
+        (cap_dir / "branches.bundle").write_text(
+            "not a bundle\n")
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 3,
+                         out.stdout + out.stderr)
+        fail = [ln for ln in out.stdout.splitlines()
+                if "BRANCH-CAP-FAIL" in ln]
+        self.assertEqual(len(fail), 1, out.stdout)
+        self.assertIn("reason=prior-bundle-unreadable",
+                      fail[0])
+        self.assertIn(" err=", fail[0])
+        self.assertIn("Could not read from remote "
+                      "repository", fail[0])
+        # archive-before-delete still binds: no ref moved
+        self.assertEqual(self.local_branches(),
+                         {"main"} | set(names))
         self.assertEqual(self.queue(), [])
 
     def test_attached_excess_branch_stands_cap_takes_selectable(self):

@@ -50,7 +50,7 @@ from collections import namedtuple
 
 DEFAULT_CAP = 800
 DEFAULT_BAND = 700
-CODE_EXTENSIONS = (".py", ".ts", ".tsx", ".js", ".mjs", ".css")
+CODE_EXTENSIONS = (".py", ".ts", ".tsx", ".js", ".mjs", ".css", ".sh")
 
 ScanResult = namedtuple(
     "ScanResult", ["findings", "missing", "band", "growth"])
