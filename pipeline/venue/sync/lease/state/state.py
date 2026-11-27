@@ -432,7 +432,17 @@ def state_records(colab, repo: Path) -> dict:
     # core's standing-managed rule), and the shape
     # catalog index the card's labels resolve through
     # (the specs portion's own list, from its cache).
-    now_dt = datetime.now(timezone.utc)
+    # The clock is taken at the card's own presented
+    # precision — whole minutes: the card's time
+    # values are a function of the record state at
+    # that precision, so the portion build and the
+    # composed build (state() below, which composes
+    # this portion) serve the identical card for the
+    # same record state; a raw instant would embed
+    # the build's own millisecond in remaining_ms
+    # and the two reads could never agree.
+    now_dt = datetime.now(timezone.utc).replace(
+        second=0, microsecond=0)
     grant_active_now = grants.grant_active(
         grants.load_grant(repo), now_dt)
     index = card.spec_index(specs(repo, colab))

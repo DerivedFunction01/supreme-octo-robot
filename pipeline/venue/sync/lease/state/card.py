@@ -63,10 +63,12 @@ CARD_VERBS = ("extend", "shorten", "release", "adopt", "exec")
 
 
 def _parse(iso):
-    """A served timestamp as an aware datetime;
-    served stamps carry their offset (a bare one
-    reads as UTC)."""
-    dt = datetime.fromisoformat(iso)
+    """A served timestamp as an aware datetime,
+    over the foundation's homed parse (served
+    stamps carry their offset; a bare one reads
+    as UTC — the coercion the home itself pairs
+    with the parse, as in dial_cache_read)."""
+    dt = foundation.parse_dt(iso)
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt
