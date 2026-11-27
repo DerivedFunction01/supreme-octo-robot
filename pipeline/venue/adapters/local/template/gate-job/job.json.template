@@ -1,0 +1,1 @@
+{"caller":"__CALLER__","script":"run.sh","shape":"local","timeout_s":3600,"uploads":["__REPO_URL_PLANT__"],"venue":"local"}

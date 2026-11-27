@@ -1,0 +1,6 @@
+# The clone source for a gate formed from this template,
+# planted beside run.sh at formation as repo-url.txt
+# (untracked — provisioned material never rides a tracked
+# file). One line: the clone URL of the gated repo, resolved
+# from the repos registry at formation.
+https://example.invalid/repos/<workload>.git
