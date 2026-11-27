@@ -358,11 +358,6 @@
     },
     {
      "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
-     "path": "pipeline/venue/adapters/colab/jobs/usmc-rollover-touch/hello.py",
-     "root": "platform"
-    },
-    {
-     "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
      "path": "pipeline/venue/adapters/colab/jobs/workhorse-rollover-touch/hello.py",
      "root": "platform"
     },

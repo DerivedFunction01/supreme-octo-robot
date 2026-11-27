@@ -253,8 +253,8 @@ export async function taskManager(): Promise<TaskManagerResult> {
           pid: 169052, ppid: 169049, cpu_pct: 98.2, mem_pct: 6.1,
           elapsed_s: 336,
           argv: ["var/venv/bin/python", "check.py", "backend/apps", "--workers", "2"],
-          cwd: "workspace/usmc-pay-monitor-v2", repo: "usmc-pay-monitor-v2",
-          thread: "usmc-pay-monitor-v2 — backend",
+          cwd: "workspace/fennelwick", repo: "fennelwick",
+          thread: "fennelwick — backend",
         },
         {
           pid: 67, ppid: 0, cpu_pct: 19.9, mem_pct: 9.6,
