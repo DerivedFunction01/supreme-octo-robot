@@ -127,6 +127,15 @@ body {
 .rn-row-btn:hover {
   background: var(--ui-surface-1);
 }
+.rn-row-btn:disabled {
+  cursor: not-allowed;
+}
+.rn-row-btn:disabled:hover {
+  background: none;
+}
+.rn-action:disabled .rn-lab {
+  color: var(--ui-content-muted);
+}
 .rn-lab {
   font-size: 14.5px;
   font-weight: 550;

@@ -32,11 +32,18 @@ import type {
   VenueId,
 } from "../types";
 import {
+  leaseDiagnosticsFromCard,
+  leaseViewFromCard,
+} from "./card";
+import type { ServedCardDiagnostics, ServedLeaseCard } from "./card";
+import {
   SESSION_NAMES,
   SPEC_CATALOG,
   VENUE_LABEL,
   shapeClass,
   shapeInfo,
+  specDescriptor,
+  specRecord,
   specView,
 } from "./catalog";
 import {
@@ -83,54 +90,139 @@ export function currentBalance(ctx: MockContext): number {
   return Math.max(0, Math.round(OPENING_BALANCE_CU - spent));
 }
 
-export function leaseView(ctx: MockContext, lease: LeaseRecord): LeaseView {
-  const expired = Date.parse(lease.deadline) <= ctx.clockMs;
+/** The mock's served lease card: the fixture form of
+ *  the shape the real backend assembles in its state
+ *  build (card.py) — the same fields under the same
+ *  rules, over the mock's store, so the mock surface
+ *  renders the card exactly as the live surface does
+ *  (one API). The build clock floors to the minute,
+ *  the precision every card time value is presented
+ *  at; the display name is the mock's served name for
+ *  the session (its session catalog), as the real
+ *  card's is the backend's derivation. Fields the
+ *  mock's record does not carry (target, account, the
+ *  entry's action) serve null. */
+export function leaseCard(ctx: MockContext, lease: LeaseRecord): ServedLeaseCard {
+  const nowMs = Math.floor(ctx.clockMs / 60000) * 60000;
+  const deadlineMs = Date.parse(lease.deadline);
+  const expired = deadlineMs <= nowMs;
+  const remainingMs = deadlineMs - nowMs;
+  const rec = specRecord(lease.shape);
+  const rate =
+    lease.rate_cu_per_hour ?? shapeInfo(lease.shape).rateCuPerHour;
+  const rateLabel = rate != null ? `${rate} CU/h` : "Cost unconfirmed";
+  // The core's standing-managed refusal: the record's
+  // standing stamp under an active grant.
+  const grantManaged = !!lease.standing && !!activeGrant(ctx);
+  const managed = {
+    applicable: !grantManaged,
+    reason: grantManaged ? "grant-managed" : null,
+  };
   return {
     session: lease.session,
-    displayName: ctx.name(lease.session),
+    display_name: ctx.name(lease.session),
     venue: lease.venue,
-    venueLabel: VENUE_LABEL[lease.venue],
+    venue_label: VENUE_LABEL[lease.venue] ?? lease.venue,
+    target: null,
     shape: lease.shape,
-    shapeLabel: shapeInfo(lease.shape).label,
+    shape_label: shapeInfo(lease.shape).label,
+    shape_descriptor: rec ? specDescriptor(rec) : lease.shape,
     caller: lease.caller ?? null,
+    account: null,
     state: expired ? "renewal-due" : "running",
-    stateLabel: expired ? "Renewal due" : "Running",
-    stateTone: expired ? "warn" : "ok",
-    acquiredAt: lease.acquired_at,
+    state_label: expired ? "Renewal due" : "Running",
+    state_tone: expired ? "warn" : "ok",
+    action: null,
+    standing: !!lease.standing,
+    acquired_at: lease.acquired_at,
+    // The card's acquired label rule (card.py's
+    // _time_label): the stamp's fmtTime form, or null
+    // when the stamp is absent or unparseable.
+    acquired_label: Number.isNaN(Date.parse(lease.acquired_at))
+      ? null
+      : fmtTime(lease.acquired_at),
     deadline: lease.deadline,
-    endsLabel: expired
+    deadline_label: fmtTime(lease.deadline),
+    ends_label: expired
       ? `ended ${fmtTime(lease.deadline)}`
       : `ends ${fmtTime(lease.deadline)}`,
-    remainingLabel: expired
+    expired,
+    remaining_ms: remainingMs,
+    remaining_label: expired
       ? "deadline passed"
-      : `${fmtTime(lease.deadline)} · ${fmtRemaining(Date.parse(lease.deadline) - ctx.clockMs)}`,
-    rateCuPerHour: lease.rate_cu_per_hour,
-    reservedCu: expired ? 0 : (lease.budget_at_acquire?.reserved_cu ?? 0),
-    envelopeId: lease.envelope_id,
-    diagnostics: diagnosticsView(ctx, lease),
+      : `${fmtTime(lease.deadline)} · ${fmtRemaining(remainingMs)}`,
+    rate_cu_per_hour: lease.rate_cu_per_hour,
+    rate_label: rateLabel,
+    // The card's reserved rule (card.py): the acquire
+    // snapshot's reserved figure, unprojected records
+    // serving their reserved_cu — with no zeroing for
+    // an expired lease (the mock's earlier view zeroed
+    // it; the card's rule is canonical).
+    reserved_cu: lease.budget_at_acquire?.reserved_cu ?? 0,
+    envelope_id: lease.envelope_id ?? null,
+    diagnostics: cardDiagnostics(ctx, lease, rateLabel),
+    capabilities: {
+      extend: { ...managed },
+      shorten: { ...managed },
+      release: { applicable: true, reason: null },
+      adopt:
+        lease.venue === "colab"
+          ? { applicable: true, reason: null }
+          : { applicable: false, reason: "venue" },
+      exec: { applicable: false, reason: "unserved" },
+    },
   };
 }
 
-/** The lease card's diagnostics (V7): the listeners
- *  census lines with their suspect flags, the keepalive
- *  heartbeat age ("unknown" when the census cannot read
- *  it — the panel's own word), the last pulse result,
- *  the burn rate, and the sync claim when one is live.
- *  A session the census does not carry serves null. */
-export function diagnosticsView(ctx: MockContext, lease: LeaseRecord): LeaseDiagnosticsView | null {
+/** The card fixture's diagnostics block, in card.py's
+ *  form: the diag seed's heartbeat / pulse / burn
+ *  labels and sync claim, or null when the seed
+ *  carries nothing the block serves (no heartbeat, no
+ *  pulse, no claim — a listeners-only seed serves its
+ *  census through the view composition, not the card). */
+function cardDiagnostics(
+  ctx: MockContext,
+  lease: LeaseRecord,
+  rateLabel: string,
+): ServedCardDiagnostics | null {
   const seed = ctx.store.leaseDiag[lease.session];
   if (!seed) return null;
-  const rate = lease.rate_cu_per_hour ?? shapeInfo(lease.shape).rateCuPerHour;
+  if (seed.heartbeatAgeS == null && !seed.lastPulse && !seed.syncClaim) {
+    return null;
+  }
   return {
-    listeners: seed.listeners.map((l) => ({ ...l, suspect: [...l.suspect] })),
-    heartbeatLabel:
-      seed.heartbeatAgeS == null ? "unknown" : `${Math.round(seed.heartbeatAgeS)}s ago`,
-    pulseLabel: seed.lastPulse,
-    burnLabel: rate != null ? `${rate} CU/h` : "Cost unconfirmed",
-    syncClaim: seed.syncClaim
-      ? { caller: seed.syncClaim.caller, untilLabel: fmtTime(seed.syncClaim.expiresAt) }
+    heartbeat_label:
+      seed.heartbeatAgeS == null
+        ? "unknown"
+        : `${Math.round(seed.heartbeatAgeS)}s ago`,
+    pulse_label: seed.lastPulse,
+    burn_label: rateLabel,
+    sync_claim: seed.syncClaim
+      ? { caller: seed.syncClaim.caller, until_label: fmtTime(seed.syncClaim.expiresAt) }
       : null,
   };
+}
+
+export function leaseView(ctx: MockContext, lease: LeaseRecord): LeaseView {
+  const card = leaseCard(ctx, lease);
+  return leaseViewFromCard(card, diagnosticsView(ctx, card, lease));
+}
+
+/** The lease card's diagnostics (V7): the card
+ *  fixture's served labels composed with the diag
+ *  seed's listeners census (the census is not card
+ *  content). A session neither source carries serves
+ *  null. */
+export function diagnosticsView(ctx: MockContext, card: ServedLeaseCard, lease: LeaseRecord): LeaseDiagnosticsView | null {
+  const seed = ctx.store.leaseDiag[lease.session];
+  return leaseDiagnosticsFromCard(card, {
+    present: !!seed,
+    listeners: (seed?.listeners ?? []).map((l) => ({
+      ...l,
+      suspect: [...l.suspect],
+    })),
+    error: null,
+  });
 }
 
 export function runView(ctx: MockContext, run: RunRecord): RunView {
@@ -514,13 +606,16 @@ export function grantView(ctx: MockContext): GrantView | null {
     spendDayCu: Math.round(day * 100) / 100,
     spendMonthCu: Math.round(month * 100) / 100,
     standingDaySpentCu: null,
-    leases: leases.map((l) => ({
-      session: l.session,
-      displayName: ctx.name(l.session),
-      shapeLabel: shapeInfo(l.shape).label,
-      caller: l.caller ?? null,
-      deadlineLabel: fmtTime(l.deadline),
-    })),
+    leases: leases.map((l) => {
+      const card = leaseCard(ctx, l);
+      return {
+        session: card.session,
+        displayName: card.display_name,
+        shapeLabel: card.shape_label,
+        caller: card.caller,
+        deadlineLabel: card.deadline_label,
+      };
+    }),
   };
 }
 

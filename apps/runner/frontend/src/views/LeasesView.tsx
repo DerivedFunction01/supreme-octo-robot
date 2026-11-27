@@ -160,7 +160,7 @@ function DegradedLeases({
             details={
               <>
                 {l.shapeLabel} · <span className="mono">{l.caller ?? "unattributed"}</span> · ends{" "}
-                {fmtTime(l.deadline)}
+                {l.deadlineLabel}
               </>
             }
             chip={<StatusChip tone="idle" label="Last known" />}

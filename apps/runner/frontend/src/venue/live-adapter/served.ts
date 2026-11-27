@@ -4,6 +4,7 @@
 // adapter serves before the budget portion lands. Split
 // from live-adapter.ts along the served-shape seam.
 
+import type { ServedLeaseCard } from "../adapter/card";
 import type { BudgetAccountView, BudgetView, ShapeSpec } from "../types";
 
 export interface ServedSpec {
@@ -49,6 +50,13 @@ export interface ServedRecordEntry {
    *  projections here take record-carrying entries only
    *  (recordEntries). */
   record?: ServedLeaseRecord;
+  /** The served lease card (the lease-card unification,
+   *  Step 1): present on a record-carrying entry whose
+   *  record carries a deadline — every record the core
+   *  writes. A deadline-less record (a form the core
+   *  itself never writes) serves cardless and does not
+   *  project as a lease (leaseEntries). */
+  card?: ServedLeaseCard;
   sync_claim: { caller: string; expires_at?: string; until?: string } | null;
   keepalive_heartbeat_age_s: number | null;
   caller: string | null;

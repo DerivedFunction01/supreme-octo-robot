@@ -134,10 +134,12 @@ export function LeaseDetailView({
             <span className="mono">{lease.caller ?? "unattributed"}</span>
           </RowValue>
         </Row>
-        <Row>
-          <span className="rn-lab">Acquired</span>
-          <RowValue>{fmtTime(lease.acquiredAt)}</RowValue>
-        </Row>
+        {lease.acquiredLabel ? (
+          <Row>
+            <span className="rn-lab">Acquired</span>
+            <RowValue>{lease.acquiredLabel}</RowValue>
+          </Row>
+        ) : null}
         <Row>
           <span className="rn-lab">Deadline</span>
           <RowValue>{lease.remainingLabel}</RowValue>
@@ -235,9 +237,16 @@ export function LeaseDetailView({
         <ActionRow label={`Run job on this lease · ${lease.venueLabel}`} onClick={exec} />
       </GroupedList>
       <GroupLabel>Actions</GroupLabel>
+      {/* Capability disabling (Step 4): the served
+          capability set alone decides enablement — a
+          not-applicable verb's rows render disabled
+          with the served reason on the control, never
+          removed; layout does not change with it. */}
       <GroupedList>
         <ActionRow
           label={extendOpen ? "Close extend" : "Extend lease"}
+          disabled={!lease.capabilities.extend.applicable}
+          disabledReason={lease.capabilities.extend.reason}
           onClick={() => setExtendOpen((v) => !v)}
         />
         {extendOpen ? (
@@ -253,11 +262,18 @@ export function LeaseDetailView({
                 />
               </span>
             </Row>
-            <ActionRow label={`Extend by ${fmtDurHours(extendHours)}`} onClick={extend} />
+            <ActionRow
+              label={`Extend by ${fmtDurHours(extendHours)}`}
+              disabled={!lease.capabilities.extend.applicable}
+              disabledReason={lease.capabilities.extend.reason}
+              onClick={extend}
+            />
           </>
         ) : null}
         <ActionRow
           label={shortenOpen ? "Close shorten" : "Shorten lease"}
+          disabled={!lease.capabilities.shorten.applicable}
+          disabledReason={lease.capabilities.shorten.reason}
           onClick={() => setShortenOpen((v) => !v)}
         />
         {shortenOpen ? (
@@ -293,11 +309,19 @@ export function LeaseDetailView({
                   ? "Shorten to the chosen time"
                   : `Shorten by ${fmtDurHours(shortenHours)}`
               }
+              disabled={!lease.capabilities.shorten.applicable}
+              disabledReason={lease.capabilities.shorten.reason}
               onClick={shorten}
             />
           </>
         ) : null}
-        <ActionRow label="Release lease" danger onClick={() => setConfirmRelease(true)} />
+        <ActionRow
+          label="Release lease"
+          danger
+          disabled={!lease.capabilities.release.applicable}
+          disabledReason={lease.capabilities.release.reason}
+          onClick={() => setConfirmRelease(true)}
+        />
       </GroupedList>
       {confirmRelease ? (
         <Dialog

@@ -215,29 +215,92 @@ export interface AccessLogView {
 
 /* ---------------- served projections ---------------- */
 
+/** The lease card's action verbs, in the canonical
+ *  interface's order for a lease (the served card's
+ *  CARD_VERBS). */
+export type LeaseCardVerb =
+  | "extend"
+  | "shorten"
+  | "release"
+  | "adopt"
+  | "exec";
+
+/** One verb's served capability: whether the lease core
+ *  would accept the action on this lease, and the reason
+ *  class where it would refuse (venue / grant-managed /
+ *  unserved), served ahead of the click. */
+export interface LeaseCapability {
+  applicable: boolean;
+  reason: string | null;
+}
+
+export type LeaseCapabilities = Record<LeaseCardVerb, LeaseCapability>;
+
+/** One lease, projected from its served card (the
+ *  lease-card unification: the backend assembles the
+ *  card in its state build and both adapters map it
+ *  through the one card mapping, so list and detail —
+ *  and mock and live — never disagree). State is the
+ *  card's deadline verdict (running / renewal-due);
+ *  deadlineLabel / endsLabel / remainingLabel are the
+ *  card's display strings. */
 export interface LeaseView {
   session: string;
   displayName: string;
   venue: VenueId;
   venueLabel: string;
+  /** The venue target the lease runs on (local venues),
+   *  or null where the record names none. */
+  target: string | null;
   shape: string;
   shapeLabel: string;
+  /** The shape's descriptor string (the detail's shape
+   *  row), as the card serves it. */
+  shapeDescriptor: string;
   caller: string | null;
+  /** The billed account the record names, when it does. */
+  account: string | null;
   state: "running" | "renewal-due";
   stateLabel: string;
   stateTone: Tone;
+  /** The core's own verdict for the entry (its action),
+   *  carried beside the deadline-derived state. */
+  action: string | null;
+  /** A standing lease (its grant manages its renewal). */
+  standing: boolean;
   acquiredAt: string;
+  /** The acquired stamp's served label (the card's
+   *  fmt_time form), or null when the stamp is absent
+   *  or unparseable — honest absence: the detail's
+   *  Acquired row renders nothing rather than a
+   *  client-side formatting of the raw stamp. */
+  acquiredLabel: string | null;
   deadline: string;
+  /** The deadline's own time label (the ends label
+   *  without its verb). */
+  deadlineLabel: string;
   endsLabel: string;
   remainingLabel: string;
+  /** Signed ms from the card's build instant to the
+   *  deadline (negative once passed). */
+  remainingMs: number;
+  expired: boolean;
   rateCuPerHour: number | null;
+  /** The burn label the card serves ("12 CU/h", or
+   *  "Cost unconfirmed"). */
+  rateLabel: string;
   reservedCu: number;
   envelopeId?: string;
-  /** The lease card's diagnostics (V7), served from the
-   *  core's listeners census + the record's liveness
-   *  stamps; null when the venue serves no census for the
-   *  session (honest absence — the card renders no
-   *  diagnostics group). */
+  /** The card's served capability set, one entry per
+   *  canonical verb. The views disable from it: a
+   *  not-applicable action renders disabled, never
+   *  removed, with the served reason on the control. */
+  capabilities: LeaseCapabilities;
+  /** The lease card's diagnostics (V7): the card's
+   *  served heartbeat / pulse / burn labels and sync
+   *  claim, composed with the core's listeners census;
+   *  null when neither source knows anything (honest
+   *  absence — the card renders no diagnostics group). */
   diagnostics: LeaseDiagnosticsView | null;
 }
 
