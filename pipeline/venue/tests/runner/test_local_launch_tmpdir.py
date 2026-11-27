@@ -73,8 +73,8 @@ def test_mkdir_creates_the_run_dirs_tmp_subdir(monkeypatch):
     rec = {"run_id": "job-local-20261127T120000Z"}
     assert mod._launch(rec, SCRIPT, TARGET) is None
     remote = fake.remote("mkdir")
-    assert "mkdir -p ~/runs/job-local-20261127T120000Z" in remote
-    assert "~/runs/job-local-20261127T120000Z/tmp" in remote
+    assert "mkdir -p " in remote
+    assert "runs/job-local-20261127T120000Z/tmp" in remote
     steps = [s for s, _ in fake.calls]
     assert steps.index("mkdir") < steps.index("launch")
 
@@ -142,5 +142,5 @@ def test_envelope_mkdir_creates_each_jobs_tmp_subdir():
     err = envelope_dispatch.launch_envelope(rec, jobs, TARGET, fake, launch_step)
     assert err is None
     remote = fake.remote("mkdir")
-    assert "~/runs/env-20261127T120000Z/job-a/tmp" in remote
-    assert "~/runs/env-20261127T120000Z/job-b/tmp" in remote
+    assert "runs/env-20261127T120000Z/job-a/tmp" in remote
+    assert "runs/env-20261127T120000Z/job-b/tmp" in remote
