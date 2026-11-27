@@ -21,11 +21,15 @@ import type {
   SpecView,
   Tone,
 } from "../types";
+import {
+  leaseDiagnosticsFromCard,
+  leaseViewFromCard,
+} from "../adapter/card";
+import type { ServedLeaseCard } from "../adapter/card";
 import { fmtTime } from "../adapter/format";
 import {
   CLASS_LABEL,
   baseName,
-  fmtRemaining,
   liveSessionName,
   shapeClass,
   str,
@@ -107,70 +111,50 @@ export function recordEntries(ctx: LiveContext): (ServedRecordEntry & { record: 
   );
 }
 
-export function leaseView(ctx: LiveContext, entry: ServedRecordEntry & { record: ServedLeaseRecord }): LeaseView {
-  const lease = entry.record;
-  const nowMs = Date.parse(ctx.now());
-  const expired = Date.parse(lease.deadline) <= nowMs;
-  return {
-    session: lease.session,
-    displayName: liveSessionName(lease.session),
-    venue: lease.venue ?? "colab",
-    venueLabel: venueLabel(lease.venue ?? "colab"),
-    shape: lease.shape,
-    shapeLabel: shapeLabel(ctx, lease.shape, lease.venue),
-    caller: lease.caller ?? entry.caller ?? null,
-    state: expired ? "renewal-due" : "running",
-    stateLabel: expired ? "Renewal due" : "Running",
-    stateTone: expired ? "warn" : "ok",
-    acquiredAt: lease.acquired_at,
-    deadline: lease.deadline,
-    endsLabel: expired
-      ? `ended ${fmtTime(lease.deadline)}`
-      : `ends ${fmtTime(lease.deadline)}`,
-    remainingLabel: expired
-      ? "deadline passed"
-      : `${fmtTime(lease.deadline)} · ${fmtRemaining(Date.parse(lease.deadline) - nowMs)}`,
-    rateCuPerHour: lease.rate_cu_per_hour,
-    reservedCu: lease.budget_at_acquire?.projected ?? lease.budget_at_acquire?.reserved_cu ?? 0,
-    envelopeId: lease.envelope_id,
-    diagnostics: diagnosticsView(ctx, entry),
-  };
+/** A record-carrying entry with its served card — the
+ *  only entries that project as leases (the lease-card
+ *  unification). A deadline-less record (a form the
+ *  core itself never writes) serves cardless and is
+ *  not a lease any projection can describe; the
+ *  admission lives at this seam beside recordEntries. */
+export type LeaseEntry = ServedRecordEntry & {
+  record: ServedLeaseRecord;
+  card: ServedLeaseCard;
+};
+
+export function leaseEntries(ctx: LiveContext): LeaseEntry[] {
+  return recordEntries(ctx).filter(
+    (e): e is LeaseEntry => !!e.card,
+  );
 }
 
-/** The lease card's diagnostics (V7), from the listeners
- *  portion plus the record's own liveness stamps. A
- *  session neither source carries serves null (honest
- *  absence). A census entry whose probe failed serves its
- *  empty listener list with the heartbeat unreadable —
- *  "unknown", the panel's own word. */
-export function diagnosticsView(ctx: LiveContext, entry: ServedRecordEntry & { record: ServedLeaseRecord }): LeaseDiagnosticsView | null {
-  const lease = entry.record;
-  const census = ctx.parts.listeners?.listeners?.[lease.session];
-  if (!census && entry.keepalive_heartbeat_age_s == null && !lease.last_pulse_result && !entry.sync_claim) {
-    return null;
-  }
-  const rate = lease.rate_cu_per_hour ?? specMap(ctx).get(lease.shape)?.rate_cu_per_hour;
-  const claim = entry.sync_claim;
-  return {
+/** The lease card, rendered as served: every label,
+ *  state, and deadline string is the card's own; the
+ *  panel derives none of them. */
+export function leaseView(ctx: LiveContext, entry: LeaseEntry): LeaseView {
+  return leaseViewFromCard(entry.card, diagnosticsView(ctx, entry));
+}
+
+/** The lease card's diagnostics (V7): the card's served
+ *  heartbeat / pulse / burn labels and sync claim,
+ *  composed with the listeners portion's census (the
+ *  census is not card content — it rides its own
+ *  portion). A session neither source carries serves
+ *  null (honest absence). A census entry whose probe
+ *  failed serves its empty listener list with the
+ *  census's error as the pulse fallback. */
+export function diagnosticsView(ctx: LiveContext, entry: LeaseEntry): LeaseDiagnosticsView | null {
+  const census = ctx.parts.listeners?.listeners?.[entry.record.session];
+  return leaseDiagnosticsFromCard(entry.card, {
+    present: !!census,
     listeners: (census?.listeners ?? []).map((l) => ({
       port: l.port,
       pid: l.pid,
       cwd: l.cwd,
       suspect: l.suspect ?? [],
     })),
-    heartbeatLabel:
-      entry.keepalive_heartbeat_age_s == null
-        ? "unknown"
-        : `${Math.round(entry.keepalive_heartbeat_age_s)}s ago`,
-    pulseLabel: lease.last_pulse_result ?? census?.error ?? null,
-    burnLabel: rate != null ? `${rate} CU/h` : "Cost unconfirmed",
-    syncClaim: claim
-      ? {
-          caller: claim.caller,
-          untilLabel: fmtTime(claim.expires_at ?? claim.until ?? ctx.now()),
-        }
-      : null,
-  };
+    error: census?.error ?? null,
+  });
 }
 
 export function runLabel(state: string): { label: string; tone: Tone } {
@@ -227,7 +211,7 @@ export function runViews(ctx: LiveContext): RunView[] {
 export function budgetView(ctx: LiveContext): BudgetView {
   const served = ctx.parts.budget?.budget;
   if (!served) return EMPTY_BUDGET;
-  const reserved = recordEntries(ctx)
+  const reserved = leaseEntries(ctx)
     .map((e) => leaseView(ctx, e).reservedCu)
     .reduce((a, b) => a + b, 0);
   const balanceCu = Math.round(served.balance * 100) / 100;
@@ -318,6 +302,12 @@ export function grantView(ctx: LiveContext): GrantView | null {
     recordEntries(ctx)
       .map((e) => e.record)
       .filter((r) => r.envelope_id === grant.granted_at);
+  // The envelope block serves raw records, not entries:
+  // a lease row renders from the records portion's card
+  // for its session where one is served.
+  const cards = new Map(
+    leaseEntries(ctx).map((e) => [e.record.session, e.card] as const),
+  );
   return {
     id: grant.granted_at,
     until: grant.until,
@@ -335,19 +325,36 @@ export function grantView(ctx: LiveContext): GrantView | null {
     spendMonthCu: envelope?.spend.month_spent ?? ctx.parts.budget?.budget.month_spent ?? 0,
     standingDaySpentCu:
       envelope?.spend.standing_day_spent ?? ctx.parts.budget?.budget.standing_day_spent ?? null,
-    leases: records.map((r) => ({
-      session: r.session,
-      displayName: liveSessionName(r.session),
-      shapeLabel: shapeLabel(ctx, r.shape),
-      caller: r.caller ?? null,
-      deadlineLabel: fmtTime(r.deadline),
-    })),
+    leases: records.map((r) => {
+      const card = cards.get(r.session);
+      if (card) {
+        return {
+          session: card.session,
+          displayName: card.display_name,
+          shapeLabel: card.shape_label,
+          caller: card.caller,
+          deadlineLabel: card.deadline_label,
+        };
+      }
+      // A record the records portion does not carry has
+      // no card to render from; its row falls back to
+      // the record's own fields (the card gap the Step 2
+      // hand-back names — the envelope block serves no
+      // cards of its own).
+      return {
+        session: r.session,
+        displayName: liveSessionName(r.session),
+        shapeLabel: shapeLabel(ctx, r.shape),
+        caller: r.caller ?? null,
+        deadlineLabel: fmtTime(r.deadline),
+      };
+    }),
   };
 }
 
 export function callerViews(ctx: LiveContext): CallerView[] {
-  const byCaller = new Map<string, ServedRecordEntry & { record: ServedLeaseRecord }>();
-  for (const entry of recordEntries(ctx)) {
+  const byCaller = new Map<string, LeaseEntry>();
+  for (const entry of leaseEntries(ctx)) {
     const caller = entry.record.caller ?? entry.caller;
     if (caller && !byCaller.has(caller)) byCaller.set(caller, entry);
   }

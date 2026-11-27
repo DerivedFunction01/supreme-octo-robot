@@ -39,19 +39,19 @@ import { AdapterError } from "../types";
 import type { VenueAdapter } from "../adapter";
 import { fmtTime } from "../adapter/format";
 import { liveSessionName, num, str } from "./helpers";
-import type { FetchLike, Parts, ServedLeaseRecord, ServedRecordEntry } from "./served";
+import type { FetchLike, Parts } from "./served";
 import {
   accessViews,
   budgetView,
   callerViews,
   grantView,
+  leaseEntries,
   leaseView,
   orphanViews,
-  recordEntries,
   runViews,
   specViews,
 } from "./projections";
-import type { LiveContext } from "./projections";
+import type { LeaseEntry, LiveContext } from "./projections";
 import { accessLogViews, eventViews, resolvedOrphanViews } from "./events";
 
 /** One portion's fetch bound. The records portion's state
@@ -112,10 +112,10 @@ export class LiveVenueAdapter implements VenueAdapter {
   private context(): LiveContext {
     return { parts: this.parts, now: () => this.now() };
   }
-  private recordEntries(): (ServedRecordEntry & { record: ServedLeaseRecord })[] {
-    return recordEntries(this.context());
+  private leaseEntries(): LeaseEntry[] {
+    return leaseEntries(this.context());
   }
-  private leaseView(entry: ServedRecordEntry & { record: ServedLeaseRecord }): LeaseView {
+  private leaseView(entry: LeaseEntry): LeaseView {
     return leaseView(this.context(), entry);
   }
   private budgetView(): BudgetView {
@@ -260,7 +260,7 @@ export class LiveVenueAdapter implements VenueAdapter {
   snapshot(): Snapshot {
     if (this.cachedSnapshot) return this.cachedSnapshot;
     const ctx = this.context();
-    const entries = recordEntries(ctx);
+    const entries = leaseEntries(ctx);
     const leases = entries
       .map((e) => leaseView(ctx, e))
       .sort((a, b) => Date.parse(a.deadline) - Date.parse(b.deadline));
@@ -329,7 +329,7 @@ export class LiveVenueAdapter implements VenueAdapter {
   }
 
   private leaseViewFor(session: string): LeaseView {
-    const entry = this.recordEntries().find(
+    const entry = this.leaseEntries().find(
       (e) => e.record.session === session,
     );
     if (!entry) {
