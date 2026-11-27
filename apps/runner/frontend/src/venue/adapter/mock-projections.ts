@@ -135,6 +135,12 @@ export function leaseCard(ctx: MockContext, lease: LeaseRecord): ServedLeaseCard
     action: null,
     standing: !!lease.standing,
     acquired_at: lease.acquired_at,
+    // The card's acquired label rule (card.py's
+    // _time_label): the stamp's fmtTime form, or null
+    // when the stamp is absent or unparseable.
+    acquired_label: Number.isNaN(Date.parse(lease.acquired_at))
+      ? null
+      : fmtTime(lease.acquired_at),
     deadline: lease.deadline,
     deadline_label: fmtTime(lease.deadline),
     ends_label: expired

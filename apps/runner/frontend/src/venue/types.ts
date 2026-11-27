@@ -269,6 +269,12 @@ export interface LeaseView {
   /** A standing lease (its grant manages its renewal). */
   standing: boolean;
   acquiredAt: string;
+  /** The acquired stamp's served label (the card's
+   *  fmt_time form), or null when the stamp is absent
+   *  or unparseable — honest absence: the detail's
+   *  Acquired row renders nothing rather than a
+   *  client-side formatting of the raw stamp. */
+  acquiredLabel: string | null;
   deadline: string;
   /** The deadline's own time label (the ends label
    *  without its verb). */
@@ -286,8 +292,9 @@ export interface LeaseView {
   reservedCu: number;
   envelopeId?: string;
   /** The card's served capability set, one entry per
-   *  canonical verb. Carried through in this step;
-   *  Step 4 wires the disabling. */
+   *  canonical verb. The views disable from it: a
+   *  not-applicable action renders disabled, never
+   *  removed, with the served reason on the control. */
   capabilities: LeaseCapabilities;
   /** The lease card's diagnostics (V7): the card's
    *  served heartbeat / pulse / burn labels and sync

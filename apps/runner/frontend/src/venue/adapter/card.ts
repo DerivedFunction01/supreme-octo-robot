@@ -51,6 +51,7 @@ export interface ServedLeaseCard {
   action: string | null;
   standing: boolean;
   acquired_at: string;
+  acquired_label: string | null;
   deadline: string;
   deadline_label: string;
   ends_label: string;
@@ -75,8 +76,8 @@ const CARD_VERBS: LeaseCardVerb[] = [
 
 /** The served capability set in the view's form: the
  *  five canonical verbs, each carried verbatim —
- *  applicability is backend work; the view renders the
- *  set (Step 4 wires the disabling). */
+ *  applicability is backend work; the views disable
+ *  from the set (Step 4). */
 export function capabilitiesFromServed(
   card: ServedLeaseCard,
 ): LeaseCapabilities {
@@ -144,6 +145,7 @@ export function leaseViewFromCard(
     action: card.action,
     standing: card.standing,
     acquiredAt: card.acquired_at,
+    acquiredLabel: card.acquired_label,
     deadline: card.deadline,
     deadlineLabel: card.deadline_label,
     endsLabel: card.ends_label,

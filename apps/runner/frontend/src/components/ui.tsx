@@ -90,16 +90,30 @@ export function Chevron() {
 export function ActionRow({
   label,
   danger,
+  disabled,
+  disabledReason,
   onClick,
 }: {
   label: string;
   danger?: boolean;
+  /** A not-applicable action (the served capability
+   *  set's verdict, lease-card unification Step 4):
+   *  the row renders disabled, never removed, in the
+   *  kit button's unavailable form — the native
+   *  disabled attribute, dimmed — with the served
+   *  reason carried as the control's title. The
+   *  disabled state and its reason attribute are the
+   *  rendering; no prose rides beside the row. */
+  disabled?: boolean;
+  disabledReason?: string | null;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       className={danger ? "rn-row rn-row-btn rn-action danger" : "rn-row rn-row-btn rn-action"}
+      disabled={disabled}
+      title={disabled ? (disabledReason ?? undefined) : undefined}
       onClick={onClick}
     >
       <span className="rn-lab">{label}</span>
