@@ -15,6 +15,10 @@ Gate dispatches ride pre-authorized routes: the scheduler ops route (`bin/sched 
 
 The anti-form is a bare agent-shell exec of a dispatch. Each such fire mints a runtime approval card, and an unanswered card kills the fire with no run performed — the dispatch dies before launch and leaves nothing to reconcile. Twenty cards timed out unanswered in one day of the wall-clock measurement, ≈7h44m of card-pending time, inside dispatch windows that produced no runs at all. A fire that needs a route it does not have stops and names the route; it never falls back to a bare-shell dispatch.
 
+## Venue selection under load (local fleet)
+
+Measured on the venue-scope gate shape (identical job, identical tree, production worker sizing): the MSI's per-core throughput is 1.72× hp-envy's, and its per-job speed under concurrency degrades gently to 2 jobs (1.26× slowdown) and reaches hp-solo parity at 4 concurrent jobs, where throughput stops growing. The dispatch convention follows from that curve: gate-class work routes to the MSI up to 3 concurrent jobs; the 4th and beyond spill to hp-envy under the load-aware routing rule, where a solo job finishes no later than one queued behind four on the MSI and the second machine's throughput is added to the fleet instead of contending.
+
 ## Envelope launches (local venue)
 
 An envelope groups jobs pending on the same local venue into ONE launch with one thread budget for the whole envelope, divided among the grouped jobs — instead of N independent trees each spawning uncapped pools against the venue's pid ceiling (the starvation class: one test worker bursting to ~710 threads and holding the ceiling). The grouped jobs run concurrently inside the envelope, each at its divided share; grouping never serializes. Dispatch: `bin/local-run --envelope <name> [--caller TAG] [--detach]`.
