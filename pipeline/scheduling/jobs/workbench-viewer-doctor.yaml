@@ -10,7 +10,7 @@ owner: goal:workbench-viewer-server
 run:
   argv:
     - bash
-    - ${WS}/supreme-octo-robot/pipeline/workrecord/ops/doctor.sh
+    - ${REPO}/../workrecord/ops/doctor.sh
 timeout_secs: 600
 report:
   when: on_failure
@@ -19,6 +19,6 @@ report:
     - 1
 escalate_body: bodies/workbench-viewer-doctor.md
 state_paths:
-  - ${WS}/supreme-octo-robot/pipeline/workrecord/state/doctor.log
+  - ${REPO}/../workrecord/state/doctor.log
 classification: fixed command; exit 0 clean and exit 1 findings are both normal (findings travel the doctor's own workbench-outbox digest, never an agent) and only a crash (exit 2+) escalates - owner ruling normal means no agent. Timeout 600 assigned at seed - the cron set none.
 lifetime: permanent

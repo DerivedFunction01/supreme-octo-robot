@@ -1,4 +1,4 @@
-# supreme-octo-robot — the workhorse superapp
+# The workhorse superapp
 
 One repo for the four workhorses — scheduler, workbench,
 venue runner, owner-attention — consolidated into a

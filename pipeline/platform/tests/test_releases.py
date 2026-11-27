@@ -45,7 +45,7 @@ class Fixture(unittest.TestCase):
         self.tmp.cleanup()
 
     def record(self, **kw):
-        base = {"repo": "supreme-octo-robot", "commit": "c7287cc",
+        base = {"repo": "specimen-repo", "commit": "c7287cc",
                 "artifact": "workhorse-superapp", "stage": "D5",
                 "result": "deployed", "caller": "test-lane"}
         base.update(kw)

@@ -54,7 +54,7 @@ Branches are throwaway working surfaces. Disposable branches, detached-HEAD chec
 **Branch transport — the default for a committed, pushed tree.** The job names its tree's branch on origin; the runner skips the snapshot build and the code-payload upload, drives the session's base clone (`sync/base_clone.sh`) to fetch the branch, and launches only when the fetched tip equals the announced SHA:
 
 ```json
-"transport": {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/my-change-20261123", "sha": "0123456789abcdef0123456789abcdef01234567"}
+"transport": {"kind": "branch", "repo": "specimen-repo", "branch": "cure/my-change-20261123", "sha": "0123456789abcdef0123456789abcdef01234567"}
 ```
 
 `repo` is a key in the local repos registry (`config/repos.json`), `sha` the full 40-hex tip the run is judged on. The branch is transport only, never a landing: the run is judged on the tree at that SHA, and the transport branch is deleted from origin when the work lands. A fetched tip that differs from `sha`, or an origin the session cannot reach, refuses the run before launch — the runner never substitutes the bundle mid-launch. Small non-code uploads (job scripts, kits, keys) keep the verified upload path exactly as before, and untracked provisioned material (the denylist, keys, kit files) never rides a branch: it moves on the upload/plant channel as today.

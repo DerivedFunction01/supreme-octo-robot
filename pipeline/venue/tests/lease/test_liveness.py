@@ -474,7 +474,7 @@ def test_render_entry_shape():
     # family does not exist — presence through the writer path
     # is admission, so the render carries no migrated stamp.
     assert "migrated" not in text
-    assert "pipeline/venue/bin/colab-liveness" in text
+    assert "${REPO}/../venue/bin/colab-liveness" in text
     assert SESSION in text
 
 

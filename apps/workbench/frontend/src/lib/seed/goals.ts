@@ -10,7 +10,7 @@ export function buildGoals(t: SeedTime): GoalRecord[] {
     {
       slug: "workhorse-superapp-build",
       project: "workbench-viewer",
-      title: "Workhorse superapp build — supreme-octo-robot",
+      title: "Workhorse superapp build",
       shortObjective: "one unified app over one pipeline, on Workhorse Kit v1",
       contract: {
         objective: "Scheduler, workbench, runner, and attention in one unified app over one pipeline, on Workhorse Kit v1.",

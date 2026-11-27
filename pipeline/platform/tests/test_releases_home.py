@@ -55,7 +55,7 @@ class TestDefaultConstructionLandsCanonical(unittest.TestCase):
             store.path,
             os.path.join(os.path.realpath(self.state_dir),
                          releases.STORE_FILE))
-        store.record(repo="supreme-octo-robot", commit="c13aaaa",
+        store.record(repo="specimen-repo", commit="c13aaaa",
                      artifact="workhorse-superapp", stage="v99",
                      result="deployed", caller="test-lane")
         landed = Path(store.path)
@@ -89,7 +89,7 @@ class TestNonCanonicalHomeRefused(unittest.TestCase):
     def test_record_under_split_home_fails_the_same_way(self):
         with self.assertRaises(ValueError):
             releases.ReleaseStore(HISTORICAL_SPLIT_HOME).record(
-                repo="supreme-octo-robot", commit="c13bbbb",
+                repo="specimen-repo", commit="c13bbbb",
                 artifact="workhorse-superapp", stage="v99",
                 result="deployed", caller="test-lane")
 

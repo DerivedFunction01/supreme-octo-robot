@@ -27,7 +27,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[4]  # supreme-octo-robot/
+ROOT = Path(__file__).resolve().parents[4]  # the repo root
 HOLDING = ROOT / "docs/overlay/holding/scheduler/jobs"
 FIXTURES = ROOT / "contracts/fixtures"
 OUT = Path(__file__).resolve().parents[1] / "src/mock/seed-entries.json"

@@ -10,7 +10,7 @@ owner_reason: 'Owner-ordered coverage (2026-11-06): extending a live lease is li
 run:
   argv:
     - python3
-    - ${WS}/supreme-octo-robot/pipeline/venue/bin/colab-extend-guard
+    - ${REPO}/../venue/bin/colab-extend-guard
 timeout_secs: 300
 report:
   when: on_failure
@@ -18,6 +18,6 @@ report:
     - 0
 escalate_body: bodies/colab-extend-guard.md
 state_paths:
-  - ${WS}/supreme-octo-robot/pipeline/venue/var/extend-guard-state.json
+  - ${REPO}/../venue/var/extend-guard-state.json
 classification: 'fixed command (bin/colab-extend-guard); reads every lease record and applies the extend_guard policy from the lease config (per-shape/per-caller modes over activity read from records and run records; idle leases capped per shape, warmest first, once per idle episode), extending through the lease core; exit 0 when every due lease is extended or deliberately skipped (extensions and decision lines print as JSON and need no speech), exit 3 with one JSON finding line per refusal or bad policy value; when it speaks is fully determined by the exit code and its episode state file, no content judgment'
 lifetime: permanent

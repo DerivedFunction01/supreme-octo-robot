@@ -6,7 +6,7 @@ cadence:
   type: interval
   every: 1h
 timezone: America/New_York
-owner: goal:workhorse-superapp-build-supreme-octo-robot
+owner: goal:workhorse-superapp-build
 body: bodies/declaration-reconcile.md
 timeout_secs: 1800
 state_paths:

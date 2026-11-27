@@ -1,6 +1,6 @@
 {
   "kit": "@workhorse/kit",
-  "source": "supreme-octo-robot/kit (own kit; forked from spec-driven-starter at its 2026-11-25 kit consolidation)",
+  "source": "this repo's kit (own kit; forked from spec-driven-starter at its 2026-11-25 kit consolidation)",
   "files": {
     "README.md": "0abac8bcdde4ef7611b8abc30cb78084ab1b75b7dfacad4c77fd34bc3b7fab03",
     "assets/fonts/inter-var.woff2": "3100e775e8616cd2611beecfa23a4263d7037586789b43f035236a2e6fbd4c62",

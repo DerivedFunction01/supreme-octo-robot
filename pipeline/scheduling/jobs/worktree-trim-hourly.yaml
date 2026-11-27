@@ -6,7 +6,7 @@ cadence:
   type: interval
   every: 1h
 timezone: America/New_York
-owner: goal:workhorse-superapp-build-supreme-octo-robot
+owner: goal:workhorse-superapp-build
 run:
   argv:
     - bash

@@ -107,7 +107,7 @@ owner_reason: 'Machine-written by the venue lease core for one live lease; the l
 run:
   argv:
     - python3
-    - ${{WS}}/supreme-octo-robot/pipeline/venue/bin/colab-liveness
+    - ${{REPO}}/../venue/bin/colab-liveness
     - {session}
 timeout_secs: 120
 report:
@@ -116,7 +116,7 @@ report:
     - 0
 escalate_body: bodies/colab-liveness.md
 state_paths:
-  - ${{WS}}/supreme-octo-robot/pipeline/venue/var/liveness-{session}.json
+  - ${{REPO}}/../venue/var/liveness-{session}.json
 classification: 'fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment'
 lifetime: until_complete
 self_removal: 'the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan'

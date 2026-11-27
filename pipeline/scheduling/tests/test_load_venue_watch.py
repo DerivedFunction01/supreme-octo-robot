@@ -12,7 +12,7 @@ status: active
 run:
   argv:
     - python3
-    - ${{WS}}/supreme-octo-robot/pipeline/venue/bin/colab-liveness
+    - ${{REPO}}/../venue/bin/colab-liveness
     - {full}
 """
 

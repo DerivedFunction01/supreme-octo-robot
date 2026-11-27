@@ -95,7 +95,7 @@ export function TaskManager() {
       "Venue rule: no checks or code run locally while the fleet is up — re-route this work to a live venue.",
     ].join("\n");
     void a
-      .composeThread({ project: p.repo ?? "supreme-octo-robot", body, sendNow: true })
+      .composeThread({ project: p.repo ?? "", body, sendNow: true })
       .then(() => setRouted((prev) => new Set(prev).add(p.pid)));
   };
 

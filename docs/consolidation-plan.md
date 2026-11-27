@@ -66,7 +66,7 @@ delta reopens both).
 ## 1. Target structure
 
 ```
-supreme-octo-robot/
+<this repo>/
   contracts/     the pipeline contracts of §4, as documents + schemas + fixtures
   pipeline/
     scheduling/  registry, catalog/adoption/drift, schedule math, engine, executor

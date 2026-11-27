@@ -198,14 +198,14 @@ class StrictMatcherCase(unittest.TestCase):
         # up. The status transport is supervision
         # machinery, not a check or code execution.
         argv = ["python3",
-                "ws/supreme-octo-robot/pipeline/attention/cli.py",
+                "ws/specimen-repo/pipeline/attention/cli.py",
                 "post", "status", "--code", "WORKING",
                 "--summary", "lane status"]
         self.assertIsNone(self.strict(
-            argv, cwd="ws/supreme-octo-robot"))
+            argv, cwd="ws/specimen-repo"))
         argv[3] = "item"
         self.assertIsNone(self.strict(
-            argv, cwd="ws/supreme-octo-robot"))
+            argv, cwd="ws/specimen-repo"))
 
     def test_attention_cli_other_verbs_still_flag(self):
         # The exemption is the transport verb pair, not
@@ -213,9 +213,9 @@ class StrictMatcherCase(unittest.TestCase):
         # is an ordinary script execution and flags.
         finding = self.strict(
             ["python3",
-             "ws/supreme-octo-robot/pipeline/attention/cli.py",
+             "ws/specimen-repo/pipeline/attention/cli.py",
              "post", "close"],
-            cwd="ws/supreme-octo-robot")
+            cwd="ws/specimen-repo")
         self.assertIsNotNone(finding)
         self.assertEqual(finding["kind"], "script")
 
@@ -281,9 +281,9 @@ class StrictCycleCase(unittest.TestCase):
                 "colab-runner/sync/make_snapshot_bundle.sh",
                 "specimen-repo/check.py",
                 "scheduler/ops/bridge/bridge_wake.py",
-                "supreme-octo-robot/pipeline/scheduling/ops/"
+                "specimen-repo/pipeline/scheduling/ops/"
                 "bridge/bridge_wake.py",
-                "supreme-octo-robot/pipeline/scheduling/ops/"
+                "specimen-repo/pipeline/scheduling/ops/"
                 "watches/local_test_watch.py"):
             path = os.path.join(ws, rel)
             os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -349,7 +349,7 @@ class StrictCycleCase(unittest.TestCase):
         # missed on the venue gate.
         ws = self.fake_workspace()
         sched = os.path.join(
-            ws, "supreme-octo-robot", "pipeline", "scheduling")
+            ws, "specimen-repo", "pipeline", "scheduling")
         for argv in (
                 ["python3", sched + "/ops/bridge/bridge_wake.py",
                  "--live"],

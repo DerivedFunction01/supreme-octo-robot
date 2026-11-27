@@ -50,8 +50,8 @@ PROCESS = {
     "pid": 4242, "ppid": 1, "cpu_pct": 87.5,
     "mem_pct": 3.25, "elapsed_s": 442,
     "argv": ["python3", "check.py", "--workers", "2"],
-    "cwd": "/ws/supreme-octo-robot",
-    "repo": "supreme-octo-robot", "thread": "main",
+    "cwd": "/ws/specimen-repo",
+    "repo": "specimen-repo", "thread": "main",
 }
 
 VENUE = {"kind": "local", "name": "msi", "live": True,

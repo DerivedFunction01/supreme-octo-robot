@@ -44,7 +44,7 @@ from module_loader import load_module  # noqa: E402
 
 SHA = "0123456789abcdef0123456789abcdef01234567"
 OTHER = "fedcba9876543210fedcba9876543210fedcba98"
-BRANCH = {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/x-20261123", "sha": SHA}
+BRANCH = {"kind": "branch", "repo": "specimen-repo", "branch": "cure/x-20261123", "sha": SHA}
 PLANT_OK = json.dumps({"failed": [], "greeting": "Hi ExampleUser! You've successfully authenticated, but GitHub does not provide shell access."}) + "\n"
 PLANT_SPLIT = json.dumps({"failed": ["hosts", "greeting"], "greeting": "Host key verification failed."}) + "\n"
 
@@ -208,9 +208,9 @@ def test_resolve_branch_ctx(tmp_path):
 
         @staticmethod
         def get_entry(registry, repo_id):
-            if repo_id != "supreme-octo-robot":
+            if repo_id != "specimen-repo":
                 raise ValueError(f"unknown repo {repo_id!r}")
-            return repo_id, {"clone_url": "https://example.invalid/r.git", "dest": "supreme-octo-robot"}
+            return repo_id, {"clone_url": "https://example.invalid/r.git", "dest": "specimen-repo"}
 
     foundation.repo_registry = Registry
     assert launch.resolve_branch_ctx(None, None) == (None, None)
@@ -220,7 +220,7 @@ def test_resolve_branch_ctx(tmp_path):
     assert err is not None and err.startswith("branch transport:") and ctx is None
     err, ctx = launch.resolve_branch_ctx(BRANCH, None)
     assert err is None
-    assert ctx == {"clone_url": "https://example.invalid/r.git", "dest": "supreme-octo-robot"}
+    assert ctx == {"clone_url": "https://example.invalid/r.git", "dest": "specimen-repo"}
 
 
 # --- the drive (Step 2) ---
@@ -230,9 +230,9 @@ def test_prepare_branch_lands_at_the_announced_sha(tmp_path):
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", f"base clone at {SHA} tree abc\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-1")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-1")
     assert err is None, err
-    assert info == {"dest": "supreme-octo-robot", "head": SHA}
+    assert info == {"dest": "specimen-repo", "head": SHA}
     assert {"stage": "branch", "ok": True, "detail": BRANCH["branch"]} in journal
 
 
@@ -240,7 +240,7 @@ def test_prepare_branch_refuses_a_mismatched_head(tmp_path):
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", f"base clone at {OTHER} tree abc\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-2")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-2")
     assert err is not None and "!=" in err and OTHER in err and SHA in err
     assert info == {}
     assert {"stage": "branch", "ok": False, "detail": BRANCH["branch"]} in journal
@@ -250,7 +250,7 @@ def test_prepare_branch_refuses_a_fetch_that_never_lands(tmp_path):
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", PLANT_OK), ("probe",), ("stdout", "fatal: could not read from remote repository\n")], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-3")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-3")
     assert err is not None and "did not land" in err
     assert info == {}
     assert {"stage": "branch", "ok": False, "detail": BRANCH["branch"]} in journal
@@ -260,7 +260,7 @@ def test_prepare_branch_refuses_when_the_substrate_upload_fails(tmp_path):
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", PLANT_OK)], src, upload_rc=1)
     launch, _foundation, _journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-4")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-4")
     assert err is not None and "base_clone.sh upload" in err
     assert info == {}
     assert colab.exec_calls == 1  # the plant probe only; the clone never runs
@@ -273,7 +273,7 @@ def test_prepare_branch_refuses_at_an_unhealthy_plant_before_any_upload(tmp_path
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", PLANT_SPLIT)], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-5")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-5")
     assert err is not None and err.startswith("branch transport: git plant on session sess")
     assert "hosts" in err and "plant-github-key" in err
     assert info == {}
@@ -285,7 +285,7 @@ def test_prepare_branch_refuses_when_the_plant_probe_never_answers(tmp_path):
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("timeout",)], src)
     launch, _foundation, journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-6")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-6")
     assert err is not None and "plant probe" in err and "timed out" in err
     assert info == {}
     assert colab.upload_calls == 0 and colab.exec_calls == 1
@@ -296,7 +296,7 @@ def test_prepare_branch_refuses_when_the_plant_probe_returns_no_verdict(tmp_path
     src = make_base_clone(tmp_path)
     colab = ScriptedColab([("stdout", "some unstructured kernel noise\n")], src)
     launch, _foundation, _journal = load_launch(tmp_path, colab)
-    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "supreme-octo-robot", "run-7")
+    err, info = launch.prepare_branch("sess", BRANCH, "https://example.invalid/r.git", "specimen-repo", "run-7")
     assert err is not None and "plant probe" in err and "no verdict" in err
     assert info == {}
     assert colab.upload_calls == 0

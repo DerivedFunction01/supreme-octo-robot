@@ -72,7 +72,7 @@ def test_branch_transport_missing_sha_refuses_the_launch_loudly(tmp_path):
     refusal lands before any session work, like the other
     shape refusals in this module."""
     env = runner_env(tmp_path)
-    install_shaped_job(env, "branchbad", {"transport": {"kind": "branch", "repo": "supreme-octo-robot", "branch": "cure/x-20261123"}})
+    install_shaped_job(env, "branchbad", {"transport": {"kind": "branch", "repo": "specimen-repo", "branch": "cure/x-20261123"}})
     r = run_verb(env, "branchbad")
     assert r.returncode == 2, r.stdout + r.stderr
     assert "transport" in r.stderr and "sha" in r.stderr and "missing" in r.stderr, r.stderr

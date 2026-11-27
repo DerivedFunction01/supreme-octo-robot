@@ -136,7 +136,7 @@ edited by hand and no heredoc is pasted — the script does every
 step in the manual list below, in order:
 
 ```bash
-git clone <this repo> && cd supreme-octo-robot
+git clone <this repo> && cd <this repo>
 pipeline/venue/adapters/local/setup.sh
 ```
 

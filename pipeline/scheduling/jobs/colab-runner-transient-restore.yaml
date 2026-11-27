@@ -20,7 +20,7 @@ owner_reason: 'Venue-own machinery (fleet table: builtin, family venue): restore
 run:
   argv:
     - python3
-    - ${WS}/supreme-octo-robot/pipeline/venue/ops/mirror_transient.py
+    - ${REPO}/../venue/ops/mirror_transient.py
     - restore
 timeout_secs: 600
 report:
@@ -34,6 +34,6 @@ report:
     - released-idle
     - cleared-dead
 state_paths:
-  - ${WS}/supreme-octo-robot/pipeline/venue/state/transient/
+  - ${REPO}/../venue/state/transient/
 classification: fixed command (one Python script, the venue's own ops/mirror_transient.py, argv verb restore): restores transient session state after restarts and releases or clears dead leases; every outcome is an enumerated exit/result; speaking determined by failure or an actual lease release/clear. Timeout 600 assigned at seed - the cron set none.
 lifetime: permanent
