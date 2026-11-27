@@ -38,7 +38,7 @@ gate_repo = repo_fixture.gate_repo
 
 
 def lease_bin(env):
-    return Path(env["TEST_REPO_ROOT"]) / "bin" / "colab-lease"
+    return Path(env["TEST_REPO_ROOT"]) / "bin" / "venue-lease"
 
 
 def run_lease(env, *args):

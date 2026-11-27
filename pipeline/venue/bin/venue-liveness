@@ -2,8 +2,8 @@
 """Session liveness checker (session liveness plan,
 .plans/2026-11-06-session-liveness-schedule.md).
 
-    colab-liveness <session>   check one live lease
-    colab-liveness --sync      reconcile registry entries with
+    venue-liveness <session>   check one live lease
+    venue-liveness --sync      reconcile registry entries with
                                the live records (janitor mode)
 
 The checker reads ONLY local files — the lease record, the
@@ -24,7 +24,7 @@ the first time an episode crosses the threshold, or the
 all-clear when the last open finding resolves. A finding
 that merely persists is silent: each distinct stall is
 reported exactly once, by the escalation body that works the
-resulting ping (pipeline/scheduling/bodies/colab-liveness.md,
+resulting ping (pipeline/scheduling/bodies/venue-liveness.md,
 which routes mechanical findings to the owning thread
 and the approval block to the main chat).
 
@@ -80,7 +80,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _load
 
 REPO = _load.REPO
-liveness_entry = _load.sync("liveness_entry", "colab_liveness_entry")
+liveness_entry = _load.sync("liveness_entry", "venue_liveness_entry")
 writer = _load.platform_writer()
 argv_mod = _load.platform_argv()
 
@@ -90,7 +90,7 @@ argv_mod = _load.platform_argv()
 # usage refusal at exit 2. The speech contract's exit 3 is
 # the declared verdict code.
 DECL = {
-    "name": "colab-liveness",
+    "name": "venue-liveness",
     "summary": "Session liveness checker: reads only local files, never dials the session.",
     "flags": {
         "sync": {"help": "reconcile registry entries with the live records (janitor mode)"},
@@ -464,13 +464,13 @@ def main(argv) -> int:
     session = parsed["positionals"].get("session")
     if parsed["flags"]["sync"]:
         if session is not None:
-            print("usage: colab-liveness <session> | --sync", file=sys.stderr)
+            print("usage: venue-liveness <session> | --sync", file=sys.stderr)
             return 2
         records = liveness_entry.load_records(REPO)
         print(json.dumps(liveness_entry.reconcile(REPO, records)))
         return 0
     if session is None:
-        print("usage: colab-liveness <session> | --sync", file=sys.stderr)
+        print("usage: venue-liveness <session> | --sync", file=sys.stderr)
         return 2
     now = datetime.now(timezone.utc)
     rec = find_record(session)

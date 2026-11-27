@@ -73,5 +73,5 @@ fi
 
 echo "== lease machinery"
 [ -f "$REPO_ROOT/config/lease.json" ] && echo "present: config/lease.json" || echo "absent:  config/lease.json"
-"$PY" -m compileall -q "$REPO_ROOT/sync/lease" && "$PY" -m py_compile "$REPO_ROOT/bin/colab-lease" && echo "lease module + CLI compile OK"
-if ls "$REPO_ROOT"/var/lease-*.json >/dev/null 2>&1 || [ -f "$REPO_ROOT/var/lease.json" ]; then echo "lease state: lease record(s) exist (see bin/colab-lease status)"; else echo "lease state: no active lease"; fi
+"$PY" -m compileall -q "$REPO_ROOT/sync/lease" && "$PY" -m py_compile "$REPO_ROOT/bin/venue-lease" && echo "lease module + CLI compile OK"
+if ls "$REPO_ROOT"/var/lease-*.json >/dev/null 2>&1 || [ -f "$REPO_ROOT/var/lease.json" ]; then echo "lease state: lease record(s) exist (see bin/venue-lease status)"; else echo "lease state: no active lease"; fi

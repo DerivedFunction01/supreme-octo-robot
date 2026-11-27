@@ -70,4 +70,4 @@ ui/mockups/
 
 # Icon PNGs are generated from the tracked SVG (ui/make-icon-png.sh);
 # regenerable data is not tracked.
-ui/static/colab-icon-*.png
+ui/static/venue-icon-*.png

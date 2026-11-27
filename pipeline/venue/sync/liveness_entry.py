@@ -1,8 +1,8 @@
 """Machine-written scheduler entries for live leases.
 
 Session liveness plan: every live lease carries a derived schedule in
-the scheduler server's registry — jobs/colab-liveness-
-<session>.yaml, a scripted entry running bin/colab-liveness
+the scheduler server's registry — jobs/venue-liveness-
+<session>.yaml, a scripted entry running bin/venue-liveness
 every 15 minutes. The lease record is the record of truth and
 the entry is its derived schedule, exactly the relationship
 the workbench harness keeps between a todo and its
@@ -14,7 +14,7 @@ removes it, so coverage holds by construction at every birth
 (acquire, adoption, renewal swap, reconcile) and every death
 (release, reap-terminal, clear). A sync failure never fails
 the lease operation — reconcile (driven by the reaper hook's
-janitor duty and by bin/colab-liveness --sync) repairs any
+janitor duty and by bin/venue-liveness --sync) repairs any
 drift, and a leaked entry self-deletes on the checker's first
 run that finds no live record.
 
@@ -64,7 +64,7 @@ _route_spec = _ilu.spec_from_file_location(
 _route = _ilu.module_from_spec(_route_spec)
 _route_spec.loader.exec_module(_route)
 
-ENTRY_PREFIX = "colab-liveness-"
+ENTRY_PREFIX = "venue-liveness-"
 _MODULE_REPO = _paths.REPO_RESOLVED
 
 
@@ -107,17 +107,17 @@ owner_reason: 'Machine-written by the venue lease core for one live lease; the l
 run:
   argv:
     - python3
-    - ${{REPO}}/../venue/bin/colab-liveness
+    - ${{REPO}}/../venue/bin/venue-liveness
     - {session}
 timeout_secs: 120
 report:
   when: on_failure
   ok_exit_codes:
     - 0
-escalate_body: bodies/colab-liveness.md
+escalate_body: bodies/venue-liveness.md
 state_paths:
   - ${{REPO}}/../venue/var/liveness-{session}.json
-classification: 'fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment'
+classification: 'fixed command (bin/venue-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment'
 lifetime: until_complete
 self_removal: 'the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan'
 """
@@ -138,7 +138,7 @@ def sync_for_record(repo: Path, rec: dict) -> str:
         if path is None:
             return "unavailable"
         if not os.environ.get("COLAB_LIVENESS_JOBS_DIR"):
-            body = path.parent.parent / "bodies" / "colab-liveness.md"
+            body = path.parent.parent / "bodies" / "venue-liveness.md"
             if not body.exists():
                 return "unavailable"
         text = render_entry(session)

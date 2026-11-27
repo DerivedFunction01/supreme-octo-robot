@@ -12,7 +12,7 @@ script; the insert covers by-path loads) and `import _load`.
 Module names are preserved from the per-file stanzas this replaces:
 sync modules load under their bare names ("lease", "transfer", ...),
 except where a consumer historically chose a distinct name (the
-liveness entry loads liveness_entry as "colab_liveness_entry").
+liveness entry loads liveness_entry as "venue_liveness_entry").
 bin/colab-run has no .py suffix, so it loads through an explicit
 SourceFileLoader under the name "colab_run".
 """

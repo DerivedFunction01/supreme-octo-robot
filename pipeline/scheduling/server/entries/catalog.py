@@ -443,7 +443,7 @@ def drift(root, catalog):
         if not isinstance(src, dict) or "catalog" not in src:
             if job_id.startswith("wb-progress-"):
                 machine += 1
-            elif job_id.startswith("colab-liveness-"):
+            elif job_id.startswith("venue-liveness-"):
                 per_session += 1
             else:
                 hand += 1

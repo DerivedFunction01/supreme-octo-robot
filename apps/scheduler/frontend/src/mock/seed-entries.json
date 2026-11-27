@@ -61,7 +61,7 @@
   "lifetime": "permanent"
  },
  {
-  "id": "colab-extend-guard",
+  "id": "venue-extend-guard",
   "title": "Extend guard - every live Colab lease extended before it lapses",
   "kind": "scripted",
   "status": "active",
@@ -74,7 +74,7 @@
   "run": {
    "argv": [
     "python3",
-    "${WS}/colab-runner/bin/colab-extend-guard"
+    "${WS}/colab-runner/bin/venue-extend-guard"
    ]
   },
   "timeout_secs": 300,
@@ -84,15 +84,15 @@
     0
    ]
   },
-  "escalate_body": "bodies/colab-extend-guard.md",
+  "escalate_body": "bodies/venue-extend-guard.md",
   "state_paths": [
    "${WS}/colab-runner/var/extend-guard-state.json"
   ],
-  "classification": "fixed command (bin/colab-extend-guard); reads every lease record and applies the extend_guard policy from the lease config (per-shape/per-caller modes over activity read from records and run records; idle leases capped per shape, warmest first, once per idle episode), extending through the lease core; exit 0 when every due lease is extended or deliberately skipped (extensions and decision lines print as JSON and need no speech), exit 3 with one JSON finding line per refusal or bad policy value; when it speaks is fully determined by the exit code and its episode state file, no content judgment",
+  "classification": "fixed command (bin/venue-extend-guard); reads every lease record and applies the extend_guard policy from the lease config (per-shape/per-caller modes over activity read from records and run records; idle leases capped per shape, warmest first, once per idle episode), extending through the lease core; exit 0 when every due lease is extended or deliberately skipped (extensions and decision lines print as JSON and need no speech), exit 3 with one JSON finding line per refusal or bad policy value; when it speaks is fully determined by the exit code and its episode state file, no content judgment",
   "lifetime": "permanent"
  },
  {
-  "id": "colab-liveness-brisk-rocket-38",
+  "id": "venue-liveness-brisk-rocket-38",
   "title": "Liveness check - Colab session brisk-rocket-38",
   "kind": "scripted",
   "status": "active",
@@ -101,11 +101,11 @@
    "every": "15m"
   },
   "owner": "none",
-  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "owner_reason": "Machine-written by the venue lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
   "run": {
    "argv": [
     "python3",
-    "${WS}/colab-runner/bin/colab-liveness",
+    "${REPO}/../venue/bin/venue-liveness",
     "brisk-rocket-38"
    ]
   },
@@ -116,16 +116,16 @@
     0
    ]
   },
-  "escalate_body": "bodies/colab-liveness.md",
+  "escalate_body": "bodies/venue-liveness.md",
   "state_paths": [
    "${WS}/colab-runner/var/liveness-brisk-rocket-38.json"
   ],
-  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "classification": "fixed command (bin/venue-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
   "lifetime": "until_complete",
   "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
  },
  {
-  "id": "colab-liveness-cozy-pilot-61-r1794547171",
+  "id": "venue-liveness-cozy-pilot-61-r1794547171",
   "title": "Liveness check - Colab session cozy-pilot-61-r1794547171",
   "kind": "scripted",
   "status": "active",
@@ -134,11 +134,11 @@
    "every": "15m"
   },
   "owner": "none",
-  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "owner_reason": "Machine-written by the venue lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
   "run": {
    "argv": [
     "python3",
-    "${WS}/colab-runner/bin/colab-liveness",
+    "${REPO}/../venue/bin/venue-liveness",
     "cozy-pilot-61-r1794547171"
    ]
   },
@@ -149,16 +149,16 @@
     0
    ]
   },
-  "escalate_body": "bodies/colab-liveness.md",
+  "escalate_body": "bodies/venue-liveness.md",
   "state_paths": [
    "${WS}/colab-runner/var/liveness-cozy-pilot-61-r1794547171.json"
   ],
-  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "classification": "fixed command (bin/venue-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
   "lifetime": "until_complete",
   "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
  },
  {
-  "id": "colab-liveness-dawn-tower-93",
+  "id": "venue-liveness-dawn-tower-93",
   "title": "Liveness check - Colab session dawn-tower-93",
   "kind": "scripted",
   "status": "active",
@@ -167,11 +167,11 @@
    "every": "15m"
   },
   "owner": "none",
-  "owner_reason": "Machine-written by the colab-runner lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
+  "owner_reason": "Machine-written by the venue lease core for one live lease; the lease record is the record of truth and this entry is its derived schedule.",
   "run": {
    "argv": [
     "python3",
-    "${WS}/colab-runner/bin/colab-liveness",
+    "${REPO}/../venue/bin/venue-liveness",
     "dawn-tower-93"
    ]
   },
@@ -182,11 +182,11 @@
     0
    ]
   },
-  "escalate_body": "bodies/colab-liveness.md",
+  "escalate_body": "bodies/venue-liveness.md",
   "state_paths": [
    "${WS}/colab-runner/var/liveness-dawn-tower-93.json"
   ],
-  "classification": "fixed command (bin/colab-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
+  "classification": "fixed command (bin/venue-liveness <session>); local file reads only, never dials the session; exit 0 healthy, cleared, or gone (self-disarmed), exit 3 with one LIVENESS line per finding it must speak; when it speaks is fully determined by its state file and the exit code, no content judgment",
   "lifetime": "until_complete",
   "self_removal": "the lease core deletes this entry in the same call that deletes the lease record; the checker deletes it itself on the first run that finds no live record, and the reaper hook reconciliation retires any orphan"
  },
@@ -370,7 +370,7 @@
    "${REPO}/state/local-test-watch.json",
    "${REPO}/state/local-test-watch-routes.json"
   ],
-  "classification": "fixed command (one Python script): every cycle samples processes via /proc (argv + cwd + pid/ppid, reads only) and branches on the mechanical matchers alone, in two modes chosen by a mechanical signal — whether any colab-liveness entry stands in the registry (a live High-RAM fleet session; the lease core renders and removes those entries). NORMAL mode (no fleet live): silence when no test-runner process has its cwd inside the workspace; one LOCAL-TEST finding line per new episode per process signature (episode state in state/local-test-watch.json; a continuing episode never re-speaks, a closed episode that reappears is a new finding); the narrow pre-check exemption is mechanical (one test file plus a name filter; pytest <=5 named node ids from one file, or one file plus -k); check.py and package-test always flag. STRICT mode (fleet live; owner ruling 2026-11-10): the exemption is suspended and the trigger broadens to any local check/code execution from a workspace repo — test runners and gates, dev/backend servers (server binaries, python -m http.server, server-shaped script names, package dev/serve/start scripts), and experiment scripts (an interpreter running a script file) — while managed infrastructure never flags (the scheduler system's own automation surface — any argv running a script under this repo's ops/ or bin/, the scripted legs and this watcher included — and argv matching the untracked routes file's service patterns: the long-running servers, the fleet machinery; ancestry is not the discriminator, since agent work routed through the server's ops channel runs as server children too and must still flag). A strict finding is a WARNING printed on first sighting in the same cycle, naming the repo's owning thread from the untracked routes file, and is also sent directly to that thread via the harness connector (caller local-test-watch, send scope, envelope local-test-watch-<signature> for dedupe) when a route and token are configured; the printed line reaches the main chat as the sweeper's copy, so no finding waits on downstream classification. Exit 3 when /proc cannot be listed. Flagging is on sight, never load-gated; the load average is recorded in the finding as context only. Speaking is fully determined by those branches; the watcher reports and routes facts and judges nothing beyond the mechanical matchers.",
+  "classification": "fixed command (one Python script): every cycle samples processes via /proc (argv + cwd + pid/ppid, reads only) and branches on the mechanical matchers alone, in two modes chosen by a mechanical signal — whether any venue-liveness entry stands in the registry (a live High-RAM fleet session; the lease core renders and removes those entries). NORMAL mode (no fleet live): silence when no test-runner process has its cwd inside the workspace; one LOCAL-TEST finding line per new episode per process signature (episode state in state/local-test-watch.json; a continuing episode never re-speaks, a closed episode that reappears is a new finding); the narrow pre-check exemption is mechanical (one test file plus a name filter; pytest <=5 named node ids from one file, or one file plus -k); check.py and package-test always flag. STRICT mode (fleet live; owner ruling 2026-11-10): the exemption is suspended and the trigger broadens to any local check/code execution from a workspace repo — test runners and gates, dev/backend servers (server binaries, python -m http.server, server-shaped script names, package dev/serve/start scripts), and experiment scripts (an interpreter running a script file) — while managed infrastructure never flags (the scheduler system's own automation surface — any argv running a script under this repo's ops/ or bin/, the scripted legs and this watcher included — and argv matching the untracked routes file's service patterns: the long-running servers, the fleet machinery; ancestry is not the discriminator, since agent work routed through the server's ops channel runs as server children too and must still flag). A strict finding is a WARNING printed on first sighting in the same cycle, naming the repo's owning thread from the untracked routes file, and is also sent directly to that thread via the harness connector (caller local-test-watch, send scope, envelope local-test-watch-<signature> for dedupe) when a route and token are configured; the printed line reaches the main chat as the sweeper's copy, so no finding waits on downstream classification. Exit 3 when /proc cannot be listed. Flagging is on sight, never load-gated; the load average is recorded in the finding as context only. Speaking is fully determined by those branches; the watcher reports and routes facts and judges nothing beyond the mechanical matchers.",
   "lifetime": "permanent",
   "catalog": {
    "origin": "hand",

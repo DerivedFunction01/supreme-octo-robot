@@ -1,6 +1,6 @@
 // Seed entries: the storyboard specimens (mockups,
 // docs, plans) across the fennelwick / sablebrook /
-// colab-runner / aldercrest projects.
+// venue-runner / aldercrest projects.
 
 import type { Entry } from "../types";
 
@@ -121,7 +121,7 @@ export function buildEntries(): Entry[] {
     },
     {
       id: "e-lease-lifecycle",
-      project: "colab-runner",
+      project: "venue-runner",
       kind: "mockup",
       title: "Lease lifecycle — grant flow",
       status: "unexplored",

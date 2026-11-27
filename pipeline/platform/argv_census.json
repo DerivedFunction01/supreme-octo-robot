@@ -397,7 +397,7 @@
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/colab-extend-guard",
+   "path": "pipeline/venue/bin/venue-extend-guard",
    "family": "venue-bin",
    "migrated": true
   },
@@ -417,12 +417,12 @@
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/colab-lease",
+   "path": "pipeline/venue/bin/venue-lease",
    "family": "venue-bin",
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/colab-liveness",
+   "path": "pipeline/venue/bin/venue-liveness",
    "family": "venue-bin",
    "migrated": true
   },

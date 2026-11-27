@@ -48,18 +48,18 @@ registry minimum.
 
 ## Cron definition (install after the first successful login)
 
-Substitute the checkout's absolute path for `/path/to/colab-runner`
+Substitute the checkout's absolute path for `/path/to/<checkout>`
 (cron needs absolute paths; the installed path is machine-local and
 lives only in the crontab, never in this repo):
 
 ```
-*/5 * * * * /usr/bin/python3 /path/to/colab-runner/ops/mirror_transient.py restore >> /path/to/colab-runner/var/restore-cron.log 2>&1
+*/5 * * * * /usr/bin/python3 /path/to/<checkout>/ops/mirror_transient.py restore >> /path/to/<checkout>/var/restore-cron.log 2>&1
 ```
 
 Install (from the checkout):
 
 ```
-( crontab -l 2>/dev/null | grep -v 'colab-runner/ops/mirror_transient.py' ; \
+( crontab -l 2>/dev/null | grep -v '<checkout>/ops/mirror_transient.py' ; \
   echo "*/5 * * * * /usr/bin/python3 $PWD/ops/mirror_transient.py restore >> $PWD/var/restore-cron.log 2>&1" \
 ) | crontab -
 mkdir -p var

@@ -13,7 +13,7 @@ def request_path(repo: Path) -> Path:
 
 def write_request(repo: Path, reason: str = "", shape: str | None = None, now_dt: datetime | None = None, caller: str | None = None, via: str | None = None, not_before: datetime | str | None = None) -> dict:
     """Record a demand for a lease (var/lease-request.json). Any driver
-    may write it (bin/colab-lease request); the auto-acquire duty is the
+    may write it (bin/venue-lease request); the auto-acquire duty is the
     only consumer. `caller` is the requester: auto_acquire copies it
     onto the lease record it creates, so a lease started by demand is
     attributable to the thread that asked (caller-attribution plan —

@@ -54,7 +54,7 @@ transfer = _load.sync("transfer")
 git_identity = _load.sync("git_identity")
 
 # The funnel, re-exported under the names this module's consumers
-# (bin/colab-lease & friends historically, the test suites) use.
+# (bin/venue-lease & friends historically, the test suites) use.
 colab = cli.colab
 colab_bin = cli.colab_bin
 colab_env = cli.colab_env

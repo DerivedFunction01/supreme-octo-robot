@@ -45,7 +45,7 @@ in `jobs/RETIRED.md`.
   renders write entries through the path, full stop.
 - **Lifecycle owned by the writer:** a `wb-progress-*` entry
   is deleted in the same writer call that disarms its todo
-  (contract 03); a `colab-liveness-*` entry is deleted in the
+  (contract 03); a `venue-liveness-*` entry is deleted in the
   same call that deletes its lease record, and the checker
   self-deletes on the first run that finds no live record.
 - **Fixture class never fires:** a fixture-classed machine
@@ -62,7 +62,7 @@ in `jobs/RETIRED.md`.
 | Writer | Family | Trigger | Fixture |
 |---|---|---|---|
 | workbench harness (`pipeline/workrecord/lib/progress/schedule.py`) | `wb-progress-<project>-<todo-id-lower>.yaml` | todo doing-transition arms; terminal/disarmed/archived retires | `fixtures/scheduler-entry-wb-progress.yaml` |
-| runner lease core (`pipeline/venue/sync/liveness_entry.py`) | `colab-liveness-<session>.yaml` | one per live lease; deleted with the lease record | `fixtures/scheduler-entry-colab-liveness.yaml` |
+| runner lease core (`pipeline/venue/sync/liveness_entry.py`) | `venue-liveness-<session>.yaml` | one per live lease; deleted with the lease record | `fixtures/scheduler-entry-venue-liveness.yaml` |
 
 The five scheduler-entry fixtures — the two machine
 renders above plus the hand and adoption forms

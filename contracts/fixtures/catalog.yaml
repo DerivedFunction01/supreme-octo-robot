@@ -119,8 +119,8 @@ entries:
     generality: deployment-specific
     use_case: sweeper-config
     companion_of: example-sweeper-nudge-check
-  colab-liveness-example-session-00:
-    file: example-colab-liveness.yaml
+  venue-liveness-example-session-00:
+    file: example-venue-liveness.yaml
     class: entry
     origin: machine
     generality: deployment-specific

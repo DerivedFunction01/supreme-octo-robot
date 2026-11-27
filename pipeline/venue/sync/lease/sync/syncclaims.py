@@ -508,7 +508,7 @@ def sync_rights(repo: Path, session: str, caller: str | None, now_dt: datetime |
 
 
 def claim_sync(repo: Path, session: str, caller: str | None, now_dt: datetime | None = None) -> dict:
-    """The explicit claim (bin/colab-lease claim-sync): the gate's
+    """The explicit claim (bin/venue-lease claim-sync): the gate's
     verdict as a lifecycle result — sync-claimed, or a refusal
     naming what blocks. Claiming is the gate run as an action:
     an auto-claim on attach and an explicit claim are the same

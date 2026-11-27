@@ -294,7 +294,7 @@ def test_spend_journal_keys_segments_by_session(tmp_path, monkeypatch):
 def test_acquire_primes_the_initiating_scope_on_a_new_host(tmp_path, monkeypatch):
     """Initiation-time approval, Step 2: when the acquire births a
     session on a tunnel host, the initiating entry point primes its
-    own scope with one cheap call (bin/colab-lease rides
+    own scope with one cheap call (bin/venue-lease rides
     prime_session_host on the acquire result) and the host persists
     on the record."""
     repo = scratch_repo(tmp_path, monkeypatch)

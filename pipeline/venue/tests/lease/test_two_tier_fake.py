@@ -18,7 +18,7 @@ from env_fixtures import lease_env, standing_env  # noqa: E402, F401
 
 
 def run_lease(env, *args, expect_rc=0):
-    r = subprocess.run([sys.executable, str(Path(env["TEST_REPO_ROOT"]) / "bin" / "colab-lease"), *args], capture_output=True, text=True, env=env, timeout=300)
+    r = subprocess.run([sys.executable, str(Path(env["TEST_REPO_ROOT"]) / "bin" / "venue-lease"), *args], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == expect_rc, r.stdout + r.stderr
     return json.loads(r.stdout)
 

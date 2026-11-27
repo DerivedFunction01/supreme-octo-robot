@@ -18,7 +18,7 @@ spoke is older than the re-speak interval, so the
 re-speak is due.
 
 Venues: Colab sessions come from the registry's
-colab-liveness entries (session_name / live_sessions,
+venue-liveness entries (session_name / live_sessions,
 as before); the MSI local venue is live when its
 transport answers — a TCP connect to 127.0.0.1:2222,
 injectable in tests. in_flight counts are not known to
@@ -107,7 +107,7 @@ def sample_load(proc_root):
 def session_name(entry_path, filename):
     """The session name for one liveness entry: the entry
     body's run.argv session argument (the token after the
-    colab-liveness program token), with the lease-run
+    venue-liveness program token), with the lease-run
     suffix stripped. Filename parsing is the fallback."""
     try:
         with open(entry_path, encoding="utf-8") as fh:
@@ -115,24 +115,24 @@ def session_name(entry_path, filename):
                      for line in fh
                      if line.strip().startswith("- ")]
         for i, item in enumerate(items):
-            if item.rsplit("/", 1)[-1] == "colab-liveness" \
+            if item.rsplit("/", 1)[-1] == "venue-liveness" \
                     and i + 1 < len(items):
                 return _RUN_SUFFIX.sub("", items[i + 1])
     except OSError:
         pass
-    stem = filename[len("colab-liveness-"):-len(".yaml")]
+    stem = filename[len("venue-liveness-"):-len(".yaml")]
     return _RUN_SUFFIX.sub("", stem)
 
 
 def live_sessions(jobs_dir):
     """The live fleet sessions' names, sorted: one per
-    colab-liveness entry standing in the registry (the
+    venue-liveness entry standing in the registry (the
     lease core renders one per live session and removes
     it at lease end)."""
     try:
         names = sorted(
             name for name in os.listdir(jobs_dir)
-            if name.startswith("colab-liveness-")
+            if name.startswith("venue-liveness-")
             and name.endswith(".yaml"))
     except OSError:
         return []

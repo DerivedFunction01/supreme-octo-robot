@@ -18,7 +18,7 @@ while idle and still idle at the same stamp, it is skipped and
 lapses at its deadline. Unknown mode values fail closed to
 `never` with a finding line.
 
-The scheduler runs `bin/colab-extend-guard` on a cadence. A
+The scheduler runs `bin/venue-extend-guard` on a cadence. A
 clean pass exits 0 (extensions and policy skips print one JSON
 line each; skips are records, not speech). A refusal, an error,
 or a bad policy value exits 3 with finding lines, refusals

@@ -17,7 +17,7 @@ _naming_spec = _ilu.spec_from_file_location("colab_naming", _paths.NAMING)
 naming = _ilu.module_from_spec(_naming_spec)
 _naming_spec.loader.exec_module(naming)
 
-_liveness_spec = _ilu.spec_from_file_location("colab_liveness_entry", _paths.LIVENESS_ENTRY)
+_liveness_spec = _ilu.spec_from_file_location("venue_liveness_entry", _paths.LIVENESS_ENTRY)
 liveness_entry = _ilu.module_from_spec(_liveness_spec)
 _liveness_spec.loader.exec_module(liveness_entry)
 

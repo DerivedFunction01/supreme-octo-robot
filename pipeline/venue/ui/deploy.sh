@@ -47,15 +47,15 @@ space_json() {
   "name": "Colab Lease",
   "platformVersion": 25,
   "runtime": "typescript",
-  "slug": "colab-lease-2"
+  "slug": "venue-lease-2"
 }
 JSON
 }
 
-CLIENT_FILES="index.html theme.css app.css app.js logs.js controls.js poll.js theme.js orphans.js colab-icon.svg"
+CLIENT_FILES="index.html theme.css app.css app.js logs.js controls.js poll.js theme.js orphans.js venue-icon.svg"
 # Generated icon PNGs (ui/make-icon-png.sh) ship when they exist; the
 # SVG is the tracked source and the only required icon file.
-OPTIONAL_CLIENT_FILES="colab-icon-192.png colab-icon-512.png colab-icon-180.png"
+OPTIONAL_CLIENT_FILES="venue-icon-192.png venue-icon-512.png venue-icon-180.png"
 
 if [ "$CHECK" -eq 1 ]; then
   DRIFT=0
@@ -113,15 +113,15 @@ echo "deploy: sources synced (client/, space.json)"
 
 step "publish — builder pass over the runtime space"
 if command -v "$HATCHLET" >/dev/null 2>&1; then
-  "$HATCHLET" artifact publish --space "$RUNTIME" --slug colab-lease-2
+  "$HATCHLET" artifact publish --space "$RUNTIME" --slug venue-lease-2
   echo "deploy: published via $HATCHLET"
 else
   cat >&2 <<'EOF'
 deploy: no builder CLI (hatchlet) on PATH — source is deployed but
 NOT published. Run the builder pass with the artifact tool:
   first publish: artifact.create_web_fullstack, name "Colab Lease",
-  goal_id goal_e56641726a1f (the builder assigned slug colab-lease-2);
-  later updates: artifact.edit on slug colab-lease-2. Either way the
+  goal_id goal_e56641726a1f (the builder assigned slug venue-lease-2);
+  later updates: artifact.edit on slug venue-lease-2. Either way the
   deployed source in the runtime dir (LEASE_UI_RUNTIME_DIR) is the input
   (client/ is the design source; the data-plane contract lives in
   ui/README.md).

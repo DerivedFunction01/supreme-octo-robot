@@ -9,7 +9,7 @@
 # Env: COLAB_REPO_SRC (required — the source checkout's local path, taken by
 # callers from the selected repo's registry entry; there is no default, and
 # no repo is named here), BUNDLE_OUT (default
-# <colab-runner>/var/snapshot-<ts>.bundle). Prints a JSON manifest and writes
+# <venue-runner>/var/snapshot-<ts>.bundle). Prints a JSON manifest and writes
 # <bundle>.manifest.json beside the bundle.
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -36,7 +36,7 @@ mkdir -p "$(dirname "$OUT")"
 
 ORIGIN_TIP="$(git -C "$SRC" rev-parse origin/main)"
 TREE="$(git -C "$SRC" rev-parse 'HEAD^{tree}')"
-SNAPSHOT="$(git -C "$SRC" -c user.name="DL" -c user.email="" commit-tree "$TREE" -p "$ORIGIN_TIP" -m "colab-runner snapshot $TS (tree $TREE)")"
+SNAPSHOT="$(git -C "$SRC" -c user.name="DL" -c user.email="" commit-tree "$TREE" -p "$ORIGIN_TIP" -m "venue-runner snapshot $TS (tree $TREE)")"
 # git bundle refuses a bare SHA ("Refusing to create empty bundle"); it
 # needs a ref. Create a scratch ref, bundle it, then drop the ref.
 REF="refs/colab-snapshot/$TS"

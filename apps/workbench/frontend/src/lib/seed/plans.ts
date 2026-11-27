@@ -152,7 +152,7 @@ export function buildPlans(): Plan[] {
     },
     {
       bundle: "2026-11-09-venue-core-extraction",
-      project: "colab-runner",
+      project: "venue-runner",
       title: "Venue core extraction — adapter contract",
       state: "draft",
       executor: "—",

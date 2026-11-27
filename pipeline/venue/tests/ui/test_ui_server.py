@@ -2,7 +2,7 @@
 no real lease state).
 
 Covers the contract the page depends on: /api/state passes the core
-JSON through (plus caps), mutations invoke bin/colab-lease with the
+JSON through (plus caps), mutations invoke bin/venue-lease with the
 right argv and append the right outbox events with increasing seq,
 and /api/outbox?after= filters without acknowledging.
 """

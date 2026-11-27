@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Lease control UI server — the operator's manual control surface for the
-colab-runner lease.
+venue lease.
 
 Standard library only (repo rule). Binds 127.0.0.1 (default port 8793,
 see ui/config.json). The server contains no lease logic: every read and
-mutation shells out to bin/colab-lease, whose JSON is passed through to
+mutation shells out to bin/venue-lease, whose JSON is passed through to
 the page — all derivation stays core-side; the page's only client-side
 derivation is countdown arithmetic on served timestamps.
 
@@ -35,7 +35,7 @@ listener's handler threads are bounded
 panel alone.
 
 Env overrides (used by the tests):
-  COLAB_LEASE_BIN   lease CLI path (default <repo>/bin/colab-lease)
+  COLAB_LEASE_BIN   lease CLI path (default <repo>/bin/venue-lease)
   COLAB_LEASE_UI_SH UI control script path (default <repo>/ui/ui.sh)
   COLAB_RUNNER_VAR  var dir (default <repo>/var)
   COLAB_LEASE_UI_HOST / COLAB_LEASE_UI_PORT
@@ -106,7 +106,7 @@ STATE_REFRESH_AFTER_S = state_surface.STATE_REFRESH_AFTER_S
 
 
 def lease_bin() -> str:
-    return os.environ.get("COLAB_LEASE_BIN", str(REPO / "bin" / "colab-lease"))
+    return os.environ.get("COLAB_LEASE_BIN", str(REPO / "bin" / "venue-lease"))
 
 
 def ui_sh() -> str:
@@ -122,7 +122,7 @@ def outbox_path() -> Path:
 
 
 def parse_core_json(stdout: str):
-    """bin/colab-lease prints one JSON result; tolerate any log lines
+    """bin/venue-lease prints one JSON result; tolerate any log lines
     around it by falling back to the last decodable JSON object."""
     text = stdout.strip()
     if not text:
@@ -497,7 +497,7 @@ def _ensure_runtime() -> None:
     if STACKDUMP is None and \
             os.environ.get("COLAB_LEASE_UI_STACKDUMP", "1") != "0":
         STACKDUMP = StackDumpWatchdog(
-            "colab-lease-panel",
+            "venue-lease-panel",
             stackdump_health,
             var_dir() / "stackdumps.log",
             **load_stackdump_config(),

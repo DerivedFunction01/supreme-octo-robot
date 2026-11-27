@@ -7,7 +7,7 @@ profile-retirement plan for the current shape of it).
 The module is written against an injected `colab` callable with
 bin/colab-run's signature — `colab(*args, timeout=...) ->
 CompletedProcess` — so the fake CLI tests it with no network.
-bin/colab-lease is the thin CLI; bin/colab-run and bin/colab-check
+bin/venue-lease is the thin CLI; bin/colab-run and bin/colab-check
 call acquire/finish_job; the reaper hook calls reap and, when
 enabled in config, auto_acquire.
 

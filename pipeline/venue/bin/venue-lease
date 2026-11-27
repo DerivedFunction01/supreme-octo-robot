@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Thin CLI over sync/lease/ — the shared-session lease.
 
-Usage: colab-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create] [--venue V]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap [--gate-pending-hosts CSV] [--gate-probe-hosts CSV]|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
+Usage: venue-lease status [session]|acquire --shape ID [--hours H] [--via TAG] [--caller TAG] [--create] [--venue V]|extend SESSION --hours H [--caller TAG]|adopt (SESSION|--endpoint EP) [--deadline ISO|--hours H] [--caller TAG] [--shape ID]|shorten SESSION (--deadline ISO|--hours H) [--caller TAG]|claim-sync SESSION [--caller TAG]|release-sync SESSION [--caller TAG]|release [session]|release-session (SESSION|--endpoint EP)|reap [--gate-pending-hosts CSV] [--gate-probe-hosts CSV]|keepalive|auto|request [--shape ID] [--reason TEXT] [--caller TAG] [--at ISO-TIME]|unrequest|grant --hours H [--burst SHAPE]|extend-grant --hours H|ungrant|standing|state|budget-caps [--daily V] [--monthly V] [--standing-daily V] [--venue V] [--account V]|accounts|admission --shape ID [--via TAG] [--caller TAG]|plan --shape ID
 Prints one JSON result. `reap` is the reaper-hook duty (deadline +
 orphan reconciliation across all lease records); its gate flags
 carry the hook's approval-gate scope — the tunnel hosts with no
@@ -85,7 +85,7 @@ _SESSION = [{"name": "session", "required": True}]
 # surplus positional, a value flag with no value — is a usage
 # refusal at exit 2. Repeated value flags are last-wins.
 DECL = {
-    "name": "colab-lease",
+    "name": "venue-lease",
     "summary": "Thin CLI over sync/lease/ — the shared-session lease. Prints one JSON result.",
     "verbs": {
         "status": {"positionals": [{"name": "session"}]},
@@ -226,7 +226,7 @@ def resolve_cli_caller(flag: str | None) -> tuple[str | None, str | None]:
 
 
 # --- reap command composition -------------------------------------------------
-# The reaper hook bounds the whole `colab-lease reap` command at
+# The reaper hook bounds the whole `venue-lease reap` command at
 # 420 s, but the command composes two channel acts: the lease
 # pass and the standing collector that rides it. 7739f5d budgeted
 # the pass alone and the collector kept its own independent
@@ -342,7 +342,7 @@ def main() -> int:
     local_acquire = cmd == "acquire" and flags.get("venue") == "local"
     if not local_acquire:
         if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
-            print("colab-lease: STAGED — no colab login yet.", file=sys.stderr)
+            print("venue-lease: STAGED — no colab login yet.", file=sys.stderr)
             return 2
         cr.mirror("restore")
     if cmd == "status":
@@ -356,7 +356,7 @@ def main() -> int:
         if err is None and shape is None:
             err = "acquire requires --shape ID"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         if local_acquire:
             result = lease.acquire_local(REPO, shape, caller=caller, hours=hours)
@@ -375,7 +375,7 @@ def main() -> int:
         if err is None:
             caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.extend(cr.colab, REPO, pos["session"], hours, caller=caller)
     elif cmd == "adopt":
@@ -400,7 +400,7 @@ def main() -> int:
         if err is None and session and endpoint_flag is not None:
             err = "adopt takes a session name or --endpoint, not both"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         if endpoint_flag is not None:
             result = lease.adopt_nameless(cr.colab, REPO, endpoint_flag, deadline=deadline, hours=hours, caller=caller, shape=flags.get("shape"))
@@ -422,19 +422,19 @@ def main() -> int:
                 except ValueError:
                     err = "--deadline needs an ISO timestamp"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.shorten(cr.colab, REPO, pos["session"], deadline=deadline, hours=hours, caller=caller)
     elif cmd == "claim-sync":
         caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.claim_sync(REPO, pos["session"], caller=caller)
     elif cmd == "release-sync":
         caller, err = resolve_cli_caller(flags.get("caller"))
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.release_sync_claim(REPO, pos["session"], caller=caller)
     elif cmd == "release":
@@ -450,13 +450,13 @@ def main() -> int:
         if err is None and burst is not None and burst not in lease.catalog_shapes(REPO, cr.colab):
             err = f"unknown burst shape {burst!r}"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.write_grant(REPO, hours, burst_shape=burst)
     elif cmd == "extend-grant":
         hours, err = _hours(flags, "extend-grant", required=True)
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.extend_grant(cr.colab, REPO, hours)
     elif cmd == "ungrant":
@@ -498,7 +498,7 @@ def main() -> int:
                 if name in parsed["present"]:
                     updates[name] = flags[name]
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = lease.set_budget_caps(REPO, **updates)
     elif cmd == "accounts":
@@ -509,7 +509,7 @@ def main() -> int:
         if err is None and shape is None:
             err = "admission requires --shape ID"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         if shape not in lease.catalog_shapes(REPO):
             result = {"action": "unknown-shape", "shape": shape}
@@ -523,7 +523,7 @@ def main() -> int:
         if err is None and shape not in lease.catalog_shapes(REPO, cr.colab):
             err = f"unknown shape {shape!r}"
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         entry = lease.catalog_shapes(REPO, cr.colab)[shape]
         session = lease.generate_session_name(REPO, cr.colab)
@@ -548,28 +548,28 @@ def main() -> int:
         claim = flags.get("caller") if flags.get("caller") is not None else flags.get("via")
         caller, err = resolve_cli_caller(claim)
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         at = flags.get("at")
         if at is not None:
             try:
                 datetime.fromisoformat(at)
             except ValueError:
-                print("colab-lease: --at needs an ISO timestamp", file=sys.stderr)
+                print("venue-lease: --at needs an ISO timestamp", file=sys.stderr)
                 return 2
         result = lease.write_request(REPO, reason=flags.get("reason") or "", shape=_shape(parsed), caller=caller, not_before=at)
     elif cmd == "release-session":
         endpoint_flag = flags.get("endpoint")
         session = pos.get("session")
         if endpoint_flag is not None and session:
-            print("colab-lease: release-session takes a session name or --endpoint, not both", file=sys.stderr)
+            print("venue-lease: release-session takes a session name or --endpoint, not both", file=sys.stderr)
             return 2
         if endpoint_flag is not None:
             result = lease.release_endpoint(cr.colab, REPO, endpoint_flag)
         elif session:
             result = lease.release_session(cr.colab, REPO, session)
         else:
-            print("colab-lease: release-session needs a session name or --endpoint", file=sys.stderr)
+            print("venue-lease: release-session needs a session name or --endpoint", file=sys.stderr)
             return 2
     elif cmd == "unrequest":
         had = lease.load_request(REPO) is not None
@@ -586,7 +586,7 @@ def main() -> int:
             except ValueError as exc:
                 err = str(exc)
         if err:
-            print(f"colab-lease: {err}", file=sys.stderr)
+            print(f"venue-lease: {err}", file=sys.stderr)
             return 2
         result = _reap_with_collector(gate)
     print(json.dumps(result, indent=2))

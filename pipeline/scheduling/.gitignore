@@ -11,10 +11,10 @@ scheduler.env
 # Python runtime artefacts.
 __pycache__/
 *.pyc
-# Machine-written per-lease entries: the colab-runner lease core renders one
+# Machine-written per-lease entries: the venue lease core renders one
 # liveness entry per live lease and deletes it with the lease record; derived
 # state (the lease record is the record of truth), never tracked.
-jobs/colab-liveness-*.yaml
+jobs/venue-liveness-*.yaml
 # Live overlay: sweeper bodies, templates, and live configs. Tracked fictional
 # examples live beside them; the live files themselves are working state.
 bodies/

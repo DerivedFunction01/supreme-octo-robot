@@ -407,7 +407,7 @@ class HttpRouteTests(ServingBase):
 
 
 LIVENESS_FIXTURE = (
-    "id: colab-liveness-fixture-session\n"
+    "id: venue-liveness-fixture-session\n"
     "title: 'Liveness check - fixture session'\n"
     "kind: scripted\n"
     "status: active\n"
@@ -427,7 +427,7 @@ LIVENESS_FIXTURE = (
     "  when: on_failure\n"
     "  ok_exit_codes:\n"
     "    - 0\n"
-    "escalate_body: bodies/colab-liveness.md\n"
+    "escalate_body: bodies/venue-liveness.md\n"
     "state_paths:\n"
     "  - ${WS}/venue/var/liveness-fixture-session.json\n"
     "classification: 'fixed command; local file reads only; when "
@@ -496,13 +496,13 @@ class LandedRegistryTests(unittest.TestCase):
         # load must carry its self_removal through.
         with tempfile.TemporaryDirectory() as tmp:
             make_home(tmp)
-            write_entry(tmp, "colab-liveness-fixture-session",
+            write_entry(tmp, "venue-liveness-fixture-session",
                         LIVENESS_FIXTURE)
-            write_body(tmp, "colab-liveness")
+            write_body(tmp, "venue-liveness")
             entries, errors = registry.load_dir(
                 os.path.join(tmp, "jobs"), tmp)
             self.assertEqual(errors, [])
-            entry = entries["colab-liveness-fixture-session"]
+            entry = entries["venue-liveness-fixture-session"]
             self.assertEqual(entry.get("lifetime"), "until_complete")
             self.assertTrue(entry.get("self_removal"))
 

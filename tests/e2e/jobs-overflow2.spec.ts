@@ -29,8 +29,8 @@ const OUT_DIR = process.env.E2E_OUT_DIR ?? ".";
 const TARGET_IDS = [
   "bridge-drain",
   "card-watch",
-  "colab-liveness-oak-reef-65-r1795149559-r1795190959",
-  "colab-liveness-oak-reef-65-r1795149958",
+  "venue-liveness-oak-reef-65-r1795149559-r1795190959",
+  "venue-liveness-oak-reef-65-r1795149958",
   "memory-index-watchdog",
 ];
 

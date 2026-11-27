@@ -182,7 +182,7 @@ await setSearch("colab");
 await sleep(200);
 check(
   "search by family prefix filters within the built-in group",
-  bodyText().includes("colab-extend-guard") &&
+  bodyText().includes("venue-extend-guard") &&
     !bodyText().includes("storage-watch"),
 );
 await setSearch("");
@@ -371,10 +371,10 @@ check(
     window.document.querySelector('button[role="switch"]') === null,
 );
 
-// --- Built-in detail: family Venue (colab-extend-guard) -----------
+// --- Built-in detail: family Venue (venue-extend-guard) -----------
 check("back to jobs (3)", await click("Jobs", { exact: true }));
 await sleep(150);
-check("open colab-extend-guard", await click("colab-extend-guard"));
+check("open venue-extend-guard", await click("venue-extend-guard"));
 await sleep(200);
 check(
   "venue detail subtitle (mockup frame 6 form)",
@@ -397,7 +397,7 @@ check("open in Runner row", await click("Open in Runner"));
 await sleep(150);
 check(
   "Open in Runner posts the shell-bridge intent (harness surfaces it)",
-  bodyText().includes("workhorse:open → runner (colab-extend-guard)"),
+  bodyText().includes("workhorse:open → runner (venue-extend-guard)"),
 );
 
 // --- Built-in detail: family Workbench (the doctor) ---------------

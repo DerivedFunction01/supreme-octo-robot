@@ -1,4 +1,4 @@
-"""Session liveness: the checker (bin/colab-liveness) and the
+"""Session liveness: the checker (bin/venue-liveness) and the
 derived scheduler entries (sync/liveness_entry.py).
 
 The checker is driven as a subprocess against a fixture repo
@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent.parent
-CHECKER = REPO / "bin" / "colab-liveness"
+CHECKER = REPO / "bin" / "venue-liveness"
 
 sys.path.insert(0, str(REPO / "tests" / "fixtures"))
 import env_fixtures  # noqa: E402
@@ -107,7 +107,7 @@ def test_healthy_is_silent(tmp_path):
 
 def test_gone_session_self_disarms(tmp_path):
     fx = healthy(tmp_path)
-    entry = fx.jobs / f"colab-liveness-{SESSION}.yaml"
+    entry = fx.jobs / f"venue-liveness-{SESSION}.yaml"
     entry.write_text(le.render_entry(SESSION))
     (fx.root / "var" / f"lease-{SESSION}.json").unlink()
     r = fx.run(SESSION)
@@ -459,7 +459,7 @@ def lease_cli_env(tmp_path):
 
 
 def run_lease_cli(env, *args):
-    r = subprocess.run([sys.executable, str(Path(env["TEST_REPO_ROOT"]) / "bin" / "colab-lease"), *args],
+    r = subprocess.run([sys.executable, str(Path(env["TEST_REPO_ROOT"]) / "bin" / "venue-lease"), *args],
                        capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 0, r.stdout + r.stderr
     return json.loads(r.stdout)
@@ -467,14 +467,14 @@ def run_lease_cli(env, *args):
 
 def test_render_entry_shape():
     text = le.render_entry(SESSION)
-    assert f"id: colab-liveness-{SESSION}" in text
+    assert f"id: venue-liveness-{SESSION}" in text
     assert "every: 15m" in text
-    assert "escalate_body: bodies/colab-liveness.md" in text
+    assert "escalate_body: bodies/venue-liveness.md" in text
     # Amendment 3 (target registry format): the migration field
     # family does not exist — presence through the writer path
     # is admission, so the render carries no migrated stamp.
     assert "migrated" not in text
-    assert "${REPO}/../venue/bin/colab-liveness" in text
+    assert "${REPO}/../venue/bin/venue-liveness" in text
     assert SESSION in text
 
 
@@ -485,16 +485,16 @@ def test_lease_lifecycle_arms_and_disarms(tmp_path):
     env, jobs = lease_cli_env(tmp_path)
     out = run_lease_cli(env, "acquire", "--shape", "cpu")
     session = out["record"]["session"]
-    entry = jobs / f"colab-liveness-{session}.yaml"
+    entry = jobs / f"venue-liveness-{session}.yaml"
     assert entry.exists(), "acquire must arm the liveness entry"
-    assert f"colab-liveness-{session}" in entry.read_text()
+    assert f"venue-liveness-{session}" in entry.read_text()
     run_lease_cli(env, "release")
     assert not entry.exists(), "release must retire the liveness entry"
 
     text = le.render_entry(SESSION)
-    assert f"id: colab-liveness-{SESSION}" in text
+    assert f"id: venue-liveness-{SESSION}" in text
     assert "every: 15m" in text
-    assert "escalate_body: bodies/colab-liveness.md" in text
+    assert "escalate_body: bodies/venue-liveness.md" in text
     assert SESSION in text
 
 
@@ -516,11 +516,11 @@ def test_arming_waits_for_the_escalate_body(tmp_path, monkeypatch):
     jobs.mkdir(parents=True)
     rec = {"session": "body-guard-00"}
     assert le.sync_for_record(venue_root, rec) == "unavailable"
-    body = tmp_path / "pipeline" / "scheduling" / "bodies" / "colab-liveness.md"
+    body = tmp_path / "pipeline" / "scheduling" / "bodies" / "venue-liveness.md"
     body.parent.mkdir(parents=True)
     body.write_text("# body\n")
     assert le.sync_for_record(venue_root, rec) == "written"
-    assert (jobs / "colab-liveness-body-guard-00.yaml").exists()
+    assert (jobs / "venue-liveness-body-guard-00.yaml").exists()
 
 
 def test_sync_and_reconcile(tmp_path):
@@ -533,12 +533,12 @@ def test_sync_and_reconcile(tmp_path):
         rec = {"session": SESSION, "caller": "secforms"}
         assert le.sync_for_record(repo, rec) == "written"
         assert le.sync_for_record(repo, rec) == "present", "refresh must not churn identical content"
-        orphan = jobs / "colab-liveness-ghost-00.yaml"
+        orphan = jobs / "venue-liveness-ghost-00.yaml"
         orphan.write_text(le.render_entry("ghost-00"))
         out = le.reconcile(repo, [rec])
         assert out["removed"] == ["ghost-00"] and not orphan.exists()
         assert le.remove_for_session(repo, SESSION) == "removed"
-        assert not (jobs / f"colab-liveness-{SESSION}.yaml").exists()
+        assert not (jobs / f"venue-liveness-{SESSION}.yaml").exists()
         out = le.reconcile(repo, [rec])
         assert out["armed"] == [SESSION], "reconcile re-arms a live session whose entry was deleted"
     finally:
