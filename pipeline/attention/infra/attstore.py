@@ -172,12 +172,16 @@ def _backfill_attention_fold(state: dict) -> None:
       cleared (status_code, due_at) — the zombie cure for
       items closed before the action path learned to
       clear them in the same write.
-    - The edgar-greenfield programme declaration's venue
-      is "local" (the tracked registry seed already says
-      so; the live store's frozen copy is what lagged)."""
-    # Deferred: the waits engine is a services module;
-    # the composition binds at call time, never at import
-    # time (the store seam loads under every service).
+    - The venue-fold target programme's stored venue is
+      stamped from its supervision declaration — the one
+      declaration carrying the venue_fold_target marker;
+      its declared venue is what the store's frozen copy
+      lagged. No marker, no stamp."""
+    # Deferred: the waits engine and the supervision
+    # registry are services modules; the composition
+    # binds at call time, never at import time (the
+    # store seam loads under every service).
+    from attention.services.measure import registry
     from attention.services.waits import engine
 
     fallback_at = datetime(2026, 11, 26, tzinfo=UTC)
@@ -212,9 +216,11 @@ def _backfill_attention_fold(state: dict) -> None:
                 "wb is the record of truth — shadow copy settled "
                 "at the attention fold (2026-11-26)"
             )
+    fold_slug = registry.venue_fold_slug()
+    fold_row = registry.for_slug(fold_slug) if fold_slug else None
     for programme in state.get("programmes", []):
-        if programme.get("slug") == "edgar-greenfield":
-            programme["venue"] = "local"
+        if fold_row and programme.get("slug") == fold_slug:
+            programme["venue"] = fold_row["venue"]
 
 
 def _backfill_staleness(state: dict, seeds: dict) -> None:

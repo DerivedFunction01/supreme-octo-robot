@@ -9,6 +9,7 @@
   "staffing_band": null,
   "escalation_hours": 1,
   "venue": "local",
+  "venue_fold_target": true,
   "coordinator_route": {
    "sender": "wb",
    "kind": "chat",
