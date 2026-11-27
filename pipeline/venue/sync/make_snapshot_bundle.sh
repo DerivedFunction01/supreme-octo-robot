@@ -6,7 +6,7 @@
 # (local main is hundreds of commits diverged from origin; such a bundle
 # cannot fast-forward a fresh origin clone).
 #
-# Env: COLAB_REPO_SRC (required — the source checkout's local path, taken by
+# Env: VENUE_REPO_SRC (required — the source checkout's local path, taken by
 # callers from the selected repo's registry entry; there is no default, and
 # no repo is named here), BUNDLE_OUT (default
 # <colab-runner>/var/snapshot-<ts>.bundle). Prints a JSON manifest and writes
@@ -26,9 +26,9 @@ argv_tool make_snapshot_bundle.sh "Build an origin-lineage snapshot bundle of th
 argv_parse "$@" || exit 2
 [ "$ARGV_HELP" = 1 ] && exit 0
 
-SRC="${COLAB_REPO_SRC:-}"
+SRC="${VENUE_REPO_SRC:-${COLAB_REPO_SRC:-}}"  # step6-retire: COLAB_ dual-read fallback
 if [ -z "$SRC" ]; then
-  echo "make_snapshot_bundle: COLAB_REPO_SRC is not set (pass the registry entry's local_path)" >&2; exit 2
+  echo "make_snapshot_bundle: VENUE_REPO_SRC is not set (pass the registry entry's local_path)" >&2; exit 2
 fi
 TS="$(date -u +%Y%m%dT%H%M%SZ)"
 OUT="${BUNDLE_OUT:-$REPO_ROOT/var/snapshot-$TS.bundle}"

@@ -61,7 +61,7 @@ def test_collect_stale_finalizes_a_wedged_detached_run(tmp_path):
 
 def test_collect_stale_honors_the_env_budget(tmp_path):
     """The reap command's collector ride passes its remaining
-    command budget through COLAB_COLLECT_BUDGET_S: at zero the
+    command budget through VENUE_COLLECT_BUDGET_S: at zero the
     pass still counts its candidates but attends none and
     reports itself capped — the ride can be allotted too little
     to start, never silently unbounded."""
@@ -70,7 +70,7 @@ def test_collect_stale_honors_the_env_budget(tmp_path):
     rec = json.loads((runs_dir(env) / f"{out['run_id']}.json").read_text())
     _wait_session_side_done(env, out["session"], rec["remote_out"])
     _age_the_record(env, out["run_id"])
-    env["COLAB_COLLECT_BUDGET_S"] = "0"
+    env["VENUE_COLLECT_BUDGET_S"] = "0"
     r = run_verb(env, "--collect-stale")
     assert r.returncode == 0, r.stdout + r.stderr
     summary = json.loads(r.stdout)

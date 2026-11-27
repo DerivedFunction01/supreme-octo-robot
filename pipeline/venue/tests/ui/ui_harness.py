@@ -67,10 +67,10 @@ class UiServer:
         self.port = free_port()
         env = dict(
             os.environ,
-            COLAB_LEASE_BIN=str(stub),
-            COLAB_RUNNER_VAR=str(self.var),
-            COLAB_LEASE_UI_PORT=str(self.port),
-            COLAB_LEASE_UI_STACKDUMP="0",
+            VENUE_LEASE_BIN=str(stub),
+            VENUE_RUNNER_VAR=str(self.var),
+            VENUE_LEASE_UI_PORT=str(self.port),
+            VENUE_LEASE_UI_STACKDUMP="0",
             STUB_LEASE_LOG=str(self.log),
         )
         env.update(extra_env or {})

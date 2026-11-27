@@ -26,7 +26,7 @@ from fake_harness import lease_env, make_orphan, plant_cli_kit_config, run_lease
 def _plant_failed_stamp(env, session, *, attempted_ago):
     attempted = datetime.now(timezone.utc) - attempted_ago
     stamp = {"attempted_at": attempted.isoformat(), "state": "verdict", "chromium": "failed", "install_rc": 100}
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     var.mkdir(parents=True, exist_ok=True)
     (var / f"provision-{session}.json").write_text(json.dumps(stamp))
 

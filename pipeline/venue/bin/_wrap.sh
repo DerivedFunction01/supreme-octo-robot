@@ -39,10 +39,11 @@ gate_check() { # shape id -> the session shape gate's admission verdict JSON; ex
   # The wrappers that create sessions bypass the lease core, so they
   # consult its single admission seam (bin/colab-lease) before any
   # CLI call. Prints the verdict JSON either way. The driver-set
-  # $COLAB_CALLER claim rides the consult when present, so the
+  # $VENUE_CALLER claim rides the consult when present, so the
   # verdict and its journal entry name the thread.
-  if [ -n "${COLAB_CALLER:-}" ]; then
-    "$REPO_ROOT/bin/colab-lease" admission --shape "$1" --caller "$COLAB_CALLER"
+  CALLER_CLAIM="${VENUE_CALLER:-${COLAB_CALLER:-}}"  # step6-retire: COLAB_ dual-read fallback
+  if [ -n "$CALLER_CLAIM" ]; then
+    "$REPO_ROOT/bin/colab-lease" admission --shape "$1" --caller "$CALLER_CLAIM"
   else
     "$REPO_ROOT/bin/colab-lease" admission --shape "$1"
   fi

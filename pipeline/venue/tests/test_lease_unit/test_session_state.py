@@ -11,7 +11,7 @@ def test_session_state_auth_prompt_is_unknown_not_absent(tmp_path, monkeypatch):
     interactive login prompt where a session list was expected. The
     prompt is not a list: the state is unknown, never absent — absent
     is the one reading that deletes records."""
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     prompt = lambda *a, **k: cp("Enter the authorization code:")  # noqa: E731
     assert lease.session_state(prompt, "standard") == "unknown"
 

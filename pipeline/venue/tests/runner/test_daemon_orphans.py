@@ -56,7 +56,7 @@ class _Lease:
 
 
 def load_sweep(runs: Path, var: Path, live: set):
-    os.environ["COLAB_RUNNER_VAR"] = str(var)
+    os.environ["VENUE_RUNNER_VAR"] = str(var)
     package = types.ModuleType("runner_sweep_unit")
     package.__path__ = [str(REPO / "sync" / "runner")]
     sys.modules["runner_sweep_unit"] = package

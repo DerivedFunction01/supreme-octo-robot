@@ -15,7 +15,7 @@ _paths_spec.loader.exec_module(_paths)
 
 
 def var_dir(repo: Path) -> Path:
-    return Path(os.environ.get("COLAB_RUNNER_VAR", repo / "var"))
+    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", repo / "var")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def load_json(path: Path, default):
@@ -205,7 +205,7 @@ def staged_write(path: Path, data: bytes, mode: int | None = None) -> None:
 # level, not a security boundary. Mechanics:
 # docs/lease-workflow.md.
 
-ACTOR_ENV_CLAIM = "COLAB_LEASE_ACTOR"
+ACTOR_ENV_CLAIM = "VENUE_LEASE_ACTOR"
 PANEL_ACTOR = "panel"
 GATE_DEFAULT_AGENT_CLASSES = ("high_ram",)
 GATE_DEFAULT_BYPASS_ACTORS = (PANEL_ACTOR,)

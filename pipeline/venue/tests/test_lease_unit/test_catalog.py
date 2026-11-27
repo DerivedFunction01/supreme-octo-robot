@@ -38,7 +38,7 @@ def _tmp_catalog(tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True)
     (var / "shape-rates.json").write_text(json.dumps({"cpu-highram": 0.26}))
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
 
 
 def test_specs_dynamic_catalog_covers_the_cli_space(tmp_path, monkeypatch):

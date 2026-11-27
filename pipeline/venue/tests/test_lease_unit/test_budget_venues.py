@@ -68,7 +68,7 @@ def test_budgetless_venue_rule(repo):
 def test_budgets_state_home_venue_only_by_default(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     entries = lease.budgets_state(USAGE, repo, now_dt=NOW)
     # No venues configured beyond the home venue: the set is
     # the home venue's accounts — one entry, the primary, with
@@ -84,7 +84,7 @@ def test_budgets_state_home_venue_only_by_default(repo, tmp_path, monkeypatch):
 def test_budgets_state_spans_venues_and_local_is_null(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _multi_venue(repo)
     entries = lease.budgets_state(USAGE, repo, now_dt=NOW)
     assert [(e["venue"], e.get("account")) for e in entries] == [
@@ -179,7 +179,7 @@ def _local_record(repo):
 def test_local_record_status_is_unverified_never_dead(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _local_record(repo)
     # The home venue's listing does not contain the local
     # session; that list must not classify the record at all.
@@ -191,7 +191,7 @@ def test_local_record_status_is_unverified_never_dead(repo, tmp_path, monkeypatc
 def test_local_record_survives_a_reap_pass(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _local_record(repo)
 
     def stub(*a, **k):
@@ -210,7 +210,7 @@ def test_local_record_survives_a_reap_pass(repo, tmp_path, monkeypatch):
 def test_reap_pass_stamps_the_local_pulse(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _local_record(repo)
     monkeypatch.setattr(lease.local_venue, "probe_for_record", lambda repo_, rec, now_dt=None: True)
 
@@ -240,7 +240,7 @@ def test_reap_pass_stamps_the_local_pulse(repo, tmp_path, monkeypatch):
 def test_acquire_local_registers_adopts_and_releases(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     cfg = _config(repo)
     cfg["venue_shapes"] = {"local": [{"id": "local", "label": "Local machine"}]}
     _write_config(repo, cfg)
@@ -262,7 +262,7 @@ def test_acquire_local_registers_adopts_and_releases(repo, tmp_path, monkeypatch
 def test_local_targets_bind_per_shape(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     cfg = _config(repo)
     cfg["venue_shapes"] = {"local": [
         {"id": "local-a", "label": "Machine A", "target": "machine-a"},
@@ -300,7 +300,7 @@ def test_local_targets_bind_per_shape(repo, tmp_path, monkeypatch):
 def test_state_budget_portion_carries_the_set(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _multi_venue(repo)
     portion = lease.state_budget(USAGE, repo)
     # The legacy snapshot rides unchanged beside the set.
@@ -346,7 +346,7 @@ def test_ensure_transport_never_launches_unmanaged_targets(repo, monkeypatch):
 def test_probe_restarts_a_managed_transport_and_reprobes(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     cfg = _config(repo)
     cfg["venue_targets"] = {"local": {"host": "127.0.0.1", "port": 2222, "user": "agent", "start": ["/bin/true"]}}
     _write_config(repo, cfg)

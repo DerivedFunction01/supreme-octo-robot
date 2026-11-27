@@ -214,11 +214,11 @@ def _shape(parsed: dict) -> str | None:
 
 
 def resolve_cli_caller(flag: str | None) -> tuple[str | None, str | None]:
-    """Resolve a --caller flag against $COLAB_CALLER through the
+    """Resolve a --caller flag against $VENUE_CALLER through the
     core's registry. Returns (caller, error): a presented but
     unregistered claim is an error — refused at claim time — while
     no claim at all is (None, None), an unattributed call."""
-    env = os.environ.get("COLAB_CALLER")
+    env = os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
     err = lease.caller_claim_error(REPO, flag=flag, env=env)
     if err:
         return None, err
@@ -247,7 +247,7 @@ _COLLECT_MIN_REMAINING_S = 20.0
 
 
 def _reap_command_budget_s() -> float:
-    raw = os.environ.get("COLAB_LEASE_REAP_COMMAND_BUDGET_S")
+    raw = os.environ.get("VENUE_LEASE_REAP_COMMAND_BUDGET_S", os.environ.get("COLAB_LEASE_REAP_COMMAND_BUDGET_S"))  # step6-retire: COLAB_ dual-read fallback
     try:
         return float(raw) if raw else _REAP_COMMAND_BUDGET_DEFAULT_S
     except ValueError:
@@ -303,7 +303,7 @@ def _reap_with_collector(gate=None) -> dict:
         result["collect"] = {"skipped": "command-budget", "remaining_s": round(remaining, 1)}
         return result
     env = dict(os.environ)
-    env["COLAB_COLLECT_BUDGET_S"] = str(max(0.0, remaining - 5.0))
+    env["VENUE_COLLECT_BUDGET_S"] = str(max(0.0, remaining - 5.0))
     try:
         child = subprocess.run([sys.executable, str(REPO / "bin" / "colab-run"), "--collect-stale"], capture_output=True, text=True, timeout=remaining, env=env)
         _chain_log(

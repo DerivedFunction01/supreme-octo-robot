@@ -14,7 +14,7 @@ from unit_harness import NOW, REPO, cp, gate_permissive, lease, repo, seed_recor
 def test_state_surfaces_auth_required_marker(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     assert lease.auth_required(repo) is None
     (var / "auth-required.json").write_text(json.dumps({"noted_at": "2026-11-01T13:05:58+00:00", "reason": "test"}))
 

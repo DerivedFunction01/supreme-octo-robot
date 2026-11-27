@@ -44,8 +44,8 @@ CHECKOUT = Path(__file__).resolve().parent.parent
 
 @pytest.fixture(autouse=True)
 def _runner_env_isolation():
-    """The runner's env seams (COLAB_RUNNER_VAR,
-    COLAB_RUNNER_HOME) are read on every call by the code
+    """The runner's env seams (VENUE_RUNNER_VAR,
+    VENUE_RUNNER_HOME) are read on every call by the code
     under test, so a test that points one at its scratch
     state with a bare os.environ assignment leaks the
     pointing into every later test in the same worker
@@ -54,7 +54,7 @@ def _runner_env_isolation():
     Snapshot both seams around every test and restore
     them after; a test's own setting stands for its own
     duration."""
-    names = ("COLAB_RUNNER_VAR", "COLAB_RUNNER_HOME")
+    names = ("VENUE_RUNNER_VAR", "VENUE_RUNNER_HOME")
     saved = {name: os.environ.get(name) for name in names}
     yield
     for name, value in saved.items():

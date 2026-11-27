@@ -92,7 +92,7 @@ def setup_env(tmp_path, mode, token_text, binding_text=None, lease_records=None)
         os.environ,
         HOME=str(home),
         PATH=f"{fakebin}:/usr/bin:/bin",
-        COLAB_RUNNER_VAR=str(tmp_path / "var"),
+        VENUE_RUNNER_VAR=str(tmp_path / "var"),
         FAKE_MODE=mode,
         FAKE_LOG=str(tmp_path / "fake-calls.log"),
     )

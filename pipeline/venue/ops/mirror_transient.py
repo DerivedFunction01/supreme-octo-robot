@@ -2,7 +2,7 @@
 """Capture/restore transient files between canonical homes and the repo mirror.
 
 Registry: config/transient.json; runbook: ops/restore-cron.md. Canonical
-paths resolve against $HOME, or $COLAB_RUNNER_HOME when set; under
+paths resolve against $HOME, or $VENUE_RUNNER_HOME when set; under
 that override the mirror resolves under the same root, so a
 sandboxed run (the test suite) never touches the real mirror.
 Reports carry only existence, size, mtime, and action taken.
@@ -59,7 +59,7 @@ DECLARATION = {
 
 
 def home() -> Path:
-    override = os.environ.get("COLAB_RUNNER_HOME")
+    override = os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME"))  # step6-retire: COLAB_ dual-read fallback
     return Path(override) if override else Path.home()
 
 
@@ -98,11 +98,11 @@ def var_file_class(filename: str) -> str | None:
 def resolve(item: dict) -> tuple[Path, Path]:
     canonical = Path(str(item["canonical"]).replace("~", str(home()), 1))
     # The mirror's root is the repo — except under the
-    # COLAB_RUNNER_HOME override, where both sides resolve
+    # VENUE_RUNNER_HOME override, where both sides resolve
     # under the override root (the suite's mirror
     # tests shared the one real mirror file through this seam
     # and raced under parallel workers).
-    root = home() if os.environ.get("COLAB_RUNNER_HOME") else REPO
+    root = home() if os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME")) else REPO  # step6-retire: COLAB_ dual-read fallback
     return canonical, root / item["mirror"]
 
 

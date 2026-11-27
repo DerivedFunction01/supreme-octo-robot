@@ -41,7 +41,7 @@ Then open <http://127.0.0.1:8793>. Or run the server directly:
   every spec with its served label and `rate_cu_per_hour`; a null rate
   renders as "Cost unconfirmed", including in the projected cost.
 - `POST /api/server/restart` — spawns `ui/ui.sh restart` detached
-  (path overridable via `COLAB_LEASE_UI_SH`) and answers
+  (path overridable via `VENUE_LEASE_UI_SH`) and answers
   `{action: "restart-requested"}` immediately. It is the degraded
   panel's recovery action; it writes no outbox event.
 - `GET /api/outbox?after=<seq>` — outbox events with `seq > after`.
@@ -93,9 +93,9 @@ never run unsupervised in the consolidated shape.
 
 ## Env overrides (tests)
 
-- `COLAB_LEASE_BIN` — lease CLI path (default `<repo>/bin/colab-lease`)
-- `COLAB_RUNNER_VAR` — var dir (default `<repo>/var`)
-- `COLAB_LEASE_UI_HOST` / `COLAB_LEASE_UI_PORT`
+- `VENUE_LEASE_BIN` — lease CLI path (default `<repo>/bin/colab-lease`)
+- `VENUE_RUNNER_VAR` — var dir (default `<repo>/var`)
+- `VENUE_LEASE_UI_HOST` / `VENUE_LEASE_UI_PORT`
 
 ## Artifact data plane
 

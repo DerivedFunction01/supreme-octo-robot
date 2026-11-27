@@ -17,7 +17,7 @@ Two shapes:
   resolve back to the checkout), sync/snippets/ops/jobs
   symlinked in (code and tracked manifests, read-only), fixture
   config at root/config, and the measured-rate table in the
-  var dir the caller points COLAB_RUNNER_VAR at.
+  var dir the caller points VENUE_RUNNER_VAR at.
 """
 
 import json
@@ -135,9 +135,9 @@ def lease_repo(tmp_path, monkeypatch):
     """The unit suites' `repo` fixture body: a scratch repo
     carrying the authored fixture config (the suite must pass in
     a bare clone, where the checkout has no operator config),
-    with COLAB_RUNNER_VAR pointed at its var dir."""
+    with VENUE_RUNNER_VAR pointed at its var dir."""
     root = scratch_repo(tmp_path)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     return root
 
 
@@ -164,7 +164,7 @@ def fake_scratch_repo(tmp_path, monkeypatch, daily_cap=15):
     }, sort_keys=True, separators=(",", ":")))
     (tmp_path / "adapters" / "colab").mkdir(parents=True, exist_ok=True)
     (tmp_path / "adapters" / "colab" / "snippets").symlink_to(CHECKOUT / "adapters" / "colab" / "snippets")
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     # A scratch HOME keeps the local sessions binding (which the
     # post-start shape assertion reads) out of these in-process
     # tests: the real binding belongs to live sessions.
@@ -188,14 +188,14 @@ def gate_repo(tmp_path, monkeypatch, gate=None):
     (cfg_dir / "callers.json").write_text(json.dumps({"callers": ["alpha", "beta"]}))
     (tmp_path / "adapters" / "colab").mkdir(parents=True, exist_ok=True)
     (tmp_path / "adapters" / "colab" / "snippets").symlink_to(CHECKOUT / "adapters" / "colab" / "snippets")
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     # The scratch catalog cache: the CLI space this fixture serves
     # (a T4 GPU shape beyond the always-served CPU shapes).
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
     (var / "cli-catalog.json").write_text(json.dumps({"fetched_at": datetime.now(timezone.utc).isoformat(), "gpu": ["T4"], "tpu": ["v6e1"], "no_high_mem": []}))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    monkeypatch.delenv("COLAB_LEASE_ACTOR", raising=False)
+    monkeypatch.delenv("VENUE_LEASE_ACTOR", raising=False)
     return tmp_path
 
 

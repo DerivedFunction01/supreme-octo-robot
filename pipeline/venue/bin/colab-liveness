@@ -99,20 +99,20 @@ DECL = {
     "verdict_codes": {"3": "something must be said (one LIVENESS line per item on stdout)"},
 }
 
-APPROVAL_ESCALATE_S = int(os.environ.get("COLAB_LIVENESS_APPROVAL_ESCALATE_S", "1800"))
-PULSE_STALE_S = int(os.environ.get("COLAB_LIVENESS_PULSE_STALE_S", "1800"))
+APPROVAL_ESCALATE_S = int(os.environ.get("VENUE_LIVENESS_APPROVAL_ESCALATE_S", os.environ.get("COLAB_LIVENESS_APPROVAL_ESCALATE_S", "1800")))  # step6-retire: COLAB_ dual-read fallback
+PULSE_STALE_S = int(os.environ.get("VENUE_LIVENESS_PULSE_STALE_S", os.environ.get("COLAB_LIVENESS_PULSE_STALE_S", "1800")))  # step6-retire: COLAB_ dual-read fallback
 # The forwarder window: on the order of the beacon cadence
 # (the beacon restocks forwarder pins every ten minutes), so
 # a credential-exhaustion reading must outlast one restock
 # cycle before it speaks, and an established tunnel counts
 # as recent route evidence for the same span.
-FWD_EXHAUSTION_S = int(os.environ.get("COLAB_LIVENESS_FWD_EXHAUSTION_S", "600"))
-SESSION_GRACE_S = int(os.environ.get("COLAB_LIVENESS_SESSION_GRACE_S", "900"))
+FWD_EXHAUSTION_S = int(os.environ.get("VENUE_LIVENESS_FWD_EXHAUSTION_S", os.environ.get("COLAB_LIVENESS_FWD_EXHAUSTION_S", "600")))  # step6-retire: COLAB_ dual-read fallback
+SESSION_GRACE_S = int(os.environ.get("VENUE_LIVENESS_SESSION_GRACE_S", os.environ.get("COLAB_LIVENESS_SESSION_GRACE_S", "900")))  # step6-retire: COLAB_ dual-read fallback
 # The venue-state surface's freshness bound for findings:
 # the sampler writes every 120 s and the reap pass at its
 # own cadence, so a file older than this is a dark surface,
 # and a dark surface is no finding.
-VENUE_STATE_STALE_S = int(os.environ.get("COLAB_LIVENESS_VENUE_STATE_STALE_S", "900"))
+VENUE_STATE_STALE_S = int(os.environ.get("VENUE_LIVENESS_VENUE_STATE_STALE_S", os.environ.get("COLAB_LIVENESS_VENUE_STATE_STALE_S", "900")))  # step6-retire: COLAB_ dual-read fallback
 TERMINAL_RUN_STATES = {"complete", "failed", "orphaned"}
 
 
@@ -137,12 +137,12 @@ def _age_s(now, then) -> int:
 
 
 def gate_state_path() -> Path:
-    env = os.environ.get("COLAB_LIVENESS_GATE_STATE")
+    env = os.environ.get("VENUE_LIVENESS_GATE_STATE", os.environ.get("COLAB_LIVENESS_GATE_STATE"))  # step6-retire: COLAB_ dual-read fallback
     return Path(env) if env else Path.home() / "hooks" / "state" / "colab-lease-approval.json"
 
 
 def bindings_path() -> Path:
-    env = os.environ.get("COLAB_LIVENESS_BINDINGS")
+    env = os.environ.get("VENUE_LIVENESS_BINDINGS", os.environ.get("COLAB_LIVENESS_BINDINGS"))  # step6-retire: COLAB_ dual-read fallback
     return Path(env) if env else Path.home() / ".config" / "colab-cli" / "sessions.json"
 
 

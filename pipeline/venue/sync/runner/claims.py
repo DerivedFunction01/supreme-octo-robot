@@ -238,8 +238,8 @@ def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     claimed = rec["run_id"]
     log_path = RUNS.parent / f"{claimed}.daemon.log"
     child_env = dict(os.environ)
-    child_env["COLAB_RUN_ID"] = claimed
-    child_env["COLAB_RUN_DAEMON_CHILD"] = "1"
+    child_env["VENUE_RUN_ID"] = claimed
+    child_env["VENUE_RUN_DAEMON_CHILD"] = "1"
     child_args = [a for a in args if a != "--daemonize"]
     with open(log_path, "w") as log_fh:
         proc = subprocess.Popen(

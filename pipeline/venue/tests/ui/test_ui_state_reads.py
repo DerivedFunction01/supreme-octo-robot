@@ -56,8 +56,8 @@ def _panel(tmp_path, monkeypatch, refresh_after_s=None):
     """A fresh mount over a tmp var dir, watchdog off,
     state cache unbuilt (the mount builds it against the
     monkeypatched run_core)."""
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
-    monkeypatch.setenv("COLAB_LEASE_UI_STACKDUMP", "0")
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_LEASE_UI_STACKDUMP", "0")
     if refresh_after_s is not None:
         # The cadence's owning module is state_surface:
         # build_state_reads reads its global at build time.

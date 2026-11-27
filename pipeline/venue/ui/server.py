@@ -35,11 +35,11 @@ listener's handler threads are bounded
 panel alone.
 
 Env overrides (used by the tests):
-  COLAB_LEASE_BIN   lease CLI path (default <repo>/bin/colab-lease)
-  COLAB_LEASE_UI_SH UI control script path (default <repo>/ui/ui.sh)
-  COLAB_RUNNER_VAR  var dir (default <repo>/var)
-  COLAB_LEASE_UI_HOST / COLAB_LEASE_UI_PORT
-  COLAB_LEASE_UI_STACKDUMP  "0" disables the stack-dump watchdog
+  VENUE_LEASE_BIN   lease CLI path (default <repo>/bin/colab-lease)
+  VENUE_LEASE_UI_SH UI control script path (default <repo>/ui/ui.sh)
+  VENUE_RUNNER_VAR  var dir (default <repo>/var)
+  VENUE_LEASE_UI_HOST / VENUE_LEASE_UI_PORT
+  VENUE_LEASE_UI_STACKDUMP  "0" disables the stack-dump watchdog
 """
 
 import importlib.util
@@ -106,15 +106,15 @@ STATE_REFRESH_AFTER_S = state_surface.STATE_REFRESH_AFTER_S
 
 
 def lease_bin() -> str:
-    return os.environ.get("COLAB_LEASE_BIN", str(REPO / "bin" / "colab-lease"))
+    return os.environ.get("VENUE_LEASE_BIN", os.environ.get("COLAB_LEASE_BIN", str(REPO / "bin" / "colab-lease")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def ui_sh() -> str:
-    return os.environ.get("COLAB_LEASE_UI_SH", str(UI_DIR / "ui.sh"))
+    return os.environ.get("VENUE_LEASE_UI_SH", os.environ.get("COLAB_LEASE_UI_SH", str(UI_DIR / "ui.sh")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def var_dir() -> Path:
-    return Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def outbox_path() -> Path:
@@ -161,7 +161,7 @@ def run_core(*args: str,
             # (unconditionally — a stale inherited value must never
             # speak for the panel), paired with the --via panel tag
             # on the action calls. The core's bypass requires both.
-            env={**os.environ, "COLAB_LEASE_ACTOR": "panel"},
+            env={**os.environ, "VENUE_LEASE_ACTOR": "panel"},
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 1, None, f"{type(exc).__name__}: {exc}"
@@ -446,9 +446,10 @@ def load_ui_config() -> tuple[str, int]:
         port = int(cfg.get("port", port))
     except (OSError, json.JSONDecodeError, ValueError):
         pass
-    host = os.environ.get("COLAB_LEASE_UI_HOST", host)
-    if os.environ.get("COLAB_LEASE_UI_PORT"):
-        port = int(os.environ["COLAB_LEASE_UI_PORT"])
+    host = os.environ.get("VENUE_LEASE_UI_HOST", os.environ.get("COLAB_LEASE_UI_HOST", host))  # step6-retire: COLAB_ dual-read fallback
+    raw_port = os.environ.get("VENUE_LEASE_UI_PORT", os.environ.get("COLAB_LEASE_UI_PORT"))  # step6-retire: COLAB_ dual-read fallback
+    if raw_port:
+        port = int(raw_port)
     return host, port
 
 
@@ -495,7 +496,7 @@ def _ensure_runtime() -> None:
                 *args, timeout=STATE_COMPUTE_TIMEOUT_S),
             store=SHAPE_STORE)
     if STACKDUMP is None and \
-            os.environ.get("COLAB_LEASE_UI_STACKDUMP", "1") != "0":
+            os.environ.get("VENUE_LEASE_UI_STACKDUMP", os.environ.get("COLAB_LEASE_UI_STACKDUMP", "1")) != "0":  # step6-retire: COLAB_ dual-read fallback
         STACKDUMP = StackDumpWatchdog(
             "colab-lease-panel",
             stackdump_health,

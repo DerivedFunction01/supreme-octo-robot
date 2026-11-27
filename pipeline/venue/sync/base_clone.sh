@@ -46,13 +46,13 @@ if [ "${#_argv_positionals[@]}" -gt 4 ]; then
   echo "usage: base_clone.sh [repo_url] [dest] [branch] [sha]" >&2
   exit 2
 fi
-URL="${_argv_positionals[0]:-${COLAB_REPO_URL:-}}"
+URL="${_argv_positionals[0]:-${VENUE_REPO_URL:-${COLAB_REPO_URL:-}}}"  # step6-retire: COLAB_ dual-read fallback
 DEST="${_argv_positionals[1]:-}"
 BRANCH="${_argv_positionals[2]:-}"
 SHA="${_argv_positionals[3]:-}"
 unset _argv_positionals _argv_after_sep _argv_token
 if [ -z "$URL" ]; then
-  echo "base_clone: no repo URL given (arg 1 or COLAB_REPO_URL)" >&2; exit 2
+  echo "base_clone: no repo URL given (arg 1 or VENUE_REPO_URL)" >&2; exit 2
 fi
 if [ -z "$DEST" ]; then
   echo "base_clone: no dest given (arg 2; the registry entry's dest under /content)" >&2; exit 2

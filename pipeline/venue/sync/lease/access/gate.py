@@ -75,7 +75,7 @@ def check_session_admission(repo: Path, shape_id: str, via: str | None = None, s
         shape = catalog.catalog_shapes(repo).get(shape_id) or {}
     policy = session_gate_policy(repo)
     cls = shape_class(shape)
-    env = os.environ.get(foundation.ACTOR_ENV_CLAIM) or None
+    env = os.environ.get(foundation.ACTOR_ENV_CLAIM, os.environ.get("COLAB_LEASE_ACTOR")) or None  # step6-retire: COLAB_ dual-read fallback
     verdict = {"allowed": False, "shape": shape_id, "shape_class": cls, "via": via, "env_actor": env, "bypass": False, "caller": caller}
     if not policy["enabled"]:
         return {**verdict, "allowed": True, "basis": "disabled"}

@@ -41,7 +41,7 @@ def test_probe_timeout_fails_the_run_instead_of_stranding_it(tmp_path):
     the run closes failed with the reason on the record, and the
     failure is journaled as launch-channel health."""
     env = runner_env(tmp_path)
-    env.update(COLAB_BIN=str(_slow_probe_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_PROBE_TIMEOUT_S="2")
+    env.update(COLAB_BIN=str(_slow_probe_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_PROBE_TIMEOUT_S="2")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 1, r.stdout + r.stderr
     out = json.loads(r.stdout)
@@ -49,7 +49,7 @@ def test_probe_timeout_fails_the_run_instead_of_stranding_it(tmp_path):
     rec = json.loads((runs_dir(env) / f"{out['run_id']}.json").read_text())
     assert rec["state"] == "failed", "the record stranded at a non-terminal state"
     assert "verify timed out" in rec["error"]
-    journal = Path(env["COLAB_RUNNER_VAR"]) / "launch-health.jsonl"
+    journal = Path(env["VENUE_RUNNER_VAR"]) / "launch-health.jsonl"
     entries = [json.loads(line) for line in journal.read_text().splitlines() if line.strip()]
     assert any(e["stage"] == "probe" and e["ok"] is False for e in entries), "the probe failure was not journaled as health evidence"
 
@@ -84,7 +84,7 @@ def test_launch_that_never_lands_closes_launch_lost(tmp_path):
     # (the fake reader's pgrep is box-global under xdist; the
     # in-VM reader it models is session-local). Either path —
     # confirmation or grace — closes the same launch-lost.
-    env.update(COLAB_BIN=str(_noop_launch_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_ABSENCE_GRACE_S="5")
+    env.update(COLAB_BIN=str(_noop_launch_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_ABSENCE_GRACE_S="5")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 1, r.stdout + r.stderr
     out = json.loads(r.stdout)
@@ -229,7 +229,7 @@ def test_sweep_orphans_a_starting_record_on_a_dead_session(tmp_path):
     r = run_verb(env, "--sweep")
     assert r.returncode == 0, r.stdout + r.stderr
     assert json.loads(p.read_text())["state"] == "starting", "one absent reading orphaned a starting record"
-    stamp = Path(env["COLAB_RUNNER_VAR"]) / "absent-no-such-session-xyz.json"
+    stamp = Path(env["VENUE_RUNNER_VAR"]) / "absent-no-such-session-xyz.json"
     data = json.loads(stamp.read_text())
     data["first_absent_at"] = (datetime.now(timezone.utc) - timedelta(seconds=901)).isoformat()
     stamp.write_text(json.dumps(data))

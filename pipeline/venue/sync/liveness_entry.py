@@ -18,7 +18,7 @@ janitor duty and by bin/colab-liveness --sync) repairs any
 drift, and a leaked entry self-deletes on the checker's first
 run that finds no live record.
 
-Jobs-dir resolution: $COLAB_LIVENESS_JOBS_DIR when set (the
+Jobs-dir resolution: $VENUE_LIVENESS_JOBS_DIR when set (the
 deliberate override — tests, tooling). Otherwise the real
 registry is used only when the repo being operated on is
 this module's own installed repo: the registry is the
@@ -69,7 +69,7 @@ _MODULE_REPO = _paths.REPO_RESOLVED
 
 
 def jobs_dir(repo: Path) -> Path | None:
-    env = os.environ.get("COLAB_LIVENESS_JOBS_DIR")
+    env = os.environ.get("VENUE_LIVENESS_JOBS_DIR", os.environ.get("COLAB_LIVENESS_JOBS_DIR"))  # step6-retire: COLAB_ dual-read fallback
     if env:
         return Path(env)
     if os.environ.get("PYTEST_CURRENT_TEST"):
@@ -137,7 +137,7 @@ def sync_for_record(repo: Path, rec: dict) -> str:
         path = entry_path(repo, session)
         if path is None:
             return "unavailable"
-        if not os.environ.get("COLAB_LIVENESS_JOBS_DIR"):
+        if not os.environ.get("VENUE_LIVENESS_JOBS_DIR", os.environ.get("COLAB_LIVENESS_JOBS_DIR")):  # step6-retire: COLAB_ dual-read fallback
             body = path.parent.parent / "bodies" / "colab-liveness.md"
             if not body.exists():
                 return "unavailable"
@@ -199,9 +199,9 @@ def reconcile(repo: Path, records: list) -> dict:
 
 
 def var_dir(repo: Path) -> Path:
-    """The repo's var dir, honoring the same COLAB_RUNNER_VAR
+    """The repo's var dir, honoring the same VENUE_RUNNER_VAR
     seam the lease core uses."""
-    return Path(os.environ.get("COLAB_RUNNER_VAR", Path(repo) / "var"))
+    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", Path(repo) / "var")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def load_records(repo: Path) -> list:

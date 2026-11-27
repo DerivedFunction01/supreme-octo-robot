@@ -293,7 +293,7 @@ def test_poll_timeout_degrades_instead_of_killing_the_poller(tmp_path):
     )
     wrapper.chmod(0o755)
     env = runner_env(tmp_path)
-    env.update(COLAB_BIN=str(wrapper), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_POLL_TIMEOUT_S="2")
+    env.update(COLAB_BIN=str(wrapper), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_POLL_TIMEOUT_S="2")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 0, r.stdout + r.stderr
     out = json.loads(r.stdout)

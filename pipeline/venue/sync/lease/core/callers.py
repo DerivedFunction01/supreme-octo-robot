@@ -10,7 +10,7 @@ from . import foundation
 # missing local registry never breaks the panel or the duties.
 # Mechanics: docs/lease-workflow.md.
 
-CALLER_ENV = "COLAB_CALLER"
+CALLER_ENV = "VENUE_CALLER"
 MACHINERY_CALLERS = (foundation.PANEL_ACTOR, foundation.GATE_DEFAULT_INFRA_ACTOR, "test", "lease")
 _CALLER_PART = re.compile(r"[a-z0-9][a-z0-9-]*\Z")
 

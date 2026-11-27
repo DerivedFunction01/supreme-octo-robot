@@ -237,7 +237,7 @@ def test_sh_liveness_cache_rides_the_writer(tmp_path, monkeypatch):
     freshness stamp — ride the lease seam, not a private
     staging."""
     sh_state = _load("e5_sh_state", REPO_ROOT / "bin" / "_sh_state.py")
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path))
     calls = []
 
     def record(path, data, mode=None):

@@ -36,9 +36,9 @@ def caller_repo(tmp_path, monkeypatch, callers=("alpha", "beta"), gate=None):
     }, sort_keys=True, separators=(",", ":")))
     if callers is not None:
         (cfg_dir / "callers.json").write_text(json.dumps({"callers": list(callers)}))
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    monkeypatch.delenv("COLAB_LEASE_ACTOR", raising=False)
+    monkeypatch.delenv("VENUE_LEASE_ACTOR", raising=False)
     return tmp_path
 
 
@@ -173,7 +173,7 @@ def test_gate_journal_events_carry_the_caller(tmp_path, monkeypatch):
     assert [e["kind"] for e in journal] == ["shape-refused"]
     assert journal[0]["caller"] == "alpha"
     # A bypass admission journals its caller the same way.
-    monkeypatch.setenv("COLAB_LEASE_ACTOR", "panel")
+    monkeypatch.setenv("VENUE_LEASE_ACTOR", "panel")
     assert lease_mod.enforce_session_admission(repo, "plain", via="panel", caller="panel") is None
     journal = [json.loads(line) for line in (repo / "var" / "session-gate-journal.jsonl").read_text().splitlines() if line.strip()]
     assert journal[-1]["kind"] == "shape-bypass" and journal[-1]["caller"] == "panel"

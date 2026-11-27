@@ -17,7 +17,7 @@ def _backdate_absence(env, session, seconds=901):
     """Age a session's absence stamp past the confirmation
     window, so the next sweep's absent reading is a confirmed
     absence (the stamp is the sweep's own state file)."""
-    stamp = Path(env["COLAB_RUNNER_VAR"]) / f"absent-{session}.json"
+    stamp = Path(env["VENUE_RUNNER_VAR"]) / f"absent-{session}.json"
     data = json.loads(stamp.read_text())
     data["first_absent_at"] = (datetime.now(timezone.utc) - timedelta(seconds=seconds)).isoformat()
     stamp.write_text(json.dumps(data))
@@ -172,7 +172,7 @@ def test_acquire_refusal_names_an_orphaned_live_session(tmp_path):
     r = subprocess.run([sys.executable, str(FAKE), "--auth", "oauth2", "new", "-s", "orphan-live-1", "--high-mem"], capture_output=True, text=True, env=env, timeout=60)
     assert r.returncode == 0, r.stdout + r.stderr
     agent_env = dict(env)
-    agent_env.pop("COLAB_LEASE_ACTOR", None)
+    agent_env.pop("VENUE_LEASE_ACTOR", None)
     r = subprocess.run([sys.executable, str(run_bin(agent_env)), "smoke"], capture_output=True, text=True, env=agent_env, timeout=300)
     assert r.returncode == 1, r.stdout + r.stderr
     assert "orphan-live-1" in r.stderr and "bin/colab-lease adopt orphan-live-1" in r.stderr, r.stderr

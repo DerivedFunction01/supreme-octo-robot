@@ -29,7 +29,7 @@ REPO = _paths.REPO_RESOLVED
 
 
 def _var_dir() -> Path:
-    return Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
 
 
 def _lease_module():

@@ -77,7 +77,7 @@ def test_adopt_deadline_shortens_via_cli_exits_1(tmp_path):
 def test_adopt_shape_ambiguity_via_cli(tmp_path):
     env = lease_env(tmp_path)
     make_orphan(env, "stray-cli-5")
-    (Path(env["COLAB_RUNNER_VAR"]) / "cli-catalog.json").write_text(json.dumps({"gpu": ["T4"], "tpu": ["v5e1"], "no_high_mem": [], "fetched_at": "2027-01-01T00:00:00+00:00"}))
+    (Path(env["VENUE_RUNNER_VAR"]) / "cli-catalog.json").write_text(json.dumps({"gpu": ["T4"], "tpu": ["v5e1"], "no_high_mem": [], "fetched_at": "2027-01-01T00:00:00+00:00"}))
     deadline = (datetime.now(timezone.utc) + timedelta(hours=3)).isoformat()
     rc, out = run_lease_rc(env, "adopt", "stray-cli-5", "--deadline", deadline, "--caller", "alpha")
     assert rc == 1 and out["action"] == "adopt-shape-ambiguous"

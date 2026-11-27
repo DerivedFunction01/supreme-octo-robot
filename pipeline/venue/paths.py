@@ -38,7 +38,7 @@ RUNNER_DIR = REPO / "sync" / "runner"
 # Resolved forms: the transient registry the ops mirror
 # binds (the var/ and results/ data roots stay joins off
 # REPO at their consumers — one consumer re-roots them
-# wholesale under the COLAB_RUNNER_HOME override).
+# wholesale under the VENUE_RUNNER_HOME override).
 TRANSIENT_REGISTRY = REPO_RESOLVED / "config" / "transient.json"
 
 # Code loads out of the sync tree (resolved, as the loaders

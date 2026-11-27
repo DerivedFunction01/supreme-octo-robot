@@ -63,7 +63,7 @@ def test_gate_panel_bypass_needs_via_and_env(tmp_path, monkeypatch):
     repo = gate_repo(tmp_path, monkeypatch)
     fake = FakeColab()
     # The env claim alone, without the panel via, is not a bypass.
-    monkeypatch.setenv("COLAB_LEASE_ACTOR", "panel")
+    monkeypatch.setenv("VENUE_LEASE_ACTOR", "panel")
     out = lease_mod.acquire(fake, repo, "cpu", now_dt=PNOW)
     assert out["action"] == "shape-refused"
     # Both halves together bypass, and the bypass is journaled.
@@ -82,7 +82,7 @@ def test_gate_via_panel_alone_is_not_a_bypass(tmp_path, monkeypatch):
 
 def test_gate_test_claim_bypasses_and_journals(tmp_path, monkeypatch):
     repo = gate_repo(tmp_path, monkeypatch)
-    monkeypatch.setenv("COLAB_LEASE_ACTOR", "test")
+    monkeypatch.setenv("VENUE_LEASE_ACTOR", "test")
     out = lease_mod.acquire(FakeColab(), repo, "cpu", now_dt=PNOW)
     assert out["action"] == "created"
     journal = gate_journal(repo)
@@ -125,7 +125,7 @@ def test_gate_absent_block_enforces_defaults(tmp_path, monkeypatch):
 
 def test_gate_demand_refusal_clears_and_journals(tmp_path, monkeypatch):
     repo = gate_repo(tmp_path, monkeypatch)
-    monkeypatch.setenv("COLAB_RUNNER_AUTO_ACQUIRE", "1")
+    monkeypatch.setenv("VENUE_RUNNER_AUTO_ACQUIRE", "1")
     fake = FakeColab()
     # An attributed demand for a blocked shape is refused at write.
     out = lease_mod.write_request(repo, reason="burst", shape="cpu", caller="alpha", now_dt=PNOW)
@@ -169,7 +169,7 @@ def test_gate_cli_refusal_exit_code_and_panel_bypass(tmp_path):
     refused with exit 1 on Standard and GPU shapes; the panel's
     two halves together start the Standard shape."""
     env = lease_env(tmp_path)
-    env.pop("COLAB_LEASE_ACTOR", None)
+    env.pop("VENUE_LEASE_ACTOR", None)
     _seed_cli_catalog(env)
 
     def run(*args):
@@ -188,7 +188,7 @@ def test_gate_cli_refusal_exit_code_and_panel_bypass(tmp_path):
     assert r.returncode == 1
     assert json.loads(r.stdout)["action"] == "shape-refused"
     # Both halves: created.
-    env["COLAB_LEASE_ACTOR"] = "panel"
+    env["VENUE_LEASE_ACTOR"] = "panel"
     r = run("acquire", "--shape", "cpu", "--via", "panel")
     assert r.returncode == 0, r.stdout + r.stderr
     assert json.loads(r.stdout)["action"] == "created"
@@ -211,7 +211,7 @@ def test_gate_post_start_shape_mismatch_stops_and_refuses(tmp_path):
     assert record_files(env) == []
     sessions = Path(env["FAKE_COLAB_STATE"]) / "sessions"
     assert not (sessions / out["session"] / "ACTIVE").exists()
-    journal = [json.loads(line) for line in (Path(env["COLAB_RUNNER_VAR"]) / "session-gate-journal.jsonl").read_text().splitlines() if line.strip()]
+    journal = [json.loads(line) for line in (Path(env["VENUE_RUNNER_VAR"]) / "session-gate-journal.jsonl").read_text().splitlines() if line.strip()]
     assert [e["kind"] for e in journal] == ["shape-mismatch"]
     assert journal[0]["seam"] == "acquire" and journal[0]["shape"] == "cpu-highram"
     env.pop("FAKE_COLAB_FORCE_CLASS")

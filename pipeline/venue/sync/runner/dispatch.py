@@ -76,7 +76,7 @@ def launch(args: list[str]) -> int:
     if refusal is not None:
         print(f"colab-run: {refusal}", file=sys.stderr)
         return 2
-    if daemonize_flag and not os.environ.get("COLAB_RUN_DAEMON_CHILD"):
+    if daemonize_flag and not os.environ.get("VENUE_RUN_DAEMON_CHILD", os.environ.get("COLAB_RUN_DAEMON_CHILD")):  # step6-retire: COLAB_ dual-read fallback
         # --daemonize: the fire must survive its firing context.
         # A fire ridden through a bounded context — the
         # scheduler ops route is the standing specimen — dies
@@ -139,7 +139,7 @@ def launch(args: list[str]) -> int:
         job,
         script_path=(REPO / script) if isinstance(script, str) and script else None,
         uploads_base=REPO,
-        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER")),
+        claim_error=lease.caller_claim_error(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))),  # step6-retire: COLAB_ dual-read fallback
         shape_error=field_err,
         pin_error=pin_resolution_error(parse_transport(job), repo=REPO, repo_registry=repo_registry),
     )
@@ -148,14 +148,14 @@ def launch(args: list[str]) -> int:
         return 2
     normalize_manifest_outputs(job)
     # Caller claim: flag over the manifest's caller key over
-    # $COLAB_CALLER; its registration settled in the pass
+    # $VENUE_CALLER; its registration settled in the pass
     # above, before anything starts.
-    caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("COLAB_CALLER"))
+    caller = lease.resolve_caller(REPO, flag=claim_raw, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     # Session pin: flag over the env seam, mirroring the caller
     # claim's precedence. A pin names the lease this run must
     # adopt (acquire refuses pin-unavailable rather than
     # substituting another session).
-    pin_session = session_flag if session_flag is not None else os.environ.get("COLAB_RUN_SESSION")
+    pin_session = session_flag if session_flag is not None else os.environ.get("VENUE_RUN_SESSION", os.environ.get("COLAB_RUN_SESSION"))  # step6-retire: COLAB_ dual-read fallback
     # Venue-state saturation leg (venue-state mechanism,
     # step 4): a fresh fire to a saturated venue refuses
     # here, in the preflight pass's family — named, in
@@ -164,7 +164,7 @@ def launch(args: list[str]) -> int:
     # pin names one. A resume attaches to a run that
     # already holds the venue and is never refused; a stale
     # or absent file refuses nothing.
-    _var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+    _var_dir = Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
     if not resume:
         for _key in ["colab"] + ([pin_session] if pin_session else []):
             _refusal = _venue_saturation_refusal(
@@ -193,7 +193,7 @@ def launch(args: list[str]) -> int:
     # claim below suffixes it on a collision exactly as for a
     # self-minted id, and the parent reports the claimed name
     # it read off disk, so the two never disagree.
-    daemon_id = os.environ.get("COLAB_RUN_ID") if os.environ.get("COLAB_RUN_DAEMON_CHILD") else None
+    daemon_id = os.environ.get("VENUE_RUN_ID", os.environ.get("COLAB_RUN_ID")) if os.environ.get("VENUE_RUN_DAEMON_CHILD", os.environ.get("COLAB_RUN_DAEMON_CHILD")) else None  # step6-retire: COLAB_ dual-read fallback
     run_id = resume or daemon_id or f"{job_name}-{datetime.now(timezone.utc):%Y%m%dT%H%M%SZ}"
     rec = None
     if resume:

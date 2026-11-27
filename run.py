@@ -375,14 +375,14 @@ def cmd_serve_venue(argv):
     stale-while-recompute under a read-scoped timeout,
     handler threads bounded; both are the panel module's
     own seams). Its config is its own seam (ui/config.json
-    plus COLAB_LEASE_UI_* env); no scheduler config, no
+    plus VENUE_LEASE_UI_* env); no scheduler config, no
     engine lock, and no attention binding is consulted
     here, and nothing in this process loads the coupled
     surfaces' mounts."""
     if argv:
         print("run.py serve-venue: takes no arguments "
               "(the surface's config is its own "
-              "COLAB_LEASE_UI_* seam)", file=sys.stderr)
+              "VENUE_LEASE_UI_* seam)", file=sys.stderr)
         return 2
     venue_ui = _load_venue_ui()
     return venue_ui.main([])

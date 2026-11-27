@@ -67,12 +67,12 @@ def lease_env(tmp_path):
         TEST_REPO_ROOT=str(root),
         COLAB_BIN=str(FAKE),
         FAKE_COLAB_STATE=str(tmp_path / "fake"),
-        COLAB_RUNNER_VAR=str(tmp_path / "var"),
+        VENUE_RUNNER_VAR=str(tmp_path / "var"),
         # Session shape gate: the suite's door is the whitelisted
         # test actor claim (the live config's session_gate block
         # lists it); gate-specific tests pop it to run as a plain
         # agent actor.
-        COLAB_LEASE_ACTOR="test",
+        VENUE_LEASE_ACTOR="test",
         # Keepalive: two instant cycles in the sandbox, then exit — an
         # unbounded loop here would leak a process onto this machine.
         KEEPALIVE_MAX_CYCLES="2",
@@ -86,7 +86,7 @@ def standing_env(tmp_path):
     admission is the infra exemption (the infra actor + the
     standing marker on the standing shape), never a bypass."""
     env = lease_env(tmp_path)
-    env.pop("COLAB_LEASE_ACTOR", None)
+    env.pop("VENUE_LEASE_ACTOR", None)
     return env
 
 
@@ -102,11 +102,11 @@ def auto_env(tmp_path, enabled):
         TEST_REPO_ROOT=str(root),
         COLAB_BIN=str(FAKE),
         FAKE_COLAB_STATE=str(tmp_path / "fake"),
-        COLAB_RUNNER_VAR=str(tmp_path / "var"),
-        COLAB_RUNNER_AUTO_ACQUIRE="1" if enabled else "0",
+        VENUE_RUNNER_VAR=str(tmp_path / "var"),
+        VENUE_RUNNER_AUTO_ACQUIRE="1" if enabled else "0",
         # Session shape gate: the suite's test actor claim (see
         # lease_env); gate tests pop it.
-        COLAB_LEASE_ACTOR="test",
+        VENUE_LEASE_ACTOR="test",
         KEEPALIVE_MAX_CYCLES="2",
         KEEPALIVE_INTERVAL_SECONDS="0",
         KEEPALIVE_ALLOW_NONCOLAB="1",
@@ -118,7 +118,7 @@ FAKE_ENV_KEEPALIVE = dict(KEEPALIVE_MAX_CYCLES="2", KEEPALIVE_INTERVAL_SECONDS="
 # Session shape gate: the suite's test actor claim (see
 # lease_env) — without it the runner's acquire is
 # an agent actor and caller attribution refuses the fresh start.
-FAKE_ENV_GATE = dict(COLAB_LEASE_ACTOR="test")
+FAKE_ENV_GATE = dict(VENUE_LEASE_ACTOR="test")
 
 
 def runner_env(tmp_path, **extra):
@@ -134,4 +134,4 @@ def runner_env(tmp_path, **extra):
     # land in the fixture, never the checkout.
     root = repo_fixture.cli_repo(tmp_path / "repo", tmp_path / "var")
     _disable_provisioning(root)
-    return dict(os.environ, HOME=str(home), TEST_REPO_ROOT=str(root), COLAB_BIN=str(FAKE), FAKE_COLAB_STATE=str(tmp_path / "fake"), COLAB_RUNNER_VAR=str(tmp_path / "var"), **FAKE_ENV_KEEPALIVE, **FAKE_ENV_GATE, **extra)
+    return dict(os.environ, HOME=str(home), TEST_REPO_ROOT=str(root), COLAB_BIN=str(FAKE), FAKE_COLAB_STATE=str(tmp_path / "fake"), VENUE_RUNNER_VAR=str(tmp_path / "var"), **FAKE_ENV_KEEPALIVE, **FAKE_ENV_GATE, **extra)

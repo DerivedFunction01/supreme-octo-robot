@@ -33,7 +33,7 @@ def _plant_peer_lease(env, session):
     """A second live lease at the shape, a different lineage:
     the fake session created, its record copied from the
     first lease's shape."""
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     rec = json.loads((var / f"lease-{session}.json").read_text())
     r = subprocess.run([sys.executable, str(FAKE), "new", "-s", PEER, "--high-mem"], capture_output=True, text=True, env=env, timeout=60)
     assert r.returncode == 0, r.stdout + r.stderr
@@ -66,7 +66,7 @@ def test_resume_replaces_a_reaped_binding(tmp_path):
     # The reap: the bound session stopped, its lease record
     # deleted on the confirmed-absent reading.
     _stop_fake(env, session)
-    (Path(env["COLAB_RUNNER_VAR"]) / f"lease-{session}.json").unlink()
+    (Path(env["VENUE_RUNNER_VAR"]) / f"lease-{session}.json").unlink()
     _plant_bound_run(env, session)
     r = _resume(env)
     assert r.returncode == 0, r.stdout + r.stderr

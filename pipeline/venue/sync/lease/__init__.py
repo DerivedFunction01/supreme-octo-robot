@@ -16,7 +16,7 @@ generated at creation (sync/naming.py) and never reused, the caller
 is the governed attribution claim, and the shape is a catalog shape
 descriptor from the CLI-parsed catalog. State: one record per
 lease, var/lease-<session>.json (override the var dir with
-$COLAB_RUNNER_VAR, used by tests). There is no legacy model: a
+$VENUE_RUNNER_VAR, used by tests). There is no legacy model: a
 record, grant, or journal segment is read exactly as written, in
 the current shape/caller vocabulary, and anything written in the
 retired profile vocabulary is simply not interpreted. A two-tier

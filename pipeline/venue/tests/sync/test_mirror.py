@@ -1,4 +1,4 @@
-"""Mirror engine round-trip in a sandboxed HOME (COLAB_RUNNER_HOME)."""
+"""Mirror engine round-trip in a sandboxed HOME (VENUE_RUNNER_HOME)."""
 
 import json
 import os
@@ -11,7 +11,7 @@ MIRROR = REPO / "ops" / "mirror_transient.py"
 
 
 def run_mirror(op, home):
-    env = dict(os.environ, COLAB_RUNNER_HOME=str(home))
+    env = dict(os.environ, VENUE_RUNNER_HOME=str(home))
     return subprocess.run([sys.executable, str(MIRROR), op, "--json"], capture_output=True, text=True, env=env)
 
 

@@ -90,7 +90,7 @@ The runner's own lifecycle verbs ride the same record:
   reduced read budget (2 × 45 s): confirmed-absent fails the
   run fast with a `--resume` note; unknown never fails the run.
 - A run may pin its session: `--session NAME` (or
-  `$COLAB_RUN_SESSION`) makes the acquire adopt the named lease
+  `$VENUE_RUN_SESSION`) makes the acquire adopt the named lease
   or fail `pin-unavailable` — a pin never silently substitutes
   another session and never clears the named record.
 - Adoption reads launch health: the launch path journals every
@@ -352,7 +352,7 @@ when the listing itself could not be read — and unknown is
 never treated as dead. A lease record is deleted only on a
 confirmed-absent reading or a successful stop, never on an
 unreadable one. The pass then runs in phases under a cycle
-budget (`COLAB_LEASE_REAP_BUDGET_S`, default 300 s): every
+budget (`VENUE_LEASE_REAP_BUDGET_S`, default 300 s): every
 record's lifecycle legs (renewal, release, absence clearing)
 complete first, unconditionally; the liveness furniture
 (identity check, keepalive freshness, kernel pulse), the
@@ -365,12 +365,12 @@ is marked — instead of the hook's timeout killing the cycle
 mid-flight. The hook's 420 s bound applies to the whole reap
 COMMAND, which composes the pass and the standing
 collector's ride, so the command composes both against one
-budget (`COLAB_LEASE_REAP_COMMAND_BUDGET_S`, default
+budget (`VENUE_LEASE_REAP_COMMAND_BUDGET_S`, default
 390 s): the pass result is first persisted to
 `var/last-reap.json`, then the collector runs as a bounded
 subprocess (the standalone `colab-run --collect-stale` verb)
 allotted whatever the pass did not spend, passed through
-`COLAB_COLLECT_BUDGET_S` — too little remaining skips it,
+`VENUE_COLLECT_BUDGET_S` — too little remaining skips it,
 reported, and a subprocess timeout reports in the result's
 collect block rather than killing the command. Keepalive
 launches are their
@@ -495,13 +495,13 @@ the built-in defaults (fail-closed).
   unparseable evidence never triggers the assertion.
 - Adopting or reusing a live session, `extend`, and `release`
   are never gated.
-- Actors are the pair (caller claim, `COLAB_LEASE_ACTOR` env
+- Actors are the pair (caller claim, `VENUE_LEASE_ACTOR` env
   claim); a bare caller tag is caller-asserted and never
   sufficient for a bypass. The panel bypasses only with both
   halves — the env claim the server sets on every core call, plus
   `--via panel` on the call. The standing duty is exempt only as
   the infra actor admitting exactly the configured standing
-  shape. `COLAB_LEASE_ACTOR=test` is the whitelisted probe door
+  shape. `VENUE_LEASE_ACTOR=test` is the whitelisted probe door
   for deliberate live probes of other shapes; every use is
   journaled as a bypass.
 - Refusals, load-bearing bypasses, infra admissions,
@@ -913,7 +913,7 @@ on the reap cadence.
   truth); an unreadable sessions list reads as UNKNOWN, never as
   death. Reap clears a record only on confirmed absence; release
   keeps the record when a stop fails. Test suites run isolated
-  from live state (a scratch `COLAB_RUNNER_VAR` and home), so a
+  from live state (a scratch `VENUE_RUNNER_VAR` and home), so a
   green suite never writes a real record.
 - **Local-machine restart**: transient state restores from the
   repo mirror via the reaper hook and the wrappers; the lease
@@ -960,7 +960,7 @@ HTTP self-call — on the cadence `ui/config.json`'s
 `stackdump_*` keys set (defaults 5 s cadence, 15 s threshold,
 60 s repeat, 16 MiB aggregate cap), and on a lag dumps every
 Python thread's stack to `stackdumps.log` in the server's var
-dir (`COLAB_RUNNER_VAR`; the repo's `var/` in the live
+dir (`VENUE_RUNNER_VAR`; the repo's `var/` in the live
 deployment) through a handle opened at startup. The dump is
 diagnostic only — recovery stays with the ladder above. Every
 `/api/state` response carries `stackdump_last_at`, the last

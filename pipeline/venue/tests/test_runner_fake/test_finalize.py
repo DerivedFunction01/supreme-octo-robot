@@ -70,7 +70,7 @@ def test_a_download_that_delivers_empty_is_not_a_pull(tmp_path):
     and the expiry close must name the failure as
     collection_failed, apart from the payload's outcome."""
     env = runner_env(tmp_path)
-    env.update(COLAB_BIN=str(_truncating_download_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_COLLECTION_HOLD_S="3")
+    env.update(COLAB_BIN=str(_truncating_download_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_COLLECTION_HOLD_S="3")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 0, r.stdout + r.stderr
     out = json.loads(r.stdout)

@@ -45,7 +45,7 @@ _sh_spec.loader.exec_module(sh)
 @pytest.fixture()
 def repo(tmp_path, monkeypatch):
     root = repo_fixture.scratch_repo(tmp_path)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     return root
 

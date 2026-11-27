@@ -16,7 +16,7 @@ The session comes from `-s` or `$COLAB_SH_SESSION`. The tool
 targets existing sessions only and never creates one — session
 lifecycle belongs to the lease, and `bin/colab-sh` refuses a
 session its own read does not call alive. Caller attribution rides
-`$COLAB_CALLER` through the channel, as with every wrapper.
+`$VENUE_CALLER` through the channel, as with every wrapper.
 
 Bulk movement is a different tool: `bin/colab-xfer` (below) moves
 one file in 32 MB parts with per-part hash resume. colab-fs is for

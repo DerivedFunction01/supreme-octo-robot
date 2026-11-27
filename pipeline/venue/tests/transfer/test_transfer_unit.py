@@ -353,7 +353,7 @@ def verb_harness(tmp_path, monkeypatch):
     monkeypatch.setattr(t, "PART_BACKOFF_S", 0)
     monkeypatch.setattr(t, "colab", fake)
     monkeypatch.setattr(verb, "XFERS", tmp_path / "xfers")
-    monkeypatch.delenv("COLAB_CALLER", raising=False)
+    monkeypatch.delenv("VENUE_CALLER", raising=False)
     local = tmp_path / "big.bin"
     local.write_bytes(CONTENT)
     return fake, local

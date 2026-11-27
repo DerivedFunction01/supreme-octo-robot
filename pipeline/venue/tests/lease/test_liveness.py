@@ -49,10 +49,10 @@ class Fixture:
         self.gate = tmp_path / "gate.json"
         self.env = {
             **os.environ,
-            "COLAB_LIVENESS_JOBS_DIR": str(self.jobs),
-            "COLAB_LIVENESS_BINDINGS": str(self.bindings),
-            "COLAB_LIVENESS_GATE_STATE": str(self.gate),
-            "COLAB_RUNNER_VAR": str(self.root / "var"),
+            "VENUE_LIVENESS_JOBS_DIR": str(self.jobs),
+            "VENUE_LIVENESS_BINDINGS": str(self.bindings),
+            "VENUE_LIVENESS_GATE_STATE": str(self.gate),
+            "VENUE_RUNNER_VAR": str(self.root / "var"),
         }
 
     def record(self, **over):
@@ -454,7 +454,7 @@ def lease_cli_env(tmp_path):
     env = env_fixtures.lease_env(tmp_path)
     jobs = tmp_path / "jobs"
     jobs.mkdir()
-    env["COLAB_LIVENESS_JOBS_DIR"] = str(jobs)
+    env["VENUE_LIVENESS_JOBS_DIR"] = str(jobs)
     return env, jobs
 
 
@@ -508,7 +508,7 @@ def test_arming_waits_for_the_escalate_body(tmp_path, monkeypatch):
     so the fixture lays out a miniature pipeline tree and
     points the module's installed-repo root at it.)"""
     monkeypatch.delenv("PYTEST_CURRENT_TEST", raising=False)
-    monkeypatch.delenv("COLAB_LIVENESS_JOBS_DIR", raising=False)
+    monkeypatch.delenv("VENUE_LIVENESS_JOBS_DIR", raising=False)
     venue_root = tmp_path / "pipeline" / "venue"
     venue_root.mkdir(parents=True)
     monkeypatch.setattr(le, "_MODULE_REPO", venue_root)
@@ -528,7 +528,7 @@ def test_sync_and_reconcile(tmp_path):
     jobs.mkdir()
     repo = tmp_path / "runner"
     (repo / "var").mkdir(parents=True)
-    os.environ["COLAB_LIVENESS_JOBS_DIR"] = str(jobs)
+    os.environ["VENUE_LIVENESS_JOBS_DIR"] = str(jobs)
     try:
         rec = {"session": SESSION, "caller": "secforms"}
         assert le.sync_for_record(repo, rec) == "written"
@@ -542,4 +542,4 @@ def test_sync_and_reconcile(tmp_path):
         out = le.reconcile(repo, [rec])
         assert out["armed"] == [SESSION], "reconcile re-arms a live session whose entry was deleted"
     finally:
-        del os.environ["COLAB_LIVENESS_JOBS_DIR"]
+        del os.environ["VENUE_LIVENESS_JOBS_DIR"]

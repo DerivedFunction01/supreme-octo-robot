@@ -23,7 +23,7 @@ from runner_harness import FAKE, _fire_smoke, run_bin, runs_dir, runner_env  # n
 def _renew_lease(env, session):
     """Move the fixture's lease to its lineage's next
     generation, exactly as a renewal swap leaves it."""
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     rec = json.loads((var / f"lease-{session}.json").read_text())
     stem = session
     while re.search(r"-r\d+$", stem):

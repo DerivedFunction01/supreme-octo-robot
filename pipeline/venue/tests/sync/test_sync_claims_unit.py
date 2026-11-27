@@ -286,10 +286,10 @@ def _cli_env(tmp_path):
         HOME=str(home),
         COLAB_BIN=str(REPO / "tests" / "fixtures" / "fake_colab.py"),
         FAKE_COLAB_STATE=str(tmp_path / "fake"),
-        COLAB_RUNNER_VAR=str(tmp_path / "var"),
-        COLAB_LEASE_ACTOR="test",
+        VENUE_RUNNER_VAR=str(tmp_path / "var"),
+        VENUE_LEASE_ACTOR="test",
     )
-    env.pop("COLAB_CALLER", None)
+    env.pop("VENUE_CALLER", None)
     return env, root
 
 
@@ -303,7 +303,7 @@ def _run_lease(env, root, *args):
 
 
 def test_claim_sync_verbs_round_trip(tmp_path, monkeypatch):
-    monkeypatch.delenv("COLAB_RUNNER_VAR", raising=False)
+    monkeypatch.delenv("VENUE_RUNNER_VAR", raising=False)
     env, root = _cli_env(tmp_path)
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)

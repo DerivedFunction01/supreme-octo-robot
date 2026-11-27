@@ -24,7 +24,7 @@ def run_lease(env, *args, expect_rc=0):
 
 
 def var(env) -> Path:
-    return Path(env["COLAB_RUNNER_VAR"])
+    return Path(env["VENUE_RUNNER_VAR"])
 
 
 def record_files(env):
@@ -181,7 +181,7 @@ def test_standing_budget_refusal_keeps_burst_acquirable(tmp_path):
     # acquire rides the suite's test actor claim: under caller
     # attribution a claimless agent actor's fresh start is refused
     # (caller-start-refused), which is not what this test is about.
-    env["COLAB_LEASE_ACTOR"] = "test"
+    env["VENUE_LEASE_ACTOR"] = "test"
     assert run_lease(env, "acquire", "--shape", "cpu-highram")["action"] == "created"
 
 
@@ -219,7 +219,7 @@ def test_extend_grant_without_grant_refuses(tmp_path):
 
 def test_demand_started_burst_carries_envelope_stamps(tmp_path):
     env = lease_env(tmp_path)
-    env["COLAB_RUNNER_AUTO_ACQUIRE"] = "1"
+    env["VENUE_RUNNER_AUTO_ACQUIRE"] = "1"
     granted = run_lease(env, "grant", "--hours", "4", "--burst", "cpu-highram")
     run_lease(env, "request", "--shape", "cpu-highram", "--reason", "burst work", "--caller", "test")
     out = run_lease(env, "auto")
@@ -232,7 +232,7 @@ def test_demand_started_burst_carries_envelope_stamps(tmp_path):
 
 def test_demand_out_of_scope_carries_neither_stamp(tmp_path):
     env = lease_env(tmp_path)
-    env["COLAB_RUNNER_AUTO_ACQUIRE"] = "1"
+    env["VENUE_RUNNER_AUTO_ACQUIRE"] = "1"
     seed_cli_catalog(env)
     run_lease(env, "grant", "--hours", "4", "--burst", "cpu-highram")  # scope: cpu + cpu-highram
     run_lease(env, "request", "--shape", "t4", "--reason", "outside", "--caller", "test")
@@ -252,7 +252,7 @@ def test_envelope_ledger_and_state_block(tmp_path):
     ledger, its start/release ride the reaper spool as envelope
     kinds, and ungrant closes the ledger with grant-ended."""
     env = lease_env(tmp_path)
-    env["COLAB_RUNNER_AUTO_ACQUIRE"] = "1"
+    env["VENUE_RUNNER_AUTO_ACQUIRE"] = "1"
     granted = run_lease(env, "grant", "--hours", "4", "--burst", "cpu-highram")
     run_lease(env, "request", "--shape", "cpu-highram", "--reason", "burst work", "--caller", "test")
     run_lease(env, "auto")

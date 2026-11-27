@@ -52,8 +52,8 @@ def main() -> int:
     parser = job_harness.job_parser()
     parser.add_argument("--config", default=str(DEFAULT_CONFIG))
     parser.add_argument("--catalog-dir", default=str(DEFAULT_CATALOG))
-    parser.add_argument("--repo", default=os.environ.get("COLAB_REPO_ID"),
-                        help="registry repo id (default: $COLAB_REPO_ID, else the sole built clone)")
+    parser.add_argument("--repo", default=os.environ.get("VENUE_REPO_ID", os.environ.get("COLAB_REPO_ID")),  # step6-retire: COLAB_ dual-read fallback
+                        help="registry repo id (default: $VENUE_REPO_ID, else the sole built clone)")
     args = parser.parse_args()
     record = job_harness.resolve_remote_repo(args.repo)
     REPO = Path("/content") / record["dest"]

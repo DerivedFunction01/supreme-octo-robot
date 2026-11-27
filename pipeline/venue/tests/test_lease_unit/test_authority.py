@@ -19,10 +19,10 @@ STANDARD = {"high_mem": False}
 
 
 def _authority_fixture(tmp_path, monkeypatch, enabled=True):
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
     monkeypatch.setattr(lease.gate, "session_gate_policy", lambda repo: {"enabled": enabled, "agent_classes": ["high_ram"], "bypass_actors": ["panel", "test"], "infra_actor": "standing"})
     monkeypatch.setattr(lease.foundation, "load_config", lambda repo: {"standing": {"shape": "cpu"}})
-    monkeypatch.delenv("COLAB_LEASE_ACTOR", raising=False)
+    monkeypatch.delenv("VENUE_LEASE_ACTOR", raising=False)
 
 
 def _gate_journal(tmp_path):
@@ -58,14 +58,14 @@ def test_authority_non_creation_consult_and_duty_admit(repo, tmp_path, monkeypat
 
 def test_authority_panel_two_halves_and_bypass_claim_admit(repo, tmp_path, monkeypatch):
     _authority_fixture(tmp_path, monkeypatch)
-    monkeypatch.setenv("COLAB_LEASE_ACTOR", "panel")
+    monkeypatch.setenv("VENUE_LEASE_ACTOR", "panel")
     # One half alone is not authority: the panel env claim without
     # its via corroboration is refused like any agent.
     out = lease.enforce_session_admission(repo, "main", shape=HIGH_RAM, caller="panel")
     assert out is not None and out["action"] == "caller-start-refused"
     assert lease.enforce_session_admission(repo, "main", shape=HIGH_RAM, via="panel", caller="panel") is None
     # A whitelisted non-panel claim bypasses on the env half alone.
-    monkeypatch.setenv("COLAB_LEASE_ACTOR", "test")
+    monkeypatch.setenv("VENUE_LEASE_ACTOR", "test")
     assert lease.enforce_session_admission(repo, "main", shape=HIGH_RAM) is None
 
 

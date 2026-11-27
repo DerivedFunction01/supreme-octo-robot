@@ -33,7 +33,7 @@ three natures that are never blurred.
    `fixtures/callers.example.json`, the tracked fictional
    seed). Semantics, carried whole from the runner
    (**RUN3**): a claim is `--caller` on Python entry points or
-   `$COLAB_CALLER` for bash wrappers and drivers, **flag over
+   `$VENUE_CALLER` for bash wrappers and drivers, **flag over
    env**; a claim may carry **one lane suffix** (`base:lane`)
    validated against its registered base; a
    **presented-but-unregistered claim is refused** at claim

@@ -30,7 +30,7 @@ def _absence_grace_s() -> int:
     """The launch-absence grace: env-tunable for the reason the
     poll timeout is (tests shrink it), defaulting to the
     constant."""
-    return int(os.environ.get("COLAB_RUN_ABSENCE_GRACE_S", str(LAUNCH_ABSENCE_GRACE_S)))
+    return int(os.environ.get("VENUE_RUN_ABSENCE_GRACE_S", os.environ.get("COLAB_RUN_ABSENCE_GRACE_S", str(LAUNCH_ABSENCE_GRACE_S))))  # step6-retire: COLAB_ dual-read fallback
 
 
 def _launch_age_s(rec: dict) -> float:
