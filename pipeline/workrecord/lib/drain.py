@@ -203,6 +203,7 @@ def raise_tail(plans_dir, bundle: dict, titles: list,
             text = f"{title} [{drain}]"
         result = bundle_writer.create_todo(
             plans_dir, bundle["id"], text,
+            verb="raise-tail",
             body=(
                 f"{DRAIN_STAMP_PREFIX} {drain}\n\n"
                 "Raised by the workbench drain detector on "

@@ -21,15 +21,24 @@ from .bundle_core import (
     find_bundle_dir,
 )
 from .bundle_create import _check_contract_gate
+from .transitions import append_transition
 
 # Todo creation (§3.4)
 # ----------------------------------------------------------------
 
 _FRONT_MATTER_ORDER = ("id", "legacy_id", "title",
                        "status", "feature",
-                       "plan", "plan_step", "worktree",
+                       "plan", "plan_step", "est",
+                       "fanout_position", "worktree",
                        "created", "updated",
                        "progress_check", "progress_armed")
+
+# The fan-out positions a step's record may carry
+# (timing-ledger plan): serial prefix, fan-out branch,
+# fan-in. The plan grammar validates the same set on
+# the wb-step block; the writer refuses anything else
+# at the mint, like every other field rule here.
+FANOUT_POSITIONS = ("serial", "branch", "fan-in")
 
 
 def _check_progress(progress, status, *,
@@ -91,7 +100,11 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
                 progress: str = None,
                 no_progress: bool = False,
                 armed_at: str = None,
-                name: str = None) -> dict:
+                name: str = None,
+                est: str = None,
+                fanout_position: str = None,
+                actor: str = None,
+                verb: str = "create") -> dict:
     """Write one todo file into a bundle's todos/ dir,
     with complete §3.2 front-matter. The todo's name —
     its id, a GitHub-like slug — is assigned here: an
@@ -110,7 +123,33 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
     `doing` with neither is armed at the default
     cadence — monitored by default, like the doing
     move in set_todo_status.
+
+    Timing ledger (Step 2): `est` and `fanout_position`
+    are additive front-matter — carried when a caller
+    supplies them, absent otherwise, and a file without
+    them reads exactly as before. The creation itself
+    is recorded as the body's first transition line
+    through the one helper (lib/writes/transitions.py),
+    in the same write as the file. `verb` names the
+    creating path (the drain's tail raise and the DB
+    import mint through here and say so); `actor` is
+    the caller identity when one is supplied — none
+    is today, so the helper records the verb's name.
     """
+    if not title or not title.strip() \
+            or "\n" in title:
+        raise BundleError(
+            "todo title must be a single non-empty line")
+    title = title.strip()
+    if est is not None and (not str(est).strip()
+                            or "\n" in str(est)):
+        raise BundleError(
+            "est must be a single non-empty line")
+    if fanout_position is not None \
+            and fanout_position not in FANOUT_POSITIONS:
+        raise BundleError(
+            f"fanout_position must be one of "
+            f"{FANOUT_POSITIONS}, got {fanout_position!r}")
     if not title or not title.strip() \
             or "\n" in title:
         raise BundleError(
@@ -182,6 +221,8 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
         "feature": feature,
         "plan": plan,
         "plan_step": step,
+        "est": est,
+        "fanout_position": fanout_position,
         "worktree": worktree,
         "created": created or today,
         "updated": updated or created or today,
@@ -195,6 +236,9 @@ def create_todo(plans_dir, bundle_ref, title, *, step=None,
     if todo_path.exists():
         raise BundleError(
             f"todo file already exists: {todo_path}")
+    body = append_transition(
+        body, verb=verb, actor=actor, field="status",
+        old=None, new=status)
     write_text(todo_path, _render_todo(fields, body))
     rel = todo_path.relative_to(plans_dir).as_posix()
     result = bundle_parser.parse_todo(
