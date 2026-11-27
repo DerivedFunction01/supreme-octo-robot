@@ -25,7 +25,14 @@ FILE store, the ledger's actual home):
     closing est: lines; first_duration_minutes is
     the house reading of an estimate — its first
     duration token, the same reading plan-check
-    compares the two est surfaces by).
+    compares the two est surfaces by). The plan
+    text comes from the bundle's own plan.md when
+    it carries one; a bundle directory holding
+    only todos — the corpus's split form, its plan
+    file living in the seat's plan tree — is read
+    through the todos' shared `plan` front-matter
+    ref, the join the corpus itself records, when
+    every todo names the one readable file.
 
 Semantics (the plan's Rulings, implemented once here):
   - A todo's actual span is its first doing
@@ -60,9 +67,14 @@ Semantics (the plan's Rulings, implemented once here):
   - Backfilled events render marked: a transition
     carrying a truthy `backfilled` key (with its
     `source` when present) marks the figures its
-    span bounds. No writer emits that key today —
-    Step 5's backfill defines it; this read honours
-    it when it lands.
+    span bounds. The form is Step 5's: a record in
+    the ledger's own shape plus `backfilled: true`
+    and a `source` naming the evidence the instant
+    was reconstructed from (a landing record, a run
+    record, a git commit, a store stamp), the
+    instant at exactly the precision that source
+    carries — a date-only stamp becomes a day-grain
+    instant, never a finer one.
 
 The price book (across one project's plans) groups
 priced, measured todos by KIND. The grouping rule,
@@ -338,6 +350,24 @@ def plan_timing(plans_dir, bundle_ref):
         candidate = plans_dir / bundle["path"]
         if candidate.is_file():
             plan_path = candidate
+    if plan_path is None:
+        # The corpus's split form: a bundle holding
+        # only todos, its plan file outside the plans
+        # dir, joined by the todos' `plan` front-
+        # matter ref. Read the plan through the ref
+        # when the todos agree on the one file (a
+        # trailing #fragment locates a section, never
+        # a different plan, so it is stripped);
+        # disagreement or a missing file keeps the
+        # honest absence the empty text renders.
+        refs = {t.get("plan") for t in bundle["todos"]
+                if t.get("plan")}
+        if len(refs) == 1:
+            ref = Path(next(iter(refs)).split("#", 1)[0])
+            candidate = ref if ref.is_absolute() \
+                else plans_dir / ref
+            if candidate.is_file():
+                plan_path = candidate
     if plan_path is not None:
         plan_text = plan_path.read_text(encoding="utf-8")
     blocks = {b["step"]: b
