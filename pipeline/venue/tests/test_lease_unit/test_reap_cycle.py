@@ -85,7 +85,7 @@ def test_budget_never_skips_lifecycle(repo, monkeypatch):
     assert out["action"] == "released-deadline"
     assert lease.load_record(repo) is None
     assert not [c for c in calls if c and c[0] == "exec"]
-    assert out["budget"]["skipped"] == ["listeners:standard"]
+    assert out["budget"]["skipped"] == ["listeners:standard", "venue-state:colab"]
 
 
 def test_budget_skips_furniture_whole(repo, monkeypatch):
