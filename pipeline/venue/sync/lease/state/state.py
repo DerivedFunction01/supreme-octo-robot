@@ -9,7 +9,7 @@ from ..core import foundation, catalog, records as _mod_records, spend as _mod_s
 from ..access import gate as _mod_gate, access, grants
 from ..sessions import sessions, keepalive, provisioning, identity
 from ..sync import bridge, syncclaims
-from . import listeners, orphans, reconcile
+from . import card, listeners, orphans, reconcile
 
 # The paths spine (paths.py at the package root) owns the
 # root derivation; bound by path — the bootstrap form.
@@ -417,9 +417,25 @@ def state_records(colab, repo: Path) -> dict:
     12–15 s each and summed past the panel's read bound;
     one dial classifies every record, exactly as
     the per-record reads did (state_in_snapshot is the same
-    test), and a failed listing classifies unknown, never dead."""
+    test), and a failed listing classifies unknown, never dead.
+
+    Each record-carrying entry also carries its served
+    lease card (state/card.py): the card's labels and
+    capability set are derived here, in the build, so
+    the panel and every other frontend render the same
+    card from the same build — no client re-derives."""
     recs = _mod_records.all_records(repo)
     snapshot = sessions.list_snapshot(colab)
+    # The served lease card's build inputs, read once
+    # for the whole portion: the build's clock, the
+    # grant verdict the capability set mirrors (the
+    # core's standing-managed rule), and the shape
+    # catalog index the card's labels resolve through
+    # (the specs portion's own list, from its cache).
+    now_dt = datetime.now(timezone.utc)
+    grant_active_now = grants.grant_active(
+        grants.load_grant(repo), now_dt)
+    index = card.spec_index(specs(repo, colab))
 
     def entry(rec):
         e = status(colab, repo, session=rec["session"], snapshot=snapshot)
@@ -427,6 +443,18 @@ def state_records(colab, repo: Path) -> dict:
         e["venue"] = rec.get("venue")
         e["warm"] = rec.get("warm")
         e["caller"] = rec.get("caller")
+        if isinstance(e.get("record"), dict) \
+                and e["record"].get("deadline"):
+            # The card rides the entry it describes —
+            # an added served shape; the record and the
+            # entry's other fields are untouched, so
+            # every existing consumer reads as before.
+            # The deadline guard keeps a record the
+            # core itself never writes (deadline-less)
+            # serving cardless instead of wedging the
+            # portion on the card's parse.
+            e["card"] = card.lease_card(
+                e, index, grant_active_now, now_dt)
         return e
 
     if len(recs) <= 1:
