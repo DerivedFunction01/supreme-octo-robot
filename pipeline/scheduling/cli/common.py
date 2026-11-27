@@ -11,6 +11,14 @@ ROOT = _paths.ROOT
 JOBS_DIR = _paths.JOBS_DIR
 
 
-def _load():
+def _anchors():
+    """The registry anchors from the server config — the one
+    derivation every CLI registry read (and the adopt verb's
+    setup expansion) goes through, so ${WS} resolves to the
+    configured workspace root everywhere the CLI expands it."""
     values, _sources = config_mod.resolve()
-    return registry.load_dir(JOBS_DIR, ROOT, anchors=config_mod.anchors(values))
+    return config_mod.anchors(values)
+
+
+def _load():
+    return registry.load_dir(JOBS_DIR, ROOT, anchors=_anchors())

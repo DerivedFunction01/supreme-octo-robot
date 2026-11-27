@@ -32,6 +32,18 @@ from server.firing import executor  # noqa: E402
 ROOT = paths.REPO_ROOT
 
 
+def anchors():
+    """The anchors the proof load expands entries with: REPO at
+    the scheduling root (the established cross-package form)
+    and WS at the real workspace root, derived the way the
+    server derives it — ops/paths' mega-repo walk, with the
+    SCHEDULER_WORKSPACE override. derive_anchors' own default
+    would put WS at dirname(ROOT), the pipeline dir, and every
+    ${WS}-anchored entry's argv would resolve one level too
+    deep."""
+    return registry.derive_anchors(ROOT, workspace_root=paths.WORKSPACE_ROOT)
+
+
 DECL = {
     "name": "proof_run",
     "summary": "Proof run for one registry entry, in "
@@ -46,7 +58,7 @@ def main(argv):
         return code
     job_id = result["positionals"]["job-id"]
     entries, errors = registry.load_dir(
-        paths.JOBS_DIR, ROOT, anchors=registry.derive_anchors(ROOT)
+        paths.JOBS_DIR, ROOT, anchors=anchors()
     )
     if errors:
         print(f"registry errors: {errors}", file=sys.stderr)

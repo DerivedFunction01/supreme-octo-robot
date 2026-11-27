@@ -8,7 +8,7 @@ import sys
 from server.entries import catalog as catalog_mod
 from server import registry
 
-from cli.common import JOBS_DIR, ROOT, _load
+from cli.common import JOBS_DIR, ROOT, _anchors, _load
 from cli.ops_client import CALLER_FLAG, _ops_do, caller_of, parse_decl
 
 ADOPT_DECL = {
@@ -105,7 +105,10 @@ def cmd_adopt(argv):
     # beyond the entry itself, before the proof run. A failed
     # item leaves the entry suspended (not admitted) and names
     # itself.
-    anchors = registry.derive_anchors(ROOT)
+    # Anchors come from the server config (cli.common's home),
+    # never derive_anchors(ROOT): its default WS is dirname(ROOT),
+    # one level too deep for the ${WS} setup paths below.
+    anchors = _anchors()
 
     def expand(value):
         return registry.expand_anchors(value, anchors)
