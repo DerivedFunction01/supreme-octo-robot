@@ -212,11 +212,6 @@
      "root": "attention"
     },
     {
-     "kind": "card watch sends \u2014 the registry card watch posts through the dispatch sends home by design",
-     "path": "pipeline/registry/tests/test_cardwatch.py",
-     "root": "dispatch"
-    },
-    {
      "kind": "ledger/outbox composition \u2014 scheduling consumes the dispatch ledger and outbox by design; dispatch is their one home (tests mirror the seam)",
      "path": "pipeline/scheduling/cli/state_cmds.py",
      "root": "dispatch"
