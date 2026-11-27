@@ -83,7 +83,7 @@ const fetchFn = async (url, init) => {
 };
 const a = new LiveVenueAdapter({ baseUrl: s("https://evil.example"), fetchFn });
 await a.ready();
-await a.releaseAccess("brisk-dune-34-r1000000002");
+await a.releaseAccess("quiet-ridge-56");
 ok("behaviour: no request left the serving origin", requested.every((u) => u.startsWith("/api/") && !u.includes("evil.example")));
 ok("behaviour: the release POST went to the origin's route", requested.some((u) => u === "/api/access/release"));
 const snap = a.snapshot();

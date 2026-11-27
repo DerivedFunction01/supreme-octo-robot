@@ -82,8 +82,8 @@ if (threw) console.log("  threw:", threw.message);
 if (snap) {
   ok("recordless: the 3 record-carrying leases render", snap.leases.length === 3);
   ok(
-    "recordless: brisk-dune-34-r1000000002 renders from its record entry",
-    snap.leases.some((l) => l.session === "brisk-dune-34-r1000000002"),
+    "recordless: quiet-ridge-56 renders from its record entry",
+    snap.leases.some((l) => l.session === "quiet-ridge-56"),
   );
   ok("recordless: no lease is invented for the recordless entry", snap.leases.every((l) => l.deadline));
   ok("recordless: callers and events projections survive", Array.isArray(snap.callers) && Array.isArray(snap.events));

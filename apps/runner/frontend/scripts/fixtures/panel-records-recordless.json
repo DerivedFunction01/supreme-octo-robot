@@ -51,7 +51,7 @@
     },
     "via": "panel",
     "caller": "panel",
-    "host": "8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
+    "host": "8080-m-hm-use1c0-specimen00001-c.us-east1.prod.r.colab.dev",
     "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
     "last_pulse_result": "ok",
     "venue": "colab",
@@ -80,8 +80,8 @@
     "chromium": "installed"
    },
    "runtime": {
-    "host": "8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
-    "endpoint": "https://8080-m-hm-use1c0-3b5xtnvpksgu2-c.us-east1.prod.r.colab.dev",
+    "host": "8080-m-hm-use1c0-specimen00001-c.us-east1.prod.r.colab.dev",
+    "endpoint": "https://8080-m-hm-use1c0-specimen00001-c.us-east1.prod.r.colab.dev",
     "boot_id": "00000000-0000-4000-8000-000000000100",
     "boot_epoch": 1794788978.6923082,
     "session": "amber-cliff-12-r1000000001-r1000000101",
@@ -101,7 +101,7 @@
   {
    "action": "active",
    "record": {
-    "session": "quiet-ridge-56",
+    "session": "brisk-dune-34-r1000000002",
     "shape": "cpu-highram",
     "shape_spec": {
      "gpu": null,
@@ -142,7 +142,7 @@
      "day_spent": 16.61,
      "month_spent": 204.94
     },
-    "host": "8080-m-hm-euw4b0-1eqtd3l7jpp4p-b.europe-west4.prod.r.colab.dev",
+    "host": "8080-m-hm-euw4b0-specimen00002-b.europe-west4.prod.r.colab.dev",
     "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
     "last_pulse_result": "failed",
     "venue": "colab",
@@ -157,7 +157,7 @@
     "at": null
    },
    "keepalive_heartbeat_age_s": null,
-   "session": "quiet-ridge-56",
+   "session": "brisk-dune-34-r1000000002",
    "venue": "colab",
    "warm": null,
    "caller": "panel"
@@ -165,7 +165,7 @@
   {
    "action": "active",
    "record": {
-    "session": "brisk-dune-34-r1000000002",
+    "session": "quiet-ridge-56",
     "shape": "cpu-highram",
     "shape_spec": {
      "gpu": null,
@@ -193,7 +193,7 @@
     "account": "primary",
     "last_pulse_at": "2026-11-16T09:34:30.169581+00:00",
     "last_pulse_result": "failed",
-    "host": "8080-m-hm-euw4b0-1k3tq5mf3pw6a-b.europe-west4.prod.r.colab.dev"
+    "host": "8080-m-hm-euw4b0-specimen00003-b.europe-west4.prod.r.colab.dev"
    },
    "sync_claim": null,
    "provisioning": null,
@@ -203,14 +203,14 @@
     "at": null
    },
    "keepalive_heartbeat_age_s": null,
-   "session": "brisk-dune-34-r1000000002",
+   "session": "quiet-ridge-56",
    "venue": "colab",
    "warm": null,
    "caller": "panel"
   },
   {
    "action": "no-lease",
-   "session": "brisk-dune-34-r1000000002",
+   "session": "quiet-ridge-56",
    "venue": "colab",
    "warm": null,
    "caller": "venue-lane"
@@ -218,22 +218,22 @@
  ],
  "access": [
   {
-   "session": "quiet-ridge-56",
-   "endpoint": "m-hm-euw4b0-1eqtd3l7jpp4p",
+   "session": "brisk-dune-34-r1000000002",
+   "endpoint": "m-hm-euw4b0-specimen00002",
    "shape_class": "high_ram",
    "caller": "panel",
    "first_seen": "2026-11-16T07:24:31.257871+00:00"
   },
   {
-   "session": "brisk-dune-34-r1000000002",
-   "endpoint": "m-hm-euw4b0-1k3tq5mf3pw6a",
+   "session": "quiet-ridge-56",
+   "endpoint": "m-hm-euw4b0-specimen00003",
    "shape_class": "high_ram",
    "caller": "panel",
    "first_seen": "2026-11-16T08:41:26.670124+00:00"
   },
   {
    "session": "amber-cliff-12-r1000000001-r1000000101",
-   "endpoint": "m-hm-use1c0-3b5xtnvpksgu2",
+   "endpoint": "m-hm-use1c0-specimen00001",
    "shape_class": "high_ram",
    "caller": "panel",
    "first_seen": "2026-11-16T00:34:16.455368+00:00"
