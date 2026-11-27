@@ -106,15 +106,15 @@ STATE_REFRESH_AFTER_S = state_surface.STATE_REFRESH_AFTER_S
 
 
 def lease_bin() -> str:
-    return os.environ.get("VENUE_LEASE_BIN", os.environ.get("COLAB_LEASE_BIN", str(REPO / "bin" / "venue-lease")))  # step6-retire: COLAB_ dual-read fallback
+    return os.environ.get("VENUE_LEASE_BIN", str(REPO / "bin" / "venue-lease"))
 
 
 def ui_sh() -> str:
-    return os.environ.get("VENUE_LEASE_UI_SH", os.environ.get("COLAB_LEASE_UI_SH", str(UI_DIR / "ui.sh")))  # step6-retire: COLAB_ dual-read fallback
+    return os.environ.get("VENUE_LEASE_UI_SH", str(UI_DIR / "ui.sh"))
 
 
 def var_dir() -> Path:
-    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var")))  # step6-retire: COLAB_ dual-read fallback
+    return Path(os.environ.get("VENUE_RUNNER_VAR", REPO / "var"))
 
 
 def outbox_path() -> Path:
@@ -446,8 +446,8 @@ def load_ui_config() -> tuple[str, int]:
         port = int(cfg.get("port", port))
     except (OSError, json.JSONDecodeError, ValueError):
         pass
-    host = os.environ.get("VENUE_LEASE_UI_HOST", os.environ.get("COLAB_LEASE_UI_HOST", host))  # step6-retire: COLAB_ dual-read fallback
-    raw_port = os.environ.get("VENUE_LEASE_UI_PORT", os.environ.get("COLAB_LEASE_UI_PORT"))  # step6-retire: COLAB_ dual-read fallback
+    host = os.environ.get("VENUE_LEASE_UI_HOST", host)
+    raw_port = os.environ.get("VENUE_LEASE_UI_PORT")
     if raw_port:
         port = int(raw_port)
     return host, port
@@ -496,7 +496,7 @@ def _ensure_runtime() -> None:
                 *args, timeout=STATE_COMPUTE_TIMEOUT_S),
             store=SHAPE_STORE)
     if STACKDUMP is None and \
-            os.environ.get("VENUE_LEASE_UI_STACKDUMP", os.environ.get("COLAB_LEASE_UI_STACKDUMP", "1")) != "0":  # step6-retire: COLAB_ dual-read fallback
+            os.environ.get("VENUE_LEASE_UI_STACKDUMP", "1") != "0":
         STACKDUMP = StackDumpWatchdog(
             "venue-lease-panel",
             stackdump_health,

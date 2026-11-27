@@ -260,7 +260,7 @@ def claim_caller(flag: str | None) -> tuple[str | None, str | None]:
     absent claim never blocks, it just leaves the attach
     unattributed in the journal."""
     lease = _lease_module()
-    env = os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
+    env = os.environ.get("VENUE_CALLER")
     err = lease.caller_claim_error(REPO, flag=flag, env=env)
     if err:
         return None, err

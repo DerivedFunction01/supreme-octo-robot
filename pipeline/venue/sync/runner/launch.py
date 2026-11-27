@@ -48,7 +48,7 @@ def _upload_timeout_s(size_bytes: int) -> int:
     # The floor is env-tunable for the reason the probe's
     # timeout is (VENUE_RUN_PROBE_TIMEOUT_S precedent): tests
     # shrink it to watch a dead channel confess quickly.
-    floor = int(os.environ.get("VENUE_RUN_UPLOAD_FLOOR_S", os.environ.get("COLAB_RUN_UPLOAD_FLOOR_S", str(UPLOAD_TIMEOUT_FLOOR_S))))  # step6-retire: COLAB_ dual-read fallback
+    floor = int(os.environ.get("VENUE_RUN_UPLOAD_FLOOR_S", str(UPLOAD_TIMEOUT_FLOOR_S)))
     scaled = size_bytes // UPLOAD_ASSUMED_MIN_BPS
     return max(floor, min(UPLOAD_TIMEOUT_CAP_S, scaled))
 
@@ -113,8 +113,8 @@ def ensure_run_dir(session: str, run_id: str) -> str | None:
         f"os.makedirs(os.path.join(BASE, {rel!r}), exist_ok=True)\n"
         "print(json.dumps({'ok': True}))\n"
     )
-    attempts = max(1, int(os.environ.get("VENUE_RUN_DIR_ATTEMPTS", os.environ.get("COLAB_RUN_DIR_ATTEMPTS", "3"))))  # step6-retire: COLAB_ dual-read fallback
-    backoff = float(os.environ.get("VENUE_RUN_DIR_BACKOFF_S", os.environ.get("COLAB_RUN_DIR_BACKOFF_S", "10")))  # step6-retire: COLAB_ dual-read fallback
+    attempts = max(1, int(os.environ.get("VENUE_RUN_DIR_ATTEMPTS", "3")))
+    backoff = float(os.environ.get("VENUE_RUN_DIR_BACKOFF_S", "10"))
     error = None
     for attempt in range(attempts):
         if attempt:
@@ -239,7 +239,7 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     )
     # The timeout is env-tunable for the reason the poll loop's
     # is: tests shrink it (VENUE_RUN_POLL_TIMEOUT_S precedent).
-    probe_timeout = int(os.environ.get("VENUE_RUN_PROBE_TIMEOUT_S", os.environ.get("COLAB_RUN_PROBE_TIMEOUT_S", "300")))  # step6-retire: COLAB_ dual-read fallback
+    probe_timeout = int(os.environ.get("VENUE_RUN_PROBE_TIMEOUT_S", "300"))
     # The probe rides a bounded attempt discipline, like the
     # chunked transfer's parts: the exec channel stalls in
     # episodes of minutes (probe-fail rates of
@@ -251,8 +251,8 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     # backoff; a size mismatch is information, not weather, and
     # returns at once. Both bounds are env-tunable so tests can
     # shrink them (the probe-timeout precedent above).
-    probe_attempts = int(os.environ.get("VENUE_RUN_PROBE_ATTEMPTS", os.environ.get("COLAB_RUN_PROBE_ATTEMPTS", "3")))  # step6-retire: COLAB_ dual-read fallback
-    probe_backoff = float(os.environ.get("VENUE_RUN_PROBE_BACKOFF_S", os.environ.get("COLAB_RUN_PROBE_BACKOFF_S", "10")))  # step6-retire: COLAB_ dual-read fallback
+    probe_attempts = int(os.environ.get("VENUE_RUN_PROBE_ATTEMPTS", "3"))
+    probe_backoff = float(os.environ.get("VENUE_RUN_PROBE_BACKOFF_S", "10"))
     stall_error = f"upload verify timed out for {dest_name}"
     stall_detail = f"{dest_name}: verify probe timed out"
     for attempt in range(1, max(1, probe_attempts) + 1):

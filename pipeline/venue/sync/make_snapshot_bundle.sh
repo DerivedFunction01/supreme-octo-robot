@@ -26,7 +26,7 @@ argv_tool make_snapshot_bundle.sh "Build an origin-lineage snapshot bundle of th
 argv_parse "$@" || exit 2
 [ "$ARGV_HELP" = 1 ] && exit 0
 
-SRC="${VENUE_REPO_SRC:-${COLAB_REPO_SRC:-}}"  # step6-retire: COLAB_ dual-read fallback
+SRC="${VENUE_REPO_SRC:-}"
 if [ -z "$SRC" ]; then
   echo "make_snapshot_bundle: VENUE_REPO_SRC is not set (pass the registry entry's local_path)" >&2; exit 2
 fi

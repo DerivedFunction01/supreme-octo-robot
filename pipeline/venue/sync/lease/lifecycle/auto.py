@@ -61,7 +61,7 @@ def auto_enabled(cfg: dict) -> bool:
     """The config seam is config/lease.json's auto_acquire.enabled; the
     VENUE_RUNNER_AUTO_ACQUIRE env var overrides it (the test harness
     uses the override so it never edits the tracked config)."""
-    env = os.environ.get("VENUE_RUNNER_AUTO_ACQUIRE", os.environ.get("COLAB_RUNNER_AUTO_ACQUIRE"))  # step6-retire: COLAB_ dual-read fallback
+    env = os.environ.get("VENUE_RUNNER_AUTO_ACQUIRE")
     if env is not None:
         return env == "1"
     return bool(cfg.get("auto_acquire", {}).get("enabled"))

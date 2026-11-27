@@ -69,7 +69,7 @@ _MODULE_REPO = _paths.REPO_RESOLVED
 
 
 def jobs_dir(repo: Path) -> Path | None:
-    env = os.environ.get("VENUE_LIVENESS_JOBS_DIR", os.environ.get("COLAB_LIVENESS_JOBS_DIR"))  # step6-retire: COLAB_ dual-read fallback
+    env = os.environ.get("VENUE_LIVENESS_JOBS_DIR")
     if env:
         return Path(env)
     if os.environ.get("PYTEST_CURRENT_TEST"):
@@ -137,7 +137,7 @@ def sync_for_record(repo: Path, rec: dict) -> str:
         path = entry_path(repo, session)
         if path is None:
             return "unavailable"
-        if not os.environ.get("VENUE_LIVENESS_JOBS_DIR", os.environ.get("COLAB_LIVENESS_JOBS_DIR")):  # step6-retire: COLAB_ dual-read fallback
+        if not os.environ.get("VENUE_LIVENESS_JOBS_DIR"):
             body = path.parent.parent / "bodies" / "venue-liveness.md"
             if not body.exists():
                 return "unavailable"
@@ -201,7 +201,7 @@ def reconcile(repo: Path, records: list) -> dict:
 def var_dir(repo: Path) -> Path:
     """The repo's var dir, honoring the same VENUE_RUNNER_VAR
     seam the lease core uses."""
-    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", Path(repo) / "var")))  # step6-retire: COLAB_ dual-read fallback
+    return Path(os.environ.get("VENUE_RUNNER_VAR", Path(repo) / "var"))
 
 
 def load_records(repo: Path) -> list:

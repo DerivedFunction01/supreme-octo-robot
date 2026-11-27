@@ -69,7 +69,7 @@ def _launch_reading(rec: dict) -> str:
     if not session or not remote_out:
         return "unknown"
     reader = write_reader(str(rec.get("run_id")), remote_out, [])
-    confirm_timeout = int(os.environ.get("VENUE_RUN_CONFIRM_TIMEOUT_S", os.environ.get("COLAB_RUN_CONFIRM_TIMEOUT_S")) or min(int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300"))), 120))  # step6-retire: COLAB_ dual-read fallback
+    confirm_timeout = int(os.environ.get("VENUE_RUN_CONFIRM_TIMEOUT_S") or min(int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", "300")), 120))
     state, _err = read_reader(session, reader, confirm_timeout)
     if state is None:
         return "unknown"
@@ -354,7 +354,7 @@ def collect_stale_detached(budget_s: int = COLLECT_PASS_BUDGET_S, max_records: i
     candidates.sort(key=_evidence_epoch)
     summary["checked"] = len(candidates)
     started = time.monotonic()
-    previous_caller = os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
+    previous_caller = os.environ.get("VENUE_CALLER")
     os.environ["VENUE_CALLER"] = COLLECTOR_CALLER
     processed = 0
     try:

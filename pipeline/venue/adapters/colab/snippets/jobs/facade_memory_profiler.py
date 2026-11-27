@@ -31,7 +31,7 @@ def _resolve_profile_repo():
     $PROFILE_REPO as a path plus a conventional .venv is the fallback."""
     import json
 
-    repo_id = os.environ.get("PROFILE_REPO_ID") or os.environ.get("VENUE_REPO_ID", os.environ.get("COLAB_REPO_ID"))  # step6-retire: COLAB_ dual-read fallback
+    repo_id = os.environ.get("PROFILE_REPO_ID") or os.environ.get("VENUE_REPO_ID")
     legacy = os.environ.get("PROFILE_REPO")
     registry_path = Path("/content/env-registry.json")
     records = {}

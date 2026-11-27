@@ -101,7 +101,7 @@ def _sync_gate(args) -> None:
         sys.path.insert(0, str(REPO))
     from sync import lease
 
-    env = os.environ.get(lease.CALLER_ENV, os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
+    env = os.environ.get(lease.CALLER_ENV)
     err = lease.caller_claim_error(REPO, env=env)
     if err:
         print(f"probes: {err}", file=sys.stderr)

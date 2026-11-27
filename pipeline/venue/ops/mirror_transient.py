@@ -59,7 +59,7 @@ DECLARATION = {
 
 
 def home() -> Path:
-    override = os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME"))  # step6-retire: COLAB_ dual-read fallback
+    override = os.environ.get("VENUE_RUNNER_HOME")
     return Path(override) if override else Path.home()
 
 
@@ -102,7 +102,7 @@ def resolve(item: dict) -> tuple[Path, Path]:
     # under the override root (the suite's mirror
     # tests shared the one real mirror file through this seam
     # and raced under parallel workers).
-    root = home() if os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME")) else REPO  # step6-retire: COLAB_ dual-read fallback
+    root = home() if os.environ.get("VENUE_RUNNER_HOME") else REPO
     return canonical, root / item["mirror"]
 
 

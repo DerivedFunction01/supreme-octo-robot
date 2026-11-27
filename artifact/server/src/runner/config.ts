@@ -16,10 +16,10 @@ const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 8793;
 
 export function backendAddress(env: Record<string, string | undefined> = {}): BackendAddress {
-  const rawPort = env.VENUE_LEASE_UI_PORT ?? env.COLAB_LEASE_UI_PORT; // step6-retire: COLAB_ dual-read fallback
+  const rawPort = env.VENUE_LEASE_UI_PORT;
   const parsed = rawPort ? Number.parseInt(rawPort, 10) : Number.NaN;
   const port = Number.isInteger(parsed) && parsed >= 1 && parsed <= 65535 ? parsed : DEFAULT_PORT;
-  const host = (env.VENUE_LEASE_UI_HOST ?? env.COLAB_LEASE_UI_HOST)?.trim(); // step6-retire: COLAB_ dual-read fallback
+  const host = (env.VENUE_LEASE_UI_HOST)?.trim();
   return { host: host ? host : DEFAULT_HOST, port };
 }
 

@@ -46,7 +46,7 @@ if [ "${#_argv_positionals[@]}" -gt 4 ]; then
   echo "usage: base_clone.sh [repo_url] [dest] [branch] [sha]" >&2
   exit 2
 fi
-URL="${_argv_positionals[0]:-${VENUE_REPO_URL:-${COLAB_REPO_URL:-}}}"  # step6-retire: COLAB_ dual-read fallback
+URL="${_argv_positionals[0]:-${VENUE_REPO_URL:-}}"
 DEST="${_argv_positionals[1]:-}"
 BRANCH="${_argv_positionals[2]:-}"
 SHA="${_argv_positionals[3]:-}"

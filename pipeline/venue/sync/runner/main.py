@@ -118,7 +118,7 @@ def main() -> int:
         # The reap command's collector ride passes its remaining
         # command budget through the env; a direct call keeps the
         # pass's own default budget.
-        raw_budget = os.environ.get("VENUE_COLLECT_BUDGET_S", os.environ.get("COLAB_COLLECT_BUDGET_S"))  # step6-retire: COLAB_ dual-read fallback
+        raw_budget = os.environ.get("VENUE_COLLECT_BUDGET_S")
         budget_s = None
         if raw_budget:
             try:
@@ -145,4 +145,4 @@ def main() -> int:
         return _usage_refusal(
             "plant-git-identity needs --session NAME "
             "--repo ID_OR_PATH --tree SESSION_TREE [--caller TAG]")
-    return plant_git_identity(session, repo, tree, flags["caller"] or os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    return plant_git_identity(session, repo, tree, flags["caller"] or os.environ.get("VENUE_CALLER"))

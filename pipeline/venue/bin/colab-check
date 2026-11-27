@@ -128,11 +128,11 @@ def main() -> int:
     # unregistered claim is refused at claim time, before anything
     # starts (the same helpers venue-run resolves through).
     caller_flag = flags.get("caller")
-    claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER"))
     if claim_err:
         print(f"colab-check: {claim_err}", file=sys.stderr)
         return 2
-    caller = lease.resolve_caller(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
+    caller = lease.resolve_caller(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER"))
     if flags.get("shape") is not None:
         shape_id = flags["shape"]
     else:

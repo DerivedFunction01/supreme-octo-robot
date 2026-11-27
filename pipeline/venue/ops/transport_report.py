@@ -72,7 +72,7 @@ _paths_spec = _ilu.spec_from_file_location(
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
-_env_home = os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME"))  # step6-retire: COLAB_ dual-read fallback
+_env_home = os.environ.get("VENUE_RUNNER_HOME")
 REPO = Path(_env_home) if _env_home else _paths.REPO_RESOLVED
 RUNS = REPO / "results" / "runs"
 

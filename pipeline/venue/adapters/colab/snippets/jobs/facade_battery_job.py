@@ -23,7 +23,7 @@ import job_harness
 def main() -> int:
     parser = job_harness.job_parser()
     parser.add_argument("--cohorts", nargs="+", default=["seed", "vintage", "sp100"])
-    parser.add_argument("--repo", default=os.environ.get("VENUE_REPO_ID", os.environ.get("COLAB_REPO_ID")),  # step6-retire: COLAB_ dual-read fallback
+    parser.add_argument("--repo", default=os.environ.get("VENUE_REPO_ID"),
                         help="registry repo id (default: $VENUE_REPO_ID, else the sole built clone)")
     args = parser.parse_args()
     record = job_harness.resolve_remote_repo(args.repo)
