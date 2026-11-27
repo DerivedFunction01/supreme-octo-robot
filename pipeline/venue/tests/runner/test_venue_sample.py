@@ -348,6 +348,45 @@ def test_store_append_and_last_two(tmp_path):
     assert [json.loads(line)["venue"] for line in lines] == ["msi-hx18"] * 3
 
 
+def _big_sample(venue, marker, size):
+    sample = vs.parse_sample(FIXTURE_VANISHED, venue, AT)
+    sample["pad"] = marker * size
+    return sample
+
+
+def test_store_append_bounds_oversized_history(tmp_path):
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
+    path = store.path_for("msi-hx18")
+    chunk = vs.MAX_STORE_BYTES // 4
+    seeded = [_big_sample("msi-hx18", "a", chunk) for _ in range(6)]
+    for sample in seeded:
+        store.append(sample)
+        assert path.stat().st_size <= vs.MAX_STORE_BYTES
+    newest = _big_sample("msi-hx18", "b", chunk)
+    store.append(newest)
+    assert path.stat().st_size <= vs.MAX_STORE_BYTES
+    assert store.last_two("msi-hx18") == [seeded[-1], newest]
+
+
+def test_store_append_keeps_a_single_oversized_sample(tmp_path):
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
+    big = _big_sample("hp-envy", "x", vs.MAX_STORE_BYTES * 2)
+    store.append(big)
+    assert store.last_two("hp-envy") == [big]
+    newer = vs.parse_sample(FIXTURE_ADVANCING, "hp-envy", AT)
+    store.append(newer)
+    assert store.last_two("hp-envy") == [big, newer]
+
+
+def test_store_append_small_history_grows_line_by_line(tmp_path):
+    store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
+    path = store.path_for("msi-hx18")
+    for _ in range(3):
+        before = len(path.read_text().splitlines()) if path.exists() else 0
+        store.append(vs.parse_sample(FIXTURE_VANISHED, "msi-hx18", AT))
+        assert len(path.read_text().splitlines()) == before + 1
+
+
 def test_store_last_two_missing_and_single(tmp_path):
     store = vs.SampleStore(root=tmp_path, writer=_stub_writer)
     assert store.last_two("hp-envy") == []

@@ -34,6 +34,16 @@ DEFAULT_PIDS_BY_SHAPE = {
     "local-hp": 1024,
 }
 
+# Byte bound on a venue's retained sample log. An append rides
+# the staged-write seam as one combined write of the retained
+# tail plus the new line, and the transport under that seam
+# caps request bodies at 4 MiB (the scheduler server's ops
+# cap); half of that leaves room for the write's own encoding
+# overhead and one large line. The classifier needs only the
+# last two samples, so the tail the bound drops is history no
+# consumer reads.
+MAX_STORE_BYTES = 2 * 1024 * 1024
+
 # The probe payload's embedded interpreter script. It mirrors
 # parse_stat / sum_tree_cpu below: the venue side cannot import
 # this module (it runs as a lone exec payload), so the walk is
@@ -389,9 +399,13 @@ class SampleStore:
     Appends ride the foundation seam's staged_write (read the
     current bytes, stage the combined write) — the same writer
     the run records ride — so a reader never sees a partial
-    line. A load context without the package (the by-path unit
-    tests) passes its own writer= callable; there is no local
-    write idiom in this module.
+    line. The retained log is bounded by MAX_STORE_BYTES: an
+    append drops the oldest lines until the combined write
+    fits, always keeping the newest two samples, so the write
+    stays under the seam's transport cap however large the
+    samples grow. A load context without the package (the
+    by-path unit tests) passes its own writer= callable; there
+    is no local write idiom in this module.
     """
 
     def __init__(self, root=None, writer=None):
@@ -439,8 +453,12 @@ class SampleStore:
         path = self.path_for(str(sample["venue"]))
         path.parent.mkdir(parents=True, exist_ok=True)
         line = (json.dumps(sample, sort_keys=True) + "\n").encode()
-        existing = path.read_bytes() if path.exists() else b""
-        self._staged_write(path, existing + line)
+        lines = path.read_bytes().splitlines(keepends=True) if path.exists() else []
+        lines.append(line)
+        total = sum(len(kept) for kept in lines)
+        while total > MAX_STORE_BYTES and len(lines) > 2:
+            total -= len(lines.pop(0))
+        self._staged_write(path, b"".join(lines))
         return path
 
     def last_two(self, venue: str) -> list:
