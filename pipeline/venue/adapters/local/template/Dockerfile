@@ -36,14 +36,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && corepack enable
 
-# Vercel CLI, pinned, in the image like node itself: the deploy
-# toolchain survives a container rebuild by construction. A
-# home-directory install does not — the rebuild that wiped the
-# home wiped the CLI with it, and only the login is planted
-# state (the entrypoint's vercel-auth plant); the binary is
-# provisioning.
-RUN npm install -g vercel@65.14.0
-
 # uv, system-wide (jobs resolve it from PATH or the per-user fallbacks;
 # in this container /usr/local/bin is the canonical location).
 RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh

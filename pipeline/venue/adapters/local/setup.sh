@@ -29,12 +29,6 @@
 #                         instance at mode 600 and planted by the
 #                         entrypoint on every start (preserved on
 #                         re-runs, like the auth key)
-#   --vercel-auth-file F  Vercel CLI auth.json (the login state);
-#                         copied into the instance at mode 600
-#                         as vercel-auth.json and planted by the
-#                         entrypoint on every start, on the
-#                         --github-key-file pattern (preserved
-#                         on re-runs)
 #   --skip-mount          do not create/mount the workspace image
 #   --skip-docker         generate files only; do not build or start
 #   --yes                 never prompt (missing authkey is an error)
@@ -65,7 +59,6 @@ argv_global_flag workspace-gb value default=96
 argv_global_flag total-gb value default=128
 argv_global_flag authorized-key value
 argv_global_flag github-key-file value
-argv_global_flag vercel-auth-file value
 argv_global_flag skip-mount bool
 argv_global_flag skip-docker bool
 argv_global_flag yes bool
@@ -81,7 +74,6 @@ CPUS="${ARGV_FLAGS[cpus]}"; MEM="${ARGV_FLAGS[mem]}"; PIDS="${ARGV_FLAGS[pids]}"
 WORKSPACE_GB="${ARGV_FLAGS[workspace-gb]}"; TOTAL_GB="${ARGV_FLAGS[total-gb]}"
 AUTH_KEY_LINE="${ARGV_FLAGS[authorized-key]}"
 GH_KEY_FILE="${ARGV_FLAGS[github-key-file]}"
-VERCEL_AUTH_FILE="${ARGV_FLAGS[vercel-auth-file]}"
 SKIP_MOUNT=0; [ "${ARGV_FLAGS[skip-mount]}" = true ] && SKIP_MOUNT=1
 SKIP_DOCKER=0; [ "${ARGV_FLAGS[skip-docker]}" = true ] && SKIP_DOCKER=1
 ASSUME_YES=0; [ "${ARGV_FLAGS[yes]}" = true ] && ASSUME_YES=1
@@ -138,14 +130,6 @@ if [ -n "$GH_KEY_FILE" ]; then
   cp "$GH_KEY_FILE" "$TARGET/id_github"
   chmod 600 "$TARGET/id_github"
 fi
-# The Vercel auth copy is instance state the same way: given
-# once via --vercel-auth-file, preserved on re-runs, planted
-# into the container by the entrypoint on every start.
-if [ -n "$VERCEL_AUTH_FILE" ]; then
-  cp "$VERCEL_AUTH_FILE" "$TARGET/vercel-auth.json"
-  chmod 600 "$TARGET/vercel-auth.json"
-fi
-
 # Workspace hard cap: fixed-size ext4 image, loop-mounted.
 if [ "$SKIP_MOUNT" = 0 ]; then
   if mountpoint -q "$TARGET/workspace"; then
