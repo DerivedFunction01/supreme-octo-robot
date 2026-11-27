@@ -375,7 +375,7 @@ traces every §2 preserve item to a contract clause.
 2. **Machine-entry writer contract** — the scheduler
    registry has two machine writers: the workbench harness
    (`wb-progress-*`, machine-form source stamp) and the
-   runner lease core (`colab-liveness-*`, entry deleted in
+   runner lease core (`venue-liveness-*`, entry deleted in
    the same call that deletes the lease record). One
    contract class for machine-rendered entries: stamp
    form, lifecycle owned by the writer, drift counted
@@ -933,7 +933,7 @@ wrapper calls under contract 15.
 
 **Crons and jobs.** Of the scheduler registry's entries
 at formation: the two machine-entry families
-(`wb-progress-*`, `colab-liveness-*`) are not registry
+(`wb-progress-*`, `venue-liveness-*`) are not registry
 entries in the target — arming and venue health are
 internal pipeline acts; the cross-app watch/maintenance
 jobs that existed only because the apps were separate

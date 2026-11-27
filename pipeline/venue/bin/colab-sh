@@ -241,7 +241,7 @@ def orphan_advisory(session: str) -> None:
         if _lease_module().load_record(REPO, session) is None:
             print(
                 f"colab-sh: note: session {session!r} is live but has no lease record (orphaned) — "
-                f"it sits outside lease governance; adopt it with: bin/colab-lease adopt {session}",
+                f"it sits outside lease governance; adopt it with: bin/venue-lease adopt {session}",
                 file=sys.stderr,
             )
             # The disagreement is evidence, not just a note:

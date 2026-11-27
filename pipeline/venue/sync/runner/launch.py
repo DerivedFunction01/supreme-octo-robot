@@ -744,7 +744,7 @@ def orphan_notes(shape_id: str, shape: dict) -> list[str]:
             name = entry["session"]
             if name in recorded or entry.get("shape_class") not in (None, want_class):
                 continue
-            notes.append(f"colab-run: note: session {name} is live but has no lease record (orphaned) — restore it with: bin/colab-lease adopt {name}")
+            notes.append(f"colab-run: note: session {name} is live but has no lease record (orphaned) — restore it with: bin/venue-lease adopt {name}")
         return notes
     except Exception:  # noqa: BLE001
         return []

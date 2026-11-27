@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ui/make-icon-png.sh — rasterize the Colab icon SVG to PNG fallbacks.
 #
-# The SVG (static/colab-icon.svg) is the tracked source of truth. The
+# The SVG (static/venue-icon.svg) is the tracked source of truth. The
 # PNGs are generated, never tracked: run this when a consumer cannot
 # take SVG (an artifact library icon slot, an apple-touch-icon) and
 # the PNGs land next to the SVG in static/, where ui/deploy.sh picks
@@ -27,7 +27,7 @@ argv_tool make-icon-png.sh "Rasterize the Colab icon SVG to PNG fallbacks."
 argv_parse "$@" || exit 2
 [ "$ARGV_HELP" = 1 ] && exit 0
 
-SVG="$HERE/static/colab-icon.svg"
+SVG="$HERE/static/venue-icon.svg"
 [ -f "$SVG" ] || { echo "make-icon-png: $SVG not found" >&2; exit 2; }
 
 render() { # render <size> <out.png>
@@ -49,6 +49,6 @@ render() { # render <size> <out.png>
   echo "make-icon-png: wrote $out (${size}x${size})"
 }
 
-render 192 "$HERE/static/colab-icon-192.png"
-render 512 "$HERE/static/colab-icon-512.png"
-render 180 "$HERE/static/colab-icon-180.png"
+render 192 "$HERE/static/venue-icon-192.png"
+render 512 "$HERE/static/venue-icon-512.png"
+render 180 "$HERE/static/venue-icon-180.png"

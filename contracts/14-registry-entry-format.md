@@ -100,7 +100,7 @@ evidence:
 | Fixture | Provenance |
 |---|---|
 | `fixtures/scheduler-entry-wb-progress.yaml` | produced by the workbench `render_entry` from its tests' fixture todo (machine form, workbench family) |
-| `fixtures/scheduler-entry-colab-liveness.yaml` | the tracked catalog specimen of the runner lease core's render (machine form, runner family) |
+| `fixtures/scheduler-entry-venue-liveness.yaml` | the tracked catalog specimen of the runner lease core's render (machine form, runner family) |
 | `fixtures/scheduler-entry-bridge-wake.yaml` | tracked live hand entry (hand form) |
 | `fixtures/scheduler-entry-bridge-drain.yaml` | tracked live agent entry (hand form) |
 | `fixtures/scheduler-entry-catalog-example.yaml` | tracked catalog example carrying the `catalog` block (adoption form) |

@@ -2,7 +2,7 @@
 # Create a session at a shape, under a fresh generated name.
 # Usage: colab-up [shape]  (default: the config's default_shape)
 # Adoption/reuse of a live lease is the lease core's job
-# (bin/colab-lease acquire); this wrapper is the bare creation path.
+# (bin/venue-lease acquire); this wrapper is the bare creation path.
 set -euo pipefail
 # The operator surface, declared for the unified argument
 # parser's bash adapter (pipeline/platform/argv.sh): one

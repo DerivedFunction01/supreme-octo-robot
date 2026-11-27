@@ -564,7 +564,7 @@ def test_orphan_advisory_names_the_adopt_verb(tmp_path, monkeypatch, capsys):
     fake = FakeRun(rc=0)
     assert run_main(monkeypatch, fake, ["-s", "alpha", "echo", "hi"], tmp_path) == 0
     err = capsys.readouterr().err
-    assert "no lease record (orphaned)" in err and "bin/colab-lease adopt alpha" in err
+    assert "no lease record (orphaned)" in err and "bin/venue-lease adopt alpha" in err
 
 
 # --- Detached registration (E8) and local waits (E13) ---

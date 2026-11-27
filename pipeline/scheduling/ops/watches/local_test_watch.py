@@ -15,7 +15,7 @@ pid/ppid via /proc — reads only) and works in two modes:
   pre-check exemption (one test file plus a name filter;
   pytest <= 5 named node ids from one file, or one file
   plus -k). check.py and package-test runs always flag.
-- Strict mode (at least one colab-liveness entry stands
+- Strict mode (at least one venue-liveness entry stands
   in the registry — a live fleet session): the exemption
   is SUSPENDED, and the trigger broadens to any local
   check/code execution from a workspace repo — test
@@ -521,12 +521,12 @@ def is_attention_transport(argv, cwd=None):
 
 
 def sessions_live(jobs_dir):
-    """Live fleet sessions = colab-liveness entries standing
+    """Live fleet sessions = venue-liveness entries standing
     in the registry (the lease core renders one per live
     session and removes it at lease end)."""
     try:
         return sum(1 for name in os.listdir(jobs_dir)
-                   if name.startswith("colab-liveness-")
+                   if name.startswith("venue-liveness-")
                    and name.endswith(".yaml"))
     except OSError:
         return 0

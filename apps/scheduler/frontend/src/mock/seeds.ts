@@ -74,7 +74,7 @@ export const PLANS: Record<string, PlannedOutcome[]> = {
     ok(0.6, "Completed · flap active", { ledger: "completed · flap active" }),
     ok(0.5, "Completed · flap active", { ledger: "completed · flap active" }),
   ],
-  "colab-extend-guard": [
+  "venue-extend-guard": [
     ok(4.4, "Extended 2 leases · 1 deliberately skipped"),
     ok(3.9, "Skipped · venue busy", { ledger: "skipped · venue busy" }),
     ok(5.1, "Extended 3 leases"),
@@ -170,10 +170,10 @@ export const CLASSIFICATION: Record<string, JobClassification> = {
   "weekly-gmail-otp-cleanup": OPERATOR_CLS,
   "weekly-gmail-stale-jobs-cleanup": OPERATOR_CLS,
   // Built-in · Venue (6) → Runner
-  "colab-extend-guard": familyCls("venue", "runner"),
-  "colab-liveness-brisk-rocket-38": familyCls("venue", "runner"),
-  "colab-liveness-cozy-pilot-61-r1794547171": familyCls("venue", "runner"),
-  "colab-liveness-dawn-tower-93": familyCls("venue", "runner"),
+  "venue-extend-guard": familyCls("venue", "runner"),
+  "venue-liveness-brisk-rocket-38": familyCls("venue", "runner"),
+  "venue-liveness-cozy-pilot-61-r1794547171": familyCls("venue", "runner"),
+  "venue-liveness-dawn-tower-93": familyCls("venue", "runner"),
   "colab-runner-transient-restore": familyCls("venue", "runner"),
   "colab-store-prune": familyCls("venue", "runner"),
   // Built-in · Arming (2) → Workbench
@@ -721,7 +721,7 @@ function seedLedger(now: number): LedgerEventRaw[] {
       note: "programme-a",
       status: "ok",
     }),
-    ev(37, { kind: "run", job_id: "colab-extend-guard", status: "ok", exit_code: 0, due: iso(now - 37 * min), collapsed: 0 }),
+    ev(37, { kind: "run", job_id: "venue-extend-guard", status: "ok", exit_code: 0, due: iso(now - 37 * min), collapsed: 0 }),
     ev(42, { kind: "run", job_id: "flap-watch", status: "ok", exit_code: 0, due: iso(now - 42 * min), collapsed: 0 }),
     ev(48, { kind: "skipped_overlap", job_id: "local-test-watch" }),
     ev(52, { kind: "run", job_id: "file-registry-check", status: "ok", exit_code: 0, due: iso(now - 52 * min), collapsed: 0 }),

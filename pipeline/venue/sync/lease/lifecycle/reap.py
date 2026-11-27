@@ -25,7 +25,7 @@ from . import lifecycle, local_venue
 # under a remaining-budget check that skips-and-reports instead
 # of being killed, and keepalive launches execute as their own
 # deferred phase. The default is sized against the reap
-# COMMAND's budget (bin/colab-lease composes pass + collector
+# COMMAND's budget (bin/venue-lease composes pass + collector
 # against COLAB_LEASE_REAP_COMMAND_BUDGET_S, default 390): the
 # pass takes at most 300 of it, the collector's subprocess ride
 # takes the remainder, and the hook's 420 keeps ~30 for process

@@ -60,7 +60,7 @@ export function buildTodos(t: SeedTime): FileTodo[] {
     todo({ id: "population-audit", project: "aldercrest", bundle: "2026-11-11-document-parsing-successor", title: "Population audit", status: "todo" }),
     todo({ id: "adopt-refresh-retire-call", project: "aldercrest", bundle: "2026-11-11-document-parsing-successor", title: "Adopt / refresh / retire call", status: "todo" }),
     ...[1, 2, 3, 4, 5].map((n) =>
-      todo({ id: ["name-the-venue-seam", "extract-the-generic-core", "colab-adapter-over-the-core", "venue-key-the-records", "second-adapter-proof"][n - 1], project: "colab-runner", bundle: "2026-11-09-venue-core-extraction", title: ["Name the venue seam", "Extract the generic core", "Colab adapter over the core", "Venue-key the records", "Second-adapter proof"][n - 1], status: "todo" as const }),
+      todo({ id: ["name-the-venue-seam", "extract-the-generic-core", "colab-adapter-over-the-core", "venue-key-the-records", "second-adapter-proof"][n - 1], project: "venue-runner", bundle: "2026-11-09-venue-core-extraction", title: ["Name the venue seam", "Extract the generic core", "Colab adapter over the core", "Venue-key the records", "Second-adapter proof"][n - 1], status: "todo" as const }),
     ),
     ...[1, 2, 3, 4].map((n) =>
       todo({ id: ["p1-defect-fixes", "p2-today-actions-reply", "p3-digest-programme-cards", "p4-render-time-re-verification"][n - 1], project: "owner-attention", bundle: "2026-11-11-today-digest-build", title: ["P1 — defect fixes", "P2 — Today actions + reply", "P3 — Digest programme cards", "P4 — render-time re-verification"][n - 1], status: "done" as const }),

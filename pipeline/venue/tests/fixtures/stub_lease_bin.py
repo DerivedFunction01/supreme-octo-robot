@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stub bin/colab-lease for the lease UI tests.
+"""Stub bin/venue-lease for the lease UI tests.
 
 Emits the fixed core contract JSON per subcommand and records every
 invocation (one line, argv space-joined) to $STUB_LEASE_LOG. If

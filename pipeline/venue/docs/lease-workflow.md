@@ -17,7 +17,7 @@ workspaces and checks no file isolation: scoping a job's files on
 the session is the coordinator's competence, exercised the way it
 is on any computer.
 
-1. **Preflight (local, every job)**: `bin/colab-lease status` must
+1. **Preflight (local, every job)**: `bin/venue-lease status` must
    show the lease active with its deadline in the future. Read the
    local HEAD of the repo being shipped; if the job needs a tree
    newer than the warmed snapshot, ship it BEFORE queueing the
@@ -286,7 +286,7 @@ duration. Synchronous use is therefore a claim, not a default
   unaffected, as for every caller.
 - A claim lapses at its TTL or when its holder goes quiet
   (last attach older than the window, no other live evidence);
-  a lapsed claim reads as absent. `bin/colab-lease claim-sync`
+  a lapsed claim reads as absent. `bin/venue-lease claim-sync`
   and `release-sync` take and end a claim explicitly; only
   the holder releases by name.
 - Detached work never needs a claim: `colab-run` jobs and
@@ -325,7 +325,7 @@ system, outside this repo). Each pass runs, in order:
 2. **Transient mirror restore** — the local machine's token and
    session state are repaired from the repo mirror per item.
 3. **Liveness reconciliation** — a local duty (it runs even while
-   the gate stands): `bin/colab-liveness --sync` arms scheduler
+   the gate stands): `bin/venue-liveness --sync` arms scheduler
    entries for live leases missing one and retires entries whose
    record is gone.
 4. **Network duties** — reap, auto-acquire, and the standing
@@ -451,7 +451,7 @@ path stamps the record for it.
 
 **Auto-lease**: `config/lease.json`'s `auto_acquire.enabled`
 (default off) gates the auto duty. Demand is planted with
-`bin/colab-lease request` (writes `var/lease-request.json`); on
+`bin/venue-lease request` (writes `var/lease-request.json`); on
 each poll, if a demand exists and no live lease satisfies it, the
 hook acquires through the ordinary `acquire()` path — same budget
 guard, keepalive launch, and kernel pulse. The demand is consumed
@@ -464,7 +464,7 @@ improvised by an agent.
 
 **Liveness schedule**: every live lease carries a per-session
 scheduler entry, armed and retired by the lease core's record
-writers. `bin/colab-liveness <session>` checks the lease from
+writers. `bin/venue-liveness <session>` checks the lease from
 local files only — record against binding, deadline, pulse
 verdict and freshness, approval-blockage age — and speaks on
 change; it never dials, so it cannot mint an approval card.
@@ -484,7 +484,7 @@ the built-in defaults (fail-closed).
   demand at write time, and consumption clears a refused demand
   instead of retrying it); renewal re-creation, as a bare class
   check with no actor bypass; the session-creating wrappers,
-  through the core's `bin/colab-lease admission` verdict; and the
+  through the core's `bin/venue-lease admission` verdict; and the
   bridge agent's mint (kit install stamps the allowed shapes into
   the bridge config).
 - A post-start assertion rides every fresh create: the local
@@ -521,7 +521,7 @@ Findings first: a lease's deadline is a window end, and an
 extension moves the end — never the session. Renewal keeps a
 window alive across the sessions it outlives.
 
-- **Extend**: `bin/colab-lease extend SESSION --hours H` (panel:
+- **Extend**: `bin/venue-lease extend SESSION --hours H` (panel:
   the lease card's Extend control) moves the deadline by H,
   priced by the budget guard on the delta only (rate × H). The
   record gains `renew: true` — it is now a window lease. A
@@ -577,7 +577,7 @@ window alive across the sessions it outlives.
 Findings first: shorten is extend's mirror, not a soft release —
 the session keeps running, only the deadline moves.
 
-`bin/colab-lease shorten SESSION (--deadline ISO | --hours H)`
+`bin/venue-lease shorten SESSION (--deadline ISO | --hours H)`
 pulls a lease's deadline earlier; the panel action rides the
 same verb. The target must be strictly earlier than the current
 deadline and strictly in the future: a target at or beyond the
@@ -621,7 +621,7 @@ scope afterwards is script-level machinery and served state.
   grant is active and releases it at expiry, inside a standing
   daily sub-cap.
 - **Bursts start by demand, never by agent-fired commands**:
-  `bin/colab-lease request --shape SHAPE --caller TAG` plants
+  `bin/venue-lease request --shape SHAPE --caller TAG` plants
   the demand (`--via` is an accepted alias for the same claim);
   the hook's auto duty creates the lease and copies the caller
   onto its record. A timed start is the same record with `--at
@@ -833,7 +833,7 @@ needs the path quarantines it to `<name>.torn-<timestamp>`
 with its bytes preserved — the write then proceeds onto a
 clean path, and adoption over a torn file stays possible.
 
-`bin/colab-lease adopt SESSION` plants the derived deadline
+`bin/venue-lease adopt SESSION` plants the derived deadline
 verbatim, or the operator's `--deadline`/`--hours` target.
 Restoring the evidenced window is exempt from budget pricing —
 it creates no new commitment; only the excess beyond the
@@ -861,7 +861,7 @@ record drops it (the listing shows the endpoint wearing `?`,
 or omits the name while the assignment stands), and every
 lease channel being name-keyed, the named adoption cannot
 reach it — it bills on, unadoptable. The endpoint
-form, `bin/colab-lease adopt --endpoint EP`, is the cure: the
+form, `bin/venue-lease adopt --endpoint EP`, is the cure: the
 name is the machinery's own identifier, not evidence, so the
 flow mints a fresh one through the naming module (checked
 against live sessions, all lease records, and the

@@ -56,7 +56,7 @@ def _disable_provisioning(root):
 def lease_env(tmp_path):
     home = _scratch_home(tmp_path)
     # The CLI under test runs against a fixture repo (authored
-    # config in the test tree): bin/colab-lease derives its repo
+    # config in the test tree): bin/venue-lease derives its repo
     # root from its own location, so the checkout's untracked
     # operator config must never be the config it reads.
     root = repo_fixture.cli_repo(tmp_path / "repo", tmp_path / "var")

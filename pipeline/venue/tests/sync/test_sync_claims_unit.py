@@ -297,7 +297,7 @@ def _run_lease(env, root, *args):
     import subprocess as _sp
     import sys as _sys
 
-    r = _sp.run([_sys.executable, str(root / "bin" / "colab-lease"), *args],
+    r = _sp.run([_sys.executable, str(root / "bin" / "venue-lease"), *args],
                 capture_output=True, text=True, env=env, timeout=120)
     return r.returncode, (json.loads(r.stdout) if r.stdout.strip() else {})
 

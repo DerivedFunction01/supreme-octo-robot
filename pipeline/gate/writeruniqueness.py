@@ -161,7 +161,7 @@ EXCEPTIONS = (
     {"path": "pipeline/workrecord/lib/util.py",
      "kind": "standalone fallback seam — the workrecord "
              "staged_write_bytes seam"},
-    {"path": "pipeline/venue/bin/colab-lease",
+    {"path": "pipeline/venue/bin/venue-lease",
      "kind": "append-only evidence log — the rc120 chain "
              "log (var/rc120-chain.jsonl) is diagnostic "
              "evidence, not a state store: one O_APPEND "

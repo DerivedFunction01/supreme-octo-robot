@@ -1,9 +1,9 @@
 # Lease control UI
 
-The operator's manual control surface for the colab-runner lease: tap to start
+The operator's manual control surface for the venue lease: tap to start
 a lease (or a two-tier grant), choose how long it lasts, terminate early.
 No agent operates the lease — this server's scripts do, by shelling out
-to `bin/colab-lease`. Start/stop/grant events are appended to the UI
+to `bin/venue-lease`. Start/stop/grant events are appended to the UI
 outbox (`var/ui-outbox.jsonl`), which the `colab-lease-notify` hook
 tails to announce them in the main chat.
 
@@ -24,7 +24,7 @@ Then open <http://127.0.0.1:8793>. Or run the server directly:
 ## How it works
 
 - `ui/server.py` — Python standard library only. It holds no lease
-  logic: reads and mutations are subprocess calls to `bin/colab-lease`
+  logic: reads and mutations are subprocess calls to `bin/venue-lease`
   (`state`, `acquire --shape <shape> [--hours H]`, `release [session]`,
   `grant --hours H [--burst <shape>]`, `ungrant`), and the core's JSON is passed through
   to the page. All derivation stays core-side; the page only does
@@ -93,7 +93,7 @@ never run unsupervised in the consolidated shape.
 
 ## Env overrides (tests)
 
-- `COLAB_LEASE_BIN` — lease CLI path (default `<repo>/bin/colab-lease`)
+- `COLAB_LEASE_BIN` — lease CLI path (default `<repo>/bin/venue-lease`)
 - `COLAB_RUNNER_VAR` — var dir (default `<repo>/var`)
 - `COLAB_LEASE_UI_HOST` / `COLAB_LEASE_UI_PORT`
 
@@ -149,7 +149,7 @@ served timestamps and rates.
 ## Published artifact (Library)
 
 The same page is published to the operator's artifacts library as
-**Colab Lease** (slug `colab-lease-2`), a fullstack artifact whose
+**Colab Lease** (slug `venue-lease-2`), a fullstack artifact whose
 server-side actions proxy this companion server — the phone-friendly
 surface; this localhost page remains the local one. Redeploy with
 `bash ui/deploy.sh`: sync the artifact sources to

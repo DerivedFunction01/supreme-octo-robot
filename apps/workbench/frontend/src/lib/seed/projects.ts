@@ -39,7 +39,7 @@ export function buildProjects(): Project[] {
     project("aldercrest", "aldercrest", "ok", "2 plans in progress", "26 min ago"),
     project("copperleaf", "copperleaf", "degraded", "Degraded · feed stale 23 d", "23 d ago"),
     project("sablebrook", "sablebrook", "ok", "1 mockup awaiting review", "1 h ago"),
-    project("colab-runner", "colab-runner", "ok", "Manifest + registry declared", "3 h ago"),
+    project("venue-runner", "venue-runner", "ok", "Manifest + registry declared", "3 h ago"),
     project("scheduler", "scheduler", "ok", "Registry current", "44 min ago"),
     project("owner-attention", "owner-attention", "ok", "Today + Digest build in progress", "18 min ago"),
     project("workbench-viewer", "workbench-viewer", "ok", "Viewer build programme", "2 h ago"),

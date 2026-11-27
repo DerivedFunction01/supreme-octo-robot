@@ -19,7 +19,7 @@ _paths_spec = _ilu.spec_from_file_location(
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
-_extend_guard_spec = _ilu.spec_from_file_location("colab_extend_guard", _paths.EXTEND_GUARD)
+_extend_guard_spec = _ilu.spec_from_file_location("venue_extend_guard", _paths.EXTEND_GUARD)
 extend_guard = _ilu.module_from_spec(_extend_guard_spec)
 _extend_guard_spec.loader.exec_module(extend_guard)
 

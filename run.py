@@ -33,12 +33,12 @@ Subcommands (the link map):
                       and reads over the attention
                       surface (ATTN_URL, default
                       http://127.0.0.1:8797)
-  colab-lease ...     the venue lease CLI, plus the other
+  venue-lease ...     the venue lease CLI, plus the other
   colab-run ...       venue bins under their own names:
   ...                 the Python bins (colab-bridge,
-                      colab-check, colab-extend-guard,
+                      colab-check, venue-extend-guard,
                       colab-harness-bootstrap,
-                      colab-harness-relay, colab-liveness,
+                      colab-harness-relay, venue-liveness,
                       colab-sh, colab-xfer) link in-process; the
                       four bash bins (colab-down, colab-fs,
                       colab-status, colab-up) are shell
@@ -152,17 +152,17 @@ def cmd_attn(argv):
 
 _VENUE_BIN = PIPELINE / "venue" / "bin"
 _VENUE_PYTHON_BINS = {
-    "colab-bridge", "colab-check", "colab-extend-guard",
+    "colab-bridge", "colab-check", "venue-extend-guard",
     "colab-harness-bootstrap", "colab-harness-relay",
-    "colab-lease", "colab-liveness", "colab-run", "colab-sh",
+    "venue-lease", "venue-liveness", "colab-run", "colab-sh",
     "colab-xfer",
 }
 _VENUE_BASH_BINS = {"colab-down", "colab-fs", "colab-status",
                     "colab-up"}
-_VENUE_ALIASES = {"lease": "colab-lease", "run": "colab-run",
+_VENUE_ALIASES = {"lease": "venue-lease", "run": "colab-run",
                   "sh": "colab-sh", "fs": "colab-fs",
                   "status": "colab-status", "up": "colab-up",
-                  "down": "colab-down", "liveness": "colab-liveness",
+                  "down": "colab-down", "liveness": "venue-liveness",
                   "check": "colab-check", "xfer": "colab-xfer"}
 
 

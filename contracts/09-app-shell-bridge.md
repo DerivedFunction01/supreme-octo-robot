@@ -208,9 +208,9 @@ The table in `classification.py` (23 entries):
   `weekly-gmail-otp-cleanup`,
   `weekly-gmail-stale-jobs-cleanup`.
 - Built-in · family Venue (7, open in Runner):
-  `colab-extend-guard`, `colab-liveness-brisk-rocket-38`,
-  `colab-liveness-cozy-pilot-61-r1794547171`,
-  `colab-liveness-dawn-tower-93`,
+  `venue-extend-guard`, `venue-liveness-brisk-rocket-38`,
+  `venue-liveness-cozy-pilot-61-r1794547171`,
+  `venue-liveness-dawn-tower-93`,
   `colab-runner-transient-restore`, `colab-store-prune`,
   `venue-healthcheck`.
 - Built-in · family Workbench (2, open in Workbench):

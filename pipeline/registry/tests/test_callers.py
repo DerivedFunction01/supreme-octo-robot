@@ -118,7 +118,7 @@ class JournalTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             journal = Path(tmp) / "var" / "caller-claims.jsonl"
             self.assertTrue(callers.append_claim(
-                journal, "sess-1", "alpha-thread", "colab-lease"))
+                journal, "sess-1", "alpha-thread", "venue-lease"))
             self.assertTrue(callers.append_claim(
                 journal, "sess-1", "beta-thread", "colab-run"))
             self.assertTrue(callers.append_claim(

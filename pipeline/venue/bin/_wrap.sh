@@ -27,7 +27,7 @@ EOF
 plan_for() { # shape id -> two lines: the generated session name, then the `colab new` args after `new`
   # Name generation and shape flags live in the lease core alone;
   # its plan verb is the one place both are derived.
-  "$REPO_ROOT/bin/colab-lease" plan --shape "$1" | "$PY" -c '
+  "$REPO_ROOT/bin/venue-lease" plan --shape "$1" | "$PY" -c '
 import json, sys
 d = json.load(sys.stdin)
 print(d["session"])
@@ -37,13 +37,13 @@ print(" ".join(d["args"][1:]))
 
 gate_check() { # shape id -> the session shape gate's admission verdict JSON; exit 0 admitted, 1 refused
   # The wrappers that create sessions bypass the lease core, so they
-  # consult its single admission seam (bin/colab-lease) before any
+  # consult its single admission seam (bin/venue-lease) before any
   # CLI call. Prints the verdict JSON either way. The driver-set
   # $COLAB_CALLER claim rides the consult when present, so the
   # verdict and its journal entry name the thread.
   if [ -n "${COLAB_CALLER:-}" ]; then
-    "$REPO_ROOT/bin/colab-lease" admission --shape "$1" --caller "$COLAB_CALLER"
+    "$REPO_ROOT/bin/venue-lease" admission --shape "$1" --caller "$COLAB_CALLER"
   else
-    "$REPO_ROOT/bin/colab-lease" admission --shape "$1"
+    "$REPO_ROOT/bin/venue-lease" admission --shape "$1"
   fi
 }

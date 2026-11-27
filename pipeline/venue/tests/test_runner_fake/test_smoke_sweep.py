@@ -175,4 +175,4 @@ def test_acquire_refusal_names_an_orphaned_live_session(tmp_path):
     agent_env.pop("COLAB_LEASE_ACTOR", None)
     r = subprocess.run([sys.executable, str(run_bin(agent_env)), "smoke"], capture_output=True, text=True, env=agent_env, timeout=300)
     assert r.returncode == 1, r.stdout + r.stderr
-    assert "orphan-live-1" in r.stderr and "bin/colab-lease adopt orphan-live-1" in r.stderr, r.stderr
+    assert "orphan-live-1" in r.stderr and "bin/venue-lease adopt orphan-live-1" in r.stderr, r.stderr

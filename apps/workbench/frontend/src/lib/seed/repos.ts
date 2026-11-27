@@ -164,7 +164,7 @@ export function buildRepos(): Repo[] {
     }),
     repo("copperleaf", "${WS}/copperleaf", "degraded"),
     repo("sablebrook", "${WS}/sablebrook", "swept"),
-    repo("colab-runner", "${WS}/colab-runner", "swept"),
+    repo("venue-runner", "${WS}/venue-runner", "swept"),
     repo("scheduler", "${WS}/scheduler", "swept"),
     repo("owner-attention", "${WS}/owner-attention", "swept"),
     repo("workbench-viewer", "${WS}/workbench-viewer", "swept"),

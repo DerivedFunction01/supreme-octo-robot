@@ -1,5 +1,5 @@
 """Auto-extension guard: every live lease is extended before it
-lapses (sync/extend_guard.py, driven by bin/colab-extend-guard
+lapses (sync/extend_guard.py, driven by bin/venue-extend-guard
 on a scheduler cadence).
 
 In-process against the lease fake harness (scratch repo + fake

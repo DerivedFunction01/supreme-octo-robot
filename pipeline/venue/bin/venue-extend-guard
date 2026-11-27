@@ -36,7 +36,7 @@ argv_mod = _load.platform_argv()
 # is a usage refusal at exit 2. Exit 3 on findings is the
 # declared verdict code.
 DECL = {
-    "name": "colab-extend-guard",
+    "name": "venue-extend-guard",
     "summary": "Auto-extension guard: extend every live lease before it lapses. Takes no arguments.",
     "verdict_codes": {"3": "the guard ran and has findings"},
 }

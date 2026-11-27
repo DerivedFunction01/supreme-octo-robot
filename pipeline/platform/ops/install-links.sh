@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Short command names for the pipeline entries (owner
 # commission, 2026-11-15): the names lanes and the owner
-# type — wb, sched, harness, colab-run, colab-lease,
+# type — wb, sched, harness, colab-run, venue-lease,
 # runner — installed as symlinks in $HOME/.local/bin pointing
 # at the real entries in this repo. Symlinks, never
 # wrappers or copies: the name resolves to the entry
@@ -63,7 +63,7 @@ wb:pipeline/workrecord/wb
 sched:pipeline/scheduling/bin/sched
 harness:pipeline/scheduling/bin/harness
 colab-run:pipeline/venue/bin/colab-run
-colab-lease:pipeline/venue/bin/colab-lease
+venue-lease:pipeline/venue/bin/venue-lease
 runner:pipeline/venue/bin/colab-run
 "
 

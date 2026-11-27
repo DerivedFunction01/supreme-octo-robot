@@ -2,7 +2,7 @@
 path (the workbench prime discipline, applied to the
 panel's own hot read).
 
-The panel's state reads shell out to bin/colab-lease,
+The panel's state reads shell out to bin/venue-lease,
 whose state build walks every lease record and live
 session; under load a build takes seconds, and a wedged
 core takes as long as the caller's timeout. Served

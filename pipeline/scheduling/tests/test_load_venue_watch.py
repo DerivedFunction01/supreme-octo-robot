@@ -5,14 +5,14 @@ import unittest
 
 from ops.watches import load_venue_watch as watch
 
-LIVENESS = """id: colab-liveness-{full}
+LIVENESS = """id: venue-liveness-{full}
 title: 'Liveness check - Colab session {full}'
 kind: scripted
 status: active
 run:
   argv:
     - python3
-    - ${{REPO}}/../venue/bin/colab-liveness
+    - ${{REPO}}/../venue/bin/venue-liveness
     - {full}
 """
 
@@ -26,12 +26,12 @@ T4 = "2026-11-24T00:21:00Z"
 def write_jobs(root, full_ids):
     os.makedirs(root, exist_ok=True)
     for name in os.listdir(root):
-        if name.startswith("colab-liveness-") \
+        if name.startswith("venue-liveness-") \
                 and name.endswith(".yaml"):
             os.unlink(os.path.join(root, name))
     for full in full_ids:
         with open(os.path.join(
-                root, "colab-liveness-%s.yaml" % full), "w",
+                root, "venue-liveness-%s.yaml" % full), "w",
                 encoding="utf-8") as fh:
             fh.write(LIVENESS.format(full=full))
     with open(os.path.join(root, "some-other-job.yaml"), "w",
@@ -186,7 +186,7 @@ class LoadVenueWatchCase(unittest.TestCase):
     def test_session_name_falls_back_to_filename(self):
         path = os.path.join(self.jobs, "gone.yaml")
         name = watch.session_name(
-            path, "colab-liveness-ember-petal-28-r999.yaml")
+            path, "venue-liveness-ember-petal-28-r999.yaml")
         self.assertEqual(name, "ember-petal-28")
 
 

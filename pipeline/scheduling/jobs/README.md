@@ -107,7 +107,7 @@ lists of maps.
   entry it finds here. Admission evidence (validation
   counts, proof outcome) is recorded as events in the
   ledger, not as fields on the entry. Machine-rendered
-  entries (`wb-progress-*`, `colab-liveness-*`) are admitted
+  entries (`wb-progress-*`, `venue-liveness-*`) are admitted
   the same way: by their writer's write, with no
   born-admitted class.
 - `catalog` — the classified-catalog block (examples layer):
