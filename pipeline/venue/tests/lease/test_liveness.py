@@ -233,6 +233,72 @@ def test_local_venue_state_reads_the_targets_file(tmp_path):
     assert r.returncode == 3 and "saturated-standing" in r.stdout
 
 
+# Synthetic budgets in the disk pins: the figures are the
+# test's own, never an instance's real budget.
+def _disk_block(state="warn", **over):
+    block = {
+        "root_used_gb": 11.0,
+        "workspace_used_gb": 1.0,
+        "warn_gb": 10,
+        "stop_gb": 12,
+        "state": state,
+    }
+    block.update(over)
+    return block
+
+
+def test_venue_disk_warn_speaks(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(fx, "local", state="advancing", pids_current=40, disk=_disk_block())
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "disk-warn:local" in r.stdout
+    assert "disk-warn:local" in fx.state()["open"]
+
+
+def test_venue_disk_stop_speaks(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(
+        fx, "local", state="advancing", pids_current=40,
+        disk=_disk_block(state="stop", root_used_gb=12.5),
+    )
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "disk-stop:local" in r.stdout
+
+
+def test_venue_disk_ok_is_no_finding(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(
+        fx, "local", state="advancing", pids_current=40,
+        disk=_disk_block(state="ok", root_used_gb=4.0),
+    )
+    r = fx.run(SESSION)
+    assert r.returncode == 0, r.stdout
+    assert fx.state()["open"] == {}
+
+
+def test_venue_unreachable_carried_disk_reading_speaks_disk_last(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(
+        fx, "local", state="unreachable", pids_current=None, pids_capacity=None,
+        disk=_disk_block(disk_sampled_at=iso(now() - timedelta(minutes=30))),
+    )
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "disk-last:local" in r.stdout
+    assert "last disk reading 11.0 GB of stop budget 12 GB" in r.stdout
+
+
+def test_venue_unreachable_carried_ok_reading_is_no_disk_finding(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(
+        fx, "local", state="unreachable", pids_current=None, pids_capacity=None,
+        disk=_disk_block(state="ok", root_used_gb=4.0,
+                         disk_sampled_at=iso(now() - timedelta(minutes=30))),
+    )
+    r = fx.run(SESSION)
+    assert r.returncode == 0, r.stdout
+    assert "disk-" not in r.stdout
+
+
 def _fwd_state(**over):
     """A forwarder state record in the shape
     local_compute_fwd.py writes: every credential source

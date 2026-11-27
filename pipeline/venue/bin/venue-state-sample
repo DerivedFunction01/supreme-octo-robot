@@ -27,6 +27,15 @@ file with state "unreachable" and still exits 0. Exit 1 is
 reserved for this tool's own defects (a classification or
 write failure on a venue that did answer); one JSON line
 per target goes to stdout either way.
+
+Every state file for a target with a disk budget in the
+untracked seed (var/disk-thresholds.json, read through the
+sampler leaf) carries a disk block: the sample's root-store
+reading against the target's warn/stop figures. An
+unreachable target's file carries the last successful
+sample's block instead, stamped with that sample's time —
+the host-side disk guard's warning was a line in a log
+nothing reads; this surface is where it is read.
 """
 
 import importlib
@@ -142,12 +151,25 @@ def _take_sample(mods, local_venue, repo, target_id, target, at):
     return mods["sample"].parse_sample(proc.stdout, target_id, at)
 
 
+def _read_state_file(var_dir, target_id):
+    """The target's standing state file as a dict, or None
+    when it does not exist or does not parse — the
+    unreachable pass reads it for the disk block it carries
+    forward."""
+    try:
+        data = json.loads((Path(var_dir) / f"venue-state-{target_id}.json").read_text())
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
 def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> str:
     """Sample, store, classify, and write one target's
     state file. Returns the state name written. Raises on
     this tool's own defects (classification/write failure
     on a venue that answered)."""
     classify_mod = mods["classify"]
+    sample_mod = mods["sample"]
     at = mods["foundation"].now()
     sample = _take_sample(mods, local_venue, repo, target_id, target, at)
     if sample is None:
@@ -159,6 +181,9 @@ def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> str:
             "pids_capacity": None,
             "jobs": [],
         }
+        carried = sample_mod.carried_disk_block(_read_state_file(var_dir, target_id))
+        if carried is not None:
+            state["disk"] = carried
         classify_mod.write_state(state, var_dir)
         return "unreachable"
     store = mods["sample"].SampleStore(root=var_dir)
@@ -174,6 +199,10 @@ def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> str:
             rec["first_seen_at"] = first_seen[run_id]
         records_by_run_id[run_id] = rec
     state = classify_mod.classify(prev_sample, sample, records_by_run_id)
+    thresholds = sample_mod.load_disk_thresholds(var_dir).get(target_id)
+    block = sample_mod.disk_block(sample, thresholds)
+    if block is not None:
+        state["disk"] = block
     classify_mod.write_state(state, var_dir)
     return state["state"]
 

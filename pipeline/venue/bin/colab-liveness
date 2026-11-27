@@ -55,7 +55,14 @@ sessions' and the fleet's) reading "saturated" stands as
 saturated-standing, a fresh "idle" as idle-capacity, and a
 job whose run record carries the actuator's reap stamp as
 wedged-killed — the owning lane's notification on this
-escalation surface, in this speech contract's form.
+escalation surface, in this speech contract's form. A
+state file's disk block (the sampler's per-target reading
+against the instance's warn/stop budget) at warn or stop
+stands as disk-warn / disk-stop for the target, and a dark
+venue whose carried last reading was at warn or stop
+stands as disk-last — the disk warning the host-side
+guard only ever wrote to its own log, on the surface that
+is read.
 Runner-side work facts (runs in flight on the session, a
 pending demand) are recorded in the state file for the
 escalation body's context; judging whether the owning
@@ -239,8 +246,12 @@ def venue_state_findings(now, rec) -> dict:
     run record carries the actuator's `reaped` stamp stands
     as wedged-killed:<run id> — the owning lane's
     notification, routed by the escalation body on the
-    record's caller. A stale or absent file is no finding:
-    the surface's silence is not a verdict."""
+    record's caller. The file's disk block at warn or stop
+    stands as disk-warn:<target> / disk-stop:<target>; on
+    an unreachable venue, the carried last reading at warn
+    or stop stands as disk-last:<target>, naming the
+    reading and its stamp. A stale or absent file is no
+    finding: the surface's silence is not a verdict."""
     findings = {}
     venue = rec.get("venue") or "colab"
     keys = []
@@ -272,6 +283,22 @@ def venue_state_findings(now, rec) -> dict:
                 f"venue {key} idle: no live job trees "
                 f"(pids {state.get('pids_current')}/{state.get('pids_capacity')}) — capacity available"
             )
+        disk = state.get("disk")
+        if isinstance(disk, dict) and disk.get("state") in ("warn", "stop"):
+            level = disk["state"]
+            if state.get("state") == "unreachable":
+                findings[f"disk-last:{key}"] = (
+                    f"venue {key} unreachable; last disk reading "
+                    f"{disk.get('root_used_gb')} GB of stop budget {disk.get('stop_gb')} GB "
+                    f"(warn at {disk.get('warn_gb')} GB) at {disk.get('disk_sampled_at')} "
+                    f"— disk {level} when the venue went dark"
+                )
+            else:
+                findings[f"disk-{level}:{key}"] = (
+                    f"venue {key} disk {level}: root store {disk.get('root_used_gb')} GB "
+                    f"against warn {disk.get('warn_gb')} GB / stop {disk.get('stop_gb')} GB "
+                    f"at {state.get('sampled_at')}"
+                )
         for job in state.get("jobs") or []:
             if not isinstance(job, dict):
                 continue

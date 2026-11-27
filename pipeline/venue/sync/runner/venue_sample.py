@@ -2,12 +2,18 @@
 
 One SSH exec per local venue per cycle runs the probe payload
 (build_probe_command) on the venue and prints line-based facts:
-the container's pid occupancy and, for every run dir carrying a
-root.pid stamp, the root's liveness and the CPU ticks summed over
-its whole process tree. parse_sample turns that text into the
-sample dict the classification consumes; SampleStore keeps the
-samples as JSON lines, one file per venue, so the last two
-samples are always at hand for the two-sample rule.
+the container's pid occupancy, the disk occupancy of the root
+store and the workspace mount, and, for every run dir carrying
+a root.pid stamp, the root's liveness and the CPU ticks summed
+over its whole process tree. parse_sample turns that text into
+the sample dict the classification consumes; SampleStore keeps
+the samples as JSON lines, one file per venue, so the last two
+samples are always at hand for the two-sample rule. The disk
+helpers here (disk_block, carried_disk_block,
+load_disk_thresholds) turn a sample's disk reading into the
+state surface's disk block: the host-side disk guard's WARN
+was a line in a log nothing reads, so the warning lives on
+this surface instead.
 
 This leaf is stdlib-only at import time (the standalone module
 loaders in the test suites load it by path); the venue paths
@@ -105,6 +111,20 @@ def main():
             total += stats.get(pid, 0)
             stack.extend(children.get(pid, []))
         return total
+
+    def disk_used_kb(path):
+        try:
+            st = os.statvfs(path)
+        except OSError:
+            return None
+        return (st.f_blocks - st.f_bfree) * st.f_frsize // 1024
+
+    root_kb = disk_used_kb("/")
+    if root_kb is not None:
+        print("DISK root {}".format(root_kb))
+    workspace_kb = disk_used_kb("/workspace")
+    if workspace_kb is not None:
+        print("DISK workspace {}".format(workspace_kb))
 
     runs = Path.home() / "runs"
     try:
@@ -213,6 +233,96 @@ def effective_pids_capacity(sample: dict, shape_id=None):
     return declared_pids(shape_id)
 
 
+KB_PER_GB = 1048576
+
+
+def _gb(kb):
+    """Used KB -> GB at the surface's one decimal, or None
+    for a missing reading."""
+    if kb is None:
+        return None
+    return round(kb / KB_PER_GB, 1)
+
+
+def load_disk_thresholds(var_dir) -> dict:
+    """Per-target disk budgets from the untracked seed
+    (var/disk-thresholds.json): {target: {"warn_gb": ...,
+    "stop_gb": ...}} — each instance's DISK_WARN_GB /
+    DISK_STOP_GB from its own environment record, seeded by
+    the operator, never hardcoded here. An absent or
+    unreadable seed, and any malformed entry, yields no
+    budget for that target: unmeasured is the honest state,
+    never a default."""
+    try:
+        data = json.loads((Path(var_dir) / "disk-thresholds.json").read_text())
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    budgets = {}
+    for target, entry in data.items():
+        if not isinstance(entry, dict):
+            continue
+        warn = entry.get("warn_gb")
+        stop = entry.get("stop_gb")
+        if isinstance(warn, (int, float)) and isinstance(stop, (int, float)):
+            budgets[str(target)] = {"warn_gb": warn, "stop_gb": stop}
+    return budgets
+
+
+def disk_block(sample: dict, thresholds):
+    """One sample's disk block for the state surface, or
+    None when the venue carries no budget (thresholds
+    missing) or the probe read no root store.
+
+    The verdict rides the root store: it is the store that
+    fills and kills the venue — the workspace image can sit
+    near-empty while the root store rides to the cap. The
+    evaluation reads the same one-decimal GB figure the
+    block publishes, so the surface never contradicts
+    itself: at the warn figure the state is "warn", at the
+    stop figure "stop"."""
+    if not thresholds:
+        return None
+    root_gb = _gb(sample.get("disk_root_used_kb"))
+    if root_gb is None:
+        return None
+    warn = thresholds["warn_gb"]
+    stop = thresholds["stop_gb"]
+    if root_gb >= stop:
+        state = "stop"
+    elif root_gb >= warn:
+        state = "warn"
+    else:
+        state = "ok"
+    return {
+        "root_used_gb": root_gb,
+        "workspace_used_gb": _gb(sample.get("disk_workspace_used_kb")),
+        "warn_gb": warn,
+        "stop_gb": stop,
+        "state": state,
+    }
+
+
+def carried_disk_block(prev_state):
+    """The disk block an unreachable state carries: the
+    previous state file's block, stamped with the last
+    successful sample's time as disk_sampled_at — a venue
+    dark reads with its last disk reading, never with none.
+    A block already carried keeps its original stamp.
+    None when the previous state carried no block."""
+    if not isinstance(prev_state, dict):
+        return None
+    block = prev_state.get("disk")
+    if not isinstance(block, dict):
+        return None
+    carried = dict(block)
+    stamp = block.get("disk_sampled_at") or prev_state.get("sampled_at")
+    if stamp is not None:
+        carried["disk_sampled_at"] = stamp
+    return carried
+
+
 def _int_or_none(token):
     try:
         return int(token)
@@ -227,13 +337,19 @@ def parse_sample(text: str, venue: str, at) -> dict:
     root_pid, tree_alive, cpu_ticks}], errors: [...]}.
     pids_max is None when the venue reports "max" (unlimited)
     or the value is unreadable; ERR lines collect into errors;
-    malformed lines are ignored, never fatal.
+    malformed lines are ignored, never fatal. The DISK lines
+    land as disk_root_used_kb / disk_workspace_used_kb (used
+    KB of the root store and the workspace mount); a store
+    the probe could not read is absent from its output and
+    stays None here — honest absence, never 0-for-missing.
     """
     sample = {
         "venue": venue,
         "at": at,
         "pids_current": None,
         "pids_max": None,
+        "disk_root_used_kb": None,
+        "disk_workspace_used_kb": None,
         "jobs": [],
         "errors": [],
     }
@@ -246,6 +362,8 @@ def parse_sample(text: str, venue: str, at) -> dict:
             sample["pids_current"] = _int_or_none(parts[1])
             if parts[2] != "max":
                 sample["pids_max"] = _int_or_none(parts[2])
+        elif kind == "DISK" and len(parts) == 3 and parts[1] in ("root", "workspace"):
+            sample[f"disk_{parts[1]}_used_kb"] = _int_or_none(parts[2])
         elif kind == "JOB" and len(parts) == 5:
             root_pid = _int_or_none(parts[2])
             cpu_ticks = _int_or_none(parts[4])
