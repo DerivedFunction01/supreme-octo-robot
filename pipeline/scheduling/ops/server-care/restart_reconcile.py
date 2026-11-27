@@ -189,7 +189,7 @@ def resolve_owner(caller, owners):
         return exact[caller]
     # The namespace is the segment before the first colon; a
     # caller with no colon is its own namespace (a bare caller
-    # named for its namespace — e.g. edgar-specimen — resolves
+    # named for its namespace — e.g. specimen-caller — resolves
     # by its full name).
     chat = namespaces.get(caller.split(":", 1)[0])
     if chat:
