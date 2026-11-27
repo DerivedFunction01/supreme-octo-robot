@@ -137,10 +137,13 @@ class WatchdogSetSurvivalTests(unittest.TestCase):
             OPS_DIR, cls.ops,
             ignore=shutil.ignore_patterns("__pycache__"))
         # the ops tree's durable writer reaches the
-        # platform writer through the paths spine; the
-        # fixture tree carries both at their production
+        # platform writer through the paths spine, and
+        # the ops scripts and the cutover renderer load
+        # the argv pair by relative path; the fixture
+        # tree carries them all at their production
         # relative locations
-        for name in ("paths.py", "writer.py"):
+        for name in ("paths.py", "writer.py", "argv.sh",
+                     "argv.py"):
             shutil.copy2(OPS_DIR.parent / name,
                          cls.ops.parent / name)
         cls.units_dir = cls.tmp / "units"
