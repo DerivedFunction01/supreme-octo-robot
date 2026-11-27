@@ -5,6 +5,7 @@ from ..core import foundation, catalog, callers, records, spend
 from ..access import gate, access, grants
 from ..sessions import sessions, keepalive, renewal, health, provisioning, identity, load
 from ..state import orphans
+from . import local_venue
 
 def acquire(colab, repo: Path, shape_id: str, now_dt: datetime | None = None, hours: float | None = None, max_hours_cap: float | None = None, via: str | None = None, caller: str | None = None, duty: bool = False, standing: bool = False, create: bool = False, prefer_session: str | None = None, min_window_s: float | None = None) -> dict:
     """Adopt a live lease at this shape or create one. The only
@@ -387,7 +388,10 @@ def extend(colab, repo: Path, session: str, hours: float, now_dt: datetime | Non
     is over and a fresh start is a new lease), extend-unknown
     (session state unreadable; never act on an unreadable list),
     extend-standing-managed (the standing lease's lifetime belongs
-    to the grant), refused-budget."""
+    to the grant), refused-budget. A local-venue record's session
+    state comes from its target probe, not the Colab session
+    listing — a local session never appears in the listing, so
+    the probe's True reads alive, False absent, None unreadable."""
     now_dt = now_dt or datetime.now(timezone.utc)
     cfg = foundation.load_config(repo)
     if not cfg.get("enabled"):
@@ -398,7 +402,16 @@ def extend(colab, repo: Path, session: str, hours: float, now_dt: datetime | Non
     if rec.get("standing") and grants.grant_active(grants.load_grant(repo), now_dt):
         return {"action": "extend-standing-managed"}
     diag: dict = {}
-    state = sessions.session_state(colab, session, diag)
+    if rec.get("venue") == local_venue.VENUE:
+        # A local session never appears in the Colab session
+        # listing, so the listing test reads every local lease
+        # as absent: a local record's state is its target
+        # probe's verdict instead (True alive, False absent,
+        # None unreadable — extend-unknown, as with the list).
+        probed = local_venue.probe_for_record(repo, rec, now_dt)
+        state = {True: "alive", False: "absent", None: "unknown"}[probed]
+    else:
+        state = sessions.session_state(colab, session, diag)
     if state == "unknown":
         return {"action": "extend-unknown", "session": session, "read_error": diag.get("read_error"), "attempts": diag.get("attempts")}
     if state == "absent" and not rec.get("renew"):
@@ -429,7 +442,9 @@ def extend(colab, repo: Path, session: str, hours: float, now_dt: datetime | Non
     out = {"action": "extended", "session": session, "shape": rec.get("shape"), "hours": float(hours), "old_deadline": old_deadline, "new_deadline": new_deadline, "record": rec, "budget": budget}
     if caller:
         out["caller"] = caller
-    if state == "alive" and rec.get("kit") != "installed":
+    # The renewal kit is Colab machinery: a local extension
+    # never installs it.
+    if state == "alive" and rec.get("venue") != local_venue.VENUE and rec.get("kit") != "installed":
         kit = renewal.install_renewal_kit(colab, repo, rec, now_dt)
         out["kit"] = kit
         if kit.get("kit") == "installed":

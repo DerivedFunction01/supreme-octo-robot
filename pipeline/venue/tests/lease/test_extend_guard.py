@@ -206,6 +206,73 @@ def test_guard_treats_lease_normally_after_operator_extend(tmp_path, monkeypatch
     assert len(mine) == 1 and mine[0]["action"] == "extended"
 
 
+# --- local-venue leases: the probe is the state reading ---
+
+
+def _craft_local(repo, session="local-hp-1", *, deadline_m=30, last_used_h=0):
+    """A local-venue lease record, in the shape acquire_local
+    writes: venue/target stamped, no rate (the venue kind is
+    budget-less), no Colab session behind it."""
+    rec = {"session": session, "venue": "local", "target": "hp-envy", "shape": "local-hp", "shape_spec": {"gpu": None, "tpu": None, "high_mem": False}, "rate_cu_per_hour": None, "caller": "workhorse", "account": "primary", "deadline": (PNOW + timedelta(minutes=deadline_m)).isoformat(), "acquired_at": (PNOW - timedelta(hours=8)).isoformat(), "last_used_at": (PNOW - timedelta(hours=last_used_h)).isoformat(), "jobs": []}
+    (repo / "var" / f"lease-{session}.json").write_text(json.dumps(rec))
+    return rec
+
+
+def _stub_probe(monkeypatch, verdict):
+    """Stub the local target probe at the seam extend() reads:
+    the local_venue module's probe_for_record, patched on the
+    module object the lease package (and lifecycle) holds."""
+    monkeypatch.setattr(lease_mod.local_venue, "probe_for_record", lambda repo, rec, now_dt=None: verdict)
+
+
+def test_extend_local_lease_probe_alive_extends_by_72_hours(tmp_path, monkeypatch):
+    repo = scratch_repo(tmp_path, monkeypatch)
+    rec = _craft_local(repo)
+    _stub_probe(monkeypatch, True)
+    out = lease_mod.extend(FakeColab(), repo, rec["session"], 72, now_dt=PNOW, caller="workhorse")
+    assert out["action"] == "extended"
+    # The deadline moves by the full given hours off the old
+    # deadline — a local extension carries no window cap.
+    assert out["new_deadline"] == (PNOW + timedelta(minutes=30, hours=72)).isoformat()
+    saved = lease_mod.load_record(repo, rec["session"])
+    assert saved["deadline"] == out["new_deadline"] and saved["renew"] is True
+    # The renewal kit is Colab machinery: a local extension
+    # never installs it and the result carries no kit entry.
+    assert "kit" not in out and "kit" not in saved
+
+
+def test_extend_local_lease_probe_absent_refuses_no_lease(tmp_path, monkeypatch):
+    repo = scratch_repo(tmp_path, monkeypatch)
+    rec = _craft_local(repo)
+    _stub_probe(monkeypatch, False)
+    out = lease_mod.extend(FakeColab(), repo, rec["session"], 72, now_dt=PNOW, caller="workhorse")
+    assert out["action"] == "extend-no-lease"
+    saved = lease_mod.load_record(repo, rec["session"])
+    assert saved["deadline"] == rec["deadline"] and "renew" not in saved
+
+
+def test_extend_local_lease_probe_unreadable_refuses_unknown(tmp_path, monkeypatch):
+    repo = scratch_repo(tmp_path, monkeypatch)
+    rec = _craft_local(repo)
+    _stub_probe(monkeypatch, None)
+    out = lease_mod.extend(FakeColab(), repo, rec["session"], 72, now_dt=PNOW, caller="workhorse")
+    assert out["action"] == "extend-unknown"
+    saved = lease_mod.load_record(repo, rec["session"])
+    assert saved["deadline"] == rec["deadline"] and "renew" not in saved
+
+
+def test_guard_extends_a_due_local_lease(tmp_path, monkeypatch):
+    repo = scratch_repo(tmp_path, monkeypatch)
+    rec = _craft_local(repo)  # deadline 30m out, used just now (active)
+    _stub_probe(monkeypatch, True)
+    code, lines = guard_mod.run_guard(lease_mod, FakeColab(), repo, now_dt=PNOW)
+    assert code == 0
+    mine = [line for line in lines if line["session"] == rec["session"]]
+    assert len(mine) == 1 and mine[0]["action"] == "extended"
+    assert not any(line.get("finding") for line in lines)
+    assert lease_mod.load_record(repo, rec["session"])["deadline"] == mine[0]["new_deadline"]
+
+
 # --- detached work is in-flight work (E8) ---
 
 
