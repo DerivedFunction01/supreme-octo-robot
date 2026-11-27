@@ -47,7 +47,7 @@ burst_per_worker defaults to 860 — the mergegate evidence's
 ~710-thread burst plus ~150 of controller/subprocess
 overhead — and an envelope declaration may override it.
 The observed plateau under that worst case: mergegate5's
-sampler read 550 threads at 1 worker for the Edgar suite,
+sampler read 550 threads at 1 worker for a large suite,
 inside the 860 the division prices. With the default, a
 thread share of 384 prices workers = 1: the same form the
 coordinator hand-set for the first envelope consumer after
