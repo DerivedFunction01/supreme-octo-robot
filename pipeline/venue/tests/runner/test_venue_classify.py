@@ -181,7 +181,7 @@ def test_tree_gone():
 def test_mixed_advancing_and_wedged():
     prev = _sample([_job("run-a", 1000), _job("run-b", 2000, pid=5151)], at=T_PREV)
     cur = _sample([_job("run-a", 1600), _job("run-b", 2000, pid=5151)])
-    records = {"run-a": _rec(), "run-b": _rec(caller="edgar", first_seen=SEEN_OLD)}
+    records = {"run-a": _rec(), "run-b": _rec(caller="other", first_seen=SEEN_OLD)}
     state = classify(prev, cur, records)
     assert state["state"] == "advancing"
     verdicts = {j["run_id"]: j["verdict"] for j in state["jobs"]}

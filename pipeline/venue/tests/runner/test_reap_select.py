@@ -32,6 +32,7 @@ def load_launch():
     sys.modules["runner_reap_unit"] = package
     foundation = types.ModuleType("runner_reap_unit.foundation")
     foundation.REPO = REPO
+    foundation.PLATFORM_ARGV = REPO / "argv.py"
     foundation.colab = None
     foundation.json_object_from_output = None
     foundation.lease = None

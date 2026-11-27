@@ -80,6 +80,7 @@ def load_launch(tmp_path, colab, chunked=None):
     sys.modules["runner_perrun_unit"] = package
     foundation = types.ModuleType("runner_perrun_unit.foundation")
     foundation.REPO = tmp_path
+    foundation.PLATFORM_ARGV = tmp_path / "argv.py"
     foundation.colab = colab
     foundation.json_object_from_output = _json_object_from_output
     journal = []
