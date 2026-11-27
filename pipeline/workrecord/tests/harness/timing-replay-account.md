@@ -1,4 +1,4 @@
-# Replay account — timing-ledger Step 5 over 2026-11-26-wall-clock-reduction
+# Replay account — timing-ledger Step 5 over the wall-clock-reduction plan
 
 Findings first. The trace stands end to end for five of the plan's
 eight steps: plan-file estimate → transition events reconstructed
@@ -25,7 +25,7 @@ was reconstructed from. Precision follows the source exactly:
 - a run record's `finished_at`, a git commit's committer instant
   — second precision, as recorded;
 - the front-matter `created:` stamp — date-only, so the create
-  line's instant is day-grain (`2026-11-26T00:00:00+00:00`) and
+  line's instant is day-grain (midnight UTC on the plan day) and
   its source says so;
 - a todo file's mtime — the write that recorded its done state,
   rendered at second grain.
@@ -102,7 +102,8 @@ it ("landed d02055a with precision cure c27c2c9").
   the step's record (164038Z, transport-dead at mkdir) moved
   no bound.
 - measurement.md itself prices the baseline corpus (the
-  programme window 2026-11-24→26), not this plan's steps, so
+  programme window: the three days ending on the plan day),
+  not this plan's steps, so
   the two records overlap at exactly one point: step 1.
   measurement.md is step 1's deliverable, and the report shows
   step 1 priced (1h) with no measured span — its completion
@@ -179,10 +180,14 @@ front-matter and completion-note bodies verbatim, the plan's
 step headings, wb-step blocks, and closing est lines verbatim.
 Elided, and named: the plan steps' prose bodies (the report
 reads none of it) and the annotation on step 1's closing est
-line after its first clause. The todo copies' `plan:` refs name
+line after its first clause. Rendered by file name only, and
+named here: the untracked plan-dir paths in two of the plan
+copy's `files:` lines and in wc-measure's completion note
+stand as file names — tracked text carries no untracked path,
+and no figure depends on the rendering. The todo copies' `plan:` refs name
 the fixture's own plan file — in the serve tree they name the
 repo-root plan file by absolute path; the copy's ref names the
 file it points at, in the same split geometry. Git commits are
 cited by their current-tree SHAs; the todo bodies record
-pre-strip SHAs for the same commits (the 2026-11-27 history
+pre-strip SHAs for the same commits (the next day's history
 rewrite), with subjects and instants identical.

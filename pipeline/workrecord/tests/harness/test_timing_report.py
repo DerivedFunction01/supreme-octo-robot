@@ -17,7 +17,7 @@ and todos the record does not price or measure
 render as honest absence, never as zeros.
 
 All figures below are hand-computed from the
-planted transition stamps (2026-11-27, UTC):
+planted transition stamps (the fixture day, UTC):
 
 Bundle one (timing-demo):
   step 1 serial est 30m — groundwork (est 30m):
