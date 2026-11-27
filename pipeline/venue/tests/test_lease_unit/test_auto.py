@@ -12,7 +12,7 @@ def test_auto_timed_start_waits_then_fires(repo, tmp_path, monkeypatch):
     the first pass after its time — a timed start as data, with the
     request's tag (written here in its legacy via spelling) read as
     the caller claim and stamped on the created record."""
-    monkeypatch.setenv("COLAB_RUNNER_AUTO_ACQUIRE", "1")
+    monkeypatch.setenv("VENUE_RUNNER_AUTO_ACQUIRE", "1")
     alive = set()
     stub = _auto_stub(alive)
     lease.write_request(repo, reason="timed", shape="cpu", now_dt=NOW, via="timer", not_before=NOW + timedelta(hours=1))

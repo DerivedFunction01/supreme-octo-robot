@@ -100,7 +100,7 @@ def test_set_budget_caps_addressed_account_writes_budgets_block(repo):
 def test_attributed_spend_splits_by_account(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     now = datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc)
     day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     hours = (now - day_start).total_seconds() / 3600.0
@@ -141,7 +141,7 @@ def test_budget_check_prices_the_addressed_account(repo):
 def test_record_save_stamps_account_and_segment_carries_it(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _with_accounts(repo)
     rec = {
         "session": "acct-stamp", "shape": "cpu",
@@ -163,7 +163,7 @@ def test_record_save_stamps_account_and_segment_carries_it(repo, tmp_path, monke
 def test_snapshot_and_census_serve_accounts(repo, tmp_path, monkeypatch):
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     _with_accounts(repo, budgets={"colab": {"backup": {"daily": 40}}})
 
     census = lease.accounts_state(repo, NOW)

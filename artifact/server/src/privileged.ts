@@ -277,7 +277,7 @@ export const privileged = definePrivilegedContracts({
 // The config-seam env names, one pair per app — the same
 // names each backend's own seam reads (design §1):
 // workbench WB_VIEWER_*, scheduler SCHEDULER_API_*,
-// attention ATTENTION_*, runner COLAB_LEASE_UI_*.
+// attention ATTENTION_*, runner VENUE_LEASE_UI_*.
 export const ENV_KEYS = [
   "WB_VIEWER_HOST",
   "WB_VIEWER_PORT",
@@ -285,6 +285,11 @@ export const ENV_KEYS = [
   "SCHEDULER_API_PORT",
   "ATTENTION_HOST",
   "ATTENTION_PORT",
+  "VENUE_LEASE_UI_HOST",
+  "VENUE_LEASE_UI_PORT",
+  // step6-retire: the COLAB_ pair rides the allowlist only so the
+  // runner bridge's dual-read fallback can see them; both entries
+  // are deleted in Step 6 (separation plan).
   "COLAB_LEASE_UI_HOST",
   "COLAB_LEASE_UI_PORT",
 ] as const;

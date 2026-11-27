@@ -3,7 +3,7 @@ step D): the probes' long synchronous consumers (exec / install /
 upload / download) pass the lease core's sync_rights verdict
 before dialing; short reads, lifecycle calls, and session-less
 calls do not. The lease core is the checkout's own package; var
-state is a scratch dir (COLAB_RUNNER_VAR), and the gate's session
+state is a scratch dir (VENUE_RUNNER_VAR), and the gate's session
 name is unique to this file so no real run record can name it.
 """
 
@@ -44,8 +44,8 @@ def plant_claim(var: Path, holder="lease"):
 
 
 def test_exec_refused_under_a_foreign_claim(tmp_path, monkeypatch):
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
-    monkeypatch.delenv("COLAB_CALLER", raising=False)
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.delenv("VENUE_CALLER", raising=False)
     plant_claim(tmp_path / "var")
     fake = FakeRun()
     monkeypatch.setattr(driver.subprocess, "run", fake)
@@ -58,8 +58,8 @@ def test_exec_refused_under_a_foreign_claim(tmp_path, monkeypatch):
 
 
 def test_exec_allowed_when_the_session_is_quiet(tmp_path, monkeypatch):
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
-    monkeypatch.delenv("COLAB_CALLER", raising=False)
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.delenv("VENUE_CALLER", raising=False)
     fake = FakeRun()
     monkeypatch.setattr(driver.subprocess, "run", fake)
     out = driver.colab("exec", "-s", SESSION, "-f", "payload.py")
@@ -67,8 +67,8 @@ def test_exec_allowed_when_the_session_is_quiet(tmp_path, monkeypatch):
 
 
 def test_short_and_sessionless_calls_are_not_gated(tmp_path, monkeypatch):
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(tmp_path / "var"))
-    monkeypatch.delenv("COLAB_CALLER", raising=False)
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(tmp_path / "var"))
+    monkeypatch.delenv("VENUE_CALLER", raising=False)
     plant_claim(tmp_path / "var")
     fake = FakeRun()
     monkeypatch.setattr(driver.subprocess, "run", fake)

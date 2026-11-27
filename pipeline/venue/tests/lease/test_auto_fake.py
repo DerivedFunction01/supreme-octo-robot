@@ -1,6 +1,6 @@
 """Auto-acquire against the fake colab CLI (no login, no network).
 
-The flag is driven through the COLAB_RUNNER_AUTO_ACQUIRE env override so
+The flag is driven through the VENUE_RUNNER_AUTO_ACQUIRE env override so
 the tests never edit the tracked config (whose shipped default is off).
 Covers: inert while disabled, inert with no demand, acquire + consume
 on demand, satisfied-live + consume when a lease already exists, and a
@@ -27,7 +27,7 @@ def run_lease(env, *args, expect_rc=0):
 
 
 def request_file(env):
-    return Path(env["COLAB_RUNNER_VAR"]) / "lease-request.json"
+    return Path(env["VENUE_RUNNER_VAR"]) / "lease-request.json"
 
 
 def test_auto_disabled_is_inert(tmp_path):
@@ -66,7 +66,7 @@ def test_auto_satisfied_live_consumes(tmp_path):
 
 def test_auto_budget_refusal_keeps_demand(tmp_path):
     env = auto_env(tmp_path, enabled=True)
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     var.mkdir(parents=True, exist_ok=True)
     now = datetime.now(timezone.utc)
     # Attributed accounting: a journaled segment covering today so
@@ -120,7 +120,7 @@ def test_unrequest(tmp_path):
 
 def test_request_refused_at_write_for_agent_standard(tmp_path):
     env = auto_env(tmp_path, enabled=True)
-    env.pop("COLAB_LEASE_ACTOR", None)
+    env.pop("VENUE_LEASE_ACTOR", None)
     out = run_lease(env, "request", "--shape", "cpu", "--reason", "burst", "--caller", "test", expect_rc=1)
     assert out["action"] == "shape-refused"
     assert out["shape_class"] == "standard"
@@ -129,7 +129,7 @@ def test_request_refused_at_write_for_agent_standard(tmp_path):
 
 def test_auto_shape_refusal_clears_demand(tmp_path):
     env = auto_env(tmp_path, enabled=True)
-    env.pop("COLAB_LEASE_ACTOR", None)
+    env.pop("VENUE_LEASE_ACTOR", None)
     # No via: the write defers, and consumption refuses + clears,
     # so the duty never retries a permanently refused demand.
     run_lease(env, "request", "--shape", "cpu", "--reason", "unattributed")
@@ -137,6 +137,6 @@ def test_auto_shape_refusal_clears_demand(tmp_path):
     assert out["action"] == "skipped-shape"
     assert not request_file(env).exists()
     assert run_lease(env, "status")["action"] == "no-lease"
-    journal = Path(env["COLAB_RUNNER_VAR"]) / "session-gate-journal.jsonl"
+    journal = Path(env["VENUE_RUNNER_VAR"]) / "session-gate-journal.jsonl"
     kinds = [json.loads(line)["kind"] for line in journal.read_text().splitlines() if line.strip()]
     assert kinds == ["shape-refused", "demand-shape-refused"]

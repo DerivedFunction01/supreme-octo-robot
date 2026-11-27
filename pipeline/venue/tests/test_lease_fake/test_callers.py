@@ -62,7 +62,7 @@ def test_caller_extend_fills_only_when_absent(tmp_path, monkeypatch):
 
 def test_caller_demand_consumed_stamps_the_record(tmp_path, monkeypatch):
     repo = gate_repo(tmp_path, monkeypatch)
-    monkeypatch.setenv("COLAB_RUNNER_AUTO_ACQUIRE", "1")
+    monkeypatch.setenv("VENUE_RUNNER_AUTO_ACQUIRE", "1")
     fake = FakeColab()
     # A High-RAM demand from a registered caller is askable (the
     # write-time check is shape-only) and the duty creates it,

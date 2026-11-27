@@ -105,14 +105,14 @@ from pathlib import Path
 
 # The paths spine (paths.py at the package root) owns the
 # root derivation; bound by path — the bootstrap form. The
-# COLAB_RUNNER_HOME override stays here: it re-roots the
+# VENUE_RUNNER_HOME override stays here: it re-roots the
 # whole store, mirror-side, by design.
 _paths_spec = _ilu.spec_from_file_location(
     "venue_paths", Path(__file__).resolve().parent.parent / "paths.py")
 _paths = _ilu.module_from_spec(_paths_spec)
 _paths_spec.loader.exec_module(_paths)
 
-_env_home = os.environ.get("COLAB_RUNNER_HOME")
+_env_home = os.environ.get("VENUE_RUNNER_HOME", os.environ.get("COLAB_RUNNER_HOME"))  # step6-retire: COLAB_ dual-read fallback
 REPO = Path(_env_home) if _env_home else _paths.REPO_RESOLVED
 
 # The unified argv contract home, loaded by location

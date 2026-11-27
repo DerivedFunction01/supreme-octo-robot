@@ -1,6 +1,6 @@
 // The runner binding of the shared bridge core
 // (server/src/bridge-core.ts): the runnerApi contract, the
-// COLAB_LEASE_UI_* config seam, and this app's sentences.
+// VENUE_LEASE_UI_* config seam, and this app's sentences.
 // The bridge semantics (status-0 diagnoses, the retry
 // policy) live in the core, once, for all four apps.
 import type { Ctx } from "@hatch/space-sdk";

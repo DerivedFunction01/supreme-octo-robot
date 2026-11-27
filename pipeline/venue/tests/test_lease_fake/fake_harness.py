@@ -53,7 +53,7 @@ def run_lease_rc(env, *args):
 
 
 def record_files(env):
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     return sorted(p for p in var.glob("lease-*.json") if p.name not in ("lease-spend.json", "lease-request.json"))
 
 
@@ -117,7 +117,7 @@ def gate_journal(repo):
 
 
 def _seed_cli_catalog(env):
-    var = Path(env["COLAB_RUNNER_VAR"])
+    var = Path(env["VENUE_RUNNER_VAR"])
     var.mkdir(parents=True, exist_ok=True)
     (var / "cli-catalog.json").write_text(json.dumps({"fetched_at": datetime.now(timezone.utc).isoformat(), "gpu": ["T4"], "tpu": ["v6e1"], "no_high_mem": []}))
 
@@ -139,4 +139,4 @@ def make_orphan(env, name, *, high_mem=True):
 
 def plant_cli_kit_config(env, session, *, deadline, acquired_at):
     cfg = {"shape": "cpu-highram", "session": session, "deadline": deadline.isoformat(), "acquired_at": acquired_at.isoformat(), "cap_seconds": 3600, "margin_seconds": 600, "high_mem": True, "gpu": None, "tpu": None}
-    (Path(env["COLAB_RUNNER_VAR"]) / f"renewal-config-{session}.json").write_text(json.dumps(cfg, indent=2))
+    (Path(env["VENUE_RUNNER_VAR"]) / f"renewal-config-{session}.json").write_text(json.dumps(cfg, indent=2))

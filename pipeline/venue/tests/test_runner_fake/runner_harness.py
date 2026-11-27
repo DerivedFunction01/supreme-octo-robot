@@ -49,7 +49,7 @@ def run_verb(env, *argv):
 
 
 def outbox_events(env):
-    path = Path(env["COLAB_RUNNER_VAR"]) / "ui-outbox.jsonl"
+    path = Path(env["VENUE_RUNNER_VAR"]) / "ui-outbox.jsonl"
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]

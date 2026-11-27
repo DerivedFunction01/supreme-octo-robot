@@ -26,12 +26,12 @@ def _resolve_profile_repo():
 
     Primary source is the env build's remote registry
     (/content/env-registry.json): the repo id comes from $PROFILE_REPO_ID
-    (or $COLAB_REPO_ID); $PROFILE_REPO, when set, is taken as a dest slug
+    (or $VENUE_REPO_ID); $PROFILE_REPO, when set, is taken as a dest slug
     or a clone path whose final component is the dest. With no registry,
     $PROFILE_REPO as a path plus a conventional .venv is the fallback."""
     import json
 
-    repo_id = os.environ.get("PROFILE_REPO_ID") or os.environ.get("COLAB_REPO_ID")
+    repo_id = os.environ.get("PROFILE_REPO_ID") or os.environ.get("VENUE_REPO_ID", os.environ.get("COLAB_REPO_ID"))  # step6-retire: COLAB_ dual-read fallback
     legacy = os.environ.get("PROFILE_REPO")
     registry_path = Path("/content/env-registry.json")
     records = {}

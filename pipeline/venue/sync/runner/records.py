@@ -179,8 +179,8 @@ def load_run_record(run_id: str) -> dict | None:
 
 def outbox_path() -> Path:
     # The UI outbox lives in the runner var dir (the panel's own
-    # var_dir() convention: $COLAB_RUNNER_VAR, else the repo's var).
-    return Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var")) / "ui-outbox.jsonl"
+    # var_dir() convention: $VENUE_RUNNER_VAR, else the repo's var).
+    return Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))) / "ui-outbox.jsonl"  # step6-retire: COLAB_ dual-read fallback
 
 
 def emit_terminal_event(rec: dict) -> bool:

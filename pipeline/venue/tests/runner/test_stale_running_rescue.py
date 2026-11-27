@@ -81,7 +81,7 @@ class ReaderColab:
 
 
 def load_sweep(runs: Path, root: Path, live: set, colab):
-    os.environ["COLAB_RUNNER_VAR"] = str(root / "var")
+    os.environ["VENUE_RUNNER_VAR"] = str(root / "var")
     package = types.ModuleType("runner_rescue_unit")
     package.__path__ = [str(REPO / "sync" / "runner")]
     sys.modules["runner_rescue_unit"] = package

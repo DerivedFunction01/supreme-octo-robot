@@ -39,8 +39,8 @@ The route, in order:
    per-seam copies carried — under the same retry.
 
 Attempts and backoff are env-tunable at call time
-(COLAB_WRITER_ATTEMPTS, COLAB_WRITER_BACKOFF_S — the
-run-dir cure's COLAB_RUN_DIR_* precedent). The defaults
+(VENUE_WRITER_ATTEMPTS, VENUE_WRITER_BACKOFF_S — the
+run-dir cure's VENUE_RUN_DIR_* precedent). The defaults
 match the /ops client's own retry discipline deliberately
 (TRANSIENT_ATTEMPTS = 4, TRANSIENT_BACKOFF_S = (3, 8, 20)
 in the claim-retry cure): the same denial wave should meet
@@ -119,14 +119,14 @@ WriterError = WRITER.WriterError if WRITER is not None else _InlineWriterError
 
 def _attempts(env) -> int:
     try:
-        n = int(env.get("COLAB_WRITER_ATTEMPTS", ""))
+        n = int(env.get("VENUE_WRITER_ATTEMPTS", env.get("COLAB_WRITER_ATTEMPTS", "")))  # step6-retire: COLAB_ dual-read fallback
     except ValueError:
         return DEFAULT_ATTEMPTS
     return n if n >= 1 else DEFAULT_ATTEMPTS
 
 
 def _backoff(env) -> tuple:
-    raw = env.get("COLAB_WRITER_BACKOFF_S", "")
+    raw = env.get("VENUE_WRITER_BACKOFF_S", env.get("COLAB_WRITER_BACKOFF_S", ""))  # step6-retire: COLAB_ dual-read fallback
     try:
         parts = tuple(float(p) for p in raw.split(",") if p.strip())
     except ValueError:

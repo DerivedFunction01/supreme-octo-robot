@@ -128,10 +128,10 @@ def poll_run(run_id: str) -> int:
         print(json.dumps({"run_id": run_id, "state": rec.get("state"), "error": "record predates launch (no session/remote_out); --resume relaunches it"}, indent=2))
         return 1
     reader = write_reader(run_id, remote_out, job.get("outputs", []))
-    poll_timeout = int(os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300"))
+    poll_timeout = int(os.environ.get("VENUE_RUN_POLL_TIMEOUT_S", os.environ.get("COLAB_RUN_POLL_TIMEOUT_S", "300")))  # step6-retire: COLAB_ dual-read fallback
     state, poll_error = read_reader(session, reader, poll_timeout)
     if state is None:
-        if register_poll_failure(rec, session, poll_error, collector=os.environ.get("COLAB_CALLER")) == "failed":
+        if register_poll_failure(rec, session, poll_error, collector=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))) == "failed":  # step6-retire: COLAB_ dual-read fallback
             close_out_lease(rec)
             print(json.dumps({"run_id": run_id, "state": "failed", "error": rec["error"]}, indent=2))
             return 1
@@ -141,7 +141,7 @@ def poll_run(run_id: str) -> int:
     done_units = (state.get("checkpoint") or {}).get("completed_units", 0)
     rec["last_checkpoint_units"] = done_units
     rec["last_evidence_at"] = now()
-    stamp_collector(rec, os.environ.get("COLAB_CALLER"))
+    stamp_collector(rec, os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     save_record(rec)
     if job.get("outputs"):
         pull_outputs(rec, job, session, remote_out, state)
@@ -180,7 +180,7 @@ def poll_run(run_id: str) -> int:
     except (KeyError, ValueError):
         past_deadline = False
     if complete or past_deadline:
-        stamp_collector(rec, os.environ.get("COLAB_CALLER"))
+        stamp_collector(rec, os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
         rc, result = finalize_run(rec, job, session, remote_out, state, rec.get("usage_before"))
         if result.get("state") == "collecting":
             # Not a close: outputs probed present remotely

@@ -103,8 +103,8 @@ def load_launch(tmp_path, colab):
 
 @pytest.fixture(autouse=True)
 def fast_probe(monkeypatch):
-    monkeypatch.setenv("COLAB_RUN_PROBE_ATTEMPTS", "3")
-    monkeypatch.setenv("COLAB_RUN_PROBE_BACKOFF_S", "0")
+    monkeypatch.setenv("VENUE_RUN_PROBE_ATTEMPTS", "3")
+    monkeypatch.setenv("VENUE_RUN_PROBE_BACKOFF_S", "0")
 
 
 def make_src(tmp_path):

@@ -17,7 +17,7 @@ def test_budget_snapshot_serves_standing_day_spend(repo, tmp_path, monkeypatch):
     balance did in between (external usage, expirations)."""
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     # A fixed mid-day now: the fixture must not depend on the
     # wall clock — inside the first minute of a UTC day the
     # segment is shorter than the rate floor below assumes and
@@ -56,7 +56,7 @@ def test_attributed_spend_splits_segments_at_period_boundaries(repo, tmp_path, m
     and unconfirmed-rate work contributes nothing."""
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     now = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
     segs = [
         # Spans midnight into today: 2 h count today (and this month).
@@ -82,7 +82,7 @@ def test_budget_check_balance_floor_refuses_beyond_the_bank(repo, tmp_path, monk
     zero spend against every cap."""
     var = tmp_path / "var"
     var.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("COLAB_RUNNER_VAR", str(var))
+    monkeypatch.setenv("VENUE_RUNNER_VAR", str(var))
     out = lease.budget_check(lambda *a, **k: cp("Current balance: 0.05 compute units"), repo, lease.load_config(repo), {"rate_cu_per_hour": 0.08}, hours=8, now_dt=NOW)
     assert out["ok"] is False
     assert out["reason"] == "balance-insufficient"

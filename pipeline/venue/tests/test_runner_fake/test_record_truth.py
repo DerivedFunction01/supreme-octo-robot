@@ -40,7 +40,7 @@ def test_confirmed_launch_stamps_the_measured_shape(tmp_path):
     at launch confirmation."""
     # The measured shape is stamped by exactly one read: the
     # launch-confirmation reader pass, whose funnel timeout
-    # is COLAB_RUN_CONFIRM_TIMEOUT_S (default capped at
+    # is VENUE_RUN_CONFIRM_TIMEOUT_S (default capped at
     # 120 s). If that single exec loses its race against the
     # timeout under load, production — by design — marks the
     # launch unconfirmed and no later pass ever stamps the
@@ -54,7 +54,7 @@ def test_confirmed_launch_stamps_the_measured_shape(tmp_path):
     # the reader's logic alone; the fire likewise runs under
     # a hang-guard timeout rather than the harness's 300 s.
     env = runner_env(tmp_path)
-    env.update(COLAB_RUN_CONFIRM_TIMEOUT_S="3600")
+    env.update(VENUE_RUN_CONFIRM_TIMEOUT_S="3600")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=1800)
     assert r.returncode == 0, r.stdout + r.stderr
     out = json.loads(r.stdout)
@@ -76,7 +76,7 @@ def test_resume_after_launch_lost_clears_the_stale_verdict(tmp_path):
     (the stripfix2 specimen: starting + remote_out +
     launch_lost on one record)."""
     env = runner_env(tmp_path)
-    env.update(COLAB_BIN=str(_noop_launch_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_ABSENCE_GRACE_S="5")
+    env.update(COLAB_BIN=str(_noop_launch_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_ABSENCE_GRACE_S="5")
     r = subprocess.run([sys.executable, str(run_bin(env)), "smoke"], capture_output=True, text=True, env=env, timeout=300)
     assert r.returncode == 1, r.stdout + r.stderr
     run_id = json.loads(r.stdout)["run_id"]

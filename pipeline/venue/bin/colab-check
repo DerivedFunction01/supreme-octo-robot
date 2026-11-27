@@ -13,7 +13,7 @@ carries finalized clean work only.
 Usage: colab-check <check.py paths...> [--repo ID] [--variant NAME]
        [--shape SHAPE] [--caller TAG]
 The caller claim resolves exactly as colab-run's does, minus the
-manifest tier (a gate names no job): --caller over $COLAB_CALLER,
+manifest tier (a gate names no job): --caller over $VENUE_CALLER,
 validated against the caller registry before anything starts. The
 claim is what the gate's lease acquire adopts under — a gate for a
 thread runs under that thread's caller, so it shares the lease the
@@ -124,15 +124,15 @@ def main() -> int:
     if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
         print("colab-check: STAGED — no colab login yet (see README).", file=sys.stderr)
         return 2
-    # Caller claim: flag over $COLAB_CALLER; a presented but
+    # Caller claim: flag over $VENUE_CALLER; a presented but
     # unregistered claim is refused at claim time, before anything
     # starts (the same helpers colab-run resolves through).
     caller_flag = flags.get("caller")
-    claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("COLAB_CALLER"))
+    claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     if claim_err:
         print(f"colab-check: {claim_err}", file=sys.stderr)
         return 2
-    caller = lease.resolve_caller(REPO, flag=caller_flag, env=os.environ.get("COLAB_CALLER"))
+    caller = lease.resolve_caller(REPO, flag=caller_flag, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     if flags.get("shape") is not None:
         shape_id = flags["shape"]
     else:
@@ -159,7 +159,7 @@ def main() -> int:
     version_checks = entry.get("version_checks") or {}
 
     bundle_env = dict(os.environ)
-    bundle_env["COLAB_REPO_SRC"] = str(local_checkout)
+    bundle_env["VENUE_REPO_SRC"] = str(local_checkout)
     bundle = subprocess.run(["bash", str(REPO / "sync" / "make_snapshot_bundle.sh")], capture_output=True, text=True, env=bundle_env)
     if bundle.returncode != 0:
         print(bundle.stderr[-500:], file=sys.stderr)

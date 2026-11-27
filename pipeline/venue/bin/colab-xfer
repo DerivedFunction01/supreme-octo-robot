@@ -24,7 +24,7 @@ the parts that never landed verified. `status` prints a record
 without touching a session (exit 0 when found, 2 when not).
 
 The caller claim resolves exactly as the other wrappers' does:
---caller over $COLAB_CALLER, validated against the caller registry
+--caller over $VENUE_CALLER, validated against the caller registry
 before anything starts, and stamped on the record.
 
 Exit codes: for a move, 0 = completed, 1 = failed (the record
@@ -68,7 +68,7 @@ argv_mod = _load.platform_argv()
 # the declared verdict set.
 _MOVE_FLAGS = {
     "session": {"takes_value": True, "short": "s", "required": True, "help": "session name"},
-    "caller": {"takes_value": True, "help": "caller claim (default: $COLAB_CALLER)"},
+    "caller": {"takes_value": True, "help": "caller claim (default: $VENUE_CALLER)"},
     "id": {"takes_value": True, "help": "transfer id (default: generated); reuse an id to continue its record"},
 }
 DECL = {
@@ -116,11 +116,11 @@ def remote_name(raw: str) -> str | None:
 
 
 def run_move(args) -> int:
-    claim_err = lease.caller_claim_error(REPO, flag=args.caller, env=os.environ.get("COLAB_CALLER"))
+    claim_err = lease.caller_claim_error(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     if claim_err:
         print(f"colab-xfer: {claim_err}", file=sys.stderr)
         return 2
-    caller = lease.resolve_caller(REPO, flag=args.caller, env=os.environ.get("COLAB_CALLER"))
+    caller = lease.resolve_caller(REPO, flag=args.caller, env=os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER")))  # step6-retire: COLAB_ dual-read fallback
     name = remote_name(args.remote)
     if name is None:
         print(f"colab-xfer: remote must be a bare file name at /content, got {args.remote!r}", file=sys.stderr)

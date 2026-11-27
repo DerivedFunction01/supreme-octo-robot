@@ -53,7 +53,7 @@ def _record(root: Path, kind: str, name: str, rec: dict) -> None:
 def _plan_paths(root: Path) -> set:
     import importlib.util
 
-    os.environ["COLAB_RUNNER_HOME"] = str(root)
+    os.environ["VENUE_RUNNER_HOME"] = str(root)
     try:
         spec = importlib.util.spec_from_file_location("store_prune_under_test", SCRIPT)
         module = importlib.util.module_from_spec(spec)
@@ -61,7 +61,7 @@ def _plan_paths(root: Path) -> set:
         chosen, _report = module.plan(1e15)
         return {str(p.relative_to(root)) for _o, p, _s, _c in chosen}
     finally:
-        os.environ.pop("COLAB_RUNNER_HOME", None)
+        os.environ.pop("VENUE_RUNNER_HOME", None)
 
 
 def test_records_and_in_flight_work_are_never_candidates(tmp_path):
@@ -113,14 +113,14 @@ def test_terminal_payload_inside_a_day_is_kept_and_removed_dirs_are_named(tmp_pa
     aged = time.time() - 25 * 3600
     os.utime(old_rec, (aged, aged))  # terminal, past the day grace
     _write(root / "results" / "run-old" / "gate.log")
-    os.environ["COLAB_RUNNER_HOME"] = str(root)
+    os.environ["VENUE_RUNNER_HOME"] = str(root)
     try:
         spec = importlib.util.spec_from_file_location("store_prune_under_test", SCRIPT)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         chosen, report = module.plan(1e15)
     finally:
-        os.environ.pop("COLAB_RUNNER_HOME", None)
+        os.environ.pop("VENUE_RUNNER_HOME", None)
     paths = {str(p.relative_to(root)) for _o, p, _s, _c in chosen}
     assert "results/run-evening" not in paths
     assert "results/run-old" in paths
@@ -260,14 +260,14 @@ def test_terminal_job_class_does_not_run_without_the_exclusion_config(tmp_path):
     _job_record(root, "old-job-20260101T000000Z", "old-job", "complete", age_s=49 * 3600)
     job = root / "adapters" / "colab" / "jobs" / "old-job"
     _write(job / "data.bin", age_s=49 * 3600)            # would be a candidate with the config provisioned
-    os.environ["COLAB_RUNNER_HOME"] = str(root)
+    os.environ["VENUE_RUNNER_HOME"] = str(root)
     try:
         spec = importlib.util.spec_from_file_location("store_prune_under_test", SCRIPT)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         chosen, report = module.plan(1e15)
     finally:
-        os.environ.pop("COLAB_RUNNER_HOME", None)
+        os.environ.pop("VENUE_RUNNER_HOME", None)
     paths = {str(p.relative_to(root)) for _o, p, _s, _c in chosen}
     assert "adapters/colab/jobs/old-job/data.bin" not in paths
     assert report["skipped_classes"] == [

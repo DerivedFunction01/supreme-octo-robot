@@ -71,7 +71,7 @@ contract is `client/INTEGRATION.md`.
 | Workbench | `WB_VIEWER_HOST` / `WB_VIEWER_PORT` | 127.0.0.1:8792 |
 | Scheduler | `SCHEDULER_API_HOST` / `SCHEDULER_API_PORT` | 127.0.0.1:8796 |
 | Attention | `ATTENTION_HOST` / `ATTENTION_PORT` | 127.0.0.1:8797 |
-| Runner | `COLAB_LEASE_UI_HOST` / `COLAB_LEASE_UI_PORT` | 127.0.0.1:8793 |
+| Runner | `VENUE_LEASE_UI_HOST` / `VENUE_LEASE_UI_PORT` | 127.0.0.1:8793 |
 
 ## Build
 

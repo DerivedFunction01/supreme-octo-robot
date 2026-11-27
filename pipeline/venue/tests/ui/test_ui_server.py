@@ -296,13 +296,13 @@ def test_extend_validation(ui):
 def test_server_restart_spawns_ui_sh_detached(tmp_path):
     """POST /api/server/restart answers immediately with
     restart-requested and spawns `ui.sh restart` detached (via the
-    COLAB_LEASE_UI_SH override); the answering server itself is not
+    VENUE_LEASE_UI_SH override); the answering server itself is not
     blocked or stopped by the spawn."""
     sh_log = tmp_path / "ui-sh.log"
     stub_sh = tmp_path / "stub_ui.sh"
     stub_sh.write_text(f'#!/usr/bin/env bash\necho "$@" >> "{sh_log}"\n')
     stub_sh.chmod(0o755)
-    server = UiServer(tmp_path, extra_env={"COLAB_LEASE_UI_SH": str(stub_sh)})
+    server = UiServer(tmp_path, extra_env={"VENUE_LEASE_UI_SH": str(stub_sh)})
     try:
         status, result = server.post("/api/server/restart", {})
         assert status == 200

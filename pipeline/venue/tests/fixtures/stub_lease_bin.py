@@ -107,7 +107,7 @@ def main(argv):
             if argv and argv[0] == "acquire":
                 # The actor claim the server passed in the child env
                 # (session shape gate: the panel claims "panel").
-                fh.write(f"actor:{os.environ.get('COLAB_LEASE_ACTOR') or 'absent'}\n")
+                fh.write(f"actor:{os.environ.get('VENUE_LEASE_ACTOR') or 'absent'}\n")
     if not argv:
         return 2
     cmd = argv[0]

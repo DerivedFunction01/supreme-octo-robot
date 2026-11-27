@@ -12,14 +12,14 @@ and records the plant on its own run record — beside the key
 plant, so a session-side commit carries the repo's identity,
 never the forming shell's inheritance. Seeded trees are
 planted by the seed itself (the record's bundle_seed entry).
---session NAME (or $COLAB_RUN_SESSION) pins the run to the named
+--session NAME (or $VENUE_RUN_SESSION) pins the run to the named
 lease: it adopts that session or fails pin-unavailable — never a
 silent substitution. A launch is confirmed against the venue:
 when the channel answers and no job footprint exists, the run
 closes as failed with launch_lost set instead of claiming a run
 that does not exist.
 Job manifest: jobs/<name>/job.json (JSON: repo code parses it, so not YAML).
---caller TAG (or the manifest's "caller" key, or $COLAB_CALLER)
+--caller TAG (or the manifest's "caller" key, or $VENUE_CALLER)
 attributes the run to its thread: it rides the lease acquire and
 is stamped on the run record.
 --daemonize fires the launch in its own session, detached from

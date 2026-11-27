@@ -46,9 +46,9 @@ UPLOAD_ASSUMED_MIN_BPS = 8192
 
 def _upload_timeout_s(size_bytes: int) -> int:
     # The floor is env-tunable for the reason the probe's
-    # timeout is (COLAB_RUN_PROBE_TIMEOUT_S precedent): tests
+    # timeout is (VENUE_RUN_PROBE_TIMEOUT_S precedent): tests
     # shrink it to watch a dead channel confess quickly.
-    floor = int(os.environ.get("COLAB_RUN_UPLOAD_FLOOR_S", str(UPLOAD_TIMEOUT_FLOOR_S)))
+    floor = int(os.environ.get("VENUE_RUN_UPLOAD_FLOOR_S", os.environ.get("COLAB_RUN_UPLOAD_FLOOR_S", str(UPLOAD_TIMEOUT_FLOOR_S))))  # step6-retire: COLAB_ dual-read fallback
     scaled = size_bytes // UPLOAD_ASSUMED_MIN_BPS
     return max(floor, min(UPLOAD_TIMEOUT_CAP_S, scaled))
 
@@ -89,7 +89,7 @@ def ensure_run_dir(session: str, run_id: str) -> str | None:
 
     The create rides a bounded retry (the upload verify
     probe's discipline, env-tunable the same way:
-    COLAB_RUN_DIR_ATTEMPTS / COLAB_RUN_DIR_BACKOFF_S). The
+    VENUE_RUN_DIR_ATTEMPTS / VENUE_RUN_DIR_BACKOFF_S). The
     diagnosed failure (VENUE DEFECT 2, leg b): the exec rides
     the CLI's HTTP transport to the session's exec proxy, and
     that transport's read timeout (~10 s, inside the CLI —
@@ -113,8 +113,8 @@ def ensure_run_dir(session: str, run_id: str) -> str | None:
         f"os.makedirs(os.path.join(BASE, {rel!r}), exist_ok=True)\n"
         "print(json.dumps({'ok': True}))\n"
     )
-    attempts = max(1, int(os.environ.get("COLAB_RUN_DIR_ATTEMPTS", "3")))
-    backoff = float(os.environ.get("COLAB_RUN_DIR_BACKOFF_S", "10"))
+    attempts = max(1, int(os.environ.get("VENUE_RUN_DIR_ATTEMPTS", os.environ.get("COLAB_RUN_DIR_ATTEMPTS", "3"))))  # step6-retire: COLAB_ dual-read fallback
+    backoff = float(os.environ.get("VENUE_RUN_DIR_BACKOFF_S", os.environ.get("COLAB_RUN_DIR_BACKOFF_S", "10")))  # step6-retire: COLAB_ dual-read fallback
     error = None
     for attempt in range(attempts):
         if attempt:
@@ -238,8 +238,8 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
         "    print(json.dumps({'size': None, 'sha256': None}))\n"
     )
     # The timeout is env-tunable for the reason the poll loop's
-    # is: tests shrink it (COLAB_RUN_POLL_TIMEOUT_S precedent).
-    probe_timeout = int(os.environ.get("COLAB_RUN_PROBE_TIMEOUT_S", "300"))
+    # is: tests shrink it (VENUE_RUN_POLL_TIMEOUT_S precedent).
+    probe_timeout = int(os.environ.get("VENUE_RUN_PROBE_TIMEOUT_S", os.environ.get("COLAB_RUN_PROBE_TIMEOUT_S", "300")))  # step6-retire: COLAB_ dual-read fallback
     # The probe rides a bounded attempt discipline, like the
     # chunked transfer's parts: the exec channel stalls in
     # episodes of minutes (probe-fail rates of
@@ -251,8 +251,8 @@ def upload_one(session: str, src: Path, dest_name: str, tag: str, remote_dir: st
     # backoff; a size mismatch is information, not weather, and
     # returns at once. Both bounds are env-tunable so tests can
     # shrink them (the probe-timeout precedent above).
-    probe_attempts = int(os.environ.get("COLAB_RUN_PROBE_ATTEMPTS", "3"))
-    probe_backoff = float(os.environ.get("COLAB_RUN_PROBE_BACKOFF_S", "10"))
+    probe_attempts = int(os.environ.get("VENUE_RUN_PROBE_ATTEMPTS", os.environ.get("COLAB_RUN_PROBE_ATTEMPTS", "3")))  # step6-retire: COLAB_ dual-read fallback
+    probe_backoff = float(os.environ.get("VENUE_RUN_PROBE_BACKOFF_S", os.environ.get("COLAB_RUN_PROBE_BACKOFF_S", "10")))  # step6-retire: COLAB_ dual-read fallback
     stall_error = f"upload verify timed out for {dest_name}"
     stall_detail = f"{dest_name}: verify probe timed out"
     for attempt in range(1, max(1, probe_attempts) + 1):
@@ -554,7 +554,7 @@ def build_seed_ctx(extra_args, rec) -> "tuple[str | None, dict | None]":
     except ValueError as exc:
         return f"bundle seed: {exc}", None
     bundle_env = dict(os.environ)
-    bundle_env["COLAB_REPO_SRC"] = str(Path(os.path.expanduser(seed_entry["local_path"])))
+    bundle_env["VENUE_REPO_SRC"] = str(Path(os.path.expanduser(seed_entry["local_path"])))
     bundle = subprocess.run(["bash", str(REPO / "sync" / "make_snapshot_bundle.sh")], capture_output=True, text=True, env=bundle_env)
     if bundle.returncode != 0:
         return f"bundle seed: snapshot build failed: {bundle.stderr[-300:]}", None

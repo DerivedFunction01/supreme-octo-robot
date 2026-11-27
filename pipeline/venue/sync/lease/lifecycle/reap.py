@@ -26,7 +26,7 @@ from . import lifecycle, local_venue
 # of being killed, and keepalive launches execute as their own
 # deferred phase. The default is sized against the reap
 # COMMAND's budget (bin/venue-lease composes pass + collector
-# against COLAB_LEASE_REAP_COMMAND_BUDGET_S, default 390): the
+# against VENUE_LEASE_REAP_COMMAND_BUDGET_S, default 390): the
 # pass takes at most 300 of it, the collector's subprocess ride
 # takes the remainder, and the hook's 420 keeps ~30 for process
 # startup, the result print, and the mirror capture.
@@ -35,7 +35,7 @@ _REAP_BUDGET_DEFAULT_S = 300.0
 
 
 def _budget_s() -> float:
-    raw = os.environ.get("COLAB_LEASE_REAP_BUDGET_S")
+    raw = os.environ.get("VENUE_LEASE_REAP_BUDGET_S", os.environ.get("COLAB_LEASE_REAP_BUDGET_S"))  # step6-retire: COLAB_ dual-read fallback
     try:
         return float(raw) if raw else _REAP_BUDGET_DEFAULT_S
     except ValueError:

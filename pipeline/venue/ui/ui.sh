@@ -11,23 +11,23 @@
 # for the port. That delegation is also what the panel's
 # Restart-server action rides: ui.sh restart restarts
 # venue.service only, never the coupled workhorse unit. The
-# pidfile and log live in the lease var dir (COLAB_RUNNER_VAR,
+# pidfile and log live in the lease var dir (VENUE_RUNNER_VAR,
 # default <repo>/var) alongside the lease state they control.
-# Test seams (env): COLAB_UI_UNIT_DIR, COLAB_UI_SYSTEMCTL.
+# Test seams (env): VENUE_UI_UNIT_DIR, VENUE_UI_SYSTEMCTL.
 set -euo pipefail
 
 UI_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(dirname "$UI_DIR")"
 # The panel's actor identity for the core's session shape gate
 # (the systemd unit carries the same claim in its Environment).
-export COLAB_LEASE_ACTOR=panel
-VAR_DIR="${COLAB_RUNNER_VAR:-$REPO/var}"
+export VENUE_LEASE_ACTOR=panel
+VAR_DIR="${VENUE_RUNNER_VAR:-${COLAB_RUNNER_VAR:-$REPO/var}}"  # step6-retire: COLAB_ dual-read fallback
 PIDFILE="$VAR_DIR/lease-ui.pid"
 LOG="$VAR_DIR/lease-ui.log"
-PORT="${COLAB_LEASE_UI_PORT:-8793}"
+PORT="${VENUE_LEASE_UI_PORT:-${COLAB_LEASE_UI_PORT:-8793}}"  # step6-retire: COLAB_ dual-read fallback
 UNIT_NAME="venue.service"
-UNIT_DIR="${COLAB_UI_UNIT_DIR:-/etc/systemd/system}"
-SYSTEMCTL="${COLAB_UI_SYSTEMCTL:-systemctl}"
+UNIT_DIR="${VENUE_UI_UNIT_DIR:-${COLAB_UI_UNIT_DIR:-/etc/systemd/system}}"  # step6-retire: COLAB_ dual-read fallback
+SYSTEMCTL="${VENUE_UI_SYSTEMCTL:-${COLAB_UI_SYSTEMCTL:-systemctl}}"  # step6-retire: COLAB_ dual-read fallback
 
 unit_installed() {
   [[ -f "$UNIT_DIR/$UNIT_NAME" ]]

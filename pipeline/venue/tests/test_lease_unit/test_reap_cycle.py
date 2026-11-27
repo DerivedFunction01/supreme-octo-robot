@@ -67,7 +67,7 @@ def test_failed_snapshot_costs_one_retry_sequence(repo):
 def test_budget_never_skips_lifecycle(repo, monkeypatch):
     """Budget zero: a past-deadline record still releases —
     the budget gates furniture, never lifecycle."""
-    monkeypatch.setenv("COLAB_LEASE_REAP_BUDGET_S", "0")
+    monkeypatch.setenv("VENUE_LEASE_REAP_BUDGET_S", "0")
     seed_record(repo)
     calls = []
     stopped = {"done": False}
@@ -92,7 +92,7 @@ def test_budget_skips_furniture_whole(repo, monkeypatch):
     """Budget zero on a kept record: no identity exec, no
     freshness download, no pulse — the skip is on the record's
     entry and in the pass's budget report."""
-    monkeypatch.setenv("COLAB_LEASE_REAP_BUDGET_S", "0")
+    monkeypatch.setenv("VENUE_LEASE_REAP_BUDGET_S", "0")
     seed_record(repo)
     calls = []
 
@@ -152,7 +152,7 @@ def test_stale_keepalive_launch_deferred_when_budget_expires(repo, monkeypatch):
 
     fake = _FakeTime(real_time)
     monkeypatch.setattr(reap_mod, "time", fake)
-    monkeypatch.setenv("COLAB_LEASE_REAP_BUDGET_S", "360")
+    monkeypatch.setenv("VENUE_LEASE_REAP_BUDGET_S", "360")
     seed_record(repo)
     calls = []
     stub = _stale_keepalive_stub(calls, on_download=lambda: setattr(fake, "now", 1000.0))

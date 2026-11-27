@@ -149,8 +149,8 @@ def test_server_refusal_is_final_and_the_target_untouched(tmp_path, monkeypatch)
 def test_fallback_retries_a_transient_denial_then_lands(tmp_path, monkeypatch):
     target = tmp_path / "token.json"
     _fake_client(monkeypatch, _unreachable)
-    monkeypatch.setenv("COLAB_WRITER_ATTEMPTS", "4")
-    monkeypatch.setenv("COLAB_WRITER_BACKOFF_S", "0,0,0")
+    monkeypatch.setenv("VENUE_WRITER_ATTEMPTS", "4")
+    monkeypatch.setenv("VENUE_WRITER_BACKOFF_S", "0,0,0")
     attempts = []
 
     def flaky(path, data, mode=None):
@@ -171,8 +171,8 @@ def test_fallback_exhaustion_leaves_the_target_byte_identical(tmp_path, monkeypa
     target = tmp_path / "token.json"
     target.write_bytes(b"standing")
     _fake_client(monkeypatch, _unreachable)
-    monkeypatch.setenv("COLAB_WRITER_ATTEMPTS", "3")
-    monkeypatch.setenv("COLAB_WRITER_BACKOFF_S", "0,0")
+    monkeypatch.setenv("VENUE_WRITER_ATTEMPTS", "3")
+    monkeypatch.setenv("VENUE_WRITER_BACKOFF_S", "0,0")
 
     def always_denied(path, data, mode=None):
         raise _denial_error()
@@ -190,8 +190,8 @@ def test_fallback_exhaustion_leaves_the_target_byte_identical(tmp_path, monkeypa
 def test_a_non_denial_local_failure_is_not_retried(tmp_path, monkeypatch):
     target = tmp_path / "token.json"
     _fake_client(monkeypatch, _unreachable)
-    monkeypatch.setenv("COLAB_WRITER_ATTEMPTS", "4")
-    monkeypatch.setenv("COLAB_WRITER_BACKOFF_S", "0,0,0")
+    monkeypatch.setenv("VENUE_WRITER_ATTEMPTS", "4")
+    monkeypatch.setenv("VENUE_WRITER_BACKOFF_S", "0,0,0")
     attempts = []
 
     def mismatch(path, data, mode=None):

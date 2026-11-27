@@ -91,7 +91,7 @@ def _snapshot_bundle(tmp_path):
     _git(src, "-c", "user.name=T", "-c", "user.email=t@t", "commit", "-qm", "base")
     _git(src, "update-ref", "refs/remotes/origin/main", "HEAD")
     out = tmp_path / "snap.bundle"
-    env = dict(os.environ, COLAB_REPO_SRC=str(src), BUNDLE_OUT=str(out))
+    env = dict(os.environ, VENUE_REPO_SRC=str(src), BUNDLE_OUT=str(out))
     r = subprocess.run(["bash", str(REPO / "sync" / "make_snapshot_bundle.sh")], capture_output=True, text=True, env=env, timeout=120)
     assert r.returncode == 0, r.stdout + r.stderr
     return out

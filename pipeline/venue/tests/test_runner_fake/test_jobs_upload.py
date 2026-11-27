@@ -83,7 +83,7 @@ def test_small_upload_dead_channel_confesses_on_the_scaled_budget(tmp_path):
     state = Path(env["FAKE_COLAB_STATE"])
     state.mkdir(parents=True, exist_ok=True)
     (state / "uploadsleep.json").write_text(json.dumps({"sleep_upload_named": "bareslow", "sleep_seconds": 60}))
-    env.update(COLAB_BIN=str(upload_sleep_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), COLAB_RUN_UPLOAD_FLOOR_S="5")
+    env.update(COLAB_BIN=str(upload_sleep_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE), VENUE_RUN_UPLOAD_FLOOR_S="5")
     started = time.monotonic()
     r = run_verb(env, "bareslow")
     elapsed = time.monotonic() - started

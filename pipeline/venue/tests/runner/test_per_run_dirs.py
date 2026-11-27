@@ -137,7 +137,7 @@ def test_upload_one_remote_dir_chunked_carries_the_prefixed_name(tmp_path):
 
 
 def test_ensure_run_dir_ok_and_timeout(tmp_path, monkeypatch):
-    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
+    monkeypatch.setenv("VENUE_RUN_DIR_BACKOFF_S", "0")
     colab = ScriptedColab([("stdout", '{"ok": true}\n')])
     launch, _journal = load_launch(tmp_path, colab)
     assert launch.ensure_run_dir("sess", "run-9") is None
@@ -162,7 +162,7 @@ def test_ensure_run_dir_retries_stalls_then_lands(tmp_path, monkeypatch):
     (~10 s, inside the CLI's HTTP transport) killed launches
     whose sessions were healthy — one attempt, no retry. Each
     stall form now retries and the create lands."""
-    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
+    monkeypatch.setenv("VENUE_RUN_DIR_BACKOFF_S", "0")
     # A subprocess timeout, then success.
     colab = ScriptedColab([("timeout",), ("stdout", '{"ok": true}\n')])
     launch, _journal = load_launch(tmp_path, colab)
@@ -186,7 +186,7 @@ def test_ensure_run_dir_real_failure_returns_at_once(tmp_path, monkeypatch):
     """A far-side failure with no stall signature is a real
     refusal: it returns on the first attempt, never retried
     into a different verdict."""
-    monkeypatch.setenv("COLAB_RUN_DIR_BACKOFF_S", "0")
+    monkeypatch.setenv("VENUE_RUN_DIR_BACKOFF_S", "0")
     colab = ScriptedColab([("fail", "PermissionError: [Errno 13] Permission denied\n")])
     launch, _journal = load_launch(tmp_path, colab)
     err = launch.ensure_run_dir("sess", "run-9")

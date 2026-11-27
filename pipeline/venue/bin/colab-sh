@@ -97,7 +97,7 @@ DECL = {
     "summary": "Bare-shell channel to a leased Colab session, over real SSH.",
     "flags": {
         "session": {"takes_value": True, "short": "s", "help": "session name (default: the active lease's)"},
-        "caller": {"takes_value": True, "help": "caller claim: the thread doing this work (or $COLAB_CALLER); journaled per attach"},
+        "caller": {"takes_value": True, "help": "caller claim: the thread doing this work (or $VENUE_CALLER); journaled per attach"},
         "detach": {"help": "launch the script detached in-session (nohup + log under /content/sync-detached) and return its id at once; the async path, open to all callers"},
         "poll": {"takes_value": True, "help": "one short read of a detached launch's state + log tail; exits with the job's exit code once it is done"},
         "wait": {"takes_value": True, "help": "bounded wait over the LOCAL detached record only (zero channel use): exit 0 complete, 1 failed, 3 still running at the --max bound"},
@@ -254,13 +254,13 @@ def orphan_advisory(session: str) -> None:
 
 def claim_caller(flag: str | None) -> tuple[str | None, str | None]:
     """Resolve the attach's caller claim (--caller flag over
-    $COLAB_CALLER) through the lease core's registry. Returns
+    $VENUE_CALLER) through the lease core's registry. Returns
     (caller, error): a presented but unregistered claim is an
     error — refused at claim time. Attach is journal-only: an
     absent claim never blocks, it just leaves the attach
     unattributed in the journal."""
     lease = _lease_module()
-    env = os.environ.get("COLAB_CALLER")
+    env = os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
     err = lease.caller_claim_error(REPO, flag=flag, env=env)
     if err:
         return None, err
