@@ -218,7 +218,7 @@ def resolve_cli_caller(flag: str | None) -> tuple[str | None, str | None]:
     core's registry. Returns (caller, error): a presented but
     unregistered claim is an error — refused at claim time — while
     no claim at all is (None, None), an unattributed call."""
-    env = os.environ.get("VENUE_CALLER", os.environ.get("COLAB_CALLER"))  # step6-retire: COLAB_ dual-read fallback
+    env = os.environ.get("VENUE_CALLER")
     err = lease.caller_claim_error(REPO, flag=flag, env=env)
     if err:
         return None, err
@@ -247,7 +247,7 @@ _COLLECT_MIN_REMAINING_S = 20.0
 
 
 def _reap_command_budget_s() -> float:
-    raw = os.environ.get("VENUE_LEASE_REAP_COMMAND_BUDGET_S", os.environ.get("COLAB_LEASE_REAP_COMMAND_BUDGET_S"))  # step6-retire: COLAB_ dual-read fallback
+    raw = os.environ.get("VENUE_LEASE_REAP_COMMAND_BUDGET_S")
     try:
         return float(raw) if raw else _REAP_COMMAND_BUDGET_DEFAULT_S
     except ValueError:

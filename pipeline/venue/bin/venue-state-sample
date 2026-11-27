@@ -233,7 +233,7 @@ def main(argv: list[str]) -> int:
     if parsed["flags"].get("var-dir"):
         var_dir = Path(parsed["flags"]["var-dir"])
     else:
-        var_dir = Path(os.environ.get("VENUE_RUNNER_VAR", os.environ.get("COLAB_RUNNER_VAR", repo / "var")))  # step6-retire: COLAB_ dual-read fallback
+        var_dir = Path(os.environ.get("VENUE_RUNNER_VAR", repo / "var"))
     try:
         mods = _load_runner_modules()
     except Exception as exc:

@@ -119,14 +119,14 @@ WriterError = WRITER.WriterError if WRITER is not None else _InlineWriterError
 
 def _attempts(env) -> int:
     try:
-        n = int(env.get("VENUE_WRITER_ATTEMPTS", env.get("COLAB_WRITER_ATTEMPTS", "")))  # step6-retire: COLAB_ dual-read fallback
+        n = int(env.get("VENUE_WRITER_ATTEMPTS", ""))
     except ValueError:
         return DEFAULT_ATTEMPTS
     return n if n >= 1 else DEFAULT_ATTEMPTS
 
 
 def _backoff(env) -> tuple:
-    raw = env.get("VENUE_WRITER_BACKOFF_S", env.get("COLAB_WRITER_BACKOFF_S", ""))  # step6-retire: COLAB_ dual-read fallback
+    raw = env.get("VENUE_WRITER_BACKOFF_S", "")
     try:
         parts = tuple(float(p) for p in raw.split(",") if p.strip())
     except ValueError:
