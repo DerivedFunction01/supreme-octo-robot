@@ -15,7 +15,14 @@
 #     activity (directory mtime — a live run's tree is
 #     the newest by construction); the excess oldest are
 #     removed whole. Run RECORDS live on the controller
-#     side permanently; the tree is scratch.
+#     side permanently; the tree is scratch. The same
+#     store is also capped by bytes: past the count leg,
+#     if the store's measured total exceeds the byte
+#     budget the same ranked list keeps cutting
+#     oldest-first until the measured cuts cover the
+#     excess — the count cap alone cannot see one huge
+#     tree, and the byte leg is what binds before the
+#     venue's disk warn line does.
 #   clones (every git repo rooted within depth 3 of
 #     $HOME, outside runs/): job clones, mirrors, lane
 #     worktrees. A dirty clone is auto-committed in
@@ -31,6 +38,19 @@
 #     runs/): transport copies, cut past the same 24h
 #     grace as the controller-side census; a bundle is
 #     never a preservation claim.
+#   caches (every sub-store of $HOME/.cache, plus
+#     $HOME/.npm/_cacache as one entry): provisioning
+#     residue — package and browser caches that regrow
+#     with every fire and no other surface bounds.
+#     Capped by total bytes; over budget, whole
+#     sub-stores are cut oldest-first by newest-content
+#     mtime. Two preservation rules: a sub-store whose
+#     newest content is within the active window of
+#     now is in-flight provisioning — it is skipped by
+#     name (CACHE-ACTIVE-SKIP) and never cut in that
+#     pass; and the ms-playwright store is cut per
+#     browser build, oldest build first, the newest
+#     build always kept.
 # No state exempts a surface: not dirty, not unlanded,
 # not a live process, not a claimed in-flight run. The
 # one preservation rule the whole system keeps: work is
@@ -50,7 +70,10 @@
 #
 # Overrides (tests, fixtures): WORKTREE_TRIM_VENUE_HOME,
 # WT_TRIM_VENUE_RUN_CAP (default 300),
+# WT_TRIM_VENUE_RUN_BYTES (default 77309411328),
 # WT_TRIM_VENUE_CLONE_CAP (default 40),
+# WT_TRIM_VENUE_CACHE_BYTES (default 8589934592),
+# WT_TRIM_VENUE_CACHE_ACTIVE_SECS (default 900),
 # WORKTREE_TRIM_BUNDLE_GRACE_SECS (default 86400),
 # WORKTREE_TRIM_NOW (epoch seconds, the fake-clock seam).
 set -uo pipefail
@@ -64,20 +87,36 @@ VENUE_HOME="${WORKTREE_TRIM_VENUE_HOME:-$HOME}"
 # module cannot be sourced here.
 export PATH="$VENUE_HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 RUN_CAP="${WT_TRIM_VENUE_RUN_CAP:-300}"
+RUN_BYTES="${WT_TRIM_VENUE_RUN_BYTES:-77309411328}"
 CLONE_CAP="${WT_TRIM_VENUE_CLONE_CAP:-40}"
+CACHE_BYTES="${WT_TRIM_VENUE_CACHE_BYTES:-8589934592}"
+CACHE_ACTIVE_SECS="${WT_TRIM_VENUE_CACHE_ACTIVE_SECS:-900}"
 BUNDLE_GRACE="${WORKTREE_TRIM_BUNDLE_GRACE_SECS:-86400}"
 
 case "$VENUE_HOME" in
   ""|/) echo "REFUSED venue home: '$VENUE_HOME'"; exit 2 ;;
 esac
 [ -d "$VENUE_HOME" ] || { echo "REFUSED venue home missing: $VENUE_HOME"; exit 2; }
-case "$RUN_CAP$CLONE_CAP" in
+case "$RUN_CAP$CLONE_CAP$RUN_BYTES$CACHE_BYTES$CACHE_ACTIVE_SECS" in
   *[!0-9]*) echo "REFUSED non-numeric cap"; exit 2 ;;
 esac
 
 partial=0
 
 mtime_of() { stat -c %Y "$1" 2>/dev/null || echo 0; }
+
+# du_bytes <path> <timeout-secs> — the path's total in
+# bytes (du -sb: apparent size, the figure a budget is
+# stated in), measured under a timeout so a wedged walk
+# can never wedge the trim; prints nothing and returns
+# 1 when the measurement fails or times out.
+du_bytes() {
+  local out
+  out="$(timeout "$2" du -sb "$1" 2>/dev/null)" || return 1
+  out="${out%%$'\t'*}"
+  case "$out" in ""|*[!0-9]*) return 1 ;; esac
+  printf '%s\n' "$out"
+}
 
 # auto_commit_clone <path> — the controller trim's
 # auto-commit, venue form. Prints "<branch><TAB><head>"
@@ -134,8 +173,12 @@ if [ -d "$runs_dir" ]; then
     run_rows+=("$(mtime_of "$d")"$'\t'"${d%/}")
   done
   run_before=${#run_rows[@]}
-  if [ "$run_before" -gt "$RUN_CAP" ]; then
+  cut_n=0
+  declare -a run_sorted=()
+  if [ "$run_before" -gt 0 ]; then
     mapfile -t run_sorted < <(printf '%s\n' "${run_rows[@]}" | sort -t$'\t' -k1,1n)
+  fi
+  if [ "$run_before" -gt "$RUN_CAP" ]; then
     cut_n=$((run_before - RUN_CAP))
     for ((i = 0; i < cut_n; i++)); do
       victim="${run_sorted[$i]#*$'\t'}"
@@ -146,6 +189,43 @@ if [ -d "$runs_dir" ]; then
         partial=3
       fi
     done
+  fi
+  # Byte leg: the same ranked list, continuing past the
+  # count leg's survivors, until the measured cuts cover
+  # the excess over the byte budget. The store total is
+  # measured once up front and once at the end; a
+  # measurement that times out skips the leg by name —
+  # the trim never wedges on measurement.
+  if [ "$run_before" -gt 0 ]; then
+    if run_bytes_before="$(du_bytes "$runs_dir" 120)"; then
+      run_bytes_after="$run_bytes_before"
+      if [ "$run_bytes_before" -gt "$RUN_BYTES" ]; then
+        excess=$((run_bytes_before - RUN_BYTES))
+        cut_bytes=0
+        for ((i = cut_n; i < run_before && cut_bytes < excess; i++)); do
+          victim="${run_sorted[$i]#*$'\t'}"
+          vbytes="$(du_bytes "$victim" 30 || true)"
+          if rm -rf "$victim"; then
+            echo "RUN-TREE-CUT path=$victim"
+            [ -n "$vbytes" ] && cut_bytes=$((cut_bytes + vbytes))
+          else
+            echo "RUN-TREE-CUT-FAILED path=$victim"
+            partial=3
+          fi
+        done
+        run_bytes_after="$(du_bytes "$runs_dir" 120 || echo unknown)"
+      fi
+      echo "RUN-BYTES before=$run_bytes_before after=$run_bytes_after budget=$RUN_BYTES"
+      case "$run_bytes_after" in
+        unknown) : ;;
+        *) if [ "$run_bytes_after" -gt "$RUN_BYTES" ]; then
+             echo "RUN-BYTES-OVER live=$run_bytes_after budget=$RUN_BYTES"
+             partial=3
+           fi ;;
+      esac
+    else
+      echo "RUN-BYTES skipped=measure-timeout"
+    fi
   fi
   run_after="$(find "$runs_dir" -mindepth 1 -maxdepth 1 -type d | wc -l)"
   echo "RUN-TREES before=$run_before after=$run_after cap=$RUN_CAP"
@@ -241,5 +321,93 @@ while IFS= read -r bf; do
     fi
   fi
 done < <(find "$VENUE_HOME" -maxdepth 4 -path '*/.git' -prune -o -name '*.bundle' -type f -print 2>/dev/null)
+
+# --- caches -----------------------------------------------------
+# Every sub-store of $HOME/.cache, plus $HOME/.npm/_cacache
+# as one entry, under one byte budget. Each store is
+# measured once (timeout-guarded; an unmeasurable store
+# is skipped by name and left alone) and ranked by its
+# newest content mtime. Over budget, stores cut
+# oldest-first until the measured cuts bring the total
+# under budget — whole stores, except ms-playwright,
+# which cuts per browser build (oldest build first, the
+# newest build always kept). A store whose newest
+# content is within the active window of NOW is
+# in-flight provisioning: skipped by name, never cut.
+cache_root="$VENUE_HOME/.cache"
+declare -a cache_paths=()
+if [ -d "$cache_root" ]; then
+  for d in "$cache_root"/*/; do
+    [ -d "$d" ] || continue
+    cache_paths+=("${d%/}")
+  done
+fi
+if [ -d "$VENUE_HOME/.npm/_cacache" ]; then
+  cache_paths+=("$VENUE_HOME/.npm/_cacache")
+fi
+if [ "${#cache_paths[@]}" -gt 0 ]; then
+  declare -a cache_rows=()
+  cache_before=0
+  for p in "${cache_paths[@]}"; do
+    if pbytes="$(du_bytes "$p" 60)"; then
+      newest="$(timeout 60 find "$p" -printf '%T@\n' 2>/dev/null | sort -g | tail -1)"
+      newest="${newest%.*}"
+      case "$newest" in ""|*[!0-9-]*) newest="$(mtime_of "$p")" ;; esac
+      cache_rows+=("$newest"$'\t'"$p"$'\t'"$pbytes")
+      cache_before=$((cache_before + pbytes))
+    else
+      echo "CACHE-MEASURE-SKIP path=$p"
+    fi
+  done
+  cache_cut=0
+  if [ "$cache_before" -gt "$CACHE_BYTES" ] && [ "${#cache_rows[@]}" -gt 0 ]; then
+    mapfile -t cache_sorted < <(printf '%s\n' "${cache_rows[@]}" | sort -t$'\t' -k1,1n)
+    for row in "${cache_sorted[@]}"; do
+      [ $((cache_before - cache_cut)) -le "$CACHE_BYTES" ] && break
+      newest="${row%%$'\t'*}"
+      rest="${row#*$'\t'}"
+      p="${rest%%$'\t'*}"
+      pbytes="${rest#*$'\t'}"
+      if [ $((NOW - newest)) -lt "$CACHE_ACTIVE_SECS" ]; then
+        echo "CACHE-ACTIVE-SKIP path=$p"
+        continue
+      fi
+      if [ "$(basename "$p")" = "ms-playwright" ]; then
+        declare -a build_rows=()
+        for b in "$p"/*/; do
+          [ -d "$b" ] || continue
+          build_rows+=("$(mtime_of "$b")"$'\t'"${b%/}")
+        done
+        if [ "${#build_rows[@]}" -gt 1 ]; then
+          mapfile -t build_sorted < <(printf '%s\n' "${build_rows[@]}" | sort -t$'\t' -k1,1n)
+          for ((j = 0; j < ${#build_sorted[@]} - 1; j++)); do
+            [ $((cache_before - cache_cut)) -le "$CACHE_BYTES" ] && break
+            bpath="${build_sorted[$j]#*$'\t'}"
+            bbytes="$(du_bytes "$bpath" 60 || true)"
+            if rm -rf "$bpath"; then
+              echo "CACHE-CUT path=$bpath bytes=${bbytes:-unknown}"
+              [ -n "$bbytes" ] && cache_cut=$((cache_cut + bbytes))
+            else
+              echo "CACHE-CUT-FAILED path=$bpath"
+              partial=3
+            fi
+          done
+        fi
+      elif rm -rf "$p"; then
+        echo "CACHE-CUT path=$p bytes=$pbytes"
+        cache_cut=$((cache_cut + pbytes))
+      else
+        echo "CACHE-CUT-FAILED path=$p"
+        partial=3
+      fi
+    done
+  fi
+  cache_after=$((cache_before - cache_cut))
+  echo "CACHE before=$cache_before after=$cache_after budget=$CACHE_BYTES"
+  if [ "$cache_after" -gt "$CACHE_BYTES" ]; then
+    echo "CACHE-CAP-OVER live=$cache_after budget=$CACHE_BYTES"
+    partial=3
+  fi
+fi
 
 exit "$partial"

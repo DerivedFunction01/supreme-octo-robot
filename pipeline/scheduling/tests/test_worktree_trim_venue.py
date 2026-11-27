@@ -10,6 +10,7 @@ left over cap is reported as a defect (exit 3).
 """
 
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -52,6 +53,26 @@ class VenueFixture(unittest.TestCase):
         d = self.home / "runs" / name
         d.mkdir(parents=True)
         (d / "log.txt").write_text("run\n")
+        os.utime(d, (epoch, epoch))
+        return d
+
+    def make_sized_run_tree(self, name, epoch, size):
+        d = self.home / "runs" / name
+        d.mkdir(parents=True)
+        # Sparse: du -sb reports apparent size, so the
+        # fixture's byte total is exact without writing
+        # real payload.
+        with open(d / "payload.bin", "wb") as fh:
+            fh.truncate(size)
+        os.utime(d, (epoch, epoch))
+        return d
+
+    def make_cache_store(self, name, epoch, size, parent=None):
+        d = (parent or (self.home / ".cache")) / name
+        d.mkdir(parents=True)
+        with open(d / "payload.bin", "wb") as fh:
+            fh.truncate(size)
+        os.utime(d / "payload.bin", (epoch, epoch))
         os.utime(d, (epoch, epoch))
         return d
 
@@ -187,6 +208,117 @@ class TestVenueTrim(VenueFixture):
         self.assertIn(f"BUNDLE-CUT path={old}", out.stdout)
         self.assertFalse(old.exists())
         self.assertTrue(young.exists())
+
+
+class TestVenueTrimBytesAndCaches(VenueFixture):
+
+    def _line(self, out, prefix):
+        m = re.search(rf"^{prefix} .*$", out.stdout, re.M)
+        self.assertIsNotNone(m, out.stdout + out.stderr)
+        return m.group(0)
+
+    def test_run_bytes_cut_to_budget_oldest_first(self):
+        names = [f"run-{i}" for i in range(4)]
+        for i, name in enumerate(names):
+            self.make_sized_run_tree(name, NOW - 50000 + i * 10000,
+                                     200_000)
+        out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "450000"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        line = self._line(out, "RUN-BYTES")
+        fields = dict(kv.split("=") for kv in line.split()[1:])
+        self.assertEqual(fields["budget"], "450000")
+        self.assertGreater(int(fields["before"]), 450000)
+        self.assertLessEqual(int(fields["after"]), 450000)
+        for name in names[:2]:
+            self.assertIn(f"RUN-TREE-CUT path={self.home}/runs/{name}",
+                          out.stdout)
+            self.assertFalse((self.home / "runs" / name).exists())
+        for name in names[2:]:
+            self.assertTrue((self.home / "runs" / name).exists())
+
+    def test_run_bytes_still_over_reports_partial(self):
+        # An rm stub that refuses run-1: its bytes survive
+        # the leg, so the re-measured total stays over
+        # budget and the pass reports partial.
+        stub = self.home / ".local" / "bin"
+        stub.mkdir(parents=True)
+        rm = stub / "rm"
+        rm.write_text(
+            "#!/bin/bash\n"
+            "for a in \"$@\"; do case \"$a\" in *run-1) exit 1;;"
+            " esac; done\n"
+            "exec /bin/rm \"$@\"\n")
+        rm.chmod(0o755)
+        for i in range(2):
+            self.make_sized_run_tree(f"run-{i}", NOW - 50000 + i * 10000,
+                                     200_000)
+        out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "1000"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self._line(out, "RUN-BYTES-OVER")
+        self.assertFalse((self.home / "runs" / "run-0").exists())
+        self.assertTrue((self.home / "runs" / "run-1").exists())
+
+    def test_run_bytes_measure_failure_skips_the_leg(self):
+        stub = self.home / ".local" / "bin"
+        stub.mkdir(parents=True)
+        du = stub / "du"
+        du.write_text("#!/bin/bash\nexit 1\n")
+        du.chmod(0o755)
+        self.make_sized_run_tree("run-0", NOW - 50000, 200_000)
+        out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "1"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("RUN-BYTES skipped=measure-timeout", out.stdout)
+        self.assertTrue((self.home / "runs" / "run-0").exists())
+
+    def test_cache_cuts_oldest_first_to_budget(self):
+        a = self.make_cache_store("cache-a", NOW - 50000, 300_000)
+        b = self.make_cache_store("cache-b", NOW - 40000, 300_000)
+        c = self.make_cache_store("cache-c", NOW - 30000, 300_000)
+        out = self.run_venue({"WT_TRIM_VENUE_CACHE_BYTES": "650000"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(f"CACHE-CUT path={a} bytes=", out.stdout)
+        self.assertFalse(a.exists())
+        self.assertTrue(b.exists())
+        self.assertTrue(c.exists())
+        line = self._line(out, "CACHE")
+        fields = dict(kv.split("=") for kv in line.split()[1:])
+        self.assertEqual(fields["budget"], "650000")
+        self.assertLessEqual(int(fields["after"]), 650000)
+
+    def test_cache_playwright_cuts_builds_keeps_newest(self):
+        pw = self.home / ".cache" / "ms-playwright"
+        old = self.make_cache_store("chromium-1000", NOW - 50000,
+                                    300_000, parent=pw)
+        new = self.make_cache_store("chromium-2000", NOW - 40000,
+                                    300_000, parent=pw)
+        # The store dir's own mtime is content too: age it
+        # to the newest build, as a settled store stands.
+        os.utime(pw, (NOW - 40000, NOW - 40000))
+        out = self.run_venue({"WT_TRIM_VENUE_CACHE_BYTES": "350000"})
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn(f"CACHE-CUT path={old} bytes=", out.stdout)
+        self.assertFalse(old.exists())
+        self.assertTrue(new.exists())
+        self.assertTrue(pw.exists())
+
+    def test_cache_active_store_skipped_and_cap_over(self):
+        active = self.make_cache_store("cache-active", NOW - 10, 500_000)
+        out = self.run_venue({"WT_TRIM_VENUE_CACHE_BYTES": "100000"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn(f"CACHE-ACTIVE-SKIP path={active}", out.stdout)
+        self._line(out, "CACHE-CAP-OVER")
+        self.assertTrue(active.exists())
+
+    def test_cache_old_cut_active_kept_still_over(self):
+        old = self.make_cache_store("cache-old", NOW - 50000, 300_000)
+        active = self.make_cache_store("cache-active", NOW - 10, 500_000)
+        out = self.run_venue({"WT_TRIM_VENUE_CACHE_BYTES": "100000"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn(f"CACHE-CUT path={old} bytes=", out.stdout)
+        self.assertFalse(old.exists())
+        self.assertIn(f"CACHE-ACTIVE-SKIP path={active}", out.stdout)
+        self._line(out, "CACHE-CAP-OVER")
+        self.assertTrue(active.exists())
 
 
 if __name__ == "__main__":
