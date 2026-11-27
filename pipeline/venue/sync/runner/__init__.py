@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The job runner: sync in, execute detached, poll, pull results.
 
-bin/colab-run is the thin entry point; its body lives in this
+bin/venue-run is the thin entry point; its body lives in this
 package, split by seam (consolidation Wave 2, Lane B5 — the code
 moved verbatim, no behaviour change):
 
@@ -28,9 +28,9 @@ moved verbatim, no behaviour change):
   poll loop, and finalize under the close-out finally.
 - main: argument parsing and verb routing.
 
-The package re-exports the former bin/colab-run module's whole
-surface under its existing names: consumers load bin/colab-run
-by path (as "colab_run") and address colab / load_run_record /
+The package re-exports the former bin/venue-run module's whole
+surface under its existing names: consumers load bin/venue-run
+by path (as "venue_run") and address colab / load_run_record /
 TERMINAL_STATES / main on it, and the thin entry binds these
 names from here.
 """

@@ -32,7 +32,7 @@ interactive flow — structurally impossible.
 
 ## The guards
 
-- `bin/colab-run`'s `colab()` — the single funnel for automated CLI
+- `bin/venue-run`'s `colab()` — the single funnel for automated CLI
   calls: refuses to invoke the CLI when the stored token is
   missing/invalid; snapshots the token before each call and restores
   it (atomically) if the call leaves it invalid, including on

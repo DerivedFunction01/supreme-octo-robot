@@ -136,7 +136,7 @@ def token_valid(path: Path) -> bool:
     """The colab-token validation: parses as JSON and carries a
     refresh_token of plausible length. The interactive flow's stub (a
     lone 15-char refresh_token) fails it. Contents are never printed.
-    Mirrors bin/colab-run's guard check."""
+    Mirrors bin/venue-run's guard check."""
     try:
         parsed = json.loads(path.read_text())
     except Exception:

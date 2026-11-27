@@ -38,7 +38,7 @@ platform_argv = importlib.util.module_from_spec(_argv_spec)
 _argv_spec.loader.exec_module(platform_argv)
 
 DECLARATION = {
-    "name": "colab-run",
+    "name": "venue-run",
     "summary": "run a named job on Colab, or work a router verb",
     "flags": {
         "sweep": {"help": "reconcile run records against "
@@ -72,7 +72,7 @@ _VERB_FLAGS = ("sweep", "collect-stale", "poll", "wait")
 
 
 def _usage_refusal(message):
-    print(f"colab-run: {message}", file=sys.stderr)
+    print(f"venue-run: {message}", file=sys.stderr)
     print(platform_argv.help_text(DECLARATION),
           file=sys.stderr, end="")
     return platform_argv.USAGE_EXIT
@@ -136,7 +136,7 @@ def main() -> int:
             try:
                 max_seconds = int(flags["max"])
             except ValueError:
-                print("colab-run --wait: --max must be an integer number of seconds", file=sys.stderr)
+                print("venue-run --wait: --max must be an integer number of seconds", file=sys.stderr)
                 return 2
         return wait_run(flags["wait"], max_seconds)
     # plant-git-identity

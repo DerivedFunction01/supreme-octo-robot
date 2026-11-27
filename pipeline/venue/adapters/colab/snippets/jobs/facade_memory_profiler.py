@@ -2,7 +2,7 @@
 
 One file, two lives: launched by system python3 it re-execs itself under
 the repo venv interpreter, then profiles in that dedicated process.
-Follows the colab-run harness contract (implemented once in
+Follows the venue-run harness contract (implemented once in
 job_harness.py): progress to <out>/heartbeat.log, completion is
 <out>/checkpoint.json with completed_units=1 plus a final heartbeat
 line containing "complete".

@@ -243,7 +243,7 @@ def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     child_args = [a for a in args if a != "--daemonize"]
     with open(log_path, "w") as log_fh:
         proc = subprocess.Popen(
-            [sys.executable, str(REPO / "bin" / "colab-run"), *child_args],
+            [sys.executable, str(REPO / "bin" / "venue-run"), *child_args],
             stdout=log_fh, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
             start_new_session=True, cwd=str(REPO), env=child_env)
     rec["daemon_child_pid"] = proc.pid

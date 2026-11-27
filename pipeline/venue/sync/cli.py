@@ -13,7 +13,7 @@ the NO_PROXY suffixes that keep Colab/Google traffic off this
 machine's egress proxy.
 
 The guarded colab() below is the auth guard of record (mechanics:
-docs/auth.md). It moved here from bin/colab-run unchanged; the
+docs/auth.md). It moved here from bin/venue-run unchanged; the
 runner and every other consumer load this module by path and call
 the one implementation.
 """

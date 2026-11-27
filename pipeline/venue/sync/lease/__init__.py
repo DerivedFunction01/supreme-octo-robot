@@ -5,9 +5,9 @@ All session-lifecycle logic for the lease model lives here (plans:
 the colab-lease-model plan for the model, the
 profile-retirement plan for the current shape of it).
 The module is written against an injected `colab` callable with
-bin/colab-run's signature — `colab(*args, timeout=...) ->
+bin/venue-run's signature — `colab(*args, timeout=...) ->
 CompletedProcess` — so the fake CLI tests it with no network.
-bin/venue-lease is the thin CLI; bin/colab-run and bin/colab-check
+bin/venue-lease is the thin CLI; bin/venue-run and bin/colab-check
 call acquire/finish_job; the reaper hook calls reap and, when
 enabled in config, auto_acquire.
 

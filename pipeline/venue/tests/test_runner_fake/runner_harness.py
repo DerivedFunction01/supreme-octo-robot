@@ -37,7 +37,7 @@ def control_sha(seed: str, unit: int) -> str:
 
 
 def run_bin(env):
-    return Path(env["TEST_REPO_ROOT"]) / "bin" / "colab-run"
+    return Path(env["TEST_REPO_ROOT"]) / "bin" / "venue-run"
 
 
 def runs_dir(env):

@@ -42,7 +42,7 @@ in, holding a session. Each entry computes the verdicts
 that need its own seams (the lease registry, the repos
 registry) and passes them in as settled strings — the pass
 itself stays a pure composition, and both dispatch entries
-(local-run included, through the package's exports) consume
+(venue-run included, through the package's exports) consume
 the same one.
 """
 

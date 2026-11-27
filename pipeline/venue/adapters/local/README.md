@@ -2,7 +2,7 @@
 
 Operator's own machine as a compute venue: Tailscale sidecar + Docker
 workspace container, SSH into the container only. Jobs run through
-the runner (`bin/local-run`) against the lease config's local
+the runner (`bin/venue-run`) against the lease config's local
 targets; `local_compute_fwd.py` here is the tunnel forwarder the
 lease's transport lifecycle launches (its pin file rides as
 argv[3], its listen port as argv[4], default 2222).
@@ -23,7 +23,7 @@ Layers, kept separate:
   files.
 - **Job manifests** — `jobs/` in this folder: the local
   venue's job manifests (`job.json` + `run.sh`) that
-  `bin/local-run` ships to the container. A manifest may
+  `bin/venue-run` ships to the container. A manifest may
   also declare `uploads`: files relative to the venue root
   that ship beside the script into the run dir under their
   basenames before launch (the local form of the Colab

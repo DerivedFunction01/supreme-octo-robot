@@ -427,7 +427,6 @@
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/colab-run",
    "family": "venue-bin",
    "migrated": true
   },
@@ -457,7 +456,7 @@
    "migrated": true
   },
   {
-   "path": "pipeline/venue/bin/local-run",
+   "path": "pipeline/venue/bin/venue-run",
    "family": "venue-bin",
    "migrated": true
   },

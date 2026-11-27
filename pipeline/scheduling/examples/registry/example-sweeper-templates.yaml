@@ -35,7 +35,7 @@ kinds:
       - job
       - state
       - age
-    text: "Run record check: colab-run record {record} (job {job}) has been {state} for {age} with no reconcile evidence past its evidence bound — a frozen record is not running work. Reconcile it (colab-run --poll {record}) or close it out; do not treat it as still running."
+    text: "Run record check: venue-run record {record} (job {job}) has been {state} for {age} with no reconcile evidence past its evidence bound — a frozen record is not running work. Reconcile it (venue-run --poll {record}) or close it out; do not treat it as still running."
   venue-question:
     version: 1
     audience: chat

@@ -48,7 +48,7 @@ is on any computer.
    the build also merges its record into
    `/content/env-registry.json`, which gates and consumer jobs
    resolve their clone and interpreter from.
-3. **Submit**: `bin/colab-run <job>` with a manifest under
+3. **Submit**: `bin/venue-run <job>` with a manifest under
    jobs/<name>/. Manifest essentials: script, args, explicit
    timeout, expected outputs, checkpoint_pull_seconds (small
    enough that a dead session loses at most one checkpoint
@@ -74,7 +74,7 @@ is on any computer.
 
 The runner's own lifecycle verbs ride the same record:
 
-- `bin/colab-run <job> --detach` launches and returns at once;
+- `bin/venue-run <job> --detach` launches and returns at once;
   `--poll RUN_ID` performs one bounded reconcile (sweep-for-self,
   one reader pass, pull, record update) — exits 0 complete /
   1 failed-or-orphaned / 2 no record / 3 still running;
@@ -289,7 +289,7 @@ duration. Synchronous use is therefore a claim, not a default
   a lapsed claim reads as absent. `bin/venue-lease claim-sync`
   and `release-sync` take and end a claim explicitly; only
   the holder releases by name.
-- Detached work never needs a claim: `colab-run` jobs and
+- Detached work never needs a claim: `venue-run` jobs and
   `bin/colab-sh --detach` / `--poll` (launch under nohup at
   `/content/sync-detached/<id>`; poll state + log tail with
   one short call) stay open to every caller. The records
@@ -368,7 +368,7 @@ collector's ride, so the command composes both against one
 budget (`VENUE_LEASE_REAP_COMMAND_BUDGET_S`, default
 390 s): the pass result is first persisted to
 `var/last-reap.json`, then the collector runs as a bounded
-subprocess (the standalone `colab-run --collect-stale` verb)
+subprocess (the standalone `venue-run --collect-stale` verb)
 allotted whatever the pass did not spend, passed through
 `VENUE_COLLECT_BUDGET_S` — too little remaining skips it,
 reported, and a subprocess timeout reports in the result's

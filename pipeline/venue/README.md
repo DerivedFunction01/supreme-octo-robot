@@ -9,8 +9,8 @@ SSH into a workspace container) and Colab sessions
 
 - **The tree** is the venue root in the runner's
   self-rooting shape: `sync/` (lease core + runner),
-  `bin/` (`colab-run`, `venue-lease`, `colab-check`,
-  `local-run`, and the rest of the wrapper set),
+  `bin/` (`venue-run`, `venue-lease`, `colab-check`,
+  and the rest of the wrapper set),
   `tests/`, `ui/` (the lease panel server), `config/`
   (tracked examples + the live registries, untracked
   by the carried `.gitignore`),

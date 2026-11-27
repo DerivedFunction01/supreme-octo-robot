@@ -1,5 +1,5 @@
 """Local poll reader pass (launch-path plan, Step 2b):
-bin/local-run accepts no record face — not even a terminal
+bin/venue-run accepts no record face — not even a terminal
 one — before the container's exit file has had its say.
 
 The specimen shape: the record face reads
@@ -42,18 +42,18 @@ RID = "greenfield-ci-proofform-lcheck-local-20261124T161808Z"
 TARGET = {"host": "machine.invalid", "user": "agent"}
 
 
-def load_local_run(monkeypatch, rec, reading):
-    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [reading])
+def load_venue_run(monkeypatch, rec, reading):
+    mod, finalized, _reads = load_venue_run_seq(monkeypatch, rec, [reading])
     return mod, finalized
 
 
-def load_local_run_seq(monkeypatch, rec, readings):
+def load_venue_run_seq(monkeypatch, rec, readings):
     """The poll harness over a readings sequence: each
     read_run_state call serves the next reading (the last
     repeats), the calls are logged, and the module's sleep
     is neutralized so the warmup backoff costs no wall
     time. A single-reading load is the one-element form."""
-    mod = load_module("local_run_poll_unit", REPO / "bin" / "local-run")
+    mod = load_module("venue_run_poll_unit", REPO / "bin" / "venue-run")
     finalized = []
     reads = []
 
@@ -77,7 +77,7 @@ def load_local_run_seq(monkeypatch, rec, readings):
 
 
 def _poll(monkeypatch, mod, capsys):
-    monkeypatch.setattr(sys, "argv", ["local-run", "--poll", RID])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--poll", RID])
     rc = mod.main()
     return rc, json.loads(capsys.readouterr().out)
 
@@ -88,7 +88,7 @@ def test_specimen_shape_orphan_face_rederived_complete(tmp_path, monkeypatch, ca
     serves the derived state, not the face."""
     rec = {"run_id": RID, "job": "greenfield-ci-proofform-lcheck", "venue": "local", "state": "orphaned"}
     reading = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "ok\n"}
-    mod, finalized = load_local_run(monkeypatch, rec, reading)
+    mod, finalized = load_venue_run(monkeypatch, rec, reading)
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 0
     assert out == {"run_id": RID, "state": "complete", "exit_code": 0, "rederived": True}
@@ -102,7 +102,7 @@ def test_confirmed_face_stands_without_second_finalize(tmp_path, monkeypatch, ca
     again (no second terminal transition)."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "complete", "exit_code": 0}
     reading = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": ""}
-    mod, finalized = load_local_run(monkeypatch, rec, reading)
+    mod, finalized = load_venue_run(monkeypatch, rec, reading)
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 0
     assert out == {"run_id": RID, "state": "complete"}
@@ -114,7 +114,7 @@ def test_non_exit_reading_leaves_face_alone(tmp_path, monkeypatch, capsys):
     face stands — a lost read is never a verdict in
     either direction."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "orphaned"}
-    mod, finalized = load_local_run(monkeypatch, rec, {"reading": "unknown"})
+    mod, finalized = load_venue_run(monkeypatch, rec, {"reading": "unknown"})
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 1
     assert out == {"run_id": RID, "state": "orphaned"}
@@ -127,7 +127,7 @@ def test_poll_finalizes_running_record_from_exit_file(tmp_path, monkeypatch, cap
     finalize, and the poll reports the derived state."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     reading = {"reading": "exit", "exit_code": 3, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "boom\n"}
-    mod, finalized = load_local_run(monkeypatch, rec, reading)
+    mod, finalized = load_venue_run(monkeypatch, rec, reading)
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 0
     assert out == {"run_id": RID, "state": "failed", "exit_code": 3}
@@ -142,7 +142,7 @@ def test_poll_retries_an_unknown_reading_through_warmup(tmp_path, monkeypatch, c
     sibling of the launch path's Step 3 retry)."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     exit_reading = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "ok\n"}
-    mod, finalized, reads = load_local_run_seq(
+    mod, finalized, reads = load_venue_run_seq(
         monkeypatch, rec, [{"reading": "unknown"}, {"reading": "unknown"}, exit_reading])
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 0
@@ -163,14 +163,14 @@ def test_poll_contested_exit_reading_serves_no_verdict(tmp_path, monkeypatch, ca
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     phantom = {"reading": "exit", "exit_code": 7, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": ""}
     truth_zero = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:20:00+00:00", "output_tail": ""}
-    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, truth_zero])
+    mod, finalized, _reads = load_venue_run_seq(monkeypatch, rec, [phantom, truth_zero])
     rc, out = _poll(monkeypatch, mod, capsys)
     # BT5 (unified argv plan): the still-running poll exit is
     # 3 on both run twins — this pin read 0 before the token.
     assert rc == 3
     assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
     assert finalized == []
-    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
+    mod, finalized, _reads = load_venue_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 3
     assert out == {"run_id": RID, "state": "running", "exit_unconfirmed": True}
@@ -182,7 +182,7 @@ def test_poll_agreeing_confirmation_finalizes(tmp_path, monkeypatch, capsys):
     the verdict: the finalize runs on the agreed code."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
     reading = {"reading": "exit", "exit_code": 7, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": "boom\n"}
-    mod, finalized, reads = load_local_run_seq(monkeypatch, rec, [reading, dict(reading)])
+    mod, finalized, reads = load_venue_run_seq(monkeypatch, rec, [reading, dict(reading)])
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 0
     assert out == {"run_id": RID, "state": "failed", "exit_code": 7}
@@ -196,7 +196,7 @@ def test_rederive_contested_exit_leaves_face_alone(tmp_path, monkeypatch, capsys
     contradicts does not rewrite the face."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "orphaned"}
     phantom = {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T16:19:00+00:00", "output_tail": ""}
-    mod, finalized, _reads = load_local_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
+    mod, finalized, _reads = load_venue_run_seq(monkeypatch, rec, [phantom, {"reading": "running"}])
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 1
     assert out == {"run_id": RID, "state": "orphaned"}
@@ -209,7 +209,7 @@ def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, ca
     finalized — and the retry is bounded: attempts are
     the backoff count plus the first read, never more."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
-    mod, finalized, reads = load_local_run_seq(monkeypatch, rec, [{"reading": "unknown"}])
+    mod, finalized, reads = load_venue_run_seq(monkeypatch, rec, [{"reading": "unknown"}])
     rc, out = _poll(monkeypatch, mod, capsys)
     # BT5: still running exits 3 (was 0 before the token).
     assert rc == 3 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
@@ -217,14 +217,14 @@ def test_poll_unknown_reading_bounded_then_unreachable(tmp_path, monkeypatch, ca
     assert len(reads) == len(mod.READ_BACKOFF_S) + 1
 
 
-def load_local_run_jobs(monkeypatch, tmp_path, records, readings):
+def load_venue_run_jobs(monkeypatch, tmp_path, records, readings):
     """The attach-resolution harness: records is a
     {run_id: rec} dict the stubbed loader reads, the
     module's RUNS is a real directory holding one file
     per record (the job scan globs it), and the container
     reader serves the readings sequence like the poll
     harness. Returns (mod, finalized, runs_dir)."""
-    mod = load_module("local_run_attach_unit", REPO / "bin" / "local-run")
+    mod = load_module("venue_run_attach_unit", REPO / "bin" / "venue-run")
     runs_dir = tmp_path / "runs"
     runs_dir.mkdir()
     for rid in records:
@@ -268,13 +268,13 @@ def _job_records():
 
 
 def test_job_first_wait_attaches_to_newest_and_dispatches_nothing(tmp_path, monkeypatch, capsys):
-    """The re-dispatch defect's pin: `local-run <job>
+    """The re-dispatch defect's pin: `venue-run <job>
     --wait` attaches to the job's newest run and settles
     it — no new run is minted (the runs dir's file set is
     byte-identical after the call)."""
-    mod, finalized, runs_dir = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    mod, finalized, runs_dir = load_venue_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
     before = sorted(p.name for p in runs_dir.iterdir())
-    monkeypatch.setattr(sys, "argv", ["local-run", JOB, "--wait", "--max", "60"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", JOB, "--wait", "--max", "60"])
     rc = mod.main()
     out = json.loads(capsys.readouterr().out)
     assert rc == 0
@@ -287,8 +287,8 @@ def test_wait_with_job_name_attaches_to_newest(tmp_path, monkeypatch, capsys):
     """`--wait <job>` resolves the job's newest run the
     same way — the flag-first form and the job-first form
     are the one attach."""
-    mod, finalized, _runs = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
-    monkeypatch.setattr(sys, "argv", ["local-run", "--wait", JOB, "--max", "60"])
+    mod, finalized, _runs = load_venue_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--wait", JOB, "--max", "60"])
     rc = mod.main()
     out = json.loads(capsys.readouterr().out)
     assert rc == 0
@@ -297,10 +297,10 @@ def test_wait_with_job_name_attaches_to_newest(tmp_path, monkeypatch, capsys):
 
 
 def test_job_first_poll_attaches(tmp_path, monkeypatch, capsys):
-    """`local-run <job> --poll` is the same attach in its
+    """`venue-run <job> --poll` is the same attach in its
     one-shot form."""
-    mod, finalized, _runs = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
-    monkeypatch.setattr(sys, "argv", ["local-run", JOB, "--poll"])
+    mod, finalized, _runs = load_venue_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0, EXIT0])
+    monkeypatch.setattr(sys, "argv", ["venue-run", JOB, "--poll"])
     rc = mod.main()
     out = json.loads(capsys.readouterr().out)
     assert rc == 0
@@ -311,8 +311,8 @@ def test_job_first_poll_attaches(tmp_path, monkeypatch, capsys):
 def test_attach_unknown_target_fails_without_dispatch(tmp_path, monkeypatch, capsys):
     """An attach naming nothing resolvable fails with
     the attach contract — and dispatches nothing."""
-    mod, finalized, runs_dir = load_local_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0])
-    monkeypatch.setattr(sys, "argv", ["local-run", "--wait", "no-such-run-or-job"])
+    mod, finalized, runs_dir = load_venue_run_jobs(monkeypatch, tmp_path, _job_records(), [EXIT0])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--wait", "no-such-run-or-job"])
     rc = mod.main()
     err = capsys.readouterr().err
     assert rc == 2
@@ -326,11 +326,11 @@ def test_poll_running_and_unreachable_readings(tmp_path, monkeypatch, capsys):
     container reads "running" with the unreachable flag —
     neither finalizes anything."""
     rec = {"run_id": RID, "job": "job", "venue": "local", "state": "running"}
-    mod, finalized = load_local_run(monkeypatch, rec, {"reading": "running"})
+    mod, finalized = load_venue_run(monkeypatch, rec, {"reading": "running"})
     rc, out = _poll(monkeypatch, mod, capsys)
     # BT5: still running exits 3 (was 0 before the token).
     assert rc == 3 and out == {"run_id": RID, "state": "running"}
-    mod, finalized = load_local_run(monkeypatch, rec, {"reading": "unknown"})
+    mod, finalized = load_venue_run(monkeypatch, rec, {"reading": "unknown"})
     rc, out = _poll(monkeypatch, mod, capsys)
     assert rc == 3 and out == {"run_id": RID, "state": "running", "venue_unreachable": True}
     assert finalized == []

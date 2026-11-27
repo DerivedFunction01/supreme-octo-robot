@@ -2,7 +2,7 @@
 readers a --poll/--wait serves from, the record resolution
 an attach target names, and the attach route itself.
 
-bin/local-run loads this leaf by path (its _load_runner_leaf
+bin/venue-run loads this leaf by path (its _load_runner_leaf
 form) and binds the seams at call time from its own module
 globals — the repo root, the venue module, the runner's
 record machinery, the entry's fail verb — so the leaf
@@ -168,7 +168,7 @@ def attach(flags: dict, target_token, seams: dict) -> int:
     existing run record or fails here — it can never fall
     through to the entry's job path, whose bare job name is
     the only dispatch spelling. (The defect this closes:
-    `local-run <job> --wait` read as a dispatch and re-fired
+    `venue-run <job> --wait` read as a dispatch and re-fired
     the job — a second execution of work believed to be a
     poll.)"""
     fail = seams["fail"]
@@ -203,7 +203,7 @@ def attach(flags: dict, target_token, seams: dict) -> int:
         out = seams["poll"](rec, target)
         print(json.dumps({"run_id": rec["run_id"], **out}, indent=2))
         # The twins' shared still-running verdict (BT5):
-        # 3 while the run is still running, as colab-run's
+        # 3 while the run is still running, as venue-run's
         # poll has always read; a poll that settles the run
         # keeps this tool's standing 0.
         return 3 if out["state"] == "running" else 0

@@ -338,7 +338,7 @@ def test_bootstrap_launch_survives_pipe_holding_descendants(tmp_path):
     (repo / "var" / "harness").mkdir(parents=True)
     (repo / "var" / "harness" / "sweeper-venue.token").write_text("tok-staged\n")
     (repo / "results" / "r1").mkdir(parents=True)
-    fake_run = repo / "bin" / "colab-run"
+    fake_run = repo / "bin" / "venue-run"
     fake_run.write_text(
         "#!/bin/sh\n"
         "if [ \"$1\" = \"--wait\" ]; then\n"

@@ -38,11 +38,11 @@ def plant_git_identity(session: str, repo_ref: str, tree: str, caller: "str | No
             _repo_id, entry = repo_registry.get_entry(registry, repo_ref)
             local_path = entry["local_path"]
         except (ValueError, KeyError) as exc:
-            print(f"colab-run plant-git-identity: cannot resolve repo {repo_ref!r}: {exc}", file=sys.stderr)
+            print(f"venue-run plant-git-identity: cannot resolve repo {repo_ref!r}: {exc}", file=sys.stderr)
             return 2
     identity = git_identity.repo_identity(local_path)
     if identity is None:
-        print(f"colab-run plant-git-identity: no complete repo-local identity (user.name + user.email) configured at {local_path} — nothing planted", file=sys.stderr)
+        print(f"venue-run plant-git-identity: no complete repo-local identity (user.name + user.email) configured at {local_path} — nothing planted", file=sys.stderr)
         return 2
     run_id = datetime.now(timezone.utc).strftime("plant-git-identity-%Y%m%dT%H%M%SZ")
     rec = {
@@ -98,14 +98,14 @@ def poll_run(run_id: str) -> int:
     not staged, 3 still running."""
     rec = load_run_record(run_id)
     if rec is None:
-        print(f"colab-run --poll: no run record at {RUNS / f'{run_id}.json'}", file=sys.stderr)
+        print(f"venue-run --poll: no run record at {RUNS / f'{run_id}.json'}", file=sys.stderr)
         return 2
     if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
-        print("colab-run: STAGED — no colab login yet. Run ops/bootstrap_local.sh, then the one-time login (see README).", file=sys.stderr)
+        print("venue-run: STAGED — no colab login yet. Run ops/bootstrap_local.sh, then the one-time login (see README).", file=sys.stderr)
         return 2
     manifest_path = JOBS / str(rec.get("job")) / "job.json"
     if not manifest_path.exists():
-        print(f"colab-run --poll: no job manifest at {manifest_path}", file=sys.stderr)
+        print(f"venue-run --poll: no job manifest at {manifest_path}", file=sys.stderr)
         return 2
     job = json.loads(manifest_path.read_text())
     # Same load-time normalization the launch performs, so a
@@ -205,7 +205,7 @@ def wait_run(run_id: str, max_seconds: int) -> int:
     failed/orphaned, 2 no such record, 3 still running when the
     bound runs out."""
     if not (RUNS / f"{run_id}.json").exists():
-        print(f"colab-run --wait: no run record for {run_id}", file=sys.stderr)
+        print(f"venue-run --wait: no run record for {run_id}", file=sys.stderr)
         return 2
     end = time.time() + max_seconds
     while True:

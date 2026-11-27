@@ -25,7 +25,7 @@ OPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$OPS_DIR/paths.sh"
 export PATH="$SCHED_PATH"
 REPO_ROOT="$(cd "$OPS_DIR/../../.." && pwd)"
-LOCAL_RUN="$REPO_ROOT/pipeline/venue/bin/local-run"
+VENUE_RUN="$REPO_ROOT/pipeline/venue/bin/venue-run"
 # The report read rides the runner's own SSH transport.
 # The identity is a deployment binding, never a literal
 # in tracked code: the env override wins; the default
@@ -40,7 +40,7 @@ partial=0
 dispatch() {
   # $1 = runner job, $2 = ssh port, $3 = venue label.
   local out run_id report
-  if ! out="$("$LOCAL_RUN" "$1" --detach 2>&1)"; then
+  if ! out="$("$VENUE_RUN" "$1" --detach 2>&1)"; then
     echo "VENUE-TRIM-DISPATCH-FAILED venue=$3 job=$1"
     partial=3
     return
@@ -51,7 +51,7 @@ dispatch() {
     partial=3
     return
   fi
-  "$LOCAL_RUN" --wait "$run_id" --max=1500 >/dev/null 2>&1 || true
+  "$VENUE_RUN" --wait "$run_id" --max=1500 >/dev/null 2>&1 || true
   report="$(ssh -p "$2" -i "$SSH_IDENTITY" \
     -o UserKnownHostsFile="$SSH_KNOWN_HOSTS" \
     -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \

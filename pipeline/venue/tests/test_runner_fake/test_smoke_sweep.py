@@ -23,7 +23,7 @@ def _backdate_absence(env, session, seconds=901):
     stamp.write_text(json.dumps(data))
 
 
-def test_colab_run_smoke_end_to_end(tmp_path, monkeypatch, capsys):
+def test_venue_run_smoke_end_to_end(tmp_path, monkeypatch, capsys):
     """The smoke fire end to end: acquire, upload, launch,
     confirm, poll, pull, finalize — the pulled outputs
     hash-match the deterministic control and the record closes
@@ -31,7 +31,7 @@ def test_colab_run_smoke_end_to_end(tmp_path, monkeypatch, capsys):
 
     The determinism cure: the fire now drives the
     runner's own main() in-process against the fake venue
-    instead of through the bin/colab-run subprocess and the
+    instead of through the bin/venue-run subprocess and the
     fake CLI. The subprocess form's payload ran as a detached
     host process while the foreground poller raced it on a
     wall clock — under full-suite contention the poller could
@@ -45,7 +45,7 @@ def test_colab_run_smoke_end_to_end(tmp_path, monkeypatch, capsys):
     loader over this same main(), and the suite's other
     leaves keep driving it."""
     env, venue, runner = runner_inprocess(tmp_path, monkeypatch)
-    monkeypatch.setattr(sys, "argv", ["colab-run", "smoke"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "smoke"])
     rc = runner.main()
     assert rc == 0
     out = json.loads(capsys.readouterr().out)

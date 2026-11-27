@@ -34,7 +34,7 @@ Subcommands (the link map):
                       surface (ATTN_URL, default
                       http://127.0.0.1:8797)
   venue-lease ...     the venue lease CLI, plus the other
-  colab-run ...       venue bins under their own names:
+  venue-run ...       venue bins under their own names:
   ...                 the Python bins (colab-bridge,
                       colab-check, venue-extend-guard,
                       colab-harness-bootstrap,
@@ -154,12 +154,12 @@ _VENUE_BIN = PIPELINE / "venue" / "bin"
 _VENUE_PYTHON_BINS = {
     "colab-bridge", "colab-check", "venue-extend-guard",
     "colab-harness-bootstrap", "colab-harness-relay",
-    "venue-lease", "venue-liveness", "colab-run", "colab-sh",
+    "venue-lease", "venue-liveness", "venue-run", "colab-sh",
     "colab-xfer",
 }
 _VENUE_BASH_BINS = {"colab-down", "colab-fs", "colab-status",
                     "colab-up"}
-_VENUE_ALIASES = {"lease": "venue-lease", "run": "colab-run",
+_VENUE_ALIASES = {"lease": "venue-lease", "run": "venue-run",
                   "sh": "colab-sh", "fs": "colab-fs",
                   "status": "colab-status", "up": "colab-up",
                   "down": "colab-down", "liveness": "venue-liveness",

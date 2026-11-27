@@ -611,11 +611,11 @@ record's evidence is past its bound with no
 reconcile evidence.
 → Send `record-reconcile` to chat-alpha, fact-keyed
 on the record and its newest evidence stamp:
-"Run record check: colab-run record
+"Run record check: venue-run record
 alpha-gate-20261109T080000Z (job alpha-gate) has been
 polling for 2h30m with no reconcile evidence past
 its evidence bound — a frozen record is not running
-work. Reconcile it (colab-run --poll
+work. Reconcile it (venue-run --poll
 alpha-gate-20261109T080000Z) or close it out; do not
 treat it as still running." A record inside its
 window, a terminal record, a record whose evidence

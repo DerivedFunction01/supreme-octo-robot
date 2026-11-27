@@ -1,98 +1,106 @@
 #!/usr/bin/env python3
-"""Job dispatch to the local venue, over SSH.
+"""Run a named job on a venue: the unified run entry.
 
-Usage: local-run <job-name> [--caller TAG] [--detach]|local-run <job-name> --union BRANCH=SHA --union BRANCH=SHA [--check-path PATH ...] [--caller TAG] [--detach]|local-run --envelope <name> [--caller TAG] [--detach]|local-run --poll RUN_ID|local-run --wait RUN_ID [--max SECONDS]|local-run --seal <job-name> --evidence TEXT|local-run --verify-sealed <job-name>
---poll exits 0 complete, 1 failed, 3 still running; --wait the
-same at its bound (--max default 3600) — the still-running
-exit the two run twins share.
+Usage: venue-run <job-name> [--caller TAG] [--detach] [-- <job args>...]
+       venue-run <job-name> [--resume RUN_ID] [--seed] [--daemonize] [--session NAME] [--caller TAG]
+       venue-run --poll RUN_ID | --wait RUN_ID [--max SECONDS] | --sweep | --collect-stale
+       venue-run plant-git-identity --session NAME --repo ID_OR_PATH --tree SESSION_TREE [--caller TAG]
+       venue-run <job-name> --union BRANCH=SHA --union BRANCH=SHA [--check-path PATH ...] [--caller TAG] [--detach]
+       venue-run --envelope <name> [--caller TAG] [--detach]
+       venue-run --seal <job-name> --evidence TEXT | venue-run --verify-sealed <job-name>
 
-A union dispatch names at least two gate-ready constituents
-and at least one scoped check path. The dispatcher stages a
-generated constituents.json beside the job's script and stamps
-the constituents, in the order given, on the run record.
+One entry over the shared runner core (sync/runner/) for
+both venue kinds. The invocation's kind — read from its
+form and its target by sync/runner/entry_dispatch.py —
+routes it, untouched, to the kind's own main, so each
+kind keeps its exact flag surface, defaults, and refusal
+forms: the Colab kind is the runner package's main (the
+thin twin's body), the local kind is this module's own
+(below, the fat twin's body). --poll exits 0 complete, 1
+failed, 3 still running; --wait the same at its bound —
+the still-running exit the two forms share, with the
+bound's default the kind's own (120 on the Colab form,
+3600 on the local form). --caller TAG (or the manifest's
+"caller" key, or $VENUE_CALLER) attributes the run to
+its thread on both forms.
 
-An envelope dispatch (--envelope <name>) composes the jobs
-declared in adapters/local/jobs/<name>/envelope.json into
-ONE launch on the declaration's venue: one envelope run
-record carrying its constituents in order, one run dir per
-job under the envelope's run dir, per-job exit files, the
-jobs running concurrently under one divided thread budget
-(budget leaf sync/runner/envelope.py; dispatch composition
-sync/runner/envelope_dispatch.py).
+Colab form: sync in, execute detached, poll, pull
+results, stop the session on every exit path. --session
+NAME (or $VENUE_RUN_SESSION) pins the run to the named
+lease — it adopts that session or fails pin-unavailable,
+never a silent substitution. --daemonize fires the launch
+in its own session and returns {run_id, state:
+"daemonized", log} at once, the parent claiming the run
+record itself before spawning the child (single-flight,
+sync/runner/claims.py); --detach returns at once with
+{run_id, session, state} and the record then advances
+only when something reconciles it — --poll (one bounded
+reconcile), a later launch's --resume, or --sweep.
+plant-git-identity plants a source repo's configured git
+identity repo-locally in a session tree formed outside
+the seed path, on its own run record. Job manifest:
+adapters/colab/jobs/<name>/job.json.
 
---poll and --wait ATTACH to an existing run and never
-dispatch, wherever the flag sits: the attach target is a
-run id, or a job name, which attaches to that job's newest
-run. A dispatch is spelled as a bare job name with no
-attach flag.
+Local form: job dispatch to the local venue, over SSH. A
+union dispatch names at least two gate-ready constituents
+and at least one scoped check path; the dispatcher stages
+a generated constituents.json beside the job's script and
+stamps the constituents, in the order given, on the run
+record. An envelope dispatch (--envelope <name>) composes
+the jobs declared in adapters/local/jobs/<name>/
+envelope.json into ONE launch on the declaration's venue
+(budget leaf sync/runner/envelope.py; composition
+sync/runner/envelope_dispatch.py). --poll and --wait
+ATTACH to an existing run and never dispatch, wherever
+the flag sits: the attach target is a run id, or a job
+name, which attaches to that job's newest run.
 
 A job named in adapters/local/sealed-register.json is
 sealed: its script files stand in the tree only as
 <name>.sealed blobs under the runner's server-side key
-(var/sealed.key), because their read trips an
-execution-risk flag. Dispatch opens the script blob in
-memory and ships the bytes; no verb ever emits script
-content, and a plaintext reappearing beside a sealed
-job's manifest refuses dispatch (the gate defect
-state). --seal classes a newly flagged job in the same
-movement as the flag report, which the register entry
-carries as its evidence.
+(var/sealed.key). Dispatch opens the blob in memory and
+ships the bytes; a plaintext reappearing beside a sealed
+job's manifest refuses dispatch. --seal classes a newly
+flagged job in the same movement as the flag report,
+which the register entry carries as its evidence.
 
-A job is a manifest at adapters/local/jobs/<name>/job.json:
-{"script": "run.sh", "caller"?, "shape"?, "timeout_s"?,
-"uploads"?} — the script beside the manifest ships to the
-venue over SSH and runs detached in the container under
-~/runs/<run_id>/. The optional "uploads" list names files
-relative to the venue root (the Colab manifest convention,
-e.g. "var/mfa-code.txt") that ship beside the script into
-the run dir under their basenames before launch — the local
-form of the Colab job's uploads, for payloads whose input
-is a staged file rather than the script itself (the code
-drop is the standing consumer). A declared upload that is
-absent at dispatch refuses the fire, naming the file: a
-drop fired without its code must fail here, never land as
-a silent no-op in the container. The run record carries
-the upload basenames, never their contents. So a dropped
-connection never kills the job. Detached launch here is the
-dispatcher's drop-safety form, not a channel constraint: the
-local venue's sshd admits concurrent connections (the
-one-connection-at-a-time property belongs to Colab runtimes),
-and the short control calls (mkdir, upload, launch, each poll
-read) are ordinary synchronous SSH. The run's record is the
-runner's own record shape, written through the runner's record
-machinery with venue "local"; its terminal transition emits the
-runner's one run-terminal event, so the runs portion serves a
-local run beside every Colab run.
+A local job is a manifest at adapters/local/jobs/<name>/
+job.json: {"script": "run.sh", "caller"?, "shape"?,
+"timeout_s"?, "uploads"?} — the script beside the
+manifest ships to the venue over SSH and runs detached
+in the container under ~/runs/<run_id>/. The optional
+"uploads" list names files relative to the venue root
+that ship beside the script into the run dir under their
+basenames before launch; a declared upload that is absent
+at dispatch refuses the fire, naming the file. The run
+record carries the upload basenames, never their
+contents. Detached launch here is the dispatcher's
+drop-safety form, not a channel constraint: the local
+venue's sshd admits concurrent connections, and the short
+control calls are ordinary synchronous SSH. The run's
+record is the runner's own record shape, written through
+the runner's record machinery with venue "local"; its
+terminal transition emits the runner's one run-terminal
+event, so the runs portion serves a local run beside
+every Colab run. The lease is the local venue's
+registration (sync/lease's acquire_local): the container
+is the venue — nothing is created, priced, or kept alive;
+the record names the caller and the window.
 
-The lease is the local venue's registration (sync/lease's
-acquire_local): the container is the venue — nothing is
-created, priced, or kept alive; the record names the caller
-and the window. Caller attribution is the lease core's own
-registry, exactly as for a Colab run.
-
-Record truth is the container's (launch-path plan, Step 2):
-polls read the run dir through the lease core's tri-state
-reader, a finished run finalizes from its exit file (state
-from the code, completion time from the file's mtime), and
-even a terminal record face is re-derived when the exit
-file contradicts it — the record never outranks the run dir.
-
-Launch transport warmup is the dispatch's own discipline
-(Step 3): an SSH step that times out — the signature of a
-managed transport still coming up, the venue healthy
-minutes later — retries with bounded backoff inside the
-same fire, and a refusal after the bound names the warmup,
-never the venue.
-
-Pre-dispatch validation is the one pass the Colab entries
-consume (sync/runner/manifest_shape.py's preflight_error),
-folded over this entry's seams at the dispatch below: the
-manifest loads through the runner's retrying reader, and
-its field shapes, the script's presence (a sealed job's:
-its blob), the declared uploads' presence, and the caller
-claim's registration all settle before the lease
-registration or any SSH step — a defect refuses in
-seconds, naming itself.
+Record truth is the container's: polls read the run dir
+through the lease core's tri-state reader, a finished run
+finalizes from its exit file, and even a terminal record
+face is re-derived when the exit file contradicts it —
+the record never outranks the run dir (the attach path
+lives in sync/runner/local_attach.py). Launch transport
+warmup is the dispatch's own discipline: an SSH step that
+times out retries with bounded backoff inside the same
+fire, and a refusal after the bound names the warmup,
+never the venue. Pre-dispatch validation is the one pass
+the Colab entries consume (sync/runner/manifest_shape.py's
+preflight_error), folded over this entry's seams at the
+dispatch below — a defect refuses in seconds, naming
+itself, before the lease registration or any SSH step.
 """
 
 import importlib.util
@@ -112,6 +120,12 @@ for _name in runner.__all__:
     globals()[_name] = getattr(runner, _name)
 del _name
 
+# The Colab kind's main, captured before this module's
+# own main (the unified dispatcher, below) shadows the
+# name: the loop above binds the package's main here, and
+# the dispatcher's Colab route calls it untouched.
+colab_main = main
+
 argv_mod = _load.platform_argv()
 
 # The operator surface, declared once for the unified
@@ -129,8 +143,8 @@ argv_mod = _load.platform_argv()
 # two run twins share (a --poll, or a bounded --wait, that
 # finds the run still running).
 DECL = {
-    "name": "local-run",
-    "summary": "Job dispatch to the local venue, over SSH. A bare job name dispatches; --poll/--wait attach to an existing run and never dispatch.",
+    "name": "venue-run",
+    "summary": "The local form of the unified venue-run entry: job dispatch to the local venue, over SSH. A bare job name dispatches; --poll/--wait attach to an existing run and never dispatch.",
     "flags": {
         "poll": {"help": "attach: one poll of an existing run (run id, or a job name's newest run)"},
         "wait": {"help": "attach: wait for an existing run to settle"},
@@ -170,11 +184,14 @@ def _load_runner_leaf(name):
 envelope = _load_runner_leaf("envelope")
 envelope_dispatch = _load_runner_leaf("envelope_dispatch")
 local_attach = _load_runner_leaf("local_attach")
+local_seal = _load_runner_leaf("local_seal")
+entry_dispatch = _load_runner_leaf("entry_dispatch")
 JOBS = REPO / "adapters" / "local" / "jobs"
+COLAB_JOBS = REPO / "adapters" / "colab" / "jobs"
 
 
 def _fail(msg: str, code: int = 2) -> int:
-    print(f"local-run: {msg}", file=sys.stderr)
+    print(f"venue-run: {msg}", file=sys.stderr)
     return code
 
 
@@ -412,96 +429,25 @@ def _clone_src() -> str:
     return origin.stdout.strip() if origin.returncode == 0 else ""
 
 
-def _seal_job(job_name: str, evidence: str | None) -> int:
-    """Seal one job's script files in place: every file
-    beside the manifest except job.json and existing
-    blobs is encrypted to <name>.sealed under the
-    runner's server-side key, its plaintext is deleted,
-    and the register entry is written with each file's
-    SHA-256 and the flag evidence. Content is never
-    printed — the output names files and hashes only."""
-    manifest_path = JOBS / job_name / "job.json"
-    if not manifest_path.exists():
-        return _fail(f"no job manifest at {manifest_path}")
-    if not evidence:
-        return _fail("--seal needs --evidence \"<the flag class and count that classes this job>\"")
-    job_dir = manifest_path.parent
-    candidates = sorted(
-        p
-        for p in job_dir.iterdir()
-        if p.is_file() and p.name != "job.json" and not p.name.endswith(".sealed")
-    )
-    if not candidates:
-        return _fail(f"job {job_name}: no unsealed script files beside the manifest")
-    key_path = sealed.ensure_key(REPO)
-    key = sealed.load_key(REPO)
-    files = []
-    for path in candidates:
-        data = path.read_bytes()
-        files.append(
-            {"name": path.name, "sha256": sealed.sha256_hex(data), "bytes": len(data)}
-        )
-        blob_path = path.with_name(path.name + ".sealed")
-        sealed.staged_write(blob_path, sealed.seal_bytes(key, data))
-        path.unlink()
-    register = sealed.load_register(REPO)
-    entry = {
-        "job": job_name,
-        "sealed_at": now(),
-        "evidence": evidence,
-        "files": files,
+def _seal_seams() -> dict:
+    """The seams the seal leaf (sync/runner/local_seal.py)
+    consumes, bound from this entry's globals at call
+    time."""
+    return {
+        "fail": _fail,
+        "jobs_dir": JOBS,
+        "repo": REPO,
+        "sealed": sealed,
+        "now": now,
     }
-    register["jobs"] = [
-        e for e in register.get("jobs", []) if e.get("job") != job_name
-    ] + [entry]
-    sealed.save_register(REPO, register)
-    print(
-        json.dumps(
-            {
-                "job": job_name,
-                "sealed": [f["name"] for f in files],
-                "sha256": {f["name"]: f["sha256"] for f in files},
-                "register": str(sealed.register_path(REPO)),
-                "key": str(key_path),
-            },
-            indent=2,
-        )
-    )
-    return 0
+
+
+def _seal_job(job_name: str, evidence: str | None) -> int:
+    return local_seal.seal_job(job_name, evidence, _seal_seams())
 
 
 def _verify_sealed(job_name: str) -> int:
-    """Open each of a sealed job's blobs in memory and
-    compare against the register's hashes. Prints file
-    names and match facts only — never content."""
-    register = sealed.load_register(REPO)
-    entry = sealed.entry_for(register, job_name)
-    if entry is None:
-        return _fail(f"job {job_name} is not in the sealed register")
-    job_dir = JOBS / job_name
-    try:
-        key = sealed.load_key(REPO)
-    except sealed.SealError as exc:
-        return _fail(str(exc))
-    ok = True
-    results = {}
-    for f in entry["files"]:
-        blob_path = job_dir / (f["name"] + ".sealed")
-        if not blob_path.exists():
-            results[f["name"]] = "blob missing"
-            ok = False
-            continue
-        try:
-            data = sealed.open_bytes(key, blob_path.read_bytes())
-        except sealed.SealError as exc:
-            results[f["name"]] = f"open failed: {exc}"
-            ok = False
-            continue
-        match = sealed.sha256_hex(data) == f["sha256"]
-        results[f["name"]] = "match" if match else "HASH MISMATCH"
-        ok = ok and match
-    print(json.dumps({"job": job_name, "files": results}, indent=2))
-    return 0 if ok else 1
+    return local_seal.verify_sealed(job_name, _seal_seams())
 
 
 def _envelope_seams() -> dict:
@@ -529,7 +475,29 @@ def _envelope_seams() -> dict:
     }
 
 
+def _dispatch_seams() -> dict:
+    """The classifier's seams, bound from this module's
+    globals at call time (the attach/envelope seam form):
+    a monkeypatched global is the binding classify reads."""
+    return {
+        "local_jobs": JOBS,
+        "colab_jobs": COLAB_JOBS,
+        "runs": RUNS,
+        "load_run_record": load_run_record,
+    }
+
+
 def main() -> int:
+    """The unified dispatcher: classify the invocation
+    (sync/runner/entry_dispatch.py) and hand it, untouched,
+    to its kind's main — the local body below, or the
+    runner package's main for the Colab kind."""
+    if entry_dispatch.classify(sys.argv[1:], _dispatch_seams()) == "local":
+        return _local_main()
+    return colab_main()
+
+
+def _local_main() -> int:
     try:
         parsed = argv_mod.parse(DECL, sys.argv[1:])
     except argv_mod.UsageError as exc:
@@ -543,11 +511,11 @@ def main() -> int:
     target_token = parsed["positionals"].get("target")
     if flags["seal"]:
         if target_token is None:
-            return _fail("usage: local-run --seal <job-name> --evidence \"<flag class and count>\"")
+            return _fail("usage: venue-run --seal <job-name> --evidence \"<flag class and count>\"")
         return _seal_job(target_token, flags.get("evidence"))
     if flags["verify-sealed"]:
         if target_token is None:
-            return _fail("usage: local-run --verify-sealed <job-name>")
+            return _fail("usage: venue-run --verify-sealed <job-name>")
         return _verify_sealed(target_token)
     if flags["poll"] or flags["wait"]:
         # The attach route lives in the runner leaf

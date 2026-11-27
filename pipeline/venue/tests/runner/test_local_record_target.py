@@ -1,4 +1,4 @@
-"""bin/local-run's _record_target resolution chain: the
+"""bin/venue-run's _record_target resolution chain: the
 target a record carries, else its shape's binding, else the
 venue's only target.
 
@@ -47,7 +47,7 @@ class FakeVenue:
 
 
 def load(monkeypatch, targets, bound):
-    mod = load_module("local_run_record_target_unit", REPO / "bin" / "local-run")
+    mod = load_module("venue_run_record_target_unit", REPO / "bin" / "venue-run")
     fake = FakeVenue(targets, bound)
     monkeypatch.setattr(mod, "local_venue", fake)
     return mod, fake

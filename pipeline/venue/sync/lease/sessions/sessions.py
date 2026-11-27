@@ -93,7 +93,7 @@ def _read_sessions_text(colab, diag: dict | None = None, attempts: int | None = 
         if out and "Enter the authorization code" in out:
             # The CLI's interactive login prompt is not a session list: it
             # once read as "absent" here and a live lease's record
-            # was deleted under it. The bin/colab-run guard now stops the
+            # was deleted under it. The bin/venue-run guard now stops the
             # prompt from ever reaching callers; this is the same rule at
             # the seam, for any path that bypasses the wrapper.
             if diag is not None:

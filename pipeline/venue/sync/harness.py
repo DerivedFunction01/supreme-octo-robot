@@ -326,7 +326,7 @@ def bootstrap(repo: Path, consumer: str = "sweeper-venue", scopes: str = "read,w
     if run_mod is None or colab is None:
         sys.path.insert(0, str(repo / "bin"))
         import _load
-        run_mod = run_mod or _load.colab_run()
+        run_mod = run_mod or _load.venue_run()
         colab = colab or _load.sync("cli").colab
     try:
         token_path = stage_dir(repo) / f"{consumer}.token"
@@ -345,7 +345,7 @@ def bootstrap(repo: Path, consumer: str = "sweeper-venue", scopes: str = "read,w
     launch_out = stage_dir(repo) / "launch-output.json"
     with open(launch_out, "w") as fh:
         launch = subprocess.run(
-            [str(repo / "bin" / "colab-run"), "harness-bootstrap", "--detach", "--caller", "panel"],
+            [str(repo / "bin" / "venue-run"), "harness-bootstrap", "--detach", "--caller", "panel"],
             stdout=fh, stderr=subprocess.STDOUT, timeout=1200,
         )
     if launch.returncode != 0:
@@ -370,7 +370,7 @@ def bootstrap(repo: Path, consumer: str = "sweeper-venue", scopes: str = "read,w
         poll_out = stage_dir(repo) / "poll-output.log"
         with open(poll_out, "w") as fh:
             subprocess.run(
-                [str(repo / "bin" / "colab-run"), "--poll", run_id],
+                [str(repo / "bin" / "venue-run"), "--poll", run_id],
                 stdout=fh, stderr=subprocess.STDOUT, timeout=900,
             )
 
@@ -384,7 +384,7 @@ def bootstrap(repo: Path, consumer: str = "sweeper-venue", scopes: str = "read,w
     wait_out = stage_dir(repo) / "wait-output.log"
     with open(wait_out, "w") as fh:
         wait = subprocess.run(
-            [str(repo / "bin" / "colab-run"), "--wait", run_id],
+            [str(repo / "bin" / "venue-run"), "--wait", run_id],
             stdout=fh, stderr=subprocess.STDOUT, timeout=300,
         )
     rec = run_mod.load_run_record(run_id) or {}

@@ -62,7 +62,7 @@ class FakeSSH:
 
 
 def load_launch(monkeypatch, fake):
-    mod = load_module("local_run_uploads_unit", REPO / "bin" / "local-run")
+    mod = load_module("venue_run_uploads_unit", REPO / "bin" / "venue-run")
     monkeypatch.setattr(mod, "_ssh", fake)
     monkeypatch.setattr(mod, "LAUNCH_BACKOFF_S", (0, 0))
     return mod

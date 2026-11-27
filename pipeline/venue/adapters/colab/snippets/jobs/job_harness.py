@@ -1,6 +1,6 @@
 """The runner harness contract, implemented once for the workload jobs.
 
-Every job the runner launches speaks the same contract (see bin/colab-run):
+Every job the runner launches speaks the same contract (see bin/venue-run):
 it takes --out DIR, streams progress to <out>/heartbeat.log, records
 completion in <out>/checkpoint.json with completed_units=1, and ends its
 heartbeat with a line containing "complete". shell_job.py and

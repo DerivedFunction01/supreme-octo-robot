@@ -323,7 +323,7 @@ def auth_required(repo: Path) -> dict | None:
     """The wrapper guard's stop-and-surface marker
     (var/auth-required.json): present while the stored Colab
     credential is dead and a human re-authorization is the only way
-    forward. Written and cleared by bin/colab-run's guard."""
+    forward. Written and cleared by bin/venue-run's guard."""
     data = foundation.load_json(foundation.var_dir(repo) / "auth-required.json", None)
     return data if isinstance(data, dict) else None
 

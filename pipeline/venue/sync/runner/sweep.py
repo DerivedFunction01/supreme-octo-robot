@@ -85,7 +85,7 @@ def finalize_local_record(rec: dict, reading: dict) -> str:
     file's own mtime (the reading's finished_at), and the
     record lands through mark_terminal like every terminal
     transition. The one finalize path for local records —
-    shared by the sweep's local branch and bin/local-run's
+    shared by the sweep's local branch and bin/venue-run's
     poll pass (launch-path plan, Step 2). Returns the
     derived state."""
     code = reading["exit_code"]
