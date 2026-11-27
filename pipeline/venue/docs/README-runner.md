@@ -17,7 +17,7 @@ The anti-form is a bare agent-shell exec of a dispatch. Each such fire mints a r
 
 ## Venue selection under load (local fleet)
 
-Measured on the venue-scope gate shape (identical job, identical tree, production worker sizing): the MSI's per-core throughput is 1.72× hp-envy's, and its per-job speed under concurrency degrades gently to 2 jobs (1.26× slowdown) and reaches hp-solo parity at 4 concurrent jobs, where throughput stops growing. The dispatch convention follows from that curve: gate-class work routes to the MSI up to 3 concurrent jobs; the 4th and beyond spill to hp-envy under the load-aware routing rule, where a solo job finishes no later than one queued behind four on the MSI and the second machine's throughput is added to the fleet instead of contending.
+Dispatch under load follows the fleet's measured contention curve for the gate shape (identical job, identical tree, production worker sizing), not a fixed machine order. Each machine's curve has a knee: the concurrency at which its per-job speed falls to a slower machine's solo speed and its throughput stops growing. The convention: gate-class work routes to the fastest machine up to a cap set one below its knee, so routed jobs keep their headroom; work beyond the cap spills to the next machine under the load-aware routing rule, where a spilled job finishes no later than one queued past the knee and the second machine's throughput adds to the fleet instead of contending. The measured curves and the fleet's current cap values are the untracked fleet binding, re-measured when the fleet or the gate shape changes.
 
 ## Envelope launches (local venue)
 
