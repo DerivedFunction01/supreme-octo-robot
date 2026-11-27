@@ -16,7 +16,12 @@ form: the ground (the repo's one home,
 unioned with the repo layer beside it (`denylist.repo.txt`)
 on read when present, matched
 case-insensitively; findings name the
-offending file only, never the literal. With no denylist
+offending file only, never the literal. Sealed-form files (the
+`.sealed` extension, or the SORSEAL1 header sync/sealed.py
+writes) are ciphertext by construction and stand outside the
+personal leg's population: a substring inside ciphertext is a
+chance collision, not a literal, and the blob cannot be edited
+without corrupting the seal. With no denylist
 provisioned the personal leg is skipped, so a bare clone stays
 green; the tracked legs below are nameless shapes and always run.
 This file skips itself: it has to spell the shapes it forbids (the
@@ -35,6 +40,7 @@ SELF = Path(__file__).name
 SHAPE_LITERALS = ["~/workspace"]
 HOME_PATH_RE = re.compile(r"/(?:home|Users)/[^/\s\"']+")
 WORKLOAD_LITERAL = "edg" + "ar"  # the default workload's profile id, assembled like SHAPE_LITERALS
+SEALED_MAGIC = "SORSEAL1"  # sync/sealed.py's MAGIC, spelled here as SHAPE_LITERALS are
 CODE_DIRS = ("sync/", "bin/", "ui/", "adapters/colab/probes/", "adapters/colab/snippets/")
 CODE_SUFFIXES = {".py", ".sh", ".js"}
 
@@ -86,6 +92,8 @@ def _personal_offenders(root, names, literals):
             text = (root / name).read_text()
         except (UnicodeDecodeError, OSError):
             continue
+        if name.endswith(".sealed") or text.startswith(SEALED_MAGIC):
+            continue  # sealed form: ciphertext, outside this leg's population
         if any(lit in text.lower() for lit in lowered):
             offenders.append(name)
     return offenders
@@ -122,6 +130,21 @@ def test_personal_leg_matches_case_insensitively(tmp_path):
     (tmp_path / "clean.txt").write_text("nothing to see\n")
     offenders = _personal_offenders(tmp_path, ["planted.txt", "clean.txt"], ["zqx" + "jkv"])
     assert offenders == ["planted.txt"]
+
+
+def test_personal_leg_skips_the_sealed_form(tmp_path):
+    """The sealed form stands outside the personal leg's
+    population in both its shapes — the `.sealed` extension
+    and the SORSEAL1 header under a plain name: a synthetic
+    literal inside either is ciphertext noise, not a finding,
+    while the same literal in a plain file still convicts."""
+    lit = "zqx" + "jkv"
+    (tmp_path / "blob.sealed").write_text(f"SORSEAL1{lit}AAAA\n")
+    (tmp_path / "header.bin").write_text(f"SORSEAL1{lit}AAAA\n")
+    (tmp_path / "plain.txt").write_text(f"a {lit} appears here\n")
+    offenders = _personal_offenders(
+        tmp_path, ["blob.sealed", "header.bin", "plain.txt"], [lit])
+    assert offenders == ["plain.txt"]
 
 
 def test_profiles_config_is_retired():
