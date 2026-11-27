@@ -82,6 +82,7 @@ def test_card_matches_the_panel_derivation_for_a_colab_lease():
         "action": "active",
         "standing": False,
         "acquired_at": "2026-10-29T17:00:00+00:00",
+        "acquired_label": "1:00 PM",
         "deadline": "2026-10-30T01:00:00+00:00",
         "deadline_label": "9:00 PM",
         "ends_label": "ends 9:00 PM",
@@ -106,6 +107,36 @@ def test_card_matches_the_panel_derivation_for_a_colab_lease():
             "exec": {"applicable": False, "reason": "unserved"},
         },
     }
+
+
+def test_card_acquired_label_matches_the_deadline_path_for_an_instant():
+    """The Acquired row's label is the deadline path's
+    own form: the same instant carried in both stamps
+    serves the same label — fmt_time in the served
+    zone, never a client-side formatting."""
+    card = _card_mod.lease_card(
+        _entry(acquired_at="2026-10-30T01:00:00+00:00"),
+        _card_mod.spec_index([_spec()]),
+        grant_active_now=False, now_dt=NOW)
+    assert card["acquired_label"] == card["deadline_label"] == "9:00 PM"
+
+
+def test_card_acquired_label_is_null_without_a_parseable_stamp():
+    """Honest absence: no acquired stamp — missing,
+    null, or unparseable — serves a null label, the
+    card's rule for its optional stamps."""
+    for over in ({"acquired_at": None}, {"acquired_at": "not-a-stamp"}):
+        card = _card_mod.lease_card(
+            _entry(**over), _card_mod.spec_index([_spec()]),
+            grant_active_now=False, now_dt=NOW)
+        assert card["acquired_label"] is None
+    entry = _entry()
+    del entry["record"]["acquired_at"]
+    card = _card_mod.lease_card(
+        entry, _card_mod.spec_index([_spec()]),
+        grant_active_now=False, now_dt=NOW)
+    assert card["acquired_at"] is None
+    assert card["acquired_label"] is None
 
 
 def test_card_for_a_local_lease_disables_adopt_by_venue():

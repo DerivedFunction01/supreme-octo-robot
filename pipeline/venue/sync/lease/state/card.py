@@ -93,6 +93,20 @@ def fmt_time(iso) -> str:
     return f"{hour}:{dt.minute:02d} {ampm}"
 
 
+def _time_label(iso):
+    """An optional stamp's served label (fmt_time),
+    or None when the stamp is absent or unparseable
+    — honest absence, matching the card's other
+    labels: the row renders nothing rather than a
+    client-side formatting of the raw stamp."""
+    if not iso:
+        return None
+    try:
+        return fmt_time(iso)
+    except (TypeError, ValueError):
+        return None
+
+
 def fmt_remaining(ms) -> str:
     """The panel's fmtRemaining: whole minutes,
     clamped at zero, as "H h MM min left" (hours
@@ -206,6 +220,7 @@ def lease_card(entry, index, grant_active_now: bool,
         shape_label = shape
     deadline = record.get("deadline")
     deadline_dt = _parse(deadline)
+    acquired_label = _time_label(record.get("acquired_at"))
     expired = deadline_dt <= now_dt
     remaining_ms = int(round(
         (deadline_dt - now_dt).total_seconds() * 1000))
@@ -244,6 +259,7 @@ def lease_card(entry, index, grant_active_now: bool,
         "action": entry.get("action"),
         "standing": bool(record.get("standing")),
         "acquired_at": record.get("acquired_at"),
+        "acquired_label": acquired_label,
         "deadline": deadline,
         "deadline_label": fmt_time(deadline),
         "ends_label": f"{'ended' if expired else 'ends'} "
