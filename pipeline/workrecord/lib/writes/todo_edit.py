@@ -45,6 +45,7 @@ def set_todo_status(plans_dir, todo_id, status, *,
                     progress: str = None,
                     no_progress: bool = False,
                     armed_at: str = None,
+                    worktree: str = None,
                     actor: str = None) -> dict:
     """Move one todo's status (todo|doing|blocked|done
     only — anything else refused), stamping `updated:`.
@@ -65,7 +66,20 @@ def set_todo_status(plans_dir, todo_id, status, *,
     (progress_check: off, no armed stamp), disarming a
     live schedule. A move to a stop status
     (done/blocked) clears both progress fields in the
-    same write. Arming onto a stop status is refused."""
+    same write. Arming onto a stop status is refused.
+
+    Worktree at activation (timing-ledger Step 3): a
+    caller that knows the acting worktree — the CLI's
+    --worktree, the server action's worktree field —
+    passes it, and the move stamps the front-matter
+    `worktree:` field (replacing any earlier stamp)
+    and carries the worktree on the move's transition
+    line, in the same write. Editor identity (the
+    transition's actor) and the worktree are
+    independent fields: N editors over M worktrees,
+    and a step's record names the one worktree it ran
+    in beside the editors who acted on it. A caller
+    supplying none leaves both untouched."""
     if status not in TODO_STATUSES:
         raise BundleError(
             f"todo status must be one of {TODO_STATUSES}, "
@@ -123,6 +137,9 @@ def set_todo_status(plans_dir, todo_id, status, *,
         if key == "status":
             new_lines.append(f"status: {status}")
             seen.add("status")
+        elif key == "worktree" and worktree is not None:
+            new_lines.append(f"worktree: {worktree}")
+            seen.add("worktree")
         elif key == "updated":
             new_lines.append(f"updated: {today}")
             seen.add("updated")
@@ -148,6 +165,8 @@ def set_todo_status(plans_dir, todo_id, status, *,
             new_lines.append(line)
     if "status" not in seen:
         new_lines.append(f"status: {status}")
+    if worktree is not None and "worktree" not in seen:
+        new_lines.append(f"worktree: {worktree}")
     if "updated" not in seen:
         new_lines.append(f"updated: {today}")
     if opt_out and "progress_check" not in seen:
@@ -173,7 +192,7 @@ def set_todo_status(plans_dir, todo_id, status, *,
     body = append_transition(
         body, verb="set-status", actor=actor,
         field="status", old=fields.get("status"),
-        new=status)
+        new=status, worktree=worktree)
     out = "---\n" + "\n".join(new_lines) + "\n---\n"
     if body.strip():
         out += "\n" + body.strip("\n") + "\n"

@@ -308,6 +308,13 @@ def build_parser():
                     help="record the explicit opt-out "
                          "instead: progress_check off, "
                          "no schedule, never monitored")
+    st.add_argument("--worktree",
+                    help="the acting worktree this move "
+                         "runs in: stamped on the todo's "
+                         "worktree field and carried on "
+                         "the move's transition line "
+                         "(timing ledger — the activation "
+                         "move names it)")
     st.set_defaults(fn=cmd_todo_file_set)
 
     lt = tsub.add_parser("list")

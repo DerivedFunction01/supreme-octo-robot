@@ -59,7 +59,8 @@ def cmd_todo_new(args):
         no_progress=args.no_progress, name=args.name)
     _print({k: result[k] for k in
             ("id", "title", "status", "feature", "plan",
-             "plan_step", "worktree", "created", "updated",
+             "plan_step", "est", "fanout_position",
+             "worktree", "created", "updated",
              "progress_check", "progress_armed",
              "progress_entry", "attention_row",
              "bundle", "file")})
@@ -71,9 +72,10 @@ def cmd_todo_file_set(args):
     result = bundle_mod.set_todo_status(
         ctx.plans_dir, args.id, args.status, note=args.note,
         progress=args.progress,
-        no_progress=args.no_progress)
+        no_progress=args.no_progress,
+        worktree=args.worktree)
     _print({k: result[k] for k in
-            ("id", "title", "status", "updated",
+            ("id", "title", "status", "worktree", "updated",
              "progress_check", "progress_armed",
              "progress_entry", "attention_row",
              "bundle", "file")})

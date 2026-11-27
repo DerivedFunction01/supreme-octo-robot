@@ -132,6 +132,17 @@ LONG_DURATION_CLASSES: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 
 
+# The fan-out positions a step's record may carry
+# (timing-ledger plan): serial prefix, fan-out branch,
+# fan-in. The wb-step block declares one as position=;
+# plan-check validates the declared value against this
+# set, and the todo writer (lib/writes/todo_create)
+# carries the same set into the minted front-matter —
+# one home here, in the grammar's data, consumed by
+# both.
+FANOUT_POSITIONS = ("serial", "branch", "fan-in")
+
+
 def _normalize_words(text: str) -> str:
     """Lowercase words of the text, punctuation as
     separators. A slash is dropped first, so "i/o-bound"

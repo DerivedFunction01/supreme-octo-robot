@@ -124,7 +124,8 @@ def todo_action(project, body: dict) -> dict:
     holds no file-writing logic of its own). The retired
     registry-DB todo verbs are gone: file todos are the
     store (§3.7). Verbs: set-status (a status move, with
-    the writer's note / progress-cadence passthrough),
+    the writer's note / progress-cadence / worktree
+    passthrough),
     set-fields (title / notes), create (a new todo in a
     bundle)."""
     m = project.manifest
@@ -141,7 +142,8 @@ def todo_action(project, body: dict) -> dict:
                 m.plans, body["id"], body.get("status"),
                 note=body.get("note"),
                 progress=body.get("progress"),
-                no_progress=bool(body.get("no_progress")))
+                no_progress=bool(body.get("no_progress")),
+                worktree=body.get("worktree"))
         elif verb == "set-fields":
             if not body.get("id"):
                 raise ApiError(400, "set-fields needs a "
@@ -161,6 +163,7 @@ def todo_action(project, body: dict) -> dict:
             todo = bundle_mod.create_todo(
                 m.plans, body["bundle"], body["title"],
                 step=body.get("step"),
+                worktree=body.get("worktree"),
                 body=body.get("body") or "")
         else:
             raise ApiError(400, f"unknown verb: {verb!r}")

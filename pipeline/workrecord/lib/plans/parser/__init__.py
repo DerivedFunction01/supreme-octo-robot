@@ -46,6 +46,7 @@ from .document import (extract_step_blocks,
                        first_duration_minutes,
                        names_long_duration_class)
 from .grammar import (ESTIMATE_OVERRUN_MINUTES,
+                      FANOUT_POSITIONS,
                       LONG_DURATION_CLASSES,
                       declared_status, status_bucket)
 from .plans import (apply_answers, list_plans, load_plan,

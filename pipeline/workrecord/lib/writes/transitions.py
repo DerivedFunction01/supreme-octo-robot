@@ -28,6 +28,16 @@ given; the file writers receive none today, so each
 passes actor=None and the helper records the verb's
 own name — the record says which verb wrote it rather
 than inventing an identity no caller supplied.
+
+Worktree: a move whose caller knows the acting
+worktree (the activation move, timing-ledger Step 3)
+records it as an extra `worktree` key on that line —
+present only on lines whose writer supplied one, so
+older lines read exactly as before. Editor identity
+(the actor) and worktree stay independent fields: a
+fan-out runs N editors over M worktrees, and a line
+names the one worktree its move ran in beside the
+editor who made it.
 """
 
 import json
@@ -39,7 +49,8 @@ TRANSITION_PREFIX = "transition: "
 
 
 def transition_line(*, verb, field=None, old=None,
-                    new=None, actor=None, at=None) -> str:
+                    new=None, actor=None, at=None,
+                    worktree=None) -> str:
     """One transition line in the block's format."""
     record = {
         "at": at or now_iso(),
@@ -49,6 +60,8 @@ def transition_line(*, verb, field=None, old=None,
         "old": old,
         "new": new,
     }
+    if worktree is not None:
+        record["worktree"] = worktree
     return TRANSITION_PREFIX + json.dumps(
         record, ensure_ascii=False)
 
@@ -138,7 +151,7 @@ def append_transition_line(body: str, line: str) -> str:
 
 def append_transition(body: str, *, verb, field=None,
                       old=None, new=None, actor=None,
-                      at=None) -> str:
+                      at=None, worktree=None) -> str:
     """THE helper: body text + one transition → body
     text with the transition appended, in the block.
     Pure — no I/O; the caller folds the result into
@@ -146,4 +159,5 @@ def append_transition(body: str, *, verb, field=None,
     return append_transition_line(
         body,
         transition_line(verb=verb, field=field, old=old,
-                        new=new, actor=actor, at=at))
+                        new=new, actor=actor, at=at,
+                        worktree=worktree))
