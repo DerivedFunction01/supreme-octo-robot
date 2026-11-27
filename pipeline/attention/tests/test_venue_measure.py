@@ -1,25 +1,20 @@
-"""Venue staffing measure pins (the superapp
-supervision plan, Step 2): the family-concurrency
-measure and the plan-frontier comparison, proven on
-recorded specimens.
+"""Venue staffing measure pins (the superapp supervision plan,
+Step 2): the family-concurrency measure and the plan-frontier
+comparison, proven on recorded specimens.
 
-The specimen records are the venue runs store's own
-records for the edgar fleet, copied
-verbatim into fixtures/venue-results/runs (historical
-and immutable — read, never written). The windows
-are the plan's, as measured: 10:00–12:25Z reads
-staffed (several families across sessions); from
-12:30Z the fleet narrows to one carrying session and
-the measure reads a serial defect — one family on
-one session from 13:10Z, so the plan's 13:30Z
-defect-window start reads defect as claimed. The
-13:30Z instant was first probed staffed only
-because four launch-lost records (their terminal
-events standing in for a finish) manufactured the
-second family and the second session; with the
-derivation cured it reads defect. The measure is
-evaluated at instants inside each window from the
-records alone.
+The specimen records are a synthesized set of venue run records
+in the live store's shape, standing in for one working day of a
+multi-family fleet (fixtures/venue-results/runs — synthetic,
+immutable: read, never written). The windows are the plan's, as
+measured: 10:00–12:25Z reads staffed (several families across
+sessions); from 12:30Z the fleet narrows to one carrying session
+and the measure reads a serial defect — one family on one session
+from 13:10Z, so the plan's 13:30Z defect-window start reads defect
+as claimed. The 13:30Z instant was first probed staffed only
+because four launch-lost records (their terminal events standing
+in for a finish) manufactured the second family and the second
+session; with the derivation cured it reads defect. The measure
+is evaluated at instants inside each window from the records alone.
 """
 
 import sys
@@ -47,7 +42,7 @@ SCARLET = "amber-cliff-23"
 
 
 def at(hour, minute=0):
-    return datetime(2026, 11, 19, hour, minute, tzinfo=UTC)
+    return datetime(2026, 8, 6, hour, minute, tzinfo=UTC)
 
 
 def edgar_records(now):
@@ -56,7 +51,7 @@ def edgar_records(now):
     return [
         r
         for r in records
-        if venue.attribute_slug(r["caller"], declarations) == "edgar-greenfield"
+        if venue.attribute_slug(r["caller"], declarations) == "edgar-specimen"
     ]
 
 
@@ -70,11 +65,11 @@ def specimen_state(now, idle_minutes=52):
     facts = venue.families_at(edgar_records(now), now, 30)
     armed = [
         {
-            "project": "edgar-sec",
+            "project": "specimen-repo",
             "todo": todo,
             "row": {
-                "project": "edgar-sec",
-                "programme": "edgar-sec",
+                "project": "specimen-repo",
+                "programme": "specimen-repo",
                 "todo": todo,
                 "bundle": "2026-11-17-greenfield-continuous-improvement",
                 "status": "doing",
@@ -103,7 +98,7 @@ def specimen_state(now, idle_minutes=52):
             "specs": [],
         },
         "venue_snapshot": {
-            "edgar-greenfield": {"at": now, "jobs": len(edgar_records(now)), **facts}
+            "edgar-specimen": {"at": now, "jobs": len(edgar_records(now)), **facts}
         },
     }
 
@@ -157,7 +152,7 @@ class SpecimenWindows(unittest.TestCase):
             self.assertEqual(len(rows), 1, f"at {now}")
             row = rows[0]
             self.assertEqual(
-                [f["name"] for f in row["families"]], ["cocisep"], f"at {now}"
+                [f["name"] for f in row["families"]], ["cobalt"], f"at {now}"
             )
             self.assertEqual(row["sessions_used"], 1, f"at {now}")
             self.assertEqual(row["sessions_live"], 2, f"at {now}")
@@ -183,11 +178,11 @@ class SpecimenWindows(unittest.TestCase):
         # toward family concurrency, and the delegate
         # fires no venue runs — the defect stands on
         # the one measured family.
-        contract = registry.staffing_contract_for("edgar-greenfield")
+        contract = registry.staffing_contract_for("edgar-specimen")
         self.assertFalse(contract["delegate_counts_toward_concurrency"])
         now = at(15, 22)
         facts = venue.families_at(edgar_records(now), now, 30)
-        self.assertEqual(list(facts["families"]), ["cocisep"])
+        self.assertEqual(list(facts["families"]), ["cobalt"])
         view = staffing.build_staffing(specimen_state(now), settings(), now)
         self.assertEqual(len(serial_rows(view)), 1)
 
@@ -197,14 +192,14 @@ class FamilyDerivation(unittest.TestCase):
         prefix = venue.job_prefix(
             ["specimen-ci-fable-gate", "specimen-ci-cobalt-price"]
         )
-        self.assertEqual(prefix, "greenfield-ci-")
+        self.assertEqual(prefix, "specimen-ci-")
         cases = {
-            "specimen-ci-cobalt-gate": "cocisep",
-            "specimen-ci-cobalt-price": "cocisep",
-            "specimen-ci-ledger-cobalt-extract-b": "corefin-coci",
-            "specimen-ci-ledger-cobalt-price": "corefin-coci",
-            "specimen-ci-formtest-build-gateC": "testform",
-            "specimen-ci-tier-level-price": "is-setlevel",
+            "specimen-ci-cobalt-gate": "cobalt",
+            "specimen-ci-cobalt-price": "cobalt",
+            "specimen-ci-ledger-cobalt-extract-b": "ledger-cobalt",
+            "specimen-ci-ledger-cobalt-price": "ledger-cobalt",
+            "specimen-ci-formtest-build-gateC": "formtest",
+            "specimen-ci-tier-level-price": "tier-level",
         }
         for job, family in cases.items():
             self.assertEqual(venue.family_of(job, prefix), family, job)
@@ -215,26 +210,26 @@ class FamilyDerivation(unittest.TestCase):
             venue.attribute_slug(
                 "edgar-specimen:specimen-lane", declarations
             ),
-            "edgar-greenfield",
+            "edgar-specimen",
         )
         self.assertEqual(
             venue.attribute_slug("edgar-specimen", declarations),
-            "edgar-greenfield",
+            "edgar-specimen",
         )
         # Declared caller stems: a programme whose
         # runs ride a caller that is not its slug stem
         # attributes by its registry declaration.
         self.assertEqual(
-            venue.attribute_slug("workhorse", declarations),
-            "supreme-octo-robot",
+            venue.attribute_slug("specimenwork", declarations),
+            "specimen-platform",
         )
         self.assertEqual(
-            venue.attribute_slug("steampower-cust", declarations),
-            "steampowernj",
+            venue.attribute_slug("speciment-cust", declarations),
+            "specimen-tenant",
         )
         self.assertEqual(
-            venue.attribute_slug("steampower-cust:emp", declarations),
-            "steampowernj",
+            venue.attribute_slug("speciment-cust:emp", declarations),
+            "specimen-tenant",
         )
         self.assertIsNone(venue.attribute_slug("panel", declarations))
 
@@ -248,13 +243,13 @@ def queue_state(families):
     state = {
         "armed_rows": [
             {
-                "project": "edgar-sec",
+                "project": "specimen-repo",
                 "todo": "ci-corefin-coci-build",
-                "row": {"project": "edgar-sec", "programme": "edgar-sec"},
+                "row": {"project": "specimen-repo", "programme": "specimen-repo"},
             }
         ],
         "venue_snapshot": {
-            "edgar-greenfield": {
+            "edgar-specimen": {
                 "at": now,
                 "jobs": 4,
                 "families": {
@@ -274,26 +269,30 @@ def queue_state(families):
 _REAL_CONTRACT_FOR = registry.staffing_contract_for
 
 
-# The recorded specimen queue entry: the Round 4 instrument build
-# as it stood before its discharge pruned it from the live contract
-# (deliverable: register-fresh-verdict-4.md). The packet fixtures
-# rebuild the specimen contract from it, so the queue pins exercise
-# the gated-item form without the live queue carrying it.
-_SPECIMEN_WORK_ITEM = {
-    "key": "round4-instrument-build",
-    "label": "Round 4 instrument build",
-    "family": "round4",
-    "staffable_when": "segment-packet-landing",
-}
-
-
+# The specimen contract is the configured one: its
+# queue carries the gated instrument build, so the
+# queue pins exercise the gated-item form by flipping
+# the packet marker's landed flag alone.
 def _specimen_contract(slug, landed):
     contract = _REAL_CONTRACT_FOR(slug)
     if contract:
-        contract["staffable_queue"].append(dict(_SPECIMEN_WORK_ITEM))
         for entry in contract["staffable_queue"]:
-            if entry["key"] == "segment-packet-landing":
+            if entry["key"] == "specimen-packet-landing":
                 entry["landed"] = landed
+    return contract
+
+
+def _discharged_contract(slug):
+    """The configured contract with its work item
+    discharged — the queue form after the build stands
+    delivered and pruned: markers only, nothing due."""
+    contract = _REAL_CONTRACT_FOR(slug)
+    if contract:
+        contract["staffable_queue"] = [
+            entry
+            for entry in contract["staffable_queue"]
+            if entry.get("marker")
+        ]
     return contract
 
 
@@ -316,22 +315,23 @@ class QueueMeasure(unittest.TestCase):
     def test_due_item_named_gated_items_not_due(self):
         from unittest import mock
 
-        now, state, live, idle = queue_state({"cocisep": [CALM]})
+        now, state, live, idle = queue_state({"cobalt": [CALM]})
         # Under the specimen contract with the marker
         # unlanded, the queue's only work item (the
-        # Round 4 build) is gated: nothing reads due.
+        # instrument build) is gated: nothing reads due.
         with mock.patch.object(registry, "staffing_contract_for", packet_unlanded):
             rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
         self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
         self.assertEqual(row["queue_unstaffed"], [])
-        # The live contract carries the discharge: the Round 4
-        # build stands pruned, so nothing reads due on it.
-        live = registry.staffing_contract_for("edgar-greenfield")
-        live_keys = [e["key"] for e in live["staffable_queue"]]
-        self.assertNotIn("round4-instrument-build", live_keys)
-        rows = staffing_rows._family_rows(state, now, live, idle)
+        # The discharged contract form carries the same
+        # discharge: the build stands pruned from the
+        # queue, so nothing reads due on it either.
+        with mock.patch.object(
+            registry, "staffing_contract_for", _discharged_contract
+        ):
+            rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
         row = rows[0]
         self.assertNotIn("prerequisite_due_family_unstaffed", row["conditions"])
@@ -347,7 +347,7 @@ class QueueMeasure(unittest.TestCase):
         fillers = {f"fam-{c}": [CALM] if i < 3 else [SCARLET]
                    for i, c in enumerate("abcdef")}
         now, state, live, idle = queue_state(
-            {"cocisep": [CALM], "corefin-coci": [SCARLET], **fillers}
+            {"cobalt": [CALM], "ledger-cobalt": [SCARLET], **fillers}
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_rows._family_rows(state, now, live, idle)
@@ -361,13 +361,13 @@ class QueueMeasure(unittest.TestCase):
                    for i, c in enumerate("abcde")}
         now, state, live, idle = queue_state(
             {
-                "cocisep": [CALM],
-                "corefin-coci": [SCARLET],
-                "round4": [CALM],
+                "cobalt": [CALM],
+                "ledger-cobalt": [SCARLET],
+                "specimenbuild": [CALM],
                 **fillers,
             }
         )
-        # The specimen's Round 4 build is due-eligible
+        # The specimen's instrument build is due-eligible
         # under the landed marker; its family in flight
         # still keeps it from reading due.
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
@@ -378,19 +378,19 @@ class QueueMeasure(unittest.TestCase):
 
         now, state, live, idle = queue_state(
             {
-                "cocisep": [CALM],
-                "corefin-coci": [SCARLET],
+                "cobalt": [CALM],
+                "ledger-cobalt": [SCARLET],
                 "otherfam": [CALM],
             }
         )
         with mock.patch.object(registry, "staffing_contract_for", packet_landed):
             rows = staffing_rows._family_rows(state, now, live, idle)
         self.assertEqual(len(rows), 1)
-        # The specimen's Round 4 item reads due once
+        # The specimen's instrument item reads due once
         # its gate resolves — the queue's only work item.
         self.assertEqual(
             [e["key"] for e in rows[0]["queue_unstaffed"]],
-            ["round4-instrument-build"],
+            ["specimen-instrument-build"],
         )
 
     def test_queue_due_gate_semantics(self):
@@ -510,8 +510,8 @@ class FrontierComparison(unittest.TestCase):
         state["frontier_snapshot"] = {
             "fixture-bundle": {
                 "bundle": "fixture-bundle",
-                "project": "edgar-sec",
-                "slug": "edgar-greenfield",
+                "project": "specimen-repo",
+                "slug": "edgar-specimen",
                 "at": now,
                 "expected": ["lane-a", "lane-b"],
                 "actual": ["lane-a"],
@@ -524,7 +524,7 @@ class FrontierComparison(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["bundle"], "fixture-bundle")
         self.assertEqual(rows[0]["missing"], ["lane-b"])
-        self.assertEqual(rows[0]["handle"], "@xbrl")
+        self.assertEqual(rows[0]["handle"], "@specimen-field")
 
     def test_collect_frontier_from_surface_and_plan(self):
         import tempfile
@@ -551,7 +551,7 @@ class FrontierComparison(unittest.TestCase):
                 )
             ]
             real_projects, real_todos = wb_client.fetch_projects, wb_client.fetch_todos
-            wb_client.fetch_projects = lambda url, timeout: ["edgar-sec"]
+            wb_client.fetch_projects = lambda url, timeout: ["specimen-repo"]
             wb_client.fetch_todos = lambda url, project, timeout: {
                 "available": True,
                 "todos": todos,
@@ -559,11 +559,11 @@ class FrontierComparison(unittest.TestCase):
             try:
                 state = {
                     "programmes": [
-                        {"slug": "edgar-greenfield", "worktree_roots": [tmp]}
+                        {"slug": "edgar-specimen", "worktree_roots": [tmp]}
                     ],
                     "armed_rows": [
                         {
-                            "project": "edgar-sec",
+                            "project": "specimen-repo",
                             "todo": "lane-a",
                             "row": {"bundle": "fixture-bundle"},
                         }
@@ -577,17 +577,17 @@ class FrontierComparison(unittest.TestCase):
                 )
             self.assertTrue(changed)
             entry = state["frontier_snapshot"]["fixture-bundle"]
-            self.assertEqual(entry["slug"], "edgar-greenfield")
+            self.assertEqual(entry["slug"], "edgar-specimen")
             self.assertEqual(entry["missing"], ["lane-b"])
             self.assertEqual(entry["serial_excluded"], ["shared-step"])
 
     def test_collect_frontier_attributes_the_supervision_bundle(self):
         # The wb naming seam, reconciled in the registry
         # seed: the supervision bundle is served under
-        # "workbench-viewer" while its armed rows key
-        # "workrecord" — both names declared for the
+        # "specimen-viewer" while its armed rows key
+        # "specimen-record" — both names declared for the
         # programme, so the collector attributes the
-        # bundle to supreme-octo-robot instead of
+        # bundle to specimen-platform instead of
         # leaving the row slug-null.
         import tempfile
 
@@ -613,7 +613,7 @@ class FrontierComparison(unittest.TestCase):
                 )
             ]
             real_projects, real_todos = wb_client.fetch_projects, wb_client.fetch_todos
-            wb_client.fetch_projects = lambda url, timeout: ["workbench-viewer"]
+            wb_client.fetch_projects = lambda url, timeout: ["specimen-viewer"]
             wb_client.fetch_todos = lambda url, project, timeout: {
                 "available": True,
                 "todos": todos,
@@ -621,11 +621,11 @@ class FrontierComparison(unittest.TestCase):
             try:
                 state = {
                     "programmes": [
-                        {"slug": "supreme-octo-robot", "worktree_roots": [tmp]}
+                        {"slug": "specimen-platform", "worktree_roots": [tmp]}
                     ],
                     "armed_rows": [
                         {
-                            "project": "workrecord",
+                            "project": "specimen-record",
                             "todo": "lane-a",
                             "row": {
                                 "bundle": "2026-11-19-superapp-supervision-reminders"
@@ -643,14 +643,14 @@ class FrontierComparison(unittest.TestCase):
             entry = state["frontier_snapshot"][
                 "2026-11-19-superapp-supervision-reminders"
             ]
-            self.assertEqual(entry["slug"], "supreme-octo-robot")
+            self.assertEqual(entry["slug"], "specimen-platform")
             self.assertEqual(entry["missing"], ["lane-b"])
 
 
-def _record(run_id, state, started, finished, caller="steampower-cust"):
+def _record(run_id, state, started, finished, caller="speciment-cust"):
     return {
         "id": run_id,
-        "job": "steampower-reformed-gate",
+        "job": "specimen-reformed-gate",
         "caller": caller,
         "session": "storm-mosaic-17",
         "state": state,
@@ -722,7 +722,7 @@ class TerminalUnconsumed(unittest.TestCase):
         )
 
     def test_consumption_citation_needs_a_terminal_token(self):
-        run = "steampower-reformed-gate-20261121T005537Z"
+        run = "specimen-reformed-gate-20261121T005537Z"
         self.assertEqual(
             records.cited_terminal_runs(f"gate {run} FAILED at 01:09Z; re-forming"),
             {run},
@@ -740,14 +740,14 @@ class TerminalUnconsumed(unittest.TestCase):
     def _state(self, now, finished, consumed=()):
         return {
             "venue_snapshot": {
-                "steampowernj": {
+                "specimen-tenant": {
                     "at": now,
                     "jobs": 1,
                     "terminal_unconsumed": [
                         {
-                            "id": "steampower-reformed-gate-20261121T005537Z",
-                            "job": "steampower-reformed-gate",
-                            "caller": "steampower-cust",
+                            "id": "specimen-reformed-gate-20261121T005537Z",
+                            "job": "specimen-reformed-gate",
+                            "caller": "speciment-cust",
                             "session": "storm-mosaic-17",
                             "state": "failed",
                             "shape": "failed",
@@ -759,7 +759,7 @@ class TerminalUnconsumed(unittest.TestCase):
                 }
             },
             "consumption_snapshot": {
-                "steampowernj": {"at": now, "consumed": sorted(consumed)}
+                "specimen-tenant": {"at": now, "consumed": sorted(consumed)}
             },
         }
 
@@ -771,10 +771,10 @@ class TerminalUnconsumed(unittest.TestCase):
         self.assertEqual(rows[0]["kind"], "terminal_unconsumed")
         self.assertEqual(rows[0]["idle_minutes"], 90)
         self.assertEqual(
-            rows[0]["run_id"], "steampower-reformed-gate-20261121T005537Z"
+            rows[0]["run_id"], "specimen-reformed-gate-20261121T005537Z"
         )
         consumed = self._state(
-            now, finished, consumed=["steampower-reformed-gate-20261121T005537Z"]
+            now, finished, consumed=["specimen-reformed-gate-20261121T005537Z"]
         )
         self.assertEqual(staffing_rows._terminal_rows(consumed, now), [])
 

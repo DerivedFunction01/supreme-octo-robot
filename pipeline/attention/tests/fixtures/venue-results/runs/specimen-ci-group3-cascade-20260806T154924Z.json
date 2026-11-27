@@ -1,0 +1,84 @@
+{
+  "run_id": "specimen-ci-group3-cascade-20260806T154924Z",
+  "job": "specimen-ci-group3-cascade",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T15:49:24.936609+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T15:53:06.419696+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-group3-cascade-out-specimen-ci-group3-cascade-20260806T154924Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T15:51:14.279338+00:00",
+  "launch_confirmed_at": "2026-08-06T15:51:33.480022+00:00",
+  "collector_at": "2026-08-06T15:53:36.577049+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T15:51:33.480022+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 400.48 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "group3-cascade.json",
+      "bytes": 46906,
+      "sha256": "569cf6c89778368984e3c653e2dcda7204cc0466f806f37049100e68ef9241fd",
+      "route": "misplaced"
+    },
+    {
+      "path": "group3-cascade-log.txt",
+      "bytes": 37366,
+      "sha256": "fc6aa43c6251d3523a365b4c83c9618d47568935d7d04ccb0baea5131ff2f29a",
+      "route": "misplaced"
+    },
+    {
+      "path": "group3-cascade-result.json",
+      "bytes": 62,
+      "sha256": "fa78cb7d9d44bee09f6f7ced9fd8d552c0a2454f6815574ab0cd86b3e2284ae1",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "group3-cascade.json",
+      "path": "/content/group3-cascade.json",
+      "bytes": 46906,
+      "mtime": 1786031484.9679177,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "group3-cascade-log.txt",
+      "path": "/content/group3-cascade-log.txt",
+      "bytes": 37366,
+      "mtime": 1786031484.9679177,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "group3-cascade-result.json",
+      "path": "/content/group3-cascade-result.json",
+      "bytes": 62,
+      "mtime": 1786031484.9679177,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "finished_at": "2026-08-06T15:54:47.480890+00:00",
+  "usage_after": "Current balance: 400.41 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T15:54:47.781972+00:00"
+}

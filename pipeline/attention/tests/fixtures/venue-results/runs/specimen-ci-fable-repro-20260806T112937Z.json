@@ -1,0 +1,19 @@
+{
+  "run_id": "specimen-ci-fable-repro-20260806T112937Z",
+  "job": "specimen-ci-fable-repro",
+  "shape": "cpu-highram",
+  "state": "failed",
+  "started_at": "2026-08-06T11:29:37.695893+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T11:29:37.695893+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "uploading",
+  "launch_lost": true,
+  "error": "record still 'starting' 129 min after its freshest stamp: the launcher died before the launch landed; relaunch with --resume specimen-ci-fable-repro-20260806T112937Z to retry",
+  "terminal_event_state": "failed",
+  "terminal_event_at": "2026-08-06T13:38:58.262556+00:00"
+}

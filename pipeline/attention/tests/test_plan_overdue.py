@@ -29,13 +29,13 @@ from attention.services.measure import (  # noqa: E402
 )
 from attention.settings import Settings  # noqa: E402
 
-SLUG = "supreme-octo-robot"
+SLUG = "specimen-platform"
 ADOPTED = datetime(2026, 11, 24, tzinfo=UTC)
 
 BRACKET_PLAN = """# Estimate rule — system enforcement build
 
 Status: adopted (owner enforcement ruling, 2026-11-24)
-Executor: workhorse superapp seat (successor IV)
+Executor: specimen platform seat
 
 ## Steps
 
@@ -53,7 +53,7 @@ Executor: workhorse superapp seat (successor IV)
 SECTIONS_PLAN = """# Multi-venue, multi-account venue support
 
 Status: built — gate-green in the working tree, unlanded
-Executor: workhorse superapp seat
+Executor: specimen platform seat
 
 ## Estimates (per step, recorded at the plan's next touch)
 
@@ -80,7 +80,7 @@ The runner dispatches to the local venue.
 PROPOSED_PLAN = """# A plan awaiting its ruling
 
 Status: proposed — awaiting the owner's ruling
-Executor: workhorse superapp seat
+Executor: specimen platform seat
 
 ## Steps
 
@@ -206,7 +206,7 @@ class Actuation(unittest.TestCase):
         sends = sweep_sends(state)
         self.assertEqual(len(sends), 1)
         send = sends[0]
-        self.assertEqual(send["handle"], "@workhorse")
+        self.assertEqual(send["handle"], "@specimen-platform")
         self.assertIn(
             "Staffing commission — staff: step 1 (Spec text)", send["text"]
         )

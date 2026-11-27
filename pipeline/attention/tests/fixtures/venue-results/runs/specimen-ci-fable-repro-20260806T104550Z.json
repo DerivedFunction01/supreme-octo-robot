@@ -1,0 +1,81 @@
+{
+  "run_id": "specimen-ci-fable-repro-20260806T104550Z",
+  "job": "specimen-ci-fable-repro",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T10:45:50.788794+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T10:49:45.370686+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-fable-repro-out-specimen-ci-fable-repro-20260806T104550Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T10:49:16.157457+00:00",
+  "launch_confirmed_at": "2026-08-06T10:49:27.844215+00:00",
+  "collector_at": "2026-08-06T10:50:21.244192+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T10:49:27.844215+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 404.38 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "pulled": [
+    {
+      "path": "fable-repro-log.txt",
+      "bytes": 74805,
+      "sha256": "3cc539cc7a6f4cb2128d325636df027097dc69c29ebeca81b409cec5a67611d8",
+      "route": "misplaced"
+    },
+    {
+      "path": "fable-repro-result.json",
+      "bytes": 80,
+      "sha256": "b2f7c5358aec8351a43e4f617be47dae1b86ac9e9bb0875a42ea9237d8f20c68",
+      "route": "misplaced"
+    }
+  ],
+  "misplaced_outputs": [
+    {
+      "name": "fable-repro.json",
+      "path": "/content/fable-repro.json",
+      "bytes": 11838,
+      "mtime": 1786013366.357237,
+      "fresh": true,
+      "collected": false
+    },
+    {
+      "name": "fable-repro-log.txt",
+      "path": "/content/fable-repro-log.txt",
+      "bytes": 74805,
+      "mtime": 1786013366.358237,
+      "fresh": true,
+      "collected": true
+    },
+    {
+      "name": "fable-repro-result.json",
+      "path": "/content/fable-repro-result.json",
+      "bytes": 80,
+      "mtime": 1786013366.358237,
+      "fresh": true,
+      "collected": true
+    }
+  ],
+  "missing_outputs": [
+    "fable-repro.json"
+  ],
+  "finished_at": "2026-08-06T10:50:50.276075+00:00",
+  "usage_after": "Current balance: 404.31 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T10:50:50.636131+00:00"
+}

@@ -1,0 +1,135 @@
+{
+  "run_id": "specimen-ci-cobalt-price-20260806T124815Z",
+  "job": "specimen-ci-cobalt-price",
+  "shape": "cpu-highram",
+  "state": "complete",
+  "started_at": "2026-08-06T12:48:15.938385+00:00",
+  "resumed": false,
+  "caller": "edgar-specimen:specimen-lane",
+  "last_evidence_at": "2026-08-06T13:08:56.937063+00:00",
+  "venue": "colab",
+  "session_pin": "quiet-ridge-11",
+  "lease_action": "adopted",
+  "session": "quiet-ridge-11",
+  "launch_phase": "launched",
+  "remote_out": "specimen-ci-cobalt-price-out-specimen-ci-cobalt-price-20260806T124815Z",
+  "extra_args": [],
+  "launch_at": "2026-08-06T12:49:31.176313+00:00",
+  "launch_confirmed_at": "2026-08-06T12:49:41.074167+00:00",
+  "collector_at": "2026-08-06T13:09:49.851548+00:00",
+  "collector": "edgar-specimen:specimen-lane",
+  "measured_shape": {
+    "nproc": 8,
+    "mem_total_bytes": 54750392320,
+    "mem_limit_bytes": null,
+    "cpu_limit": null,
+    "at": "2026-08-06T12:49:41.074167+00:00"
+  },
+  "detached_launch": true,
+  "usage_before": "Current balance: 402.82 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "output_name_warnings": [
+    {
+      "name": "cobalt-parta.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price-log.txt",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price-result.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "cobalt-price.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "extract-b-cur.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    },
+    {
+      "name": "extract-d-cur.json",
+      "shared_with": "specimen-ci-cobalt-price-20260806T114515Z"
+    }
+  ],
+  "poll_failures": 0,
+  "last_checkpoint_units": 0,
+  "output_stats": {},
+  "pull_failures": {},
+  "misplaced_outputs": [
+    {
+      "name": "cobalt-price.json",
+      "path": "/content/cobalt-price.json",
+      "bytes": 53701,
+      "mtime": 1786021372.9110172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cobalt-parta.json",
+      "path": "/content/cobalt-parta.json",
+      "bytes": 15240,
+      "mtime": 1786021372.912017,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    },
+    {
+      "name": "extract-b-cur.json",
+      "path": "/content/extract-b-cur.json",
+      "bytes": 2688140,
+      "mtime": 1786021372.9140172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    },
+    {
+      "name": "extract-d-cur.json",
+      "path": "/content/extract-d-cur.json",
+      "bytes": 4687882,
+      "mtime": 1786021372.9180171,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cobalt-price-log.txt",
+      "path": "/content/cobalt-price-log.txt",
+      "bytes": 427,
+      "mtime": 1786021372.9200172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    },
+    {
+      "name": "cobalt-price-result.json",
+      "path": "/content/cobalt-price-result.json",
+      "bytes": 140,
+      "mtime": 1786021372.9200172,
+      "fresh": true,
+      "contended": true,
+      "contended_with": "specimen-ci-cobalt-price-20260806T114515Z",
+      "collected": false
+    }
+  ],
+  "missing_outputs": [
+    "cobalt-price.json",
+    "cobalt-parta.json",
+    "extract-b-cur.json",
+    "extract-d-cur.json",
+    "cobalt-price-log.txt",
+    "cobalt-price-result.json"
+  ],
+  "finished_at": "2026-08-06T13:10:44.631061+00:00",
+  "pulled": [],
+  "usage_after": "Current balance: 402.56 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
+  "terminal_event_state": "complete",
+  "terminal_event_at": "2026-08-06T13:10:44.964414+00:00"
+}
