@@ -208,12 +208,12 @@ class FamilyDerivation(unittest.TestCase):
         declarations = registry.active_declarations()
         self.assertEqual(
             venue.attribute_slug(
-                "edgar-specimen:specimen-lane", declarations
+                "edgar-lane:specimen-lane", declarations
             ),
             "edgar-specimen",
         )
         self.assertEqual(
-            venue.attribute_slug("edgar-specimen", declarations),
+            venue.attribute_slug("edgar-lane", declarations),
             "edgar-specimen",
         )
         # Declared caller stems: a programme whose

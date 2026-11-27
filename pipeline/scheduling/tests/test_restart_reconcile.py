@@ -168,7 +168,7 @@ class OwnerResolutionTests(unittest.TestCase):
 
     def test_bare_caller_resolves_by_its_namespace_name(self):
         # A colon-less caller named for its namespace (the
-        # edgar-specimen shape: orphan records carry the bare
+        # specimen-caller shape: orphan records carry the bare
         # caller, the owners file keys it under namespaces)
         # resolves by its full name, not UNRESOLVED.
         env = Env(self)

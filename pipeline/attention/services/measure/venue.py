@@ -15,7 +15,7 @@ and the bands; nothing here hardcodes a programme.
 Runs attribute to a programme by caller: a caller
 base (the part before an optional :lane suffix)
 belongs to the active programme whose slug it names
-or whose slug stem it carries — edgar-specimen and
+or whose slug stem it carries — edgar-lane and
 its lanes belong to the edgar programme. A todo
 staffed only by a research delegate fires no venue
 runs, so it never enters the family count — the
@@ -136,8 +136,8 @@ def _is_run_kind(segment: str) -> bool:
 
 def job_prefix(jobs: list) -> str:
     """The shared job prefix of a programme's jobs,
-    cut at a hyphen boundary (greenfield-ci- for the
-    edgar fleet's jobs)."""
+    cut at a hyphen boundary (specimen-ci- for the
+    specimen fleet's jobs)."""
     names = sorted({j for j in jobs if j})
     if not names:
         return ""
