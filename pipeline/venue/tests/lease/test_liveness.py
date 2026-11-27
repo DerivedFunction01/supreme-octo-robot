@@ -171,6 +171,68 @@ def test_local_record_without_a_target_is_binding_missing(tmp_path):
     assert "no local target" in fx.state()["open"]["binding-missing"]["detail"]
 
 
+def _venue_state(fx, key, **over):
+    """A venue-state file in the mechanism's shape, fresh at
+    write time unless the caller backdates sampled_at."""
+    state = {
+        "venue": key,
+        "state": "saturated",
+        "sampled_at": iso(now()),
+        "pids_current": 1000,
+        "pids_capacity": 1024,
+        "jobs": [],
+    }
+    state.update(over)
+    (fx.root / "var" / f"venue-state-{key}.json").write_text(json.dumps(state))
+    return state
+
+
+def test_venue_saturated_speaks_once(tmp_path):
+    fx = healthy(tmp_path)
+    _venue_state(fx, "colab")
+    r1 = fx.run(SESSION)
+    assert r1.returncode == 3 and "saturated-standing" in r1.stdout
+    r2 = fx.run(SESSION)
+    assert r2.returncode == 0 and r2.stdout == "", "a persisting finding must not re-speak"
+
+
+def test_venue_idle_speaks_idle_capacity(tmp_path):
+    fx = healthy(tmp_path)
+    _venue_state(fx, "colab", state="idle", pids_current=3)
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "idle-capacity" in r.stdout
+
+
+def test_venue_stale_state_is_no_finding(tmp_path):
+    fx = healthy(tmp_path)
+    _venue_state(fx, "colab", sampled_at=iso(now() - timedelta(hours=2)))
+    r = fx.run(SESSION)
+    assert r.returncode == 0, r.stdout
+    assert fx.state()["open"] == {}
+
+
+def test_venue_wedged_killed_speaks_for_the_reaped_run(tmp_path):
+    fx = healthy(tmp_path)
+    run_id = "gatejob-20261126T190000Z"
+    (fx.root / "results" / "runs" / f"{run_id}.json").write_text(json.dumps({
+        "run_id": run_id, "job": "gatejob", "caller": "lane-a", "state": "failed",
+        "reaped": {"reason": "wedged", "exit_code": 143},
+    }))
+    _venue_state(fx, "colab", state="wedged", pids_current=40, jobs=[{
+        "run_id": run_id, "caller": "lane-a", "root_pid": 4242,
+        "tree_alive": False, "cpu_s": 120.0, "cpu_delta_s": 0.0, "verdict": "gone",
+    }])
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and f"wedged-killed:{run_id}" in r.stdout
+
+
+def test_local_venue_state_reads_the_targets_file(tmp_path):
+    fx = _local_fx(tmp_path)
+    _venue_state(fx, "local")
+    r = fx.run(SESSION)
+    assert r.returncode == 3 and "saturated-standing" in r.stdout
+
+
 def _fwd_state(**over):
     """A forwarder state record in the shape
     local_compute_fwd.py writes: every credential source

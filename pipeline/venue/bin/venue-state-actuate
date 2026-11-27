@@ -1,0 +1,247 @@
+#!/usr/bin/env python3
+"""Venue-state actuator: the reap half of the venue-state
+mechanism.
+
+Usage: venue-state-actuate [--target TARGET ...] [--once] [--var-dir PATH]
+
+The argv is a declared surface on the unified argument
+contract (pipeline/platform/argv.py): an unknown flag, a
+missing value, or a surplus positional is a loud usage
+refusal (exit 2), never silently ignored.
+
+One pass per invocation — a cron in the sampler's family
+supplies the cadence. Each pass, per local target: read the
+venue's state file (var/venue-state-<target>.json, written
+by bin/venue-state-sample), take the reap decisions the
+actuator leaf licenses from it (sync/runner/venue_actuate.py
+— a wedged verdict, or a live tree past its record's
+timeout), and execute each reap as one SSH exec: the payload
+sweeps the run's whole match (the root's tree, its process
+group, and every process naming the run dir — a tree can
+outlive its root, reparented to init and invisible to a
+root-pid read), TERMs it, waits the grace, KILLs survivors,
+and writes the exit file (143) only after verifying no
+process still names the run dir. A verified reap settles
+the record through the runner's shared local finalize —
+the poll path's own seam — with the decision's evidence
+(the verdict and the two CPU samples) stamped on it as
+`reaped`; that stamp plus the liveness checker's escalation
+surface is the owning lane's notification. A reap that
+leaves a survivor settles nothing and is reported as held.
+
+A state file that is absent or stale licenses nothing: the
+sampler's freshness is the actuator's licence, and a dark
+surface reaps nothing. Exit 1 is reserved for this tool's
+own defects; one JSON line per target goes to stdout.
+"""
+
+import importlib
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _load  # noqa: E402
+
+_argv = _load.platform_argv()
+
+DECLARATION = {
+    "name": "venue-state-actuate",
+    "summary": "Reap wedged and timed-out job trees on each local venue from its state file, settling their records with the samples as evidence.",
+    "flags": {
+        "target": {
+            "takes_value": True,
+            "repeatable": True,
+            "help": "local target to act on (repeatable; default: every configured local target)",
+        },
+        "once": {
+            "help": "single pass (the only form; the calling cron supplies the cadence)"
+        },
+        "var-dir": {
+            "takes_value": True,
+            "help": "state directory (default: the runner var dir)",
+        },
+    },
+}
+
+# One reap exec's bound: the payload's TERM grace is ~8 s
+# with a KILL and two table reads behind it; a venue that
+# cannot answer inside this bound is unread for this pass,
+# and an unread reap is a hold, never a settle.
+REAP_TIMEOUT_S = 90
+
+# The state file's freshness licence for acting at all:
+# two sampler cycles plus slack. (The leaf's own freshness
+# bound governs the refusal/share legs; a reap acts on a
+# wedged verdict, which the sampler reached over two
+# samples already, so this entry's bound is the looser one
+# — and still minutes, never hours.)
+ACTUATE_FRESH_S = 600
+
+
+def _load_runner_modules():
+    """The runner package and the leaves this entry drives,
+    loaded through the one bin loader (the sampler entry's
+    form): a tree without a leaf fails as this tool's
+    defect with the module named."""
+    _load.sync("runner")
+    return {
+        "actuate": importlib.import_module("runner.venue_actuate"),
+        "records": importlib.import_module("runner.records"),
+        "sweep": importlib.import_module("runner.sweep"),
+        "foundation": importlib.import_module("runner.foundation"),
+    }
+
+
+def _execute_reap(mods, local_venue, repo, target, decision):
+    """Run one reap payload and return its parsed verdict,
+    or None when the exec never produced one (transport
+    down, timeout, unparseable output)."""
+    if not local_venue.ensure_transport(target):
+        return None
+    args = local_venue.ssh_args(repo, target)
+    args.append(
+        mods["actuate"].build_reap_command(decision["run_id"], decision["root_pid"])
+    )
+    try:
+        proc = subprocess.run(
+            args,
+            capture_output=True,
+            text=True,
+            timeout=REAP_TIMEOUT_S,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if proc.returncode != 0:
+        return None
+    return mods["actuate"].parse_reap_output(proc.stdout)
+
+
+def _settle(mods, decision, exit_code):
+    """Settle one reaped run's record through the shared
+    local finalize (the poll path's seam: terminal state
+    from the exit code, the one terminal event), then stamp
+    the reap evidence — the verdict, the two CPU samples,
+    the age and the timeout it was judged against — as the
+    record's `reaped` block, the owning lane's notification
+    on the record face. Returns the settled state, or None
+    when the record already stands terminal (settled
+    elsewhere between the state write and this pass)."""
+    rec = mods["records"].load_run_record(decision["run_id"])
+    if rec is None or rec.get("state") in mods["records"].TERMINAL_STATES:
+        return None
+    reading = {
+        "exit_code": exit_code,
+        "output_tail": "",
+        "finished_at": mods["foundation"].now(),
+    }
+    state = mods["sweep"].finalize_local_record(rec, reading)
+    rec = mods["records"].load_run_record(decision["run_id"]) or rec
+    rec["reaped"] = {
+        "reason": decision["reason"],
+        "at": mods["foundation"].now(),
+        "exit_code": exit_code,
+        **decision["evidence"],
+    }
+    mods["records"].save_record(rec)
+    return state
+
+
+def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> dict:
+    """Act on one target's state file. Returns the pass's
+    report line. Raises on this tool's own defects."""
+    actuate = mods["actuate"]
+    state = actuate.load_state(var_dir, target_id)
+    if state is None:
+        return {"target": target_id, "action": "no-state"}
+    sampled = actuate.epoch(state.get("sampled_at"))
+    if sampled is None or time.time() - sampled > ACTUATE_FRESH_S:
+        return {"target": target_id, "action": "stale-state"}
+    records_by_run_id = {}
+    for job in state.get("jobs", []):
+        run_id = job.get("run_id")
+        if run_id is not None:
+            records_by_run_id[run_id] = mods["records"].load_run_record(run_id) or {}
+    decisions = actuate.reap_decisions(state, records_by_run_id, now_epoch=time.time())
+    results = []
+    for decision in decisions:
+        parsed = _execute_reap(mods, local_venue, repo, target, decision)
+        action, detail = actuate.settle_action(parsed)
+        if action == "settle":
+            settled = _settle(mods, decision, detail)
+            results.append(
+                {
+                    "run_id": decision["run_id"],
+                    "action": "reaped" if settled else "already-terminal",
+                    "reason": decision["reason"],
+                    "exit_code": detail,
+                }
+            )
+        else:
+            results.append(
+                {
+                    "run_id": decision["run_id"],
+                    "action": "reap-held",
+                    "reason": decision["reason"],
+                    "survivors": detail,
+                }
+            )
+    return {"target": target_id, "state": state.get("state"), "reaps": results}
+
+
+def main(argv: list[str]) -> int:
+    try:
+        parsed = _argv.parse(DECLARATION, list(argv))
+    except _argv.UsageError as exc:
+        print(f"venue-state-actuate: {exc}", file=sys.stderr)
+        print(_argv.help_text(DECLARATION), file=sys.stderr, end="")
+        return _argv.USAGE_EXIT
+    if "help" in parsed:
+        print(parsed["help"], end="")
+        return 0
+    repo = _load.REPO
+    lease = _load.sync("lease")
+    local_venue = lease.local_venue
+    targets_by_id = local_venue.local_targets(repo)
+    known = sorted(targets_by_id)
+    targets = parsed["flags"].get("target") or known
+    unknown = [t for t in targets if t not in known]
+    if unknown:
+        print(
+            f"venue-state-actuate: unknown target(s) {unknown}; configured local targets: {known}",
+            file=sys.stderr,
+        )
+        return _argv.USAGE_EXIT
+    if parsed["flags"].get("var-dir"):
+        var_dir = Path(parsed["flags"]["var-dir"])
+    else:
+        var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", repo / "var"))
+    try:
+        mods = _load_runner_modules()
+    except Exception as exc:
+        print(
+            f"venue-state-actuate: cannot load the runner modules: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+    defect = False
+    for target_id in targets:
+        try:
+            report = _pass_target(
+                target_id, targets_by_id[target_id], repo, var_dir, mods, local_venue
+            )
+        except Exception as exc:
+            defect = True
+            print(
+                json.dumps({"target": target_id, "action": "error", "error": str(exc)})
+            )
+            continue
+        print(json.dumps(report))
+    return 1 if defect else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))

@@ -182,11 +182,18 @@ def install_bare_job(env, name, exit_code, uploads=None):
 
 
 def upload_sleep_wrapper(tmp_path):
-    """A COLAB_BIN wrapper that sleeps before delegating an
+    """A COLAB_BIN wrapper that holds before delegating an
     upload of one named file (ctl {"sleep_upload_named":
     "name", "sleep_seconds": N} in the fake state dir) — a
     dead channel's shape: the upload neither lands nor fails,
-    it simply never answers."""
+    it simply never answers. The hold is a barrier, not a
+    clock: entering it stamps `uploadsleep-entered` in the
+    state dir, and it ends when an `uploadsleep-release`
+    file appears there or the ctl's seconds elapse,
+    whichever comes first. A test that needs an exact
+    interleaving waits on the stamp and writes the release;
+    a test that only needs a dead channel never writes one
+    and the seconds govern, exactly as before."""
     wrapper = tmp_path / "uploadsleep_colab.py"
     wrapper.write_text(
         "#!/usr/bin/env python3\n"
@@ -197,7 +204,10 @@ def upload_sleep_wrapper(tmp_path):
         "ctl = json.loads(ctl_path.read_text()) if ctl_path.exists() else {}\n"
         "args = sys.argv[1:]\n"
         "if 'upload' in args and ctl.get('sleep_upload_named') and any(ctl['sleep_upload_named'] in a for a in args):\n"
-        "    time.sleep(float(ctl.get('sleep_seconds', 60)))\n"
+        "    (state / 'uploadsleep-entered').write_text(json.dumps(args))\n"
+        "    deadline = time.monotonic() + float(ctl.get('sleep_seconds', 60))\n"
+        "    while time.monotonic() < deadline and not (state / 'uploadsleep-release').exists():\n"
+        "        time.sleep(0.2)\n"
         "sys.exit(subprocess.run([sys.executable, os.environ['FAKE_COLAB_REAL'], *args]).returncode)\n"
     )
     wrapper.chmod(0o755)

@@ -33,6 +33,7 @@ REPO_RESOLVED = Path(os.path.realpath(PACKAGE_DIR))
 BIN_DIR = REPO / "bin"
 RUNS_DIR = REPO / "results" / "runs"
 ADAPTER_JOBS_DIR = REPO / "adapters" / "colab" / "jobs"
+RUNNER_DIR = REPO / "sync" / "runner"
 
 # Resolved forms: the transient registry the ops mirror
 # binds (the var/ and results/ data roots stay joins off

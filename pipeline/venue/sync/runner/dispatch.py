@@ -10,7 +10,9 @@ import json
 import os
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 from .claims import ManifestUnreadable, adopt, attach_verdict, load_manifest, option_like_refusal, spawn_daemon, stamp_takeover
 from .execute import execute
@@ -20,6 +22,9 @@ from .manifest_shape import parse_transport, pin_resolution_error, preflight_err
 from .pull import normalize_manifest_outputs
 from .records import claim_first_save, load_run_record, save_record
 from .replace import acquire_session, record_pin
+from .venue_actuate import load_state as _venue_load_state
+from .venue_actuate import saturation_refusal as _venue_saturation_refusal
+from .venue_actuate import share_for as _venue_share_for
 
 
 def launch(args: list[str]) -> int:
@@ -151,6 +156,23 @@ def launch(args: list[str]) -> int:
     # adopt (acquire refuses pin-unavailable rather than
     # substituting another session).
     pin_session = session_flag if session_flag is not None else os.environ.get("COLAB_RUN_SESSION")
+    # Venue-state saturation leg (venue-state mechanism,
+    # step 4): a fresh fire to a saturated venue refuses
+    # here, in the preflight pass's family — named, in
+    # seconds, with no run record written — reading the
+    # fleet's state file and the pinned session's when a
+    # pin names one. A resume attaches to a run that
+    # already holds the venue and is never refused; a stale
+    # or absent file refuses nothing.
+    _var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+    if not resume:
+        for _key in ["colab"] + ([pin_session] if pin_session else []):
+            _refusal = _venue_saturation_refusal(
+                _venue_load_state(_var_dir, _key), now_epoch=time.time()
+            )
+            if _refusal:
+                print(f"colab-run: job {job_name}: {_refusal}", file=sys.stderr)
+                return 2
     if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
         print("colab-run: STAGED — no colab login yet. Run ops/bootstrap_local.sh, then the one-time login (see README).", file=sys.stderr)
         return 2
@@ -250,6 +272,21 @@ def launch(args: list[str]) -> int:
         # and keeps the plain save — overwriting its own torn
         # prior is the resume contract.
         run_id = claim_first_save(rec)
+    # The share stamp (venue-state mechanism, step 4): the
+    # job's parallelism share, sized from the venue-state
+    # surface — the pinned session's state file when a pin
+    # names one, else the fleet's — against the shape's
+    # declared cores, recorded on the run record. The local
+    # entry also stamps the share into the run environment;
+    # the Colab launch form carries no env seam, so here the
+    # record is the stamp.
+    _share_key = pin_session or "colab"
+    rec["share"] = _venue_share_for(
+        _venue_load_state(_var_dir, _share_key),
+        shape.get("cores"),
+        now_epoch=time.time(),
+    )
+    save_record(rec)
     # Bundle seed (--seed — env-build's private-repo route): the
     # job's target repo reaches the VM as a snapshot bundle, never
     # as a VM-side clone — a private repo's plain HTTPS clone

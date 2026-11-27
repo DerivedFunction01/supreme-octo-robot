@@ -66,12 +66,15 @@ def _install_data_job(env, name):
     return job_dir
 
 
-def _fire(env, name):
-    r = run_verb(env, name)
+def _fire_result(r):
     assert r.returncode == 0, r.stdout + r.stderr
     out = json.loads(r.stdout)
     assert out["state"] == "complete", out
     return out
+
+
+def _fire(env, name):
+    return _fire_result(run_verb(env, name))
 
 
 def _install_named_data_job(env, name, basename):
@@ -193,15 +196,24 @@ def test_two_fires_overlap_on_one_session(tmp_path):
     no sync blocker on the venue job path): two
     fires at ONE session proceed concurrently — neither
     launch waits for the other's launch window. The slow
-    fire's manifest upload is held 30 s by the channel
-    wrapper (a dead-slow channel's shape); the fast fire,
-    started while the slow one is inside that upload, must
-    run to completion before the slow fire's upload even
-    returns. Under any per-session launch lock covering the
-    upload→launch window the fast fire could not launch
-    until the slow fire's window closed, and this leaf
-    would watch it wait. Both fires then complete on the
-    same session, each reading its own run's bytes."""
+    fire's manifest upload is held by the channel wrapper
+    (a dead-slow channel's shape) until this leaf releases
+    it; the fast fire, started while the slow one is inside
+    that upload, must run to completion before the slow
+    fire's upload even returns. Under any per-session
+    launch lock covering the upload→launch window the fast
+    fire could not launch until the slow fire's window
+    closed, and this leaf would watch it wait. Both fires
+    then complete on the same session, each reading its own
+    run's bytes. The interleaving is a barrier, never a
+    clock: the fast fire starts on the wrapper's
+    entered stamp (by which point the slow fire's acquire
+    has recorded the session, so the fast fire's acquire
+    adopts it) and the hold ends on the release the leaf
+    writes after the fast fire returns — a fixed sleep
+    guessed at both, and under load the guess was the
+    flake (the fast fire outlasting the slow one's window
+    read as a lock that was never there)."""
     env = runner_env(tmp_path)
     root = Path(env["TEST_REPO_ROOT"])
     (root / "var").mkdir(exist_ok=True)
@@ -211,7 +223,7 @@ def test_two_fires_overlap_on_one_session(tmp_path):
     (root / "var" / "fast-b.bin").write_bytes(b"fast-run-bytes" * 64)
     state = Path(env["FAKE_COLAB_STATE"])
     state.mkdir(parents=True, exist_ok=True)
-    (state / "uploadsleep.json").write_text(json.dumps({"sleep_upload_named": "slow-a.bin", "sleep_seconds": 30}))
+    (state / "uploadsleep.json").write_text(json.dumps({"sleep_upload_named": "slow-a.bin", "sleep_seconds": 100}))
     env.update(COLAB_BIN=str(upload_sleep_wrapper(tmp_path)), FAKE_COLAB_REAL=str(FAKE))
 
     slow_result = {}
@@ -221,13 +233,29 @@ def test_two_fires_overlap_on_one_session(tmp_path):
 
     slow_thread = threading.Thread(target=_slow, daemon=True)
     slow_thread.start()
-    # Let the slow fire reach its held upload before the
-    # fast fire starts; the overlap claim does not rest on
-    # this head start — the fast fire must still finish
-    # inside the slow upload's 30 s hold.
-    time.sleep(3)
-    fast = _fire(env, "perfast")
-    assert slow_thread.is_alive(), "the fast fire finished only after the slow fire's launch window closed"
+    entered = state / "uploadsleep-entered"
+    deadline = time.monotonic() + 120
+    while not entered.exists() and time.monotonic() < deadline:
+        time.sleep(0.25)
+    assert entered.exists(), "the slow fire never reached its held upload"
+
+    fast_result = {}
+
+    def _fast():
+        fast_result["r"] = run_verb(env, "perfast")
+
+    fast_thread = threading.Thread(target=_fast, daemon=True)
+    fast_thread.start()
+    fast_thread.join(timeout=90)
+    try:
+        assert not fast_thread.is_alive(), (
+            "the fast fire did not complete inside the slow fire's held upload window"
+            " — a per-session launch lock covering the window shows exactly this"
+        )
+        assert slow_thread.is_alive(), "the fast fire finished only after the slow fire's launch window closed"
+    finally:
+        (state / "uploadsleep-release").write_text("release\n")
+    fast = _fire_result(fast_result["r"])
     slow_thread.join(timeout=240)
     assert not slow_thread.is_alive()
     r = slow_result["r"]

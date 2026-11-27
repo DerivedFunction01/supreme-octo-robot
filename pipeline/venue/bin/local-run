@@ -156,6 +156,7 @@ lease = importlib.util.module_from_spec(_spec_l)
 sys.modules["lease"] = lease
 _spec_l.loader.exec_module(lease)
 local_venue = lease.local_venue
+venue_actuate = importlib.import_module("runner.venue_actuate")
 sealed = _load.sync("sealed")
 
 
@@ -168,8 +169,8 @@ def _load_runner_leaf(name):
 
 envelope = _load_runner_leaf("envelope")
 envelope_dispatch = _load_runner_leaf("envelope_dispatch")
+local_attach = _load_runner_leaf("local_attach")
 JOBS = REPO / "adapters" / "local" / "jobs"
-POLL_S = 5
 
 
 def _fail(msg: str, code: int = 2) -> int:
@@ -265,9 +266,16 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
         # "launched", so the record carries root_pid from
         # this same SSH call; a stamp that never lands is
         # not a launch failure — the record carries none.
+        # The share stamp's run environment: GATE_WORKERS
+        # from the record's share, when the venue-state
+        # surface sized it at dispatch.
+        share = rec.get("share") or {}
+        env_prefix = ""
+        if share.get("basis") == "state" and share.get("workers"):
+            env_prefix = f"GATE_WORKERS={share['workers']} "
         cmd = (
             f"cd ~/{base} && if [ ! -f .launched ]; then touch .launched; "
-            f"nohup bash -c 'bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
+            f"nohup bash -c '{env_prefix}bash run.sh > output.log 2>&1 & pid=$!; echo $pid > root.pid; wait $pid; echo $? > exit' "
             ">/dev/null 2>&1 & fi; "
             "for i in 1 2 3 4 5 6 7 8 9 10; do [ -s root.pid ] && break; sleep 1; done; "
             "echo launched; cat root.pid 2>/dev/null || true")
@@ -298,144 +306,52 @@ def _launch(rec: dict, script: bytes, target: dict, uploads=()) -> str | None:
     return None
 
 
-# Control-read warmup discipline (the read-side sibling of
-# the launch discipline above): a --poll fires right after
-# ensure_transport, whose success is the transport's port
-# answering — not SSH carrying over the tunnel, which can
-# lag the port by longer than one read (Step 3's recorded
-# warmup, on the launch steps). A single read in that
-# window comes back "unknown" and the call would serve
-# venue_unreachable over a healthy venue — the specimen
-# was a hand-diagnosed kex-reset window during the strip
-# staging, read as a venue failure. The poll therefore
-# retries an "unknown" reading inside the call, on a
-# bounded backoff; a resolved reading (exit / running /
-# absent) is served at once and never re-read, and an
-# "unknown" that survives every attempt is served as
-# before — a lost read is still never a verdict.
-READ_BACKOFF_S = (5, 15)
+# The attach path — the container-state readers, the
+# attach resolution, and the --poll/--wait route — lives in
+# the runner leaf sync/runner/local_attach.py, loaded above.
+# The bindings below keep this entry's own names for it
+# (the dispatch tail's wait, the envelope seams' wait and
+# record_target, and the attach route), each resolving the
+# leaf's seams from this module's globals at call time, so
+# a monkeypatched global is the binding the leaf calls.
+READ_BACKOFF_S = local_attach.READ_BACKOFF_S
 
 
-def _read_state(rec: dict, target: dict) -> dict:
-    """The poll's container reading, through the warmup
-    retry: the first non-"unknown" reading, or the last
-    "unknown" when every attempt reads lost."""
-    reading = local_venue.read_run_state(REPO, rec, target=target)
-    for backoff in READ_BACKOFF_S:
-        if reading["reading"] != "unknown":
-            break
-        time.sleep(backoff)
-        reading = local_venue.read_run_state(REPO, rec, target=target)
-    return reading
-
-
-def _confirmed_exit(rec: dict, target: dict, reading: dict) -> dict | None:
-    """The confirmation read behind every terminal verdict
-    this module serves: an "exit" reading is believed only
-    when a second, independent read of the run's own exit
-    file agrees on the code. A single anomalous read —
-    whatever its source — cannot carry a verdict alone;
-    a contested read is served as no verdict (the poll
-    reports running, the reader pass leaves the face), and
-    the next poll cycle reads the file again. Returns the
-    reading when confirmed, else None."""
-    confirm = local_venue.read_run_state(REPO, rec, target=target)
-    if confirm.get("reading") == "exit" and confirm.get("exit_code") == reading["exit_code"]:
-        return reading
-    return None
-
-
-def _poll(rec: dict, target: dict) -> dict:
-    """One poll of the run's container state, through the
-    lease core's tri-state reader (local_venue.read_run_state):
-    a confirmed exit file finalizes the record through the
-    runner's shared local finalize — terminal state from
-    the code, completion time from the exit file's own
-    mtime; no exit file yet is "running"; an unreadable
-    container is "running" with the unreachable flag — a
-    lost read is never a verdict, and neither is a single
-    unconfirmed one."""
-    reading = _read_state(rec, target)
-    if reading["reading"] == "exit":
-        if _confirmed_exit(rec, target, reading) is None:
-            return {"state": "running", "exit_unconfirmed": True}
-        state = finalize_local_record(rec, reading)
-        return {"state": state, "exit_code": reading["exit_code"]}
-    if reading["reading"] == "unknown":
-        return {"state": "running", "venue_unreachable": True}
-    return {"state": "running"}
-
-
-def _rederive(rec: dict, target: dict) -> dict | None:
-    """The reader pass over a terminal record face: the
-    container's exit file outranks the record, so a face it
-    contradicts — an orphan flip over a finished run (the
-    decxc shape: face "orphaned", run dir holding exit 0),
-    a launch-time failure the detached run outlived — is
-    re-derived from the container through the shared
-    finalize. A face the exit file confirms, and any
-    non-exit reading, stands as written. Returns the
-    derived outcome, or None when the face stands."""
-    reading = local_venue.read_run_state(REPO, rec, target=target)
-    if reading["reading"] != "exit":
-        return None
-    if _confirmed_exit(rec, target, reading) is None:
-        return None
-    code = reading["exit_code"]
-    state = "complete" if code == 0 else "failed"
-    if rec.get("state") == state and rec.get("exit_code") == code:
-        return None
-    finalize_local_record(rec, reading)
-    return {"state": state, "exit_code": code, "rederived": True}
-
-
-def _wait(rec: dict, target: dict, max_s: int, timeout_s: int) -> int:
-    deadline = time.monotonic() + min(max_s, timeout_s)
-    while True:
-        out = _poll(rec, target)
-        if out["state"] != "running":
-            print(json.dumps({"run_id": rec["run_id"], **out}, indent=2))
-            return 0 if out["state"] == "complete" else 1
-        if time.monotonic() > deadline:
-            print(json.dumps({"run_id": rec["run_id"], "state": "running", "note": "wait bound reached; the run continues detached"}, indent=2))
-            return 3
-        time.sleep(POLL_S)
+def _attach_seams() -> dict:
+    return {
+        "fail": _fail,
+        "repo": REPO,
+        "venue": local_venue,
+        "runs": RUNS,
+        "terminal_states": TERMINAL_STATES,
+        "load_run_record": load_run_record,
+        "finalize_local_record": finalize_local_record,
+        "newest_record_for_job": _newest_record_for_job,
+        "record_target": _record_target,
+        "rederive": _rederive,
+        "poll": _poll,
+        "wait": _wait,
+    }
 
 
 def _record_target(rec):
-    """The SSH target a run record belongs to: the target the
-    record itself carries, else its shape's binding, else the
-    venue's only target. A carried id that no longer resolves
-    — a record written before its target was renamed — falls
-    through to the same legs rather than ending the chain:
-    the record's shape binding names the machine it ran on."""
-    tid = rec.get("target")
-    if isinstance(tid, str) and tid:
-        target = local_venue.venue_target(REPO, tid)
-        if target is not None:
-            return target
-    _shape, _tid, target = local_venue.shape_target(REPO, rec.get("shape") or "")
-    return target or local_venue.venue_target(REPO)
+    return local_attach.record_target(rec, _attach_seams())
 
 
 def _newest_record_for_job(job_name: str) -> dict | None:
-    """The newest local run record for a job name — the
-    attach target when a --poll/--wait names the job rather
-    than a run id. Run ids are <job>-<UTC timestamp>, so
-    the job's records are the <job>-*.json files; the
-    newest is the greatest started_at among them."""
-    best = None
-    try:
-        files = sorted(RUNS.glob(f"{job_name}-*.json"))
-    except OSError:
-        return None
-    for f in files:
-        rec = load_run_record(f.stem)
-        if rec is None or rec.get("job") != job_name or rec.get("venue") != "local":
-            continue
-        if best is None or str(rec.get("started_at") or "") >= str(best.get("started_at") or ""):
-            best = rec
-    return best
+    return local_attach.newest_record_for_job(job_name, _attach_seams())
+
+
+def _poll(rec: dict, target: dict) -> dict:
+    return local_attach.poll(rec, target, _attach_seams())
+
+
+def _rederive(rec: dict, target: dict) -> dict | None:
+    return local_attach.rederive(rec, target, _attach_seams())
+
+
+def _wait(rec: dict, target: dict, max_s: int, timeout_s: int) -> int:
+    return local_attach.wait(rec, target, max_s, timeout_s, _attach_seams())
 
 
 def _union_payload(union_values, check_paths):
@@ -634,54 +550,14 @@ def main() -> int:
             return _fail("usage: local-run --verify-sealed <job-name>")
         return _verify_sealed(target_token)
     if flags["poll"] or flags["wait"]:
-        # Attach, never dispatch: an invocation carrying an
-        # attach flag resolves to an existing run record or
-        # fails here — it can never fall through to the job
-        # path below, whose bare job name is the only dispatch
-        # spelling. (The defect this closes: `local-run <job>
-        # --wait` read as a dispatch and re-fired the job —
-        # a second execution of work believed to be a poll.)
-        mode = "--wait" if flags["wait"] else "--poll"
-        rec = load_run_record(target_token) if target_token else None
-        if rec is None and target_token:
-            rec = _newest_record_for_job(target_token)
-        if rec is None:
-            return _fail("--poll/--wait attach to an existing run: name a run id, or a job name that has at least one run")
-        if rec.get("venue") != "local":
-            return _fail(f"run {rec['run_id']} is not a local-venue run")
-        if rec.get("state") in TERMINAL_STATES:
-            # A terminal face is accepted only after the
-            # reader pass: the container's exit file outranks
-            # the record (Step 2's poll half), so a face it
-            # contradicts is re-derived before it is served.
-            target = _record_target(rec)
-            if target is not None:
-                local_venue.ensure_transport(target)
-                derived = _rederive(rec, target)
-                if derived is not None:
-                    print(json.dumps({"run_id": rec["run_id"], **derived}, indent=2))
-                    return 0 if derived["state"] == "complete" else 1
-            print(json.dumps({"run_id": rec["run_id"], "state": rec["state"]}, indent=2))
-            return 0 if rec["state"] == "complete" else 1
-        target = _record_target(rec)
-        if target is None:
-            return _fail("no local venue target resolves for this run (config/lease.json venue_targets.local)")
-        local_venue.ensure_transport(target)
-        if mode == "--poll":
-            out = _poll(rec, target)
-            print(json.dumps({"run_id": rec["run_id"], **out}, indent=2))
-            # The twins' shared still-running verdict (BT5):
-            # 3 while the run is still running, as colab-run's
-            # poll has always read; a poll that settles the run
-            # keeps this tool's standing 0.
-            return 3 if out["state"] == "running" else 0
-        max_s = 3600
-        if flags.get("max") is not None:
-            try:
-                max_s = int(flags["max"])
-            except ValueError:
-                return _fail("--max must be an integer number of seconds")
-        return _wait(rec, target, max_s, int(rec.get("timeout_s") or 18000))
+        # The attach route lives in the runner leaf
+        # (sync/runner/local_attach.py): attach, never
+        # dispatch — an invocation carrying an attach flag
+        # resolves to an existing run record or fails in
+        # the leaf; it can never fall through to the job
+        # path below, whose bare job name is the only
+        # dispatch spelling.
+        return local_attach.attach(flags, target_token, _attach_seams())
 
     if flags.get("envelope") is not None:
         # The envelope form names its whole dispatch; nothing rides it.
@@ -745,6 +621,22 @@ def main() -> int:
     )
     if preflight:
         return _fail(f"job {job_name}: {preflight}")
+    # Venue-state legs (venue-state mechanism, step 4): the
+    # shape's target names the venue, and its state file —
+    # read here, before the lease registration or any SSH
+    # step — carries the saturation verdict refused on below
+    # and the free fraction the share stamp sizes from. A
+    # stale or absent file refuses nothing: the surface's
+    # silence is not a verdict.
+    shape_id = job.get("shape") or "local"
+    shape_entry, target_id, _shape_target = local_venue.shape_target(REPO, shape_id)
+    venue_state = None
+    if target_id:
+        var_dir = Path(os.environ.get("COLAB_RUNNER_VAR", REPO / "var"))
+        venue_state = venue_actuate.load_state(var_dir, target_id)
+        saturation = venue_actuate.saturation_refusal(venue_state, now_epoch=time.time())
+        if saturation:
+            return _fail(f"job {job_name}: {saturation}")
     if seal_entry is not None:
         # A sealed job dispatches from its blob, opened in
         # memory under the runner's server-side key; the
@@ -822,6 +714,15 @@ def main() -> int:
         rec["sealed"] = True
     if union_payload is not None:
         rec["constituents"] = union_payload["constituents"]
+    # The share stamp: the job's parallelism share (declared
+    # cores scaled by the venue's free pid fraction) rides
+    # the record, and into the run environment as
+    # GATE_WORKERS when the state file sized it, overriding
+    # the job form's $(nproc) default where the form reads it.
+    share = venue_actuate.share_for(
+        venue_state, (shape_entry or {}).get("cores"), now_epoch=time.time()
+    )
+    rec["share"] = share
     save_record(rec)
     if script_bytes is None:
         script_bytes = script_path.read_bytes()
