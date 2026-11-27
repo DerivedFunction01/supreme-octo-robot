@@ -87,7 +87,7 @@ def _fixture_state():
     state["items"].append(
         {
             "id": "demo-ghost-push",
-            "handle": "@xbrl",
+            "handle": "@specimen-field",
             "kind": "push_needed",
             "title": "Push the ghost fix",
             "status_code": "BLOCKED-OWNER",
@@ -113,18 +113,18 @@ def _fixture_state():
             "skipped_projects": [],
             "plans": [
                 {
-                    "project": "edgar-sec",
+                    "project": "specimen-repo",
                     "path": "2026-11-02-parked-plan.md",
                     "title": "Parked plan",
                 }
             ],
         },
-        "parked_counts": {"edgar-sec": 1},
+        "parked_counts": {"specimen-repo": 1},
         # The T-form collect_wb_facts writes: the store's
         # load decodes it back to a datetime, and the
         # snapshot reader normalizes both forms (the
         # WbFactsFromSnapshotTests below pin the shapes).
-        "modified": {"edgar-sec": "2026-11-16T11:00:00-05:00"},
+        "modified": {"specimen-repo": "2026-11-16T11:00:00-05:00"},
         "wb_topics": {},
     }
     state["capacity_snapshot"] = {
@@ -215,13 +215,13 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
                     "skipped_projects": [],
                     "plans": [
                         {
-                            "project": "edgar-sec",
+                            "project": "specimen-repo",
                             "path": "2026-11-02-parked-plan.md",
                             "title": "Parked plan",
                         }
                     ],
                 },
-                "parked_counts": {"edgar-sec": 1},
+                "parked_counts": {"specimen-repo": 1},
                 "modified": modified,
                 "wb_topics": topics,
             }
@@ -229,7 +229,7 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
 
     def _topic(self, plan_modified):
         return {
-            "edgar": {
+            "edgar-specimen": {
                 "todos_total": 5,
                 "todos_done": 2,
                 "plan_modified": plan_modified,
@@ -238,7 +238,7 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
 
     def test_round_tripped_stamps_read_as_datetimes(self):
         state = self._state(
-            {"edgar-sec": self.STAMP.isoformat()},
+            {"specimen-repo": self.STAMP.isoformat()},
             self._topic(self.STAMP.isoformat()),
         )
         with tempfile.TemporaryDirectory() as tmp:
@@ -248,45 +248,45 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
         # The mechanism: the store's decode restored the
         # T-form strings to datetimes on load.
         self.assertIsInstance(
-            loaded["digest_wb_snapshot"]["modified"]["edgar-sec"], datetime
+            loaded["digest_wb_snapshot"]["modified"]["specimen-repo"], datetime
         )
         parked, counts, modified, topics = digest_mod._wb_facts_from_snapshot(
             loaded, NOW
         )
-        self.assertEqual(modified, {"edgar-sec": self.STAMP})
-        self.assertEqual(topics["edgar"]["plan_modified"], self.STAMP)
-        self.assertEqual(topics["edgar"]["todos_total"], 5)
-        self.assertEqual(topics["edgar"]["todos_done"], 2)
-        self.assertEqual(counts, {"edgar-sec": 1})
+        self.assertEqual(modified, {"specimen-repo": self.STAMP})
+        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
+        self.assertEqual(topics["edgar-specimen"]["todos_total"], 5)
+        self.assertEqual(topics["edgar-specimen"]["todos_done"], 2)
+        self.assertEqual(counts, {"specimen-repo": 1})
         self.assertEqual(parked["plans"][0]["age_days"], 14)
 
     def test_fresh_string_stamps_read_the_same(self):
         state = self._state(
-            {"edgar-sec": self.STAMP.isoformat()},
+            {"specimen-repo": self.STAMP.isoformat()},
             self._topic(self.STAMP.isoformat()),
         )
         _, _, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
-        self.assertEqual(modified, {"edgar-sec": self.STAMP})
-        self.assertEqual(topics["edgar"]["plan_modified"], self.STAMP)
+        self.assertEqual(modified, {"specimen-repo": self.STAMP})
+        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
 
     def test_space_separated_string_stamps_read_the_same(self):
         # The form that survives the store's decode as a
         # string (its separator at position 10 is not "T").
         space_form = "2026-11-16 11:00:00-05:00"
-        state = self._state({"edgar-sec": space_form}, self._topic(space_form))
+        state = self._state({"specimen-repo": space_form}, self._topic(space_form))
         _, _, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
-        self.assertEqual(modified, {"edgar-sec": self.STAMP})
-        self.assertEqual(topics["edgar"]["plan_modified"], self.STAMP)
+        self.assertEqual(modified, {"specimen-repo": self.STAMP})
+        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
 
     def test_empty_and_missing_shapes(self):
         state = self._state({}, self._topic(None))
         _, counts, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
         self.assertEqual(modified, {})
-        self.assertEqual(counts, {"edgar-sec": 1})
-        self.assertIsNone(topics["edgar"]["plan_modified"])
+        self.assertEqual(counts, {"specimen-repo": 1})
+        self.assertIsNone(topics["edgar-specimen"]["plan_modified"])
         state = self._state({}, self._topic(""))
         _, _, _, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
-        self.assertIsNone(topics["edgar"]["plan_modified"])
+        self.assertIsNone(topics["edgar-specimen"]["plan_modified"])
         bare = self._state({}, {})
         del bare["digest_wb_snapshot"]["modified"]
         del bare["digest_wb_snapshot"]["wb_topics"]
@@ -315,7 +315,7 @@ class FingerprintTests(unittest.TestCase):
             state["sends"].append(
                 {
                     "id": send_id,
-                    "handle": "@xbrl",
+                    "handle": "@specimen-field",
                     "at": NOW,
                     "rule_id": None,
                     "wait_id": None,
@@ -329,7 +329,7 @@ class FingerprintTests(unittest.TestCase):
             )
 
         def tail(state):
-            state["handler_status"]["@xbrl"] = {
+            state["handler_status"]["@specimen-field"] = {
                 "status_code": "BLOCKED-OWNER",
                 "summary": "Battery tail holder",
                 "at": NOW - timedelta(hours=1),
@@ -349,13 +349,13 @@ class FingerprintTests(unittest.TestCase):
 
         battery = [
             ("historical_status", None, lambda s: s["handler_status"].update(
-                {"@xbrl": {"status_code": "WORKING",
+                {"@specimen-field": {"status_code": "WORKING",
                            "summary": "Battery status", "at": NOW,
                            "provenance": "commission"}}
             )),
             ("upsert_item", None, lambda s: ingest.upsert_item(
                 s,
-                {"handle": "@xbrl", "source_ref": "battery-1",
+                {"handle": "@specimen-field", "source_ref": "battery-1",
                  "kind": "defect", "title": "Battery item"},
                 NOW,
             )),
@@ -364,7 +364,7 @@ class FingerprintTests(unittest.TestCase):
             )),
             ("post_wait", None, lambda s: ingest.post_wait(
                 s,
-                {"handle": "@panel", "wait_class": "lease_renewal",
+                {"handle": "@specimen-panel", "wait_class": "lease_renewal",
                  "summary": "Battery wait"},
                 NOW,
             )),
@@ -399,10 +399,10 @@ class FingerprintTests(unittest.TestCase):
                 s, {"slug": "battery", "label": "Battery programme"}
             )),
             ("mute_type", None, lambda s: writes.mute_type(
-                s, "@xbrl", {"kind": "defect"}
+                s, "@specimen-field", {"kind": "defect"}
             )),
             ("unmute_type", None, lambda s: writes.unmute_type(
-                s, "@workbench-viewer", {"kind": "fyi"}
+                s, "@specimen-viewer", {"kind": "fyi"}
             )),
             ("record_dispatch_failure", lambda s: send(s, "s-x"),
              lambda s: writes.record_dispatch_failure(
@@ -410,7 +410,7 @@ class FingerprintTests(unittest.TestCase):
                      "reason": "boom"}, NOW
              )),
             ("record_verification", None, lambda s: writes.record_verification(
-                s, {"handle": "@workbench-viewer", "verdict": "verified"}, NOW
+                s, {"handle": "@specimen-viewer", "verdict": "verified"}, NOW
             )),
             ("dispatch_claim", lambda s: send(s, "s-batt"),
              lambda s: dispatch_mod.claim(
