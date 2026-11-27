@@ -67,14 +67,14 @@ def launch(args: list[str]) -> int:
             positional.append(args[i])
             i += 1
     if not positional:
-        print("usage: colab-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]", file=sys.stderr)
+        print("usage: venue-run <job-name> [--resume RUN_ID] [--caller TAG] [--seed] [--detach] [--daemonize] [--session NAME] [-- <job args>...]", file=sys.stderr)
         return 2
     job_name = positional[0]
     # Option-like names refuse at parse, before any record
     # is written (claims.option_like_refusal).
     refusal = option_like_refusal(job_name, resume)
     if refusal is not None:
-        print(f"colab-run: {refusal}", file=sys.stderr)
+        print(f"venue-run: {refusal}", file=sys.stderr)
         return 2
     if daemonize_flag and not os.environ.get("COLAB_RUN_DAEMON_CHILD"):
         # --daemonize: the fire must survive its firing context.
@@ -95,7 +95,7 @@ def launch(args: list[str]) -> int:
         # prints, and an unadopted claim's loss becomes
         # decidable at its deadline instead of reading as dead.
         if resume:
-            print("colab-run: --daemonize is a fresh-launch form; a resumed run is already named and claimed", file=sys.stderr)
+            print("venue-run: --daemonize is a fresh-launch form; a resumed run is already named and claimed", file=sys.stderr)
             return 2
         if not (JOBS / job_name / "job.json").exists():
             print(f"no job manifest at {JOBS / job_name / 'job.json'}", file=sys.stderr)
@@ -103,7 +103,7 @@ def launch(args: list[str]) -> int:
         try:
             claimed, log_path = spawn_daemon(job_name, args, JOBS / job_name / "job.json")
         except Exception as exc:
-            print(f"colab-run: daemonize pre-claim failed for {job_name}: {exc}", file=sys.stderr)
+            print(f"venue-run: daemonize pre-claim failed for {job_name}: {exc}", file=sys.stderr)
             return 1
         print(json.dumps({"run_id": claimed, "state": "daemonized", "log": log_path}))
         return 0
@@ -111,7 +111,7 @@ def launch(args: list[str]) -> int:
     try:
         job = load_manifest(manifest_path)
     except ManifestUnreadable as exc:
-        print(f"no job manifest at {manifest_path}" if exc.missing else f"colab-run: {exc}", file=sys.stderr)
+        print(f"no job manifest at {manifest_path}" if exc.missing else f"venue-run: {exc}", file=sys.stderr)
         return 2 if exc.missing else 1
     # Pre-dispatch validation (wall-clock plan, step 2): the
     # one pass, settled at load before any session work —
@@ -144,7 +144,7 @@ def launch(args: list[str]) -> int:
         pin_error=pin_resolution_error(parse_transport(job), repo=REPO, repo_registry=repo_registry),
     )
     if preflight:
-        print(f"colab-run: job {job_name}: {preflight}", file=sys.stderr)
+        print(f"venue-run: job {job_name}: {preflight}", file=sys.stderr)
         return 2
     normalize_manifest_outputs(job)
     # Caller claim: flag over the manifest's caller key over
@@ -171,10 +171,10 @@ def launch(args: list[str]) -> int:
                 _venue_load_state(_var_dir, _key), now_epoch=time.time()
             )
             if _refusal:
-                print(f"colab-run: job {job_name}: {_refusal}", file=sys.stderr)
+                print(f"venue-run: job {job_name}: {_refusal}", file=sys.stderr)
                 return 2
     if not TOKEN.exists() and not os.environ.get("COLAB_BIN"):
-        print("colab-run: STAGED — no colab login yet. Run ops/bootstrap_local.sh, then the one-time login (see README).", file=sys.stderr)
+        print("venue-run: STAGED — no colab login yet. Run ops/bootstrap_local.sh, then the one-time login (see README).", file=sys.stderr)
         return 2
 
     mirror("restore")
@@ -185,7 +185,7 @@ def launch(args: list[str]) -> int:
     shape_id = job.get("shape") or lease.default_shape(REPO)
     shapes = lease.catalog_shapes(REPO, colab)
     if not shape_id or shape_id not in shapes:
-        print(f"colab-run: job {job_name} names no usable shape (manifest shape or config default_shape required)", file=sys.stderr)
+        print(f"venue-run: job {job_name} names no usable shape (manifest shape or config default_shape required)", file=sys.stderr)
         return 2
     shape = shapes[shape_id]
     # A daemonized fire's parent mints the id and hands it to
@@ -210,7 +210,7 @@ def launch(args: list[str]) -> int:
                 # record) holds nothing to preserve: the resume
                 # starts the run fresh rather than crashing
                 # every later entry on the damaged file.
-                print(f"colab-run: prior record for {run_id} is unreadable (torn); starting fresh", file=sys.stderr)
+                print(f"venue-run: prior record for {run_id} is unreadable (torn); starting fresh", file=sys.stderr)
             else:
                 # Single-flight (claims.py): a resume attaches
                 # to a possibly-live execution — an outstanding

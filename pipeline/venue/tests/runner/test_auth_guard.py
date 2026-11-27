@@ -1,10 +1,10 @@
-"""bin/colab-run's auth guard, exercised end to end.
+"""bin/venue-run's auth guard, exercised end to end.
 
 The failure class: a failed token refresh drops the Colab CLI into
 its interactive login flow mid-automation; the flow overwrites the
 stored token with a stub and prints its prompt where callers expect
 data, and a live lease's record is deleted under the junk reading.
-The guard in bin/colab-run's colab() is the cure: never invoke the
+The guard in bin/venue-run's colab() is the cure: never invoke the
 CLI on an invalid token, snapshot + atomically restore around every
 call, and turn any prompt-carrying result into an auth-required
 refusal.
@@ -28,7 +28,7 @@ STUB_TOKEN = '{"refresh_token": "stub15chars000"}'
 DRIVER = """
 import importlib.util, json, sys
 from importlib.machinery import SourceFileLoader
-spec = importlib.util.spec_from_loader("colab_run", SourceFileLoader("colab_run", sys.argv[1]))
+spec = importlib.util.spec_from_loader("venue_run", SourceFileLoader("venue_run", sys.argv[1]))
 cr = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(cr)
 try:
@@ -101,7 +101,7 @@ def setup_env(tmp_path, mode, token_text, binding_text=None, lease_records=None)
 
 
 def run_driver(env, driver, timeout_s=2):
-    r = subprocess.run([sys.executable, str(driver), str(REPO / "bin" / "colab-run"), str(timeout_s)], capture_output=True, text=True, env=env, timeout=60)
+    r = subprocess.run([sys.executable, str(driver), str(REPO / "bin" / "venue-run"), str(timeout_s)], capture_output=True, text=True, env=env, timeout=60)
     assert r.returncode == 0, r.stdout + r.stderr
     return json.loads(r.stdout.strip().splitlines()[-1])
 

@@ -129,7 +129,7 @@ def runner_env(tmp_path, **extra):
     # portability-exception: ~/.config/colab-cli/sessions.json — the colab CLI's own per-user session file, named in the pollution note above
     home = _scratch_home(tmp_path)
     # The runner under test runs against a fixture repo (authored
-    # config in the test tree): bin/colab-run derives its repo root
+    # config in the test tree): bin/venue-run derives its repo root
     # from its own location, so its lease reads and its run records
     # land in the fixture, never the checkout.
     root = repo_fixture.cli_repo(tmp_path / "repo", tmp_path / "var")

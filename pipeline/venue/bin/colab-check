@@ -6,13 +6,13 @@ time.
 This wrapper ships the working tree as it stands — the bundle form,
 for a genuinely uncommitted tree. A committed, pushed tree is gated
 in branch form instead: name it in a job manifest's transport
-declaration and fire it with bin/colab-run (docs/README-runner.md) —
+declaration and fire it with bin/venue-run (docs/README-runner.md) —
 branches are throwaway working surfaces, and the main lineage
 carries finalized clean work only.
 
 Usage: colab-check <check.py paths...> [--repo ID] [--variant NAME]
        [--shape SHAPE] [--caller TAG]
-The caller claim resolves exactly as colab-run's does, minus the
+The caller claim resolves exactly as venue-run's does, minus the
 manifest tier (a gate names no job): --caller over $COLAB_CALLER,
 validated against the caller registry before anything starts. The
 claim is what the gate's lease acquire adopts under — a gate for a
@@ -40,7 +40,7 @@ import importlib.util
 
 from importlib.machinery import SourceFileLoader
 
-spec = importlib.util.spec_from_loader("colab_run", SourceFileLoader("colab_run", str(REPO / "bin" / "colab-run")))
+spec = importlib.util.spec_from_loader("venue_run", SourceFileLoader("venue_run", str(REPO / "bin" / "venue-run")))
 cr = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(cr)
 
@@ -126,7 +126,7 @@ def main() -> int:
         return 2
     # Caller claim: flag over $COLAB_CALLER; a presented but
     # unregistered claim is refused at claim time, before anything
-    # starts (the same helpers colab-run resolves through).
+    # starts (the same helpers venue-run resolves through).
     caller_flag = flags.get("caller")
     claim_err = lease.caller_claim_error(REPO, flag=caller_flag, env=os.environ.get("COLAB_CALLER"))
     if claim_err:

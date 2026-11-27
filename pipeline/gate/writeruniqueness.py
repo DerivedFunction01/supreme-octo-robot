@@ -152,7 +152,7 @@ EXCEPTIONS = (
      "kind": "standalone fallback seam — the sealed-jobs "
              "store's one writer: the dispatcher's own "
              "key, blob and register writes, performed "
-             "inline where local-run loads the module by "
+             "inline where venue-run loads the module by "
              "path outside the server context the writer "
              "route's /ops leg needs"},
     {"path": "pipeline/scheduling/ops/watches/file_registry.py",

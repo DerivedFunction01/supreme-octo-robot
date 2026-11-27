@@ -197,7 +197,7 @@ def build_stdin(script: str, env_pairs: list) -> str:
 
 def live_state(session: str, attempts: int | None = None, timeout: int = 120) -> str:
     """The target's server-side tri-state (alive/absent/unknown),
-    read through the lease machinery's own funnel (bin/colab-run)
+    read through the lease machinery's own funnel (bin/venue-run)
     and tri-state read (sync.lease.session_state). One seam, so the
     connect guard in main() is the only place that consults it.
     The async path passes the reap precedent's reduced budget
@@ -205,8 +205,8 @@ def live_state(session: str, attempts: int | None = None, timeout: int = 120) ->
     classifies unknown sooner, and unknown is never read as dead."""
     from importlib.machinery import SourceFileLoader
 
-    colab_run = SourceFileLoader("colab_run", str(REPO / "bin" / "colab-run")).load_module()
-    return _lease_module().session_state(colab_run.colab, session, attempts=attempts, timeout=timeout)
+    venue_run = SourceFileLoader("venue_run", str(REPO / "bin" / "venue-run")).load_module()
+    return _lease_module().session_state(venue_run.colab, session, attempts=attempts, timeout=timeout)
 
 
 # The async path's pre-connect read budget: the reap pass's
@@ -329,11 +329,11 @@ def busy_message(session: str) -> str:
         return (
             f"colab-sh: channel busy — session {session!r} already has a connection; "
             f"the sync claim is held by {holder!r} until {expires}. "
-            "Detached work (colab-sh --detach / --poll, colab-run) stays open to all callers."
+            "Detached work (colab-sh --detach / --poll, venue-run) stays open to all callers."
         )
     return (
         f"colab-sh: channel busy — session {session!r} already has a connection held by another attach. "
-        "Detached work (colab-sh --detach / --poll, colab-run) stays open to all callers."
+        "Detached work (colab-sh --detach / --poll, venue-run) stays open to all callers."
     )
 
 

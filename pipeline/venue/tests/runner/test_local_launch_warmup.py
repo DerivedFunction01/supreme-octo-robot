@@ -1,5 +1,5 @@
 """Local transport warmup (launch-path plan, Step 3):
-bin/local-run's launch steps retry a timeout — the
+bin/venue-run's launch steps retry a timeout — the
 warmup signature of a managed transport still coming up —
 with bounded backoff inside the same fire, and a refusal
 after the bound names the warmup, not the venue.
@@ -66,7 +66,7 @@ class FakeSSH:
 
 
 def load_launch(monkeypatch, fake):
-    mod = load_module("local_run_warmup_unit", REPO / "bin" / "local-run")
+    mod = load_module("venue_run_warmup_unit", REPO / "bin" / "venue-run")
     monkeypatch.setattr(mod, "_ssh", fake)
     monkeypatch.setattr(mod, "LAUNCH_BACKOFF_S", (0, 0))
     return mod

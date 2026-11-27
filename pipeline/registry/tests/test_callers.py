@@ -120,9 +120,9 @@ class JournalTests(unittest.TestCase):
             self.assertTrue(callers.append_claim(
                 journal, "sess-1", "alpha-thread", "colab-lease"))
             self.assertTrue(callers.append_claim(
-                journal, "sess-1", "beta-thread", "colab-run"))
+                journal, "sess-1", "beta-thread", "venue-run"))
             self.assertTrue(callers.append_claim(
-                journal, "sess-2", None, "colab-run"))
+                journal, "sess-2", None, "venue-run"))
             claims = callers.load_claims(journal)
         self.assertEqual(claims["sess-1"]["caller"], "beta-thread")
         self.assertNotIn("sess-2", claims)

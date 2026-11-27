@@ -1,6 +1,6 @@
 """Run the facade corpus battery of a built clone on the leased VM.
 
-Follows the colab-run harness contract (implemented once in
+Follows the venue-run harness contract (implemented once in
 job_harness.py): progress goes to <out>/heartbeat.log, completion is
 <out>/checkpoint.json with completed_units=1 plus a final heartbeat
 line containing "complete". The built clone is resolved from

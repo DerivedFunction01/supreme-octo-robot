@@ -74,7 +74,7 @@ def colab(*args: str, timeout: int = 18000, check: bool = False) -> subprocess.C
 #
 # Exemption, by construction rather than by flag: lease-internal
 # and runner-internal calls never pass through this module — they
-# dial through sync/cli.py's funnel and bin/colab-run — so the
+# dial through sync/cli.py's funnel and bin/venue-run — so the
 # machinery's own calls are never gated and need no bypass.
 
 _GATED_VERBS = ("exec", "install", "upload", "download")
@@ -125,7 +125,7 @@ def _sync_gate(args) -> None:
         f"probes: synchronous {args[0]} on session {session!r} refused — "
         f"blocked by {verdict.get('blocked_by')}: {verdict.get('holder')!r} "
         f"(evidence: {'; '.join(parts) or 'no detail'}; claim expiry: {verdict.get('expires_at')}). "
-        "Run it detached (a colab-run job, or bin/colab-sh --detach) instead.",
+        "Run it detached (a venue-run job, or bin/colab-sh --detach) instead.",
         file=sys.stderr,
     )
     raise SystemExit(2)

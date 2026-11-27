@@ -2,7 +2,7 @@
 declared jobs into ONE launch on the envelope's venue,
 under the budget the envelope leaf (envelope.py) divides.
 
-Placement: bin/local-run routes its --envelope form here
+Placement: bin/venue-run routes its --envelope form here
 with its own seams passed in (the manifest_shape pattern —
 this module imports nothing from the package), because the
 bin entry stands near the file cap and the composition is
@@ -163,7 +163,7 @@ def _name_safe(name: str) -> bool:
 
 
 def dispatch(name, flags, seams) -> int:
-    """The --envelope dispatch, routed from bin/local-run's
+    """The --envelope dispatch, routed from bin/venue-run's
     main with the entry's seams. Exit codes mirror the solo
     dispatch: 2 for a defective declaration or manifest, 1
     for a launch failure or a failed run, 0 complete, 3

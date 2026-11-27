@@ -12,7 +12,7 @@ from ..core import foundation, records, callers
 # is therefore a claim: TTL'd, caller-attributed, granted only to a
 # session's sole active caller, and checked per attach. The claim
 # makes "one active caller" an explicit, journaled fact; detached
-# work (colab-run jobs, colab-sh --detach) never needs one and
+# work (venue-run jobs, colab-sh --detach) never needs one and
 # stays open to every caller. Design of record:
 # the sync-channel design (option 3 composite).
 # Mechanics: docs/lease-workflow.md.

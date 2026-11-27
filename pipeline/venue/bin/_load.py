@@ -2,7 +2,7 @@
 """Shared module loader for the bin/ entry points.
 
 Every Python entry point in bin/ loads its sync/ modules (and, for
-the thin CLIs, bin/colab-run itself) by path, because none of these
+the thin CLIs, bin/venue-run itself) by path, because none of these
 files is an installed package. That stanza — resolve the repo root
 from this file, build a spec for a path, exec it — used to be copied
 into all seven entry points; it lives here once. Entry points put
@@ -13,8 +13,8 @@ Module names are preserved from the per-file stanzas this replaces:
 sync modules load under their bare names ("lease", "transfer", ...),
 except where a consumer historically chose a distinct name (the
 liveness entry loads liveness_entry as "colab_liveness_entry").
-bin/colab-run has no .py suffix, so it loads through an explicit
-SourceFileLoader under the name "colab_run".
+bin/venue-run has no .py suffix, so it loads through an explicit
+SourceFileLoader under the name "venue_run".
 """
 
 import importlib.util
@@ -68,9 +68,9 @@ def sync(name: str, module_name: str | None = None):
     return _exec(module_name or name, REPO / "sync" / f"{name}.py")
 
 
-def colab_run():
-    """Load bin/colab-run (no .py suffix) as the module "colab_run"."""
-    spec = importlib.util.spec_from_loader("colab_run", SourceFileLoader("colab_run", str(BIN / "colab-run")))
+def venue_run():
+    """Load bin/venue-run (no .py suffix) as the module "venue_run"."""
+    spec = importlib.util.spec_from_loader("venue_run", SourceFileLoader("venue_run", str(BIN / "venue-run")))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module

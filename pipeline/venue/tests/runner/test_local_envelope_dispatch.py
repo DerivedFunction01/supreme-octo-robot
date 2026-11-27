@@ -1,4 +1,4 @@
-"""Envelope dispatch pins for bin/local-run: the --envelope
+"""Envelope dispatch pins for bin/venue-run: the --envelope
 form composes the declared jobs into one launch — the
 envelope record carries its constituents in order with
 their stamps, each job's launch payload carries its
@@ -19,8 +19,8 @@ from module_loader import load_module  # noqa: E402
 TARGET = {"host": "machine.invalid", "user": "agent"}
 
 
-def load_local_run():
-    return load_module("local_run_envelope_unit", REPO / "bin" / "local-run")
+def load_venue_run():
+    return load_module("venue_run_envelope_unit", REPO / "bin" / "venue-run")
 
 
 def _write_job(jobs, name, timeout_s=300):
@@ -41,7 +41,7 @@ def _write_job(jobs, name, timeout_s=300):
 
 
 def _fixture(tmp_path, monkeypatch, spec):
-    mod = load_local_run()
+    mod = load_venue_run()
     jobs = tmp_path / "jobs"
     _write_job(jobs, "job-a", timeout_s=300)
     _write_job(jobs, "job-b", timeout_s=600)
@@ -95,7 +95,7 @@ def test_envelope_dispatch_records_constituents_in_order_with_stamps(
     tmp_path, monkeypatch, capsys
 ):
     mod, saved, launched = _fixture(tmp_path, monkeypatch, SPEC)
-    monkeypatch.setattr(sys, "argv", ["local-run", "--envelope", "my-env", "--detach"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--envelope", "my-env", "--detach"])
     assert mod.main() == 0
     out = json.loads(capsys.readouterr().out)
     assert out["state"] == "running"
@@ -131,7 +131,7 @@ def test_envelope_dispatch_records_constituents_in_order_with_stamps(
 
 def test_envelope_launcher_starts_all_trees_then_waits(tmp_path, monkeypatch):
     mod, _saved, launched = _fixture(tmp_path, monkeypatch, SPEC)
-    monkeypatch.setattr(sys, "argv", ["local-run", "--envelope", "my-env", "--detach"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--envelope", "my-env", "--detach"])
     assert mod.main() == 0
     text = mod.envelope_dispatch.envelope_launcher(launched["jobs"]).decode()
     for needle in (
@@ -155,7 +155,7 @@ def test_envelope_launcher_starts_all_trees_then_waits(tmp_path, monkeypatch):
 
 
 def test_envelope_record_settles_through_the_standing_poll(tmp_path, monkeypatch):
-    mod = load_local_run()
+    mod = load_venue_run()
     rec = {"run_id": "my-env-20261126T000000Z", "venue": "local", "state": "running"}
     reading = {"reading": "exit", "exit_code": 0, "output_tail": "", "finished_at": "t"}
     monkeypatch.setattr(
@@ -173,7 +173,7 @@ def test_envelope_refuses_a_sealed_constituent(tmp_path, monkeypatch, capsys):
         "entry_for",
         lambda register, job: {"job": job} if job == "job-b" else None,
     )
-    monkeypatch.setattr(sys, "argv", ["local-run", "--envelope", "my-env", "--detach"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--envelope", "my-env", "--detach"])
     assert mod.main() == 2
     assert "sealed" in capsys.readouterr().err
     assert launched == {}
@@ -183,7 +183,7 @@ def test_envelope_refuses_a_sealed_constituent(tmp_path, monkeypatch, capsys):
 def test_envelope_refuses_an_undeclared_shape(tmp_path, monkeypatch, capsys):
     bad = dict(SPEC, shape="nope")
     mod, saved, launched = _fixture(tmp_path, monkeypatch, bad)
-    monkeypatch.setattr(sys, "argv", ["local-run", "--envelope", "my-env", "--detach"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--envelope", "my-env", "--detach"])
     assert mod.main() == 2
     assert "declares no capacity" in capsys.readouterr().err
     assert launched == {}
@@ -194,11 +194,11 @@ def test_envelope_refuses_a_positional_and_a_missing_declaration(
 ):
     mod, _saved, launched = _fixture(tmp_path, monkeypatch, SPEC)
     monkeypatch.setattr(
-        sys, "argv", ["local-run", "job-a", "--envelope", "my-env", "--detach"]
+        sys, "argv", ["venue-run", "job-a", "--envelope", "my-env", "--detach"]
     )
     assert mod.main() == 2
     assert "does not ride it" in capsys.readouterr().err
-    monkeypatch.setattr(sys, "argv", ["local-run", "--envelope", "ghost", "--detach"])
+    monkeypatch.setattr(sys, "argv", ["venue-run", "--envelope", "ghost", "--detach"])
     assert mod.main() == 2
     assert "no envelope declaration" in capsys.readouterr().err
     assert launched == {}

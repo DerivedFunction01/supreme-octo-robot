@@ -1,4 +1,4 @@
-"""Union dispatch pins for bin/local-run: the union form
+"""Union dispatch pins for bin/venue-run: the union form
 validates its constituent list before any dispatch work, the
 generated constituents file rides the launch uploads seam,
 and the run record carries the constituents in the order
@@ -21,12 +21,12 @@ SHA_B = "0123456789abcdef0123456789abcdef01234567"
 TARGET = {"host": "machine.invalid", "user": "agent"}
 
 
-def load_local_run():
-    return load_module("local_run_union_unit", REPO / "bin" / "local-run")
+def load_venue_run():
+    return load_module("venue_run_union_unit", REPO / "bin" / "venue-run")
 
 
 def test_union_validator_preserves_constituent_and_check_path_order():
-    mod = load_local_run()
+    mod = load_venue_run()
     payload, error = mod._union_payload(
         [f"second={SHA_B}", f"first={SHA_A}"],
         ["pipeline/venue/tests", "pipeline/venue/bin"],
@@ -42,7 +42,7 @@ def test_union_validator_preserves_constituent_and_check_path_order():
 
 
 def test_union_validator_refuses_fewer_than_two_constituents():
-    mod = load_local_run()
+    mod = load_venue_run()
     payload, error = mod._union_payload(
         [f"only={SHA_A}"],
         ["pipeline/venue/tests"],
@@ -52,7 +52,7 @@ def test_union_validator_refuses_fewer_than_two_constituents():
 
 
 def test_union_validator_refuses_malformed_shas():
-    mod = load_local_run()
+    mod = load_venue_run()
     for sha in ("abc123", "g" * 40, "a" * 39, "a" * 41):
         payload, error = mod._union_payload(
             [f"one={SHA_A}", f"two={sha}"],
@@ -63,7 +63,7 @@ def test_union_validator_refuses_malformed_shas():
 
 
 def test_union_validator_refuses_an_unnamed_branch():
-    mod = load_local_run()
+    mod = load_venue_run()
     payload, error = mod._union_payload(
         [f"one={SHA_A}", f"={SHA_B}"],
         ["pipeline/venue/tests"],
@@ -73,7 +73,7 @@ def test_union_validator_refuses_an_unnamed_branch():
 
 
 def test_union_validator_refuses_a_missing_check_path():
-    mod = load_local_run()
+    mod = load_venue_run()
     payload, error = mod._union_payload(
         [f"one={SHA_A}", f"two={SHA_B}"],
         [],
@@ -83,7 +83,7 @@ def test_union_validator_refuses_a_missing_check_path():
 
 
 def test_union_validator_refuses_a_non_relative_check_path():
-    mod = load_local_run()
+    mod = load_venue_run()
     for bad in ("/abs/path", "../up"):
         payload, error = mod._union_payload(
             [f"one={SHA_A}", f"two={SHA_B}"],
@@ -94,14 +94,14 @@ def test_union_validator_refuses_a_non_relative_check_path():
 
 
 def test_non_union_invocation_has_no_union_payload():
-    mod = load_local_run()
+    mod = load_venue_run()
     assert mod._union_payload([], []) is None
 
 
 def test_union_dispatch_stamps_record_and_stages_constituents(
     tmp_path, monkeypatch, capsys
 ):
-    mod = load_local_run()
+    mod = load_venue_run()
     jobs = tmp_path / "jobs"
     job_dir = jobs / "union-gate"
     job_dir.mkdir(parents=True)
@@ -152,7 +152,7 @@ def test_union_dispatch_stamps_record_and_stages_constituents(
         sys,
         "argv",
         [
-            "local-run",
+            "venue-run",
             "union-gate",
             "--union",
             f"alpha={SHA_A}",

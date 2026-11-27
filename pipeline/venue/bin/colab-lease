@@ -58,7 +58,7 @@ import _load
 
 REPO = _load.REPO
 
-spec = importlib.util.spec_from_loader("colab_run", SourceFileLoader("colab_run", str(REPO / "bin" / "colab-run")))
+spec = importlib.util.spec_from_loader("venue_run", SourceFileLoader("venue_run", str(REPO / "bin" / "venue-run")))
 cr = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(cr)
 
@@ -305,7 +305,7 @@ def _reap_with_collector(gate=None) -> dict:
     env = dict(os.environ)
     env["COLAB_COLLECT_BUDGET_S"] = str(max(0.0, remaining - 5.0))
     try:
-        child = subprocess.run([sys.executable, str(REPO / "bin" / "colab-run"), "--collect-stale"], capture_output=True, text=True, timeout=remaining, env=env)
+        child = subprocess.run([sys.executable, str(REPO / "bin" / "venue-run"), "--collect-stale"], capture_output=True, text=True, timeout=remaining, env=env)
         _chain_log(
             {
                 "phase": "collector-done",

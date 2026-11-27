@@ -44,7 +44,7 @@ host (e.g. `$HOME/agent-workspace/` in WSL), fill it in, `docker compose up -d`.
   all exit 0) — the one-connection-at-a-time property belongs to
   Colab runtimes and their bridge channel, not to this venue.
   Each connection pays roughly 1–2 s of CONNECT setup through the
-  proxy. `bin/local-run` still launches jobs detached (nohup +
+  proxy. `bin/venue-run` still launches jobs detached (nohup +
   exit file) and polls their records: drop-safety by dispatcher
   design, so a lost client connection never kills a job — never
   a channel constraint.
