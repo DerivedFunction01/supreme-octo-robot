@@ -52,14 +52,24 @@ import ast
 import importlib
 import json
 import shutil
+import sys
 import tempfile
 import unittest
 from datetime import datetime
 from pathlib import Path
 
-from attention.infra import attstore
-from registry.cards import cardsource, cardwatch
-from registry.cards import cardwatch_fakes as fakes
+# Per-module path seam (the suite's established form,
+# as in attention's test modules): the pipeline root
+# goes at sys.path[0] unconditionally, ahead of the
+# runner's working directory — the registry package
+# root carries its own `attention` subpackage, which
+# would otherwise shadow the top-level attention
+# package under the sharded runner (cwd-first path).
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+from attention.infra import attstore  # noqa: E402
+from registry.cards import cardsource, cardwatch  # noqa: E402
+from registry.cards import cardwatch_fakes as fakes  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WAIT_CLASSES = (REPO_ROOT / "contracts" / "fixtures" /
