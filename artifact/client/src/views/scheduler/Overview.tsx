@@ -17,6 +17,7 @@ import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { GroupedList } from "@workhorse/kit/components/display/GroupedList";
 import { LogRow } from "@workhorse/kit/components/display/LogRow";
 import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
+import { RouteLink } from "../../lib/router";
 import {
   fmtBytes,
   fmtTime,
@@ -44,12 +45,10 @@ export function Overview({
   overview,
   jobs,
   ledger,
-  navigate,
 }: {
   overview: OverviewPayload | null;
   jobs: JobsPayload | null;
   ledger: LedgerPayload | null;
-  navigate: (hash: string) => void;
 }) {
   const o = overview;
   const t = o?.totals_24h;
@@ -111,17 +110,13 @@ export function Overview({
                   : "none yet"}
               </StatLine>
               <StatLine label="lifecycle">
-                <a
+                <RouteLink
                   href="#/scheduler/ledger"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate("#/scheduler/ledger");
-                  }}
                   className="mono text-xs"
                   style={{ color: "var(--ui-accent)" }}
                 >
                   sched logs …
-                </a>
+                </RouteLink>
               </StatLine>
             </>
           ) : (
@@ -147,17 +142,13 @@ export function Overview({
                   tone={outcomeTone(j.last_run?.label)}
                   label={j.last_run?.label ?? "—"}
                 />
-                <a
+                <RouteLink
                   href={`#/scheduler/jobs/${encodeURIComponent(j.id)}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`#/scheduler/jobs/${encodeURIComponent(j.id)}`);
-                  }}
                   className="font-medium"
                   style={{ color: "var(--ui-accent)" }}
                 >
                   {j.id}
-                </a>
+                </RouteLink>
                 <span
                   className="num text-sm"
                   style={{ color: "var(--ui-content-secondary)" }}

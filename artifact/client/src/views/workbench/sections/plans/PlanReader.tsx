@@ -21,6 +21,7 @@ import { highlightWithLanguage } from "../../lib/highlight";
 import { planBucketLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import {
   AnnotationComposer,
   AnnotationList,
@@ -102,7 +103,7 @@ function SubplanRows({
         }
         return (
           <li key={declaredPath}>
-            <a href={sectionHref(slug, "plans", target.path)} style={rowStyle}>
+            <RouteLink href={sectionHref(slug, "plans", target.path)} style={rowStyle}>
               <span style={isPhone ? { flex: "1 1 100%" } : { flex: 1 }}>
                 {target.title || target.path}
               </span>
@@ -110,7 +111,7 @@ function SubplanRows({
               {target.derived?.stale && target.derived.age_days != null ? (
                 <Badge kind="stale" text={`Stale · ${target.derived.age_days}d`} />
               ) : null}
-            </a>
+            </RouteLink>
           </li>
         );
       })}
@@ -367,7 +368,7 @@ export function PlanReader({
     >
       <SelectionTintStyle />
       <p style={{ color: "var(--ui-content-secondary)" }}>
-        <a
+        <RouteLink
           href={sectionHref(slug, "plans")}
           style={{
             color: "var(--ui-accent)",
@@ -376,7 +377,7 @@ export function PlanReader({
           }}
         >
           All plans
-        </a>{" "}
+        </RouteLink>{" "}
         · <span className="mono">{doc.path}</span>
       </p>
       <div

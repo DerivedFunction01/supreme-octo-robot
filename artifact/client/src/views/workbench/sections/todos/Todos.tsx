@@ -21,6 +21,7 @@ import { boardRootKey, plansRootKey, projectsKey, todosKey, todosRootKey } from 
 import { todoStatusLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import { anchor } from "../plans/anchors";
 import {
   DegradedBanner,
@@ -92,14 +93,14 @@ function TodoRow({
         {todo.plan ? (
           <>
             {" "}
-            <a
+            <RouteLink
               className="mono"
               href={todo.project ? sectionHref(todo.project, "plans", todo.plan) : undefined}
               style={{ color: "var(--ui-accent)", fontSize: "var(--ui-font-size-xs)" }}
             >
               {todo.plan}
               {todo.plan_step ? ` · step ${todo.plan_step}` : ""}
-            </a>
+            </RouteLink>
           </>
         ) : null}
         {todo.link_kind && todo.link_ref ? (

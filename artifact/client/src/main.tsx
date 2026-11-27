@@ -2,7 +2,7 @@
 // one integrated frontend — one entry, one
 // bundle, one router). There is no runtime branch: the
 // entry document is the only document, and every surface
-// is a view of this client, mounted by its hash router.
+// is a view of this client, mounted by its state router.
 //
 // Keep the QueryClientProvider + hatch-space-root wrapper
 // exactly: the SDK styles select on them (the workbench

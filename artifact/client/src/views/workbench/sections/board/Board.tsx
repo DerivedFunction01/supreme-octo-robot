@@ -27,6 +27,7 @@ import { boardKey, boardRootKey, plansRootKey, projectsKey, todosRootKey } from 
 import { kindLabel, todoStatusLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
 import { sectionHref } from "../../lib/routing";
+import { navigate } from "../../../../lib/router";
 import { anchor } from "../plans/anchors";
 import { EmptyWell, ErrorWell, SkeletonWell } from "../shared";
 import { UpdatedAgo } from "../UpdatedAgo";
@@ -356,7 +357,7 @@ export function BoardSection({
       draggable={false}
       onOpen={() => {
         if (plan.project) {
-          window.location.hash = sectionHref(plan.project, "plans", plan.path);
+          navigate(sectionHref(plan.project, "plans", plan.path));
         }
       }}
       footer={
@@ -380,7 +381,7 @@ export function BoardSection({
         if (item.project) {
           // Every review card opens in the one Entries
           // collection (SPEC §8.4), whatever its kind.
-          window.location.hash = sectionHref(item.project, "entries", item.id);
+          navigate(sectionHref(item.project, "entries", item.id));
         }
       }}
       footer={

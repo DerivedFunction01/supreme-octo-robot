@@ -30,6 +30,7 @@ import type { RepoRegistryEntry, ProjectsRegistryPayload } from "../../lib/api-t
 import { formatDateTime } from "../../lib/format";
 import { expectedLabel } from "../../lib/labels";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import { ErrorWell, SkeletonWell } from "../shared";
 
 const panelTitleStyle: React.CSSProperties = {
@@ -137,7 +138,7 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
           marginBottom: "var(--ui-space-8)",
         }}
       >
-        <a
+        <RouteLink
           href={sectionHref(id, "code")}
           className="mono"
           style={{
@@ -148,7 +149,7 @@ function RegistryRow({ id, entry }: { id: string; entry: RepoRegistryEntry }) {
           }}
         >
           {id}
-        </a>
+        </RouteLink>
         <span
           className="mono"
           style={{

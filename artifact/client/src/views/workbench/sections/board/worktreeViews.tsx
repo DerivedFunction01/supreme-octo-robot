@@ -20,6 +20,7 @@ import type { ActiveResolution, WorktreeItem } from "../../lib/api-types";
 import { formatDate, formatRelative } from "../../lib/format";
 import { activeSourceLabel, planBucketLabel } from "../../lib/labels";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import { ChangesPanel } from "../plans/ChangesPanel";
 import { metaStyle } from "../shared";
 
@@ -104,12 +105,12 @@ export function ActivePlanLine({
       }}
     >
       {plan ? (
-        <a
+        <RouteLink
           href={sectionHref(slug, "plans", plan.path)}
           style={{ color: "var(--ui-accent)", textDecoration: "none" }}
         >
           {plan.title}
-        </a>
+        </RouteLink>
       ) : (
         <span>{bundle.id}</span>
       )}

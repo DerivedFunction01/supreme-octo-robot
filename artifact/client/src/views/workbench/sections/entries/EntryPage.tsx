@@ -41,6 +41,7 @@ import { api } from "../../lib/api";
 import { formatDate } from "../../lib/format";
 import { kindLabel, ruledStatusLabel } from "../../lib/labels";
 import { sectionHref } from "../../lib/routing";
+import { navigate } from "../../../../lib/router";
 import { MetaRow } from "./meta";
 import type { EntriesFeedFull, EntryDetail, Envelope, FullEntry } from "./types";
 
@@ -186,7 +187,7 @@ export function EntryPage({ slug, entryId }: { slug: string; entryId: string }) 
       : null;
 
   const goBack = () => {
-    window.location.hash = sectionHref(slug, "entries", entryId);
+    navigate(sectionHref(slug, "entries", entryId));
   };
 
   return (

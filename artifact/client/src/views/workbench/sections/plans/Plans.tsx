@@ -21,6 +21,7 @@ import { plansKey } from "../../lib/keys";
 import { planBucketLabel, todoStatusLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import {
   DegradedBanner,
   EmptyWell,
@@ -133,9 +134,9 @@ function BundleRow({
   return (
     <li>
       {plan ? (
-        <a href={sectionHref(slug, "plans", plan.path)} style={rowStyle}>
+        <RouteLink href={sectionHref(slug, "plans", plan.path)} style={rowStyle}>
           {inner}
-        </a>
+        </RouteLink>
       ) : (
         <div style={rowStyle}>{inner}</div>
       )}

@@ -19,6 +19,7 @@ import { planBucketLabel, todoStatusLabel } from "../../lib/labels";
 import { useIsPhone } from "../../lib/responsive";
 import { indexPayloadOf, useProjectIndex } from "../../lib/projectsIndex";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import { ActivePlanLine, WorktreeChildren } from "../board/worktreeViews";
 import { EmptyWell, ErrorWell, metaStyle, SkeletonWell } from "../shared";
 import { UpdatedAgo } from "../UpdatedAgo";
@@ -96,7 +97,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
         }}
       >
         <div>
-          <a
+          <RouteLink
             href={sectionHref(row.slug, "overview")}
             style={{
               color: "var(--ui-content-primary)",
@@ -113,7 +114,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
             }}
           >
             {row.name}
-          </a>
+          </RouteLink>
           <div className="mono" style={{ ...metaStyle, whiteSpace: "normal" }}>
             {row.slug}
           </div>
@@ -194,12 +195,12 @@ function ProjectRow({ row }: { row: HomeRow }) {
             <ActivePlanLine slug={row.slug} active={row.showcase} />
           ) : row.plans.in_progress ? (
             <span style={{ display: "inline-flex", gap: "var(--ui-space-8)", flexWrap: "wrap" }}>
-              <a
+              <RouteLink
                 href={sectionHref(row.slug, "plans", row.plans.in_progress.path)}
                 style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 {row.plans.in_progress.title}
-              </a>
+              </RouteLink>
               <span style={metaStyle}>{planBucketLabel("doing")}</span>
             </span>
           ) : (
@@ -225,7 +226,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
           flexWrap: "wrap",
         }}
       >
-        <a
+        <RouteLink
           href={sectionHref(row.slug, "overview")}
           style={{
             color: "var(--ui-content-primary)",
@@ -234,7 +235,7 @@ function ProjectRow({ row }: { row: HomeRow }) {
           }}
         >
           {row.name}
-        </a>
+        </RouteLink>
         <span className="mono" style={metaStyle}>
           {row.slug}
         </span>
@@ -304,12 +305,12 @@ function ProjectRow({ row }: { row: HomeRow }) {
           <ActivePlanLine slug={row.slug} active={row.showcase} />
         ) : row.plans.in_progress ? (
           <span style={{ display: "inline-flex", gap: "var(--ui-space-8)" }}>
-            <a
+            <RouteLink
               href={sectionHref(row.slug, "plans", row.plans.in_progress.path)}
               style={{ color: "var(--ui-accent)", textDecoration: "none" }}
             >
               {row.plans.in_progress.title}
-            </a>
+            </RouteLink>
             <span style={metaStyle}>{planBucketLabel("doing")}</span>
           </span>
         ) : (
@@ -357,7 +358,7 @@ function RepoOnlyRow({ row }: { row: ProjectIndexRow }) {
           flexWrap: "wrap",
         }}
       >
-        <a
+        <RouteLink
           href={sectionHref(row.id, "overview")}
           style={{
             color: "var(--ui-content-primary)",
@@ -366,7 +367,7 @@ function RepoOnlyRow({ row }: { row: ProjectIndexRow }) {
           }}
         >
           {row.name}
-        </a>
+        </RouteLink>
         <span className="mono" style={metaStyle}>
           {row.id}
         </span>

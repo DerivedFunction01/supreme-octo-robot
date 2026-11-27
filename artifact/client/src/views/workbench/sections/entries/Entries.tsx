@@ -27,6 +27,7 @@ import { api } from "../../lib/api";
 import { entriesKey } from "../../lib/keys";
 import { kindLabel, ruledStatusLabel } from "../../lib/labels";
 import { sectionHref } from "../../lib/routing";
+import { navigate } from "../../../../lib/router";
 import { DegradedBanner, ErrorWell, SkeletonWell } from "../shared";
 import { EntryDetail } from "./EntryDetail";
 import {
@@ -81,8 +82,8 @@ export function EntriesSection({
   const selectedId = item ?? localSelected;
   const closeDetail = () => {
     setLocalSelected(null);
-    if (item != null && typeof window !== "undefined") {
-      window.location.hash = sectionHref(slug, "entries");
+    if (item != null) {
+      navigate(sectionHref(slug, "entries"));
     }
   };
 

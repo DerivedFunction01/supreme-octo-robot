@@ -9,8 +9,8 @@
 // hash "#/p/<slug>/entries" did). The href builders
 // produce FULL client hashes — the original's "#/…"
 // forms prefixed with "/workbench" — so every link and
-// `window.location.hash` assignment in the ported
-// sections navigates within the one client. The grammar
+// navigate() call in the ported sections routes within
+// the one client. The grammar
 // below is stated in the app's own segment terms:
 //
 //   #/                          workspace home (repo-home §4)

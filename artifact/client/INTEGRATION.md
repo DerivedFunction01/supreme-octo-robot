@@ -45,9 +45,14 @@ screens of record).
 
 ## 2. Routing and view mounts
 
-Hash routing (`src/lib/router.ts`): the first segment
-names the app; the remainder is the app's **subroute**,
-handed to its mount verbatim, always beginning with `/`.
+Route values (`src/lib/router.tsx`): the route is shell
+state, never the document URL — no navigation path
+mutates `window.location` (the desktop viewer blocks
+fragment navigation on its blob: document; desktop
+click probe, Step 4). The values keep the hash grammar
+below: the first segment names the app; the remainder
+is the app's **subroute**, handed to its mount verbatim,
+always beginning with `/`.
 
 | Hash | Mount |
 |---|---|

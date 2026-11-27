@@ -30,6 +30,7 @@ import { Button } from "@workhorse/kit/components/controls/Button";
 import { Frame } from "@workhorse/kit/components/shell/Frame";
 import { useIsPhone } from "../../lib/responsive";
 import { entryPageHref } from "../../lib/routing";
+import { navigate } from "../../../../lib/router";
 import { useDisposition } from "./Disposition";
 import { FilePanel } from "./FilePanel";
 import { HistoryList, ReviewLog } from "./HistoryLog";
@@ -192,7 +193,7 @@ export function EntryDetail({
                 <Button
                   variant="primary"
                   onClick={() => {
-                    window.location.hash = entryPageHref(slug, entry.id);
+                    navigate(entryPageHref(slug, entry.id));
                   }}
                 >
                   Open full page

@@ -25,6 +25,7 @@ import { homeKey } from "../../lib/keys";
 import { planBucketLabel, todoStatusLabel } from "../../lib/labels";
 import { indexPayloadOf, indexRow, useProjectIndex } from "../../lib/projectsIndex";
 import { sectionHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import {
   ActivePlanLine,
   ProvenanceMark,
@@ -83,12 +84,12 @@ function CodeCard({ slug }: { slug: string }) {
             <span className="num">{row.checkouts.length}</span> checkouts
           </span>
         ) : null}
-        <a
+        <RouteLink
           href={sectionHref(slug, "code")}
           style={{ color: "var(--ui-accent)", textDecoration: "none" }}
         >
           Open Code →
-        </a>
+        </RouteLink>
       </div>
     </Card>
   );
@@ -129,7 +130,7 @@ function ShowcaseCard({
         }}
       >
         {plan ? (
-          <a
+          <RouteLink
             href={sectionHref(slug, "plans", plan.path)}
             style={{
               color: "var(--ui-content-primary)",
@@ -139,7 +140,7 @@ function ShowcaseCard({
             }}
           >
             {plan.title}
-          </a>
+          </RouteLink>
         ) : (
           <span style={{ fontWeight: 600, fontSize: "var(--ui-font-size-lg)" }}>{bundle.id}</span>
         )}
@@ -170,12 +171,12 @@ function ShowcaseCard({
             {showcase.also_in_progress.map((other) => (
               <li key={other.bundle.id} style={{ padding: "var(--ui-space-4) 0" }}>
                 {other.plan ? (
-                  <a
+                  <RouteLink
                     href={sectionHref(slug, "plans", other.plan.path)}
                     style={{ color: "var(--ui-accent)", textDecoration: "none" }}
                   >
                     {other.plan.title}
-                  </a>
+                  </RouteLink>
                 ) : (
                   <span className="mono">{other.bundle.id}</span>
                 )}{" "}
@@ -326,7 +327,7 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
                 flexWrap: "wrap",
               }}
             >
-              <a
+              <RouteLink
                 href={sectionHref(slug, "todos")}
                 style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
@@ -337,8 +338,8 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
                       .map(([status, n]) => ` · ${n} ${todoStatusLabel(status).toLowerCase()}`)
                       .join("")
                   : ""}
-              </a>
-              <a
+              </RouteLink>
+              <RouteLink
                 href={sectionHref(slug, "plans")}
                 style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
@@ -346,19 +347,19 @@ export function OverviewSection({ slug, projectName }: { slug: string; projectNa
                 <span className="num">
                   {(row.plans.counts.todo ?? 0) + (row.plans.counts.doing ?? 0)}
                 </span>
-              </a>
-              <a
+              </RouteLink>
+              <RouteLink
                 href={sectionHref(slug, "entries")}
                 style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 In triage · <span className="num">{row.review.triage_count}</span>
-              </a>
-              <a
+              </RouteLink>
+              <RouteLink
                 href={sectionHref(slug, "board")}
                 style={{ color: "var(--ui-accent)", textDecoration: "none" }}
               >
                 Board
-              </a>
+              </RouteLink>
               {row.last_activity ? (
                 <span style={metaStyle}>
                   last activity {formatDate(row.last_activity)} {formatRelative(row.last_activity)}

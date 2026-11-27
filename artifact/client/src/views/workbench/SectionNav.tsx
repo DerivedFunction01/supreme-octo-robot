@@ -10,6 +10,7 @@
 
 import { sectionLabel } from "./lib/labels";
 import { type SectionId, sectionHref } from "./lib/routing";
+import { RouteLink } from "../../lib/router";
 
 export function SectionNav({ slug, current }: { slug: string; current: SectionId }) {
   return (
@@ -29,7 +30,7 @@ export function SectionNav({ slug, current }: { slug: string; current: SectionId
       {(["overview", "entries", "plans", "todos", "board", "code"] as SectionId[]).map((section) => {
         const isCurrent = section === current;
         return (
-          <a
+          <RouteLink
             key={section}
             href={sectionHref(slug, section)}
             aria-current={isCurrent ? "page" : undefined}
@@ -56,7 +57,7 @@ export function SectionNav({ slug, current }: { slug: string; current: SectionId
             }}
           >
             {sectionLabel(section)}
-          </a>
+          </RouteLink>
         );
       })}
     </nav>

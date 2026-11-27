@@ -14,9 +14,9 @@
 // The ladder state is module-level in effect — the
 // queries' keys are stable across route changes, exactly
 // as app.js's module-level state survived them. Entering
-// a job route refetches at once (app.js refreshed on
-// hashchange to a job); other route changes only
-// re-render.
+// a job route refetches at once (the original refreshed
+// on its route change to a job); other route changes
+// only re-render.
 
 import { useEffect, useRef, useState } from "react";
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";

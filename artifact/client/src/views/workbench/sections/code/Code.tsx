@@ -19,6 +19,7 @@ import type {
 import { formatDate, formatRelative, formatShortHash } from "../../lib/format";
 import { indexPayloadOf, indexRow, useProjectIndex } from "../../lib/projectsIndex";
 import { homeHref, sectionHref } from "../../lib/routing";
+import { RouteLink, navigate } from "../../../../lib/router";
 import { EmptyWell, ErrorWell, metaStyle, SectionTitle, SkeletonWell } from "../shared";
 import { CheckoutContext } from "./checkoutContext";
 import { FilesTab } from "./FilesTab";
@@ -71,7 +72,7 @@ function CodeHeader({
   return (
     <header style={{ marginBottom: "var(--ui-space-16)" }}>
       <p style={{ margin: "0 0 var(--ui-space-4)" }}>
-        <a
+        <RouteLink
           href={sectionHref(slug, "overview")}
           style={{
             color: "var(--ui-accent)",
@@ -80,7 +81,7 @@ function CodeHeader({
           }}
         >
           ← Project overview
-        </a>
+        </RouteLink>
       </p>
       <SectionTitle style={{ margin: 0 }}>{name}</SectionTitle>
       <p
@@ -202,12 +203,12 @@ export function CodeSection({ slug }: { slug: string }) {
     return (
       <div data-anchor="code/missing">
         <p style={{ margin: "0 0 var(--ui-space-4)" }}>
-          <a
+          <RouteLink
             href={sectionHref(slug, "overview")}
             style={{ color: "var(--ui-accent)", textDecoration: "none" }}
           >
             ← Project overview
-          </a>
+          </RouteLink>
         </p>
         <SectionTitle>{row.registry?.display_name || slug}</SectionTitle>
         <EmptyWell>
@@ -324,12 +325,12 @@ export function RepoOnlyOverview({ slug }: { slug: string }) {
             <DirtyMark summary={summary} />
           </p>
           <p>
-            <a
+            <RouteLink
               href={sectionHref(slug, "code")}
               style={{ color: "var(--ui-accent)", textDecoration: "none" }}
             >
               Open Code →
-            </a>
+            </RouteLink>
           </p>
         </>
       ) : null}
@@ -356,7 +357,7 @@ export function UnknownProjectSection({
     return (
       <p style={{ color: "var(--ui-content-secondary)" }}>
         Project <span className="mono">{slug}</span> is not in the current sweep.{" "}
-        <a
+        <RouteLink
           href={homeHref()}
           style={{
             color: "var(--ui-accent)",
@@ -365,7 +366,7 @@ export function UnknownProjectSection({
           }}
         >
           Back to projects
-        </a>
+        </RouteLink>
       </p>
     );
   }
@@ -381,12 +382,12 @@ export function UnknownProjectSection({
       </EmptyWell>
       {!row.missing ? (
         <p>
-          <a
+          <RouteLink
             href={sectionHref(slug, "code")}
             style={{ color: "var(--ui-accent)", textDecoration: "none" }}
           >
             Open Code →
-          </a>
+          </RouteLink>
         </p>
       ) : null}
     </section>
@@ -407,9 +408,9 @@ export function LegacyReposRedirect({ repoId }: { repoId: string | null }) {
         ) ?? null);
   useEffect(() => {
     if (row) {
-      window.location.replace(sectionHref(row.id, "code"));
+      navigate(sectionHref(row.id, "code"));
     } else if (payload && repoId == null) {
-      window.location.replace(homeHref());
+      navigate(homeHref());
     }
   }, [row, payload, repoId]);
   if (indexQuery.isPending) return <SkeletonWell label="the project index" />;

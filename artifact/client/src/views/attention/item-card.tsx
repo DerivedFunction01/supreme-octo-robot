@@ -150,6 +150,18 @@ export function ItemCard({ item, band }: { item: AttentionItem; band: string }) 
         {item.due_at ? <div>Due {day(item.due_at)}</div> : null}
         {item.resume_note ? <div>Resume: {item.resume_note}</div> : null}
         {item.provenance_label ? <div>{item.provenance_label}</div> : null}
+        {/* The source URL as selectable text: the title's
+            _blank link is the fast path where the viewer
+            allows it, but a viewer that blocks _blank
+            navigation (the desktop viewer's blob:
+            document) leaves it dead — the URL itself,
+            selectable in place, is the in-page fallback
+            that still reaches the source. */}
+        {item.source_url ? (
+          <div className="[overflow-wrap:anywhere]" style={{ userSelect: "text" }}>
+            {item.source_url}
+          </div>
+        ) : null}
       </div>
 
       {item.options && item.options.length ? (

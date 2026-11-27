@@ -17,6 +17,7 @@ import type { ReactNode } from "react";
 import { Card } from "@workhorse/kit/components/display/Card";
 import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { StatusChip } from "@workhorse/kit/components/display/StatusChip";
+import { RouteLink } from "../../lib/router";
 import {
   fmtDur,
   fmtTime,
@@ -96,12 +97,10 @@ export function JobDetail({
   jobs,
   jobDetail,
   jobId,
-  navigate,
 }: {
   jobs: JobsPayload | null;
   jobDetail: JobDetailPayload | null;
   jobId: string;
-  navigate: (hash: string) => void;
 }) {
   if (!jobs) {
     return <EmptyState message="Loading…" />;
@@ -149,17 +148,13 @@ export function JobDetail({
   return (
     <div className="flex flex-col gap-4">
       <p>
-        <a
+        <RouteLink
           href="#/scheduler/jobs"
-          onClick={(e) => {
-            e.preventDefault();
-            navigate("#/scheduler/jobs");
-          }}
           className="inline-block py-[2px]"
           style={{ color: "var(--ui-accent)" }}
         >
           ← all jobs
-        </a>
+        </RouteLink>
       </p>
 
       <Card title={d.id}>

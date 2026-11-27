@@ -269,7 +269,6 @@ function Component({ subroute, navigate, onBadges, searchText }: ViewProps) {
           jobs={jobs.data}
           jobDetail={portions.jobDetail}
           jobId={route.id}
-          navigate={navigate}
         />
       ) : route.name === "pings" ? (
         <Pings pings={pings.data} skewMs={pings.skewMs} now={now} />
@@ -280,7 +279,6 @@ function Component({ subroute, navigate, onBadges, searchText }: ViewProps) {
           overview={overview.data}
           jobs={jobs.data}
           ledger={ledger.data}
-          navigate={navigate}
         />
       );
     const ageMs = lastGoodAt ? now - lastGoodAt : 0;

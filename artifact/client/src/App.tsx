@@ -3,7 +3,7 @@
 // bundle, one router, the four apps as views on the
 // unified kit).
 //
-// The shell owns exactly: the route (lib/router.ts), the
+// The shell owns exactly: the route (lib/router.tsx), the
 // appearance state (lib/appearance.ts — applied once at
 // the document root), the presence state (bound to the
 // attention actions by the attention lane, §6 of
@@ -53,7 +53,7 @@ import { EmptyState } from "@workhorse/kit/components/display/EmptyState";
 import { Input } from "@workhorse/kit/components/controls/Fields";
 import { SectionBoundary } from "@workhorse/kit/components/shell/SectionBoundary";
 import { useAppearance } from "./lib/appearance";
-import { launcherHref, navigate, settingsHref, useHashRoute } from "./lib/router";
+import { launcherHref, navigate, settingsHref, useRoute } from "./lib/router";
 import type { AppId, AppViewModule, NavBadges, ViewProps } from "./lib/view-contract";
 import { APP_META, SettingsGlyph } from "./shell/apps";
 import { Launcher } from "./shell/Launcher";
@@ -201,7 +201,7 @@ function Crumb({ segments }: { segments: string[] }) {
 }
 
 export default function App() {
-  const route = useHashRoute();
+  const route = useRoute();
   const [appearance, updateAppearance] = useAppearance();
   // Presence is attention's SERVED state (INTEGRATION.md
   // §6, bound by the attention lane): the hook reads it

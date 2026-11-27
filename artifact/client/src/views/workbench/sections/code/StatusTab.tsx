@@ -8,6 +8,7 @@
 import type { RepoFileStat, RepoStatusPayload } from "../../lib/api-types-code";
 import { formatCount, formatDate, formatRelative } from "../../lib/format";
 import { pickerHref } from "../../lib/routing";
+import { RouteLink } from "../../../../lib/router";
 import { EmptyWell, metaStyle } from "../shared";
 
 const groupTitleStyle: React.CSSProperties = {
@@ -255,9 +256,9 @@ export function StatusTab({ status }: { status: RepoStatusPayload }) {
 
       <p style={{ ...metaStyle, marginTop: "var(--ui-space-24)" }}>
         Cross-links:{" "}
-        <a href={pickerHref()} style={{ color: "var(--ui-accent)" }}>
+        <RouteLink href={pickerHref()} style={{ color: "var(--ui-accent)" }}>
           all projects
-        </a>{" "}
+        </RouteLink>{" "}
         · status captured {formatDate(status.captured_at)} {formatRelative(status.captured_at)}
       </p>
     </div>
