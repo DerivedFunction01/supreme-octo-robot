@@ -60,6 +60,7 @@ from wbcli.bundles import cmd_todo_file_set  # noqa: E402,F401
 from wbcli.bundles import cmd_todo_import_db  # noqa: E402,F401
 from wbcli.bundles import cmd_todo_migrate_names  # noqa: E402,F401
 from wbcli.bundles import cmd_todo_new  # noqa: E402,F401
+from wbcli.bundles import cmd_todo_timing  # noqa: E402,F401
 from wbcli.drivers import cmd_activate  # noqa: E402,F401
 from wbcli.drivers import cmd_doctor  # noqa: E402,F401
 from wbcli.drivers import cmd_goal_check  # noqa: E402,F401

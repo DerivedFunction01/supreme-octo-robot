@@ -6,6 +6,7 @@ import sys
 from lib.writes import bundles as bundle_mod  # noqa: E402
 from lib.writes import todo_rename as todo_rename_mod  # noqa: E402
 from lib.plans import bundles as bundle_parser  # noqa: E402
+from lib.plans import timing as timing_mod  # noqa: E402
 from wbcli.context import PlansCtx  # noqa: E402
 from wbcli.context import _print  # noqa: E402
 
@@ -105,6 +106,26 @@ def cmd_todo_file_list(args):
         print(f"wb: {invalid} todo(s) with invalid "
               f"front-matter (see flags above)",
               file=sys.stderr)
+    return 0
+
+
+def cmd_todo_timing(args):
+    """The timing report (timing-ledger Step 4):
+    read-only. With a bundle, one plan's per-step
+    estimate vs actual and its ruled wall-clock;
+    without one, the project's price book across
+    plans. Writes nothing."""
+    ctx = PlansCtx(args)
+    if args.bundle:
+        try:
+            report = timing_mod.plan_timing(
+                ctx.plans_dir, args.bundle)
+        except ValueError as e:
+            raise SystemExit(f"wb todo timing: {e}")
+        print(timing_mod.render_plan(report))
+    else:
+        print(timing_mod.render_book(
+            timing_mod.price_book(ctx.plans_dir)))
     return 0
 
 
