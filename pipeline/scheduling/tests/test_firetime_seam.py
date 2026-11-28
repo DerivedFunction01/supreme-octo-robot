@@ -34,7 +34,8 @@ from server.entries import configblocks
 from server.firing import executor
 from server.firing.engine import Engine
 from tests.helpers import (T0, Clock, make_home, scripted_yaml,
-                           seed_tracked_fleet, write_entry, write_script)
+                           seed_specimen_knob_entry, seed_tracked_fleet,
+                           write_entry, write_script)
 
 PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GB = 1024 ** 3
@@ -104,6 +105,7 @@ class DeclarationTests(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
         seed_tracked_fleet(tmp, PKG_ROOT)
+        seed_specimen_knob_entry(tmp)
         return registry.load_dir(os.path.join(tmp, "jobs"), tmp)
 
     def test_landed_blocks_declare_the_scripts_variables(self):
@@ -112,17 +114,19 @@ class DeclarationTests(unittest.TestCase):
         # agent-admission census's one finding
         # (declaration-reconcile, no designated executor)
         # is resolved by retiring that entry to its Muse
-        # cron twin. Every tracked entry loads, the
-        # knob-bearing pair included.
+        # cron twin. Every tracked entry loads, and the
+        # knob-bearing specimens (the tracked storage
+        # watch and the seeded specimen entry) load with
+        # them.
         self.assertEqual(errors, [])
         self.assertEqual(
             registry.config_env(entries["storage-watch"]),
             {"STORAGE_WATCH_HOME_LOW_GB": "50",
              "STORAGE_WATCH_HOME_CRIT_GB": "45"})
         self.assertEqual(
-            registry.config_env(entries["memory-index-watchdog"]),
-            {"SCHEDULER_TOPIC_FILE_MAX_BYTES": "40960",
-             "SCHEDULER_TOPIC_PER_FILE_BYTES": "12800"})
+            registry.config_env(entries["specimen-knob-watchdog"]),
+            {"SPECIMEN_TOPIC_FILE_MAX_BYTES": "40000",
+             "SPECIMEN_TOPIC_PER_FILE_BYTES": "12000"})
 
     def test_served_view_carries_env_beside_the_value(self):
         entries, _errors = self._landed_entries()
