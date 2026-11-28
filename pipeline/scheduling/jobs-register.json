@@ -1,0 +1,119 @@
+{
+ "surface": "pipeline/scheduling/jobs",
+ "note": "The tracked register of system jobs: every tracked file under the surface stands here with its class, and the gate's register-required leg checks the tracked set against this register exactly, in both directions. Instance jobs live in the deployment's untracked overlay and never stand here.",
+ "entries": [
+  {
+   "file": "README.md",
+   "class": "document"
+  },
+  {
+   "file": "RETIRED.md",
+   "class": "document"
+  },
+  {
+   "id": "bridge-drain",
+   "file": "bridge-drain.yaml",
+   "class": "agent"
+  },
+  {
+   "id": "bridge-wake",
+   "file": "bridge-wake.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "card-watch",
+   "file": "card-watch.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "colab-runner-transient-restore",
+   "file": "colab-runner-transient-restore.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "colab-store-prune",
+   "file": "colab-store-prune.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "file-registry-check",
+   "file": "file-registry-check.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "flap-watch",
+   "file": "flap-watch.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "formation-clone-sweep",
+   "file": "formation-clone-sweep.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "load-monitor",
+   "file": "load-monitor.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "local-test-watch",
+   "file": "local-test-watch.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "restart-reconcile",
+   "file": "restart-reconcile.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "stale-mockup-cleanup",
+   "file": "stale-mockup-cleanup.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "storage-watch",
+   "file": "storage-watch.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "venue-extend-guard",
+   "file": "venue-extend-guard.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "venue-state-actuate",
+   "file": "venue-state-actuate.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "venue-state-sampler",
+   "file": "venue-state-sampler.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "venue-trim-hourly",
+   "file": "venue-trim-hourly.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "vm-restart-detector",
+   "file": "vm-restart-detector.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "workbench-viewer-doctor",
+   "file": "workbench-viewer-doctor.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "worktree-trim-deep",
+   "file": "worktree-trim-deep.yaml",
+   "class": "scripted"
+  },
+  {
+   "id": "worktree-trim-hourly",
+   "file": "worktree-trim-hourly.yaml",
+   "class": "scripted"
+  }
+ ]
+}

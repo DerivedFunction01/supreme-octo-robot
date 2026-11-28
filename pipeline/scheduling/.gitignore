@@ -22,6 +22,8 @@ jobs/venue-liveness-*.yaml
 # set is the workhorse-system set, and generalized patterns live
 # in examples/registry/.
 jobs-overlay/
+# Ops staging payloads: staged per run by the ops scripts, never tracked.
+staging/
 # Live overlay: sweeper bodies, templates, and live configs. Tracked fictional
 # examples live beside them; the live files themselves are working state.
 bodies/

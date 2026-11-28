@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from . import argvidioms, foldercensus, importisolation, linecap
-from . import staticlegs, writeruniqueness
+from . import registerrequired, staticlegs, writeruniqueness
 from .runner import LegOutcome, Package, census_config, load_families
 
 
@@ -154,6 +154,22 @@ def run_repo_scanners(repo_root: Path,
              if discovered else ""))
     return LegOutcome(
         name="repo scanner runners", ok=code == 0, code=code)
+
+
+def run_repo_registerrequired(repo_root: Path,
+                              packages: list[Package]) -> LegOutcome:
+    """The repo-scoped register-required leg: the tracked
+    jobs surface matches its tracked register exactly,
+    both directions, and every known write surface
+    carries ignore coverage."""
+    rows, failures, scanned = registerrequired.scan(repo_root)
+    print("== repo register-required (tracked register "
+          "match + write-surface ignore coverage)")
+    for line in registerrequired.render(rows, failures, scanned):
+        print(line)
+    return LegOutcome(
+        name="repo register-required", ok=not failures,
+        code=0 if not failures else 1)
 
 
 def run_folder_census(repo_root: Path,
