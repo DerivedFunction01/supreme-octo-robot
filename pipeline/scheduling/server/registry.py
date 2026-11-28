@@ -135,6 +135,15 @@ ANCHOR_PREFIXES = ("${REPO}/", "${WS}/", "${HOME}/")
 # real defect however the overlay stands.
 OVERLAY_DIR = "bodies"
 
+# The jobs overlay: a sibling jobs-overlay/ directory beside
+# the tracked jobs/ set, untracked by design, carries the
+# deployment's instance jobs — entries serving another
+# programme or this deployment instance (the fresh-instance
+# test) — while the tracked set carries the system jobs a
+# fresh instance validates alone. A checkout without the
+# overlay loads the tracked set alone.
+JOBS_OVERLAY_DIR = "jobs-overlay"
+
 
 def derive_anchors(home, workspace_root=None):
     """Path anchors (portability rule: tracked files never carry
@@ -737,15 +746,16 @@ def load_dir(jobs_dir, home, anchors=None, require_bodies=False):
     list of strings naming the quarantined files (spec EC-9).
     require_bodies is the live-load context (the server): a missing
     body file is an error there, never the overlay-absent state a
-    clean checkout reports."""
+    clean checkout reports. The jobs overlay (the sibling
+    jobs-overlay/ directory, when present) loads after the tracked
+    set, its entries held to the same validation; an id standing
+    in both sets is a named error — the overlay never shadows a
+    tracked entry."""
     entries, errors = {}, []
-    if not os.path.isdir(jobs_dir):
-        return entries, [f"registry dir missing: {jobs_dir}"]
-    for name in sorted(os.listdir(jobs_dir)):
-        if not name.endswith(".yaml"):
-            continue
+
+    def _load_one(directory, name):
         job_id = name[: -len(".yaml")]
-        path = os.path.join(jobs_dir, name)
+        path = os.path.join(directory, name)
         try:
             with open(path, "r", encoding="utf-8") as fh:
                 data = parse_yaml(fh.read(), where=name)
@@ -754,4 +764,24 @@ def load_dir(jobs_dir, home, anchors=None, require_bodies=False):
                                        require_bodies=require_bodies)
         except (EntryError, OSError) as exc:
             errors.append(str(exc))
+
+    if not os.path.isdir(jobs_dir):
+        return entries, [f"registry dir missing: {jobs_dir}"]
+    for name in sorted(os.listdir(jobs_dir)):
+        if name.endswith(".yaml"):
+            _load_one(jobs_dir, name)
+    overlay_dir = os.path.join(
+        os.path.dirname(os.path.abspath(jobs_dir)), JOBS_OVERLAY_DIR)
+    if os.path.isdir(overlay_dir):
+        for name in sorted(os.listdir(overlay_dir)):
+            if not name.endswith(".yaml"):
+                continue
+            job_id = name[: -len(".yaml")]
+            if job_id in entries:
+                errors.append(
+                    f"{name}: job id {job_id} stands in both the tracked "
+                    "registry and the jobs overlay — the overlay never "
+                    "shadows a tracked entry")
+                continue
+            _load_one(overlay_dir, name)
     return entries, errors

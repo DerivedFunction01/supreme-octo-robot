@@ -86,8 +86,8 @@ because live platform ops ride them: `render_units.py`
   was not rewritten: historical legacy mentions in the
   attention store stand as written and join through
   `legacy_id`. One armed record was dispositioned in
-  advance: the steampowernj programme todo (bundle
-  `2026-11-12-steampowernj-programme`; legacy id
+  advance: a tenant programme's todo (bundle
+  `2026-11-12-<tenant>-programme`; legacy id
   `t-01M7860FNPKG0BN2RW0SCB9RWZ`) whose record is
   missing `created` — it renamed as-is, proven safe,
   and its `created` repair is a post-cutover act owned
