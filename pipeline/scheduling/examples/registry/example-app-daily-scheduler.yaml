@@ -1,0 +1,29 @@
+id: example-app-daily-scheduler
+title: Example application daily scheduler host (scripted)
+kind: scripted
+status: active
+cadence:
+  type: daily
+  at: "06:00"
+owner: goal:example
+run:
+  cwd: ${WS}/specimen-app
+  argv:
+    - ${WS}/specimen-app/var/venv/bin/python
+    - -m
+    - platform.scheduler
+    - run-day
+timeout_secs: 14400
+report:
+  when: always
+  ok_exit_codes:
+    - 0
+state_paths:
+  - ${WS}/specimen-app/var/state/scheduler
+classification: fixed command (a registered application's own scheduler host, run daily from the app root: cwd the app root, argv the app's venv python -m platform.scheduler run-day); the day report is produced on every run by design, so it reports always; entry outcomes are enumerated by the host itself.
+lifetime: permanent
+
+catalog:
+  origin: hand
+  generality: generalized
+  use_case: demo

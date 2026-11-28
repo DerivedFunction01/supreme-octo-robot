@@ -15,6 +15,14 @@ __pycache__/
 # liveness entry per live lease and deletes it with the lease record; derived
 # state (the lease record is the record of truth), never tracked.
 jobs/venue-liveness-*.yaml
+# Instance jobs: entries serving another programme or a deployment
+# instance (the fresh-instance test) are live overlay — they stay on
+# disk and the loader reads them, but they are never tracked; the
+# tracked jobs set is the workhorse-system set, and generalized
+# patterns live in examples/registry/.
+jobs/usmc-*.yaml
+jobs/weekly-gmail-*.yaml
+jobs/memory-index-watchdog.yaml
 # Live overlay: sweeper bodies, templates, and live configs. Tracked fictional
 # examples live beside them; the live files themselves are working state.
 bodies/
