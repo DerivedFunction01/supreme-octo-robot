@@ -25,8 +25,12 @@ the repo at census, never a name list
 
 import subprocess
 import unittest
+from pathlib import Path
 
 from tests.test_worktree_trim import HOUR, NOW, Fixture, _git
+
+BRANCHCAP = (Path(__file__).resolve().parents[1]
+             / "ops" / "trim" / "trim_branchcap.sh")
 
 
 def _advance_main(fx, epoch=NOW - 3000):
@@ -303,6 +307,22 @@ class TestBranchCap(Fixture):
         self.assertEqual(self.local_branches(),
                          {"main"} | set(names))
         self.assertEqual(self.queue(), [])
+
+    def test_merge_fetch_bound_is_priced_and_timeout_named(self):
+        # The merge fetch's bound is priced by the bundle
+        # it carries (cap_fetch_timeout at both fetch
+        # sites), never a fixed 60s: the largest repo's
+        # fetch crossed the fixed bound under the pass's
+        # own parallel convoy and died silently, reported
+        # as an unreadable bundle the same pass had just
+        # verified. A death by the bound (status 124)
+        # names itself -bundle-timeout via cap_fetch_fail.
+        src = BRANCHCAP.read_text()
+        self.assertNotIn("timeout 60", src)
+        self.assertEqual(src.count("$(cap_fetch_timeout"), 2)
+        self.assertIn("cap_fetch_fail()", src)
+        self.assertIn('"$1-bundle-timeout"', src)
+        self.assertIn('"$1-bundle-unreadable"', src)
 
     def test_attached_excess_branch_stands_cap_takes_selectable(self):
         # (h'') A checked-out branch is not cap-selectable

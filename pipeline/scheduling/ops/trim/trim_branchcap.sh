@@ -246,6 +246,35 @@ branch_cap_phase() {
     [ -f "$cap_err_tmp" ] || return 0
     cap_err="$(tr '\n' ' ' <"$cap_err_tmp" | cut -c 1-300)"
   }
+  # cap_fetch_timeout <bundle-file>: the merge fetch's
+  # bound, priced by the work — a floor of 60s plus 2s
+  # per MiB of bundle, capped at 600s. A fixed bound
+  # misprices the largest repos: their fetches are the
+  # biggest, and a pass's own parallel workers are the
+  # load the fetch runs under (an idle fetch of a 58 MiB
+  # bundle reads in ~1.5s; the same fetch crossed a
+  # fixed 60s under the pass's convoy and died silently,
+  # misreported as an unreadable bundle — the bundle had
+  # already passed bundle verify in the same pass).
+  cap_fetch_timeout() {
+    local sz t
+    sz="$(stat -c %s "$1" 2>/dev/null || echo 0)"
+    t=$((60 + sz / 524288))
+    [ "$t" -gt 600 ] && t=600
+    echo "$t"
+  }
+  # cap_fetch_fail <side> <status>: the merge fetch's
+  # failure reason — a death by the bound (status 124)
+  # is a timeout and names itself; anything else is the
+  # bundle's readability, with the command's error text
+  # already in cap_err.
+  cap_fetch_fail() {
+    if [ "$2" -eq 124 ]; then
+      echo "$1-bundle-timeout"
+    else
+      echo "$1-bundle-unreadable"
+    fi
+  }
   # ref -> this pass's sides ("local", "origin", or
   # "local,origin"); a branch whose local and origin tips
   # differ stages its origin tip under <branch>@origin so
@@ -361,9 +390,10 @@ branch_cap_phase() {
     # the bundle read here is the one the rename below
     # replaces: a concurrent pass's merge is either
     # wholly before this read or wholly after it.
-    cap_run timeout 60 $GIT -C "$main_dir" fetch --quiet "$bundle" \
-      'refs/archive-cap/*:refs/archive-cap/*' \
-      || cap_fail="prior-bundle-unreadable"
+    cap_run timeout "$(cap_fetch_timeout "$bundle")" $GIT -C "$main_dir" fetch --quiet "$bundle" \
+      'refs/archive-cap/*:refs/archive-cap/*'
+    local prior_rc=$?
+    [ "$prior_rc" -ne 0 ] && cap_fail="$(cap_fetch_fail prior "$prior_rc")"
   fi
   if [ -z "$cap_fail" ]; then
     # this pass's staged refs join the namespace under
@@ -371,9 +401,10 @@ branch_cap_phase() {
     # bundle also carries, this pass's tip governs —
     # the newest staging wins, as the pre-lock staging
     # order had it.
-    cap_run timeout 60 $GIT -C "$main_dir" fetch --quiet "$staged_bundle" \
-      "$stage_ns/*:refs/archive-cap/*" \
-      || cap_fail="staged-bundle-unreadable"
+    cap_run timeout "$(cap_fetch_timeout "$staged_bundle")" $GIT -C "$main_dir" fetch --quiet "$staged_bundle" \
+      "$stage_ns/*:refs/archive-cap/*"
+    local staged_rc=$?
+    [ "$staged_rc" -ne 0 ] && cap_fail="$(cap_fetch_fail staged "$staged_rc")"
   fi
   # The bundle's rows: every staged archive ref (this
   # pass's excess unioned with any earlier same-day rows).
