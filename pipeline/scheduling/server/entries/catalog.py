@@ -61,7 +61,7 @@ STANDARD_PARAMS = ("id", "title", "owner", "owner_reason", "timezone")
 
 FIELD_ORDER = (
     "id", "title", "kind", "status", "cadence", "timezone",
-    "owner", "owner_reason", "run", "body", "escalate_body",
+    "owner", "owner_reason", "run", "body", "executor", "escalate_body",
     "timeout_secs", "report", "state_paths", "classification",
     "source", "lifetime", "catalog",
 )

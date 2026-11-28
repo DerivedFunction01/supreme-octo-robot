@@ -66,6 +66,19 @@ lists of maps.
   state), so there a reference into the absent overlay is
   not an error — `validate`/`census` report it as a named
   overlay-absent state, counted in their output.
+- `executor` (agent, required) — the registered name of
+  the surface that claims and works the job's pings: a
+  cron id, a named worker, a seat, a thread's registered
+  name. The server mints an agent job's pings and never
+  works them, so the field is the admission contract for
+  the kind: an agent entry without one fails validation
+  and does not arm, and a lone generic word or
+  to-be-decided marker (`TBD`, `none`, `agent`, …) is a
+  placeholder, not a designation, and fails the same way.
+  Scripted entries do not carry it — the server runs
+  those itself. A named executor whose pings stand
+  unclaimed past two cadences is named by `bin/sched
+  census` as an unworked defect.
 - `escalate_body` — optional, for a scripted job whose
   failure hands an agent a remediation body.
 - `timeout_secs` (required, no default) — an entry without
@@ -241,6 +254,7 @@ cadence:
   at: "09:00"
 owner: goal:example
 body: bodies/example-agent-review.md
+executor: operator agent surface
 timeout_secs: 1800
 state_paths: []
 classification: the work is reading the day's run record and judging what deserves the operator's attention - judgment over content, so agent

@@ -9,6 +9,7 @@ timezone: America/New_York
 owner: none
 owner_reason: 'Harness-connector platform machinery (F5 home, owner ruling 2026-11-11): the bridge serves every venue caller on the machine, so no single goal owns it. This entry is the drain permanent home the owner picked (registry-native agent drain) after the approval-sweeper-owned cron was removed as wrongly placed.'
 body: bodies/bridge-drain.md
+executor: main chat (bridge-wake owners drain)
 timeout_secs: 1800
 state_paths:
   - ${REPO}/state/connector-bridge

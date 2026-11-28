@@ -106,6 +106,7 @@ def agent_yaml(job_id, every="5m", timeout=60, extra=""):
         f"cadence:\n  type: interval\n  every: {every}\n"
         f"owner: goal:test-goal\n"
         f"body: bodies/{job_id}.md\n"
+        f"executor: test-agent-surface\n"
         f"timeout_secs: {timeout}\n"
         f"state_paths: []\n"
         f"classification: test fixture\n"

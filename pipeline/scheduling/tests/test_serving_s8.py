@@ -441,7 +441,8 @@ LIVENESS_FIXTURE = (
 
 class LandedRegistryTests(unittest.TestCase):
     """The landed fleet itself, seeded into a fixture home:
-    the registry loads clean, every entry classifies, and the
+    the registry loads but for the one agent-admission
+    refusal the census found, every entry classifies, and the
     two knob-bearing entries serve the blocks contract 09's
     amendment evidenced. The fleet expectation derives from
     the tracked set (git's index) — provisioned per-deployment
@@ -456,8 +457,20 @@ class LandedRegistryTests(unittest.TestCase):
             os.path.join(self.tmp, "jobs"), self.tmp)
 
     def test_registry_loads_clean(self):
-        self.assertEqual(self.errors, [])
-        self.assertEqual(sorted(self.entries), self.tracked_ids)
+        # The tracked fleet loads clean but for the one
+        # refusal the agent-admission census found:
+        # declaration-reconcile is an agent job with no
+        # designated executing surface in evidence, so the
+        # admission rule holds it out of the live registry
+        # by name (the census pin lives in
+        # test_agent_admission). Every other tracked entry
+        # stands loaded.
+        self.assertEqual(len(self.errors), 1)
+        self.assertIn("declaration-reconcile", self.errors[0])
+        self.assertIn("executor", self.errors[0])
+        self.assertEqual(sorted(self.entries),
+                         [i for i in self.tracked_ids
+                          if i != "declaration-reconcile"])
 
     def test_every_entry_classifies(self):
         for job_id in self.entries:
