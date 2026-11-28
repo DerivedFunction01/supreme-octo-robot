@@ -33,6 +33,7 @@ EXPECTED_WAIT_CLASSES = {
     "redrive": (48, "expire"),
     "ruling_propagation": (48, "expire"),
     "execution_risk_flag": (48, "expire"),
+    "unreported_stall": (48, "expire"),
     "permission_card": (None, "expire_blocked"),
     "scope_expansion": (None, "expire_blocked"),
     "login": (None, "expire_blocked"),

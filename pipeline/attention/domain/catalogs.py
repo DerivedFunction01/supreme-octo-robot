@@ -209,6 +209,7 @@ RULED_CLASSES = (
     "redrive",
     "ruling_propagation",
     "execution_risk_flag",
+    "unreported_stall",
 )
 
 
@@ -322,6 +323,15 @@ _STOP_ROWS = (
         "the re-routed artifact's venue verification, then the "
         "lane's next conforming checkpoint",
         "stopped-lane actuation commission",
+    ),
+    _stop_row(
+        "unreported_stall",
+        False,
+        "press_then_successor",
+        "the commission record and the ping ledger",
+        "the pressed lane's checkpoint inside the interval, or the "
+        "successor's first checkpoint on the same commission",
+        "stopped-lane actuation commission — nine-hour-silence amendment",
     ),
     _stop_row(
         "permission_card",
