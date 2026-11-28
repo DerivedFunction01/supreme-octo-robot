@@ -16,13 +16,12 @@ __pycache__/
 # state (the lease record is the record of truth), never tracked.
 jobs/venue-liveness-*.yaml
 # Instance jobs: entries serving another programme or a deployment
-# instance (the fresh-instance test) are live overlay — they stay on
-# disk and the loader reads them, but they are never tracked; the
-# tracked jobs set is the workhorse-system set, and generalized
-# patterns live in examples/registry/.
-jobs/usmc-*.yaml
-jobs/weekly-gmail-*.yaml
-jobs/memory-index-watchdog.yaml
+# instance (the fresh-instance test) live in the jobs overlay — the
+# loader reads the sibling jobs-overlay/ directory with the tracked
+# set, and the overlay itself is never tracked; the tracked jobs
+# set is the workhorse-system set, and generalized patterns live
+# in examples/registry/.
+jobs-overlay/
 # Live overlay: sweeper bodies, templates, and live configs. Tracked fictional
 # examples live beside them; the live files themselves are working state.
 bodies/
