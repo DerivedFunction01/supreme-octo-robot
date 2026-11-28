@@ -391,7 +391,7 @@ branch_cap_phase() {
     # replaces: a concurrent pass's merge is either
     # wholly before this read or wholly after it.
     cap_run timeout "$(cap_fetch_timeout "$bundle")" $GIT -C "$main_dir" fetch --quiet "$bundle" \
-      'refs/archive-cap/*:refs/archive-cap/*'
+      '+refs/archive-cap/*:refs/archive-cap/*'
     local prior_rc=$?
     [ "$prior_rc" -ne 0 ] && cap_fail="$(cap_fetch_fail prior "$prior_rc")"
   fi
@@ -400,9 +400,18 @@ branch_cap_phase() {
     # their final archive names; on a name the standing
     # bundle also carries, this pass's tip governs —
     # the newest staging wins, as the pre-lock staging
-    # order had it.
+    # order had it. The refspec therefore forces the
+    # update (+): an archive ref is a record, not a
+    # branch under fast-forward discipline — a branch
+    # archived once, deleted, and recreated by a lane
+    # with fresh history re-archives at a tip that does
+    # not descend from its archived tip, and an unforced
+    # fetch rejects the update (non-fast-forward),
+    # failing the whole merge while --quiet swallows
+    # the rejection lines, so the failure surfaces with
+    # an empty error as a bundle-read failure.
     cap_run timeout "$(cap_fetch_timeout "$staged_bundle")" $GIT -C "$main_dir" fetch --quiet "$staged_bundle" \
-      "$stage_ns/*:refs/archive-cap/*"
+      "+$stage_ns/*:refs/archive-cap/*"
     local staged_rc=$?
     [ "$staged_rc" -ne 0 ] && cap_fail="$(cap_fetch_fail staged "$staged_rc")"
   fi

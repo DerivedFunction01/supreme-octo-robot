@@ -308,6 +308,55 @@ class TestBranchCap(Fixture):
                          {"main"} | set(names))
         self.assertEqual(self.queue(), [])
 
+    def test_recreated_branch_rearchives_at_a_divergent_tip(self):
+        # A branch archived by one pass, deleted, then
+        # recreated by a lane with fresh history stands at
+        # a tip that does not descend from its archived
+        # tip. The next pass's merge fetch must still take
+        # it — the archive ref is a record and the newest
+        # staging wins — where an unforced fetch rejects
+        # the update as non-fast-forward and fails the
+        # whole cap phase (the production failure: the
+        # term-index branches, recreated after archiving).
+        self.add_origin()
+        names = [f"feat/r{i:02d}" for i in range(13)]
+        for i, name in enumerate(names):
+            self.add_orphan(name, NOW - 120000 + i * 1000)
+        _git(self.main, "push", "origin", "main", *names,
+             env=self.env)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        heads = _git(self.main, "bundle", "list-heads",
+                     str(self.cap_dir() / "branches.bundle"),
+                     env=self.env).stdout
+        archived = [ln.split()[0] for ln in heads.splitlines()
+                    if ln.endswith("refs/archive-cap/feat/r00")]
+        self.assertEqual(len(archived), 1)
+        archived = archived[0]
+        # Recreate the four archived names on fresh
+        # history (main has not moved; a new side commit
+        # off it is still no descendant of the archived
+        # side tip), tips dated oldest so the cap selects
+        # them again — and dated off the originals' epochs,
+        # since the fixture's commits are deterministic in
+        # content, parent and date.
+        for i, name in enumerate(names[:4]):
+            self.add_orphan(name, NOW - 120500 + i * 1000)
+        _git(self.main, "push", "origin", *names[:4],
+             env=self.env)
+        new_tip = _git(self.main, "rev-parse", "feat/r00",
+                       env=self.env).stdout.strip()
+        self.assertNotEqual(new_tip, archived)
+        out = self.run_trim("--tier", "soft")
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertNotIn("BRANCH-CAP-FAIL", out.stdout)
+        heads = _git(self.main, "bundle", "list-heads",
+                     str(self.cap_dir() / "branches.bundle"),
+                     env=self.env).stdout
+        now_archived = [ln.split()[0] for ln in heads.splitlines()
+                        if ln.endswith("refs/archive-cap/feat/r00")]
+        self.assertEqual(now_archived, [new_tip])
+
     def test_merge_fetch_bound_is_priced_and_timeout_named(self):
         # The merge fetch's bound is priced by the bundle
         # it carries (cap_fetch_timeout at both fetch
