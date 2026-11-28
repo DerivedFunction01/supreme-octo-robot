@@ -21,6 +21,12 @@ entries:
     origin: hand
     generality: generalized
     use_case: demo
+  example-app-daily-scheduler:
+    file: example-app-daily-scheduler.yaml
+    class: entry
+    origin: hand
+    generality: generalized
+    use_case: demo
   example-daily-report:
     file: example-daily-report.yaml
     class: entry
