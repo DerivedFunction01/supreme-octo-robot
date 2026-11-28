@@ -22,7 +22,12 @@
 #     oldest-first until the measured cuts cover the
 #     excess — the count cap alone cannot see one huge
 #     tree, and the byte leg is what binds before the
-#     venue's disk warn line does.
+#     venue's disk warn line does. The byte leg's total
+#     is the sum of one per-tree measure per tree (the
+#     run-trees section): a tree whose measure fails is
+#     carried at its last recorded figure or, with none,
+#     named unmeasured — and a pass with an unmeasured
+#     remainder ends partial, never green.
 #   clones (every git repo rooted within depth 3 of
 #     $HOME, outside runs/): job clones, mirrors, lane
 #     worktrees. A dirty clone is auto-committed in
@@ -71,6 +76,9 @@
 # Overrides (tests, fixtures): WORKTREE_TRIM_VENUE_HOME,
 # WT_TRIM_VENUE_RUN_CAP (default 300),
 # WT_TRIM_VENUE_RUN_BYTES (default 77309411328),
+# WT_TRIM_VENUE_RUN_BYTES_JOBS (measure parallelism;
+# default nproc), WT_TRIM_VENUE_RUN_BYTES_MEASURE_SECS
+# (the byte leg's total measure budget, default 600),
 # WT_TRIM_VENUE_CLONE_CAP (default 40),
 # WT_TRIM_VENUE_CACHE_BYTES (default 8589934592),
 # WT_TRIM_VENUE_CACHE_ACTIVE_SECS (default 900),
@@ -88,6 +96,13 @@ VENUE_HOME="${WORKTREE_TRIM_VENUE_HOME:-$HOME}"
 export PATH="$VENUE_HOME/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 RUN_CAP="${WT_TRIM_VENUE_RUN_CAP:-300}"
 RUN_BYTES="${WT_TRIM_VENUE_RUN_BYTES:-77309411328}"
+RUN_BYTES_JOBS="${WT_TRIM_VENUE_RUN_BYTES_JOBS:-}"
+RUN_BYTES_MEASURE_SECS="${WT_TRIM_VENUE_RUN_BYTES_MEASURE_SECS:-600}"
+# The byte leg's carry state: one "<bytes><TAB><path>"
+# line per run tree left standing, rewritten whole each
+# pass. The venue form keeps no other state; this file
+# is what a failed measure is carried from.
+RUN_BYTES_STATE="$VENUE_HOME/.worktree-trim-venue-run-bytes"
 CLONE_CAP="${WT_TRIM_VENUE_CLONE_CAP:-40}"
 CACHE_BYTES="${WT_TRIM_VENUE_CACHE_BYTES:-8589934592}"
 CACHE_ACTIVE_SECS="${WT_TRIM_VENUE_CACHE_ACTIVE_SECS:-900}"
@@ -97,7 +112,7 @@ case "$VENUE_HOME" in
   ""|/) echo "REFUSED venue home: '$VENUE_HOME'"; exit 2 ;;
 esac
 [ -d "$VENUE_HOME" ] || { echo "REFUSED venue home missing: $VENUE_HOME"; exit 2; }
-case "$RUN_CAP$CLONE_CAP$RUN_BYTES$CACHE_BYTES$CACHE_ACTIVE_SECS" in
+case "$RUN_CAP$CLONE_CAP$RUN_BYTES$CACHE_BYTES$CACHE_ACTIVE_SECS$RUN_BYTES_MEASURE_SECS" in
   *[!0-9]*) echo "REFUSED non-numeric cap"; exit 2 ;;
 esac
 
@@ -116,6 +131,33 @@ du_bytes() {
   out="${out%%$'\t'*}"
   case "$out" in ""|*[!0-9]*) return 1 ;; esac
   printf '%s\n' "$out"
+}
+
+# measure_run_tree <path> — the run byte leg's per-tree
+# measure worker, run under xargs parallelism (exported
+# for the child shells, with du_bytes and
+# RUN_BYTES_DEADLINE). Prints one line: "<bytes><TAB>
+# <path>" on a measure, "GONE<TAB><path>" when the tree
+# vanished between census and measure, or
+# "UNMEASURED<TAB><path>" when the measure fails, times
+# out, or the leg's total measure budget
+# (RUN_BYTES_DEADLINE, an epoch) has already passed —
+# no new measure starts past the deadline.
+measure_run_tree() {
+  local path="$1" bytes
+  if [ ! -d "$path" ]; then
+    printf 'GONE\t%s\n' "$path"
+    return 0
+  fi
+  if [ "$(date +%s)" -ge "$RUN_BYTES_DEADLINE" ]; then
+    printf 'UNMEASURED\t%s\n' "$path"
+    return 0
+  fi
+  if bytes="$(du_bytes "$path" 30)"; then
+    printf '%s\t%s\n' "$bytes" "$path"
+  else
+    printf 'UNMEASURED\t%s\n' "$path"
+  fi
 }
 
 # auto_commit_clone <path> — the controller trim's
@@ -174,7 +216,7 @@ if [ -d "$runs_dir" ]; then
   done
   run_before=${#run_rows[@]}
   cut_n=0
-  declare -a run_sorted=()
+  declare -a run_sorted=() count_cut_failed=()
   if [ "$run_before" -gt 0 ]; then
     mapfile -t run_sorted < <(printf '%s\n' "${run_rows[@]}" | sort -t$'\t' -k1,1n)
   fi
@@ -186,45 +228,146 @@ if [ -d "$runs_dir" ]; then
         echo "RUN-TREE-CUT path=$victim"
       else
         echo "RUN-TREE-CUT-FAILED path=$victim"
+        count_cut_failed+=("$victim")
         partial=3
       fi
     done
   fi
   # Byte leg: the same ranked list, continuing past the
-  # count leg's survivors, until the measured cuts cover
-  # the excess over the byte budget. The store total is
-  # measured once up front and once at the end; a
-  # measurement that times out skips the leg by name —
-  # the trim never wedges on measurement.
+  # count leg's survivors. One measure per tree, taken
+  # in parallel under a total measure budget, serves
+  # every figure the leg uses: the store total is the
+  # sum of the per-tree measures, the cuts walk the
+  # ranked list against that sum, and the after figure
+  # is the sum minus the cut trees' measures, plus any
+  # tree born during the pass (measured and named at
+  # the end). There is no second whole-store measure
+  # to disagree with the first — the old form priced
+  # its excess against a whole-store du (each inode
+  # once) but credited cuts at per-tree du (shared
+  # inodes in full per tree), so its cuts under-covered
+  # the excess it measured — and none whose timeout
+  # can no-op the verdict. A tree whose measure fails
+  # or times out is carried at its figure from the
+  # last pass's state file where one exists (named
+  # RUN-BYTES-CARRIED); with no figure to carry it is
+  # named RUN-BYTES-UNMEASURED, the byte leg does not
+  # cut it (it cannot credit the cut), and the pass
+  # ends partial — the budget is never silently
+  # unenforced.
   if [ "$run_before" -gt 0 ]; then
-    if run_bytes_before="$(du_bytes "$runs_dir" 120)"; then
-      run_bytes_after="$run_bytes_before"
-      if [ "$run_bytes_before" -gt "$RUN_BYTES" ]; then
-        excess=$((run_bytes_before - RUN_BYTES))
-        cut_bytes=0
-        for ((i = cut_n; i < run_before && cut_bytes < excess; i++)); do
-          victim="${run_sorted[$i]#*$'\t'}"
-          vbytes="$(du_bytes "$victim" 30 || true)"
-          if rm -rf "$victim"; then
-            echo "RUN-TREE-CUT path=$victim"
-            [ -n "$vbytes" ] && cut_bytes=$((cut_bytes + vbytes))
-          else
-            echo "RUN-TREE-CUT-FAILED path=$victim"
-            partial=3
-          fi
-        done
-        run_bytes_after="$(du_bytes "$runs_dir" 120 || echo unknown)"
+    declare -a survivor_paths=()
+    for p in "${count_cut_failed[@]:-}"; do
+      [ -n "$p" ] && survivor_paths+=("$p")
+    done
+    for ((i = cut_n; i < run_before; i++)); do
+      survivor_paths+=("${run_sorted[$i]#*$'\t'}")
+    done
+    declare -A prior_bytes=()
+    if [ -f "$RUN_BYTES_STATE" ]; then
+      while IFS=$'\t' read -r pfig ppath; do
+        case "$pfig" in ""|*[!0-9]*) continue ;; esac
+        [ -n "$ppath" ] && prior_bytes["$ppath"]="$pfig"
+      done < "$RUN_BYTES_STATE"
+    fi
+    declare -A tree_bytes=() tree_gone=()
+    if [ "${#survivor_paths[@]}" -gt 0 ]; then
+      RUN_BYTES_DEADLINE=$(( $(date +%s) + RUN_BYTES_MEASURE_SECS ))
+      export RUN_BYTES_DEADLINE
+      export -f du_bytes measure_run_tree
+      jobs="$RUN_BYTES_JOBS"
+      [ -n "$jobs" ] || jobs="$(nproc 2>/dev/null || echo 4)"
+      case "$jobs" in *[!0-9]*|0) jobs=1 ;; esac
+      while IFS=$'\t' read -r mfig mpath; do
+        case "$mfig" in
+          GONE) tree_gone["$mpath"]=1 ;;
+          ""|*[!0-9]*) ;;
+          *) tree_bytes["$mpath"]="$mfig" ;;
+        esac
+      done < <(printf '%s\0' "${survivor_paths[@]}" \
+        | xargs -0 -P "$jobs" -n 1 bash -c 'measure_run_tree "$1"' _)
+    fi
+    run_bytes_total=0
+    declare -a unmeasured=()
+    for p in "${survivor_paths[@]}"; do
+      [ -n "${tree_gone[$p]:-}" ] && continue
+      if [ -n "${tree_bytes[$p]:-}" ]; then
+        run_bytes_total=$((run_bytes_total + tree_bytes[$p]))
+      elif [ -n "${prior_bytes[$p]:-}" ]; then
+        tree_bytes["$p"]="${prior_bytes[$p]}"
+        run_bytes_total=$((run_bytes_total + tree_bytes[$p]))
+        echo "RUN-BYTES-CARRIED path=$p bytes=${tree_bytes[$p]}"
+      else
+        unmeasured+=("$p")
+        echo "RUN-BYTES-UNMEASURED path=$p"
       fi
-      echo "RUN-BYTES before=$run_bytes_before after=$run_bytes_after budget=$RUN_BYTES"
-      case "$run_bytes_after" in
-        unknown) : ;;
-        *) if [ "$run_bytes_after" -gt "$RUN_BYTES" ]; then
-             echo "RUN-BYTES-OVER live=$run_bytes_after budget=$RUN_BYTES"
-             partial=3
-           fi ;;
-      esac
-    else
-      echo "RUN-BYTES skipped=measure-timeout"
+    done
+    [ "${#unmeasured[@]}" -gt 0 ] && partial=3
+    declare -A tree_cut=() cut_failed=()
+    run_bytes_after=$run_bytes_total
+    if [ "$run_bytes_total" -gt "$RUN_BYTES" ]; then
+      excess=$((run_bytes_total - RUN_BYTES))
+      cut_bytes=0
+      for p in "${survivor_paths[@]}"; do
+        [ "$cut_bytes" -ge "$excess" ] && break
+        [ -n "${tree_bytes[$p]:-}" ] || continue
+        if rm -rf "$p"; then
+          echo "RUN-TREE-CUT path=$p"
+          tree_cut["$p"]=1
+          cut_bytes=$((cut_bytes + tree_bytes[$p]))
+        else
+          echo "RUN-TREE-CUT-FAILED path=$p"
+          cut_failed["$p"]=1
+          partial=3
+        fi
+      done
+      run_bytes_after=$((run_bytes_total - cut_bytes))
+    fi
+    # Trees born during the pass were not in the
+    # census: measure and name each, and count it in
+    # the after figure — never silently absorbed.
+    declare -A census_paths=()
+    for row in "${run_rows[@]}"; do
+      census_paths["${row#*$'\t'}"]=1
+    done
+    declare -a born_paths=()
+    while IFS= read -r d; do
+      [ -n "${census_paths[$d]:-}" ] && continue
+      born_paths+=("$d")
+      if bbytes="$(du_bytes "$d" 30)"; then
+        tree_bytes["$d"]="$bbytes"
+        run_bytes_after=$((run_bytes_after + bbytes))
+        echo "RUN-TREE-BORN path=$d bytes=$bbytes"
+      else
+        echo "RUN-BYTES-UNMEASURED path=$d"
+        partial=3
+      fi
+    done < <(find "$runs_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)
+    echo "RUN-BYTES before=$run_bytes_total after=$run_bytes_after budget=$RUN_BYTES"
+    if [ "$run_bytes_after" -gt "$RUN_BYTES" ]; then
+      echo "RUN-BYTES-OVER live=$run_bytes_after budget=$RUN_BYTES"
+      partial=3
+      for p in "${unmeasured[@]:-}"; do
+        [ -n "$p" ] && echo "RUN-BYTES-UNCUTTABLE path=$p reason=unmeasured"
+      done
+      for p in "${!cut_failed[@]}"; do
+        echo "RUN-BYTES-UNCUTTABLE path=$p reason=cut-failed"
+      done
+    fi
+    # The state file carries this pass's figures for
+    # the trees left standing, for the next pass's
+    # carry. Rewritten whole each pass.
+    state_tmp="$RUN_BYTES_STATE.tmp.$$"
+    : > "$state_tmp"
+    for p in "${survivor_paths[@]:-}" "${born_paths[@]:-}"; do
+      [ -n "$p" ] || continue
+      [ -n "${tree_bytes[$p]:-}" ] || continue
+      [ -n "${tree_cut[$p]:-}" ] && continue
+      printf '%s\t%s\n' "${tree_bytes[$p]}" "$p" >> "$state_tmp"
+    done
+    if ! mv "$state_tmp" "$RUN_BYTES_STATE"; then
+      echo "RUN-BYTES-STATE-WRITE-FAILED path=$RUN_BYTES_STATE"
+      rm -f "$state_tmp"
     fi
   fi
   run_after="$(find "$runs_dir" -mindepth 1 -maxdepth 1 -type d | wc -l)"
