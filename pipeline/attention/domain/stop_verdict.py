@@ -301,8 +301,7 @@ def verdict(
             ACTUATE,
             reason,
             row.get("disposition"),
-            "the reference's recorded approval validates — "
-            "the row's disposition fires",
+            "the reference's recorded approval validates — the row's disposition fires",
         )
     if row.get("hard_stop"):
         return _result(
