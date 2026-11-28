@@ -253,6 +253,45 @@ def test_carried_disk_block_absent_is_none():
     assert vs.carried_disk_block({"disk": "not-a-block"}) is None
 
 
+def test_carried_jobs_block_holds_jobs_at_unreachable():
+    prev = {
+        "venue": "venue-a",
+        "state": "advancing",
+        "sampled_at": AT,
+        "jobs": [
+            {"run_id": "run-a", "caller": "edgar", "root_pid": 4242,
+             "tree_alive": True, "cpu_s": 12.0, "cpu_delta_s": 3.0,
+             "verdict": "advancing"},
+            {"run_id": "run-b", "caller": "edgar", "root_pid": 4343,
+             "tree_alive": True, "cpu_s": 9.0, "cpu_delta_s": 0.0,
+             "verdict": "wedged"},
+        ],
+    }
+    carried = vs.carried_jobs_block(prev)
+    assert [j["run_id"] for j in carried] == ["run-a", "run-b"]
+    assert [j["verdict"] for j in carried] == ["unreachable", "unreachable"]
+    # The held job keeps its last known readings; the
+    # previous state's own dicts are not mutated.
+    assert carried[0]["cpu_s"] == 12.0
+    assert prev["jobs"][0]["verdict"] == "advancing"
+
+
+def test_carried_jobs_block_absent_or_malformed_is_empty():
+    assert vs.carried_jobs_block(None) == []
+    assert vs.carried_jobs_block({"venue": "venue-a"}) == []
+    assert vs.carried_jobs_block({"jobs": "not-a-list"}) == []
+    assert vs.carried_jobs_block({"jobs": []}) == []
+
+
+def test_unreachable_since_anchors_at_the_first_dark_sample():
+    first_dark = {"state": "unreachable", "unreachable_since": AT}
+    later = "2026-01-01T02:00:00+00:00"
+    assert vs.unreachable_since(first_dark, later) == AT
+    assert vs.unreachable_since({"state": "advancing"}, later) == later
+    assert vs.unreachable_since(None, later) == later
+    assert vs.unreachable_since({"state": "unreachable"}, later) == later
+
+
 def _stat_line(pid, comm, ppid, utime, stime):
     # Fields after the comm: state(3) then ppid(4), nine more
     # fixed fields (5..13), utime(14), stime(15).
