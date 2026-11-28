@@ -214,6 +214,34 @@ def test_wedged_job_decides_a_reap_with_its_samples_as_evidence():
     assert d["evidence"]["cpu_s"] == 120.0 and d["evidence"]["cpu_delta_s"] == 0.0
 
 
+def test_unreachable_held_job_decides_no_reap_on_either_leg():
+    # A job held at "unreachable" (its venue is dark) is
+    # never reaped: not on the wedged leg, and not on the
+    # timeout leg even with its record long past timeout —
+    # the actuator cannot verify a tree it cannot see, and
+    # no timeout accrues across a dark window.
+    state = _state(
+        [_job("run-u", "unreachable"), _job("run-w", "wedged", pid=4343)],
+        state="unreachable",
+    )
+    recs = {
+        "run-u": {
+            "state": "running",
+            "caller": "lane-a",
+            "started_at": "2026-11-26T19:00:00+00:00",
+            "timeout_s": 60,
+        },
+        "run-w": {
+            "state": "running",
+            "caller": "lane-a",
+            "started_at": "2026-11-26T19:00:00+00:00",
+            "timeout_s": 18000,
+        },
+    }
+    decisions = va.reap_decisions(state, recs, now_epoch=NOW)
+    assert [d["run_id"] for d in decisions] == ["run-w"]
+
+
 def test_advancing_past_timeout_decides_a_timeout_reap():
     # The classifier verdicts this tree "advancing" (its CPU
     # still grows); the timeout reap keys off the record.

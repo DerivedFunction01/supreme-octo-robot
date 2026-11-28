@@ -216,9 +216,12 @@ def reap_decisions(state, records_by_run_id, *, now_epoch):
     past its record's timeout (the classifier verdicts a
     still-advancing tree past its timeout "advancing" by
     design — the timeout reap keys off the record, here).
-    Terminal records and gone trees decide nothing. Each
-    decision carries its evidence: the verdict and the two
-    CPU samples the record settles with.
+    Terminal records and gone trees decide nothing. A job
+    held at "unreachable" decides nothing either, on either
+    leg: the actuator cannot verify a tree on a venue it
+    cannot see, and no timeout accrues across a dark window.
+    Each decision carries its evidence: the verdict and the
+    two CPU samples the record settles with.
     """
     decisions = []
     if not isinstance(state, dict):
@@ -227,6 +230,8 @@ def reap_decisions(state, records_by_run_id, *, now_epoch):
     for job in state.get("jobs", []):
         run_id = job.get("run_id")
         if run_id is None or not job.get("tree_alive"):
+            continue
+        if job.get("verdict") == "unreachable":
             continue
         root_pid = job.get("root_pid")
         if root_pid is None:

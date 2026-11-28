@@ -333,6 +333,43 @@ def carried_disk_block(prev_state):
     return carried
 
 
+def carried_jobs_block(prev_state):
+    """The jobs an unreachable state carries: the previous
+    state file's jobs, each re-verdicted "unreachable" —
+    a dark venue reads with its jobs held at their last
+    known state, never with an empty list (an empty list
+    is an idle venue's truth, not a dark one's: the jobs
+    are neither live nor terminal, their state is unknown
+    until the venue answers again). A job already carried
+    keeps its held form. [] when the previous state
+    carried no jobs."""
+    if not isinstance(prev_state, dict):
+        return []
+    jobs = prev_state.get("jobs")
+    if not isinstance(jobs, list):
+        return []
+    carried = []
+    for job in jobs:
+        if not isinstance(job, dict):
+            continue
+        held = dict(job)
+        held["verdict"] = "unreachable"
+        carried.append(held)
+    return carried
+
+
+def unreachable_since(prev_state, at):
+    """When the venue went dark: the previous state's own
+    unreachable_since when it was already dark — the anchor
+    is the FIRST dark sample, not the latest — else this
+    sample's time, the moment the darkness was first read."""
+    if isinstance(prev_state, dict) and prev_state.get("state") == "unreachable":
+        since = prev_state.get("unreachable_since")
+        if since is not None:
+            return since
+    return at
+
+
 def _int_or_none(token):
     try:
         return int(token)

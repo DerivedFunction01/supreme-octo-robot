@@ -35,7 +35,11 @@ reading against the target's warn/stop figures. An
 unreachable target's file carries the last successful
 sample's block instead, stamped with that sample's time —
 the host-side disk guard's warning was a line in a log
-nothing reads; this surface is where it is read.
+nothing reads; this surface is where it is read. The
+unreachable file likewise carries the last state's jobs,
+each re-verdicted "unreachable" and held with an
+unreachable_since anchor at the first dark sample: a dark
+venue's jobs are unknown, not absent and not terminal.
 """
 
 import importlib
@@ -173,15 +177,17 @@ def _pass_target(target_id, target, repo, var_dir, mods, local_venue) -> str:
     at = mods["foundation"].now()
     sample = _take_sample(mods, local_venue, repo, target_id, target, at)
     if sample is None:
+        prev_state = _read_state_file(var_dir, target_id)
         state = {
             "venue": target_id,
             "state": "unreachable",
             "sampled_at": at,
+            "unreachable_since": sample_mod.unreachable_since(prev_state, at),
             "pids_current": None,
             "pids_capacity": None,
-            "jobs": [],
+            "jobs": sample_mod.carried_jobs_block(prev_state),
         }
-        carried = sample_mod.carried_disk_block(_read_state_file(var_dir, target_id))
+        carried = sample_mod.carried_disk_block(prev_state)
         if carried is not None:
             state["disk"] = carried
         classify_mod.write_state(state, var_dir)
