@@ -237,9 +237,10 @@ class TestVenueTrimBytesAndCaches(VenueFixture):
             self.assertTrue((self.home / "runs" / name).exists())
 
     def test_run_bytes_still_over_reports_partial(self):
-        # An rm stub that refuses run-1: its bytes survive
-        # the leg, so the re-measured total stays over
-        # budget and the pass reports partial.
+        # An rm stub that refuses run-1: its bytes stay
+        # in the after figure (the total minus the cuts
+        # the leg could credit), the tree is named
+        # uncuttable, and the pass reports partial.
         stub = self.home / ".local" / "bin"
         stub.mkdir(parents=True)
         rm = stub / "rm"
@@ -255,20 +256,157 @@ class TestVenueTrimBytesAndCaches(VenueFixture):
         out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "1000"})
         self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
         self._line(out, "RUN-BYTES-OVER")
+        self.assertIn(
+            f"RUN-BYTES-UNCUTTABLE path={self.home}/runs/run-1 "
+            "reason=cut-failed", out.stdout)
         self.assertFalse((self.home / "runs" / "run-0").exists())
         self.assertTrue((self.home / "runs" / "run-1").exists())
 
-    def test_run_bytes_measure_failure_skips_the_leg(self):
+    def _du_stub(self, body):
         stub = self.home / ".local" / "bin"
-        stub.mkdir(parents=True)
+        stub.mkdir(parents=True, exist_ok=True)
         du = stub / "du"
-        du.write_text("#!/bin/bash\nexit 1\n")
+        du.write_text(body)
         du.chmod(0o755)
+        return du
+
+    def test_run_bytes_measure_failure_is_partial_never_a_skip(self):
+        # A du that fails everywhere: no tree can be
+        # measured and none has a figure to carry, so
+        # every tree is named unmeasured, nothing is
+        # cut on the byte leg, and the pass ends
+        # partial — the old form skipped the leg and
+        # exited green with the budget unenforced.
+        self._du_stub("#!/bin/bash\nexit 1\n")
         self.make_sized_run_tree("run-0", NOW - 50000, 200_000)
+        self.make_sized_run_tree("run-1", NOW - 40000, 200_000)
         out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "1"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertNotIn("skipped=measure-timeout", out.stdout)
+        self.assertNotIn("RUN-TREE-CUT", out.stdout)
+        for name in ("run-0", "run-1"):
+            self.assertIn(
+                f"RUN-BYTES-UNMEASURED path={self.home}/runs/{name}",
+                out.stdout)
+            self.assertTrue((self.home / "runs" / name).exists())
+
+    def test_run_bytes_one_tree_unmeasured_subset_still_enforced(self):
+        # du fails for run-bad only: the measured
+        # subset is still totalled and enforced (the
+        # oldest measured tree is cut to budget), the
+        # unmeasured tree is named, never cut by the
+        # byte leg, and the pass ends partial.
+        self._du_stub(
+            "#!/bin/bash\n"
+            "for a in \"$@\"; do case \"$a\" in *run-bad*) exit 1;;"
+            " esac; done\n"
+            "exec /usr/bin/du \"$@\"\n")
+        self.make_sized_run_tree("run-old", NOW - 50000, 300_000)
+        self.make_sized_run_tree("run-bad", NOW - 40000, 300_000)
+        self.make_sized_run_tree("run-new", NOW - 30000, 300_000)
+        out = self.run_venue({"WT_TRIM_VENUE_RUN_BYTES": "450000"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertIn(
+            f"RUN-BYTES-UNMEASURED path={self.home}/runs/run-bad",
+            out.stdout)
+        self.assertIn(
+            f"RUN-TREE-CUT path={self.home}/runs/run-old", out.stdout)
+        self.assertFalse((self.home / "runs" / "run-old").exists())
+        self.assertTrue((self.home / "runs" / "run-bad").exists())
+        self.assertTrue((self.home / "runs" / "run-new").exists())
+        line = self._line(out, "RUN-BYTES")
+        fields = dict(kv.split("=") for kv in line.split()[1:])
+        self.assertLessEqual(int(fields["after"]), 450000)
+
+    def test_run_bytes_carried_figure_from_prior_pass(self):
+        # Pass 1 measures cleanly and writes the carry
+        # state; in pass 2 run-bad's measure fails, so
+        # the tree is carried at pass 1's figure, named
+        # as carried, and the pass stays green.
+        self.make_sized_run_tree("run-a", NOW - 50000, 200_000)
+        bad = self.make_sized_run_tree("run-bad", NOW - 40000, 200_000)
+        first = self.run_venue()
+        self.assertEqual(first.returncode, 0,
+                         first.stdout + first.stderr)
+        state = self.home / ".worktree-trim-venue-run-bytes"
+        self.assertTrue(state.exists())
+        carried = None
+        for entry in state.read_text().splitlines():
+            fig, _, path = entry.partition("\t")
+            if path == str(bad):
+                carried = fig
+        self.assertIsNotNone(carried)
+        self._du_stub(
+            "#!/bin/bash\n"
+            "for a in \"$@\"; do case \"$a\" in *run-bad*) exit 1;;"
+            " esac; done\n"
+            "exec /usr/bin/du \"$@\"\n")
+        out = self.run_venue()
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
-        self.assertIn("RUN-BYTES skipped=measure-timeout", out.stdout)
-        self.assertTrue((self.home / "runs" / "run-0").exists())
+        self.assertIn(
+            f"RUN-BYTES-CARRIED path={bad} bytes={carried}",
+            out.stdout)
+        self.assertNotIn("RUN-BYTES-UNMEASURED", out.stdout)
+        self.assertTrue(bad.exists())
+
+    def test_run_bytes_measure_budget_exhausted_names_every_tree(self):
+        # A zero measure budget: the deadline has
+        # passed before the first measure starts, so
+        # every tree reads unmeasured and the pass ends
+        # partial with each one named — enforcement
+        # degrades to a named partial, never a skip.
+        self.make_sized_run_tree("run-0", NOW - 50000, 200_000)
+        self.make_sized_run_tree("run-1", NOW - 40000, 200_000)
+        out = self.run_venue(
+            {"WT_TRIM_VENUE_RUN_BYTES_MEASURE_SECS": "0"})
+        self.assertEqual(out.returncode, 3, out.stdout + out.stderr)
+        self.assertNotIn("RUN-TREE-CUT", out.stdout)
+        for name in ("run-0", "run-1"):
+            self.assertIn(
+                f"RUN-BYTES-UNMEASURED path={self.home}/runs/{name}",
+                out.stdout)
+            self.assertTrue((self.home / "runs" / name).exists())
+
+    def test_run_bytes_born_tree_named_and_counted(self):
+        # A du stub with a side effect: measuring
+        # run-0 births run-born mid-pass. The born
+        # tree is measured, named, and its bytes land
+        # in the after figure — not silently absorbed
+        # into a re-measure.
+        runs = self.home / "runs"
+        self._du_stub(
+            "#!/bin/bash\n"
+            "for a in \"$@\"; do\n"
+            "  case \"$a\" in *run-0)\n"
+            f"    if [ ! -d {runs}/run-born ]; then\n"
+            f"      mkdir -p {runs}/run-born\n"
+            f"      truncate -s 100000 {runs}/run-born/payload.bin\n"
+            "    fi ;;\n"
+            "  esac\n"
+            "done\n"
+            "exec /usr/bin/du \"$@\"\n")
+        self.make_sized_run_tree("run-0", NOW - 50000, 200_000)
+        self.make_sized_run_tree("run-1", NOW - 40000, 200_000)
+        out = self.run_venue()
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        m = re.search(r"^RUN-TREE-BORN path=(\S+) bytes=(\d+)$",
+                      out.stdout, re.M)
+        self.assertIsNotNone(m, out.stdout + out.stderr)
+        self.assertEqual(m.group(1), str(runs / "run-born"))
+        self.assertTrue((runs / "run-born").exists())
+        line = self._line(out, "RUN-BYTES")
+        fields = dict(kv.split("=") for kv in line.split()[1:])
+        self.assertEqual(int(fields["after"]) - int(fields["before"]),
+                         int(m.group(2)))
+
+    def test_run_bytes_source_has_no_whole_store_measure(self):
+        # The old form's two holes are gone from the
+        # script itself: no whole-store measure to
+        # time out, and no skip line that lets a pass
+        # exit green with the budget unmeasured.
+        src = SCRIPT.read_text()
+        self.assertNotIn('du_bytes "$runs_dir"', src)
+        self.assertNotIn("skipped=measure-timeout", src)
 
     def test_cache_cuts_oldest_first_to_budget(self):
         a = self.make_cache_store("cache-a", NOW - 50000, 300_000)
