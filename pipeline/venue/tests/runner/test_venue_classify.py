@@ -153,6 +153,19 @@ def test_saturated_outranks_job_states():
     assert state["pids_capacity"] == 1024
 
 
+def test_saturation_floor_is_the_system_reserve():
+    # Capacity 800: the ratio's line is 680, the reserve
+    # floor is 800 - 128 = 672. A table at 675 reads
+    # saturated on the floor alone — programme work is
+    # refused while the free remainder is inside the
+    # reserve, whatever the ratio's line says.
+    prev = _sample([], at=T_PREV, pids_current=660, pids_declared=800)
+    cur = _sample([], pids_current=675, pids_declared=800)
+    state = classify(prev, cur, {})
+    assert state["state"] == "saturated"
+    assert state["pids_capacity"] == 800
+
+
 def test_declared_capacity_wins_over_pids_max():
     prev = _sample([], at=T_PREV, pids_current=80)
     cur = _sample([], pids_current=90, pids_declared=100)

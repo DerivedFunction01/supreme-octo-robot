@@ -61,6 +61,17 @@ carries the constituents in order and the shares must be
 reproducible from it). pool_cap = max(1, thread_share //
 workers): the advisory per-worker pool cap stamped beside
 the worker count.
+
+The budget is priced net of the system reserve
+(SYSTEM_RESERVE_THREADS): the venue's own system set —
+the sampler, the actuator, the trim, sshd and the runner's
+own sessions — holds that many table slots outside every
+programme budget, so the machinery that cures a saturation
+can always fork inside one. The reserve comes off the
+ceiling before the fraction is taken, and the classifier's
+saturation line carries the same floor (venue_classify):
+programme work is refused while the table's free remainder
+is inside the reserve, whatever the configured ratio says.
 """
 
 import re
@@ -73,6 +84,7 @@ DECLARED_CAPACITY = {
 }
 
 DEFAULT_FRACTION = 0.75
+SYSTEM_RESERVE_THREADS = 128
 DEFAULT_BURST_PER_WORKER = 860
 WORKER_OVERHEAD_THREADS = 150
 
@@ -94,8 +106,10 @@ def declared_capacity(shape_id):
 
 def envelope_budget(pids_capacity: int, fraction: float = DEFAULT_FRACTION) -> int:
     """The envelope's total thread budget: the named
-    fraction of the venue's pid ceiling, floored."""
-    return int(pids_capacity * fraction)
+    fraction of the venue's pid ceiling net of the system
+    reserve, floored — the reserve is never budgeted to
+    programme work, at any fraction."""
+    return int(max(0, pids_capacity - SYSTEM_RESERVE_THREADS) * fraction)
 
 
 def connection_worst_case(connections: int, threads_per_connection: int) -> int:

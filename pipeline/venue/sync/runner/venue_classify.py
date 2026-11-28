@@ -39,11 +39,13 @@ settles elsewhere.
 Venue states, in precedence order:
 
 - saturated: pids_current is at or above the saturation
-  ratio of capacity (the sample's declared pids when it
-  carries one, else its pids_max). Saturation outranks the
-  job-derived states: a table at its ceiling refuses new
-  work whatever the tracked jobs are doing — including
-  when no tracked job is live and the table is held by
+  threshold of capacity — the saturation ratio's line,
+  floored by the system reserve, whichever comes first
+  (the sample's declared pids when it carries one, else
+  its pids_max). Saturation outranks the job-derived
+  states: a table at its ceiling refuses new work
+  whatever the tracked jobs are doing — including when
+  no tracked job is live and the table is held by
   untracked processes.
 - wedged: at least one live job is wedged and none is
   advancing.
@@ -59,10 +61,23 @@ be sampled at all.
 import json
 from pathlib import Path
 
+from .envelope import SYSTEM_RESERVE_THREADS
 from .foundation import epoch, staged_write
 
 SATURATION_RATIO = 0.85
 GRACE_S = 600
+
+
+def _saturation_threshold(capacity, saturation_ratio):
+    """The pids_current at or above which a venue reads
+    saturated: the ratio's line, floored by the system
+    reserve — programme work is refused while the table's
+    free remainder is inside the reserve
+    (envelope.SYSTEM_RESERVE_THREADS), whatever ratio a
+    configuration carries. At today's scales the ratio
+    binds first; the floor is the invariant that keeps
+    the reserve true at any capacity or ratio."""
+    return min(saturation_ratio * capacity, capacity - SYSTEM_RESERVE_THREADS)
 
 
 def _capacity(sample: dict):
@@ -172,7 +187,7 @@ def classify(
     if (
         capacity
         and pids_current is not None
-        and pids_current >= saturation_ratio * capacity
+        and pids_current >= _saturation_threshold(capacity, saturation_ratio)
     ):
         state = "saturated"
     elif (

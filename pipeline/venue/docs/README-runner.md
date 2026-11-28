@@ -31,7 +31,7 @@ The declaration stands at `adapters/local/jobs/<name>/envelope.json`:
 
 `shape` and `jobs` (in order) are required; `fraction`, `burst_per_worker`, `caller`, and `timeout_s` are optional. A job entry is a plain job name, or a mapping declaring the job's connection pool. The envelope takes one run record (constituents recorded in order, with their stamps), one run dir per job under the envelope's run dir, and per-job exit files; the envelope's exit is the first non-zero job exit in order, or 0. `--poll <envelope run id>` attaches through the standing poll form, and the envelope settles when its last job settles. A sealed job never rides an envelope — it dispatches solo from its blob.
 
-The arithmetic (the pure leaf is `sync/runner/envelope.py`; declared capacities: `local` 16 cores / 1024 pids, `local-hp` 8 cores / 1024 pids): the envelope budget is `fraction` (default 0.75) of the shape's pid ceiling, divided as a per-job thread share (the division remainder goes one each to the first jobs in order). Per job, the launch environment carries the stamps:
+The arithmetic (the pure leaf is `sync/runner/envelope.py`; declared capacities: `local` 16 cores / 1024 pids, `local-hp` 8 cores / 1024 pids): the envelope budget is `fraction` (default 0.75) of the shape's pid ceiling net of the system reserve the budget leaf holds for the venue's own system set, divided as a per-job thread share (the division remainder goes one each to the first jobs in order). Per job, the launch environment carries the stamps:
 
 | Stamp | Value |
 | --- | --- |
