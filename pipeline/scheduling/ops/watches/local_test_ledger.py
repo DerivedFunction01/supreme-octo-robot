@@ -12,8 +12,8 @@ by hand. The scheduler ledger (state/scheduler.db, events
 kind 'op') is the discriminating record: an op's record
 carries its caller and its full command target.
 
-Locator, pinned (Edgar coordinator's Instance 14
-disposition): the discriminating store is
+Locator, pinned (a coordinator disposition of
+record): the discriminating store is
 state/scheduler.db, table events — the state/ledger.db
 beside it is a 0-byte stub that answers nothing, and a
 check pointed there reads empty and misreads as
