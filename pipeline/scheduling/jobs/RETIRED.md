@@ -95,3 +95,16 @@ active jobs only; nothing here runs.
   the same watch script with per-process naming, both
   venue fleets, and the snapshot store the Task Manager
   section serves.
+- **gap-closure-sweep** — the scheduler-registry twin
+  of the gap-closure sweep, retired because its
+  agent-due pings have no designated executor: the
+  keeper worker polls the job, cannot run it (its
+  actuators are agent acts), and its occurrences
+  coalesced unworked. The executing home is the Muse
+  cron of the same name, re-enabled with the cured
+  body text, until the stopped-lane actuation build's
+  coverage handover is proven class by class. Its
+  registry entry is deleted; the body file remains on
+  disk as the text both forms read. The coalesced
+  backlog ping is written off with the retirement,
+  not drained.
