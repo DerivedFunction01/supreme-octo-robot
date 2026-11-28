@@ -27,3 +27,6 @@ catalog:
   origin: hand
   generality: generalized
   use_case: demo
+  setup:
+    state_dirs:
+      - ${WS}/specimen-app/var/state
