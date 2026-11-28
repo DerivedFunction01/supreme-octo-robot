@@ -5,7 +5,7 @@ The pre-cure trim charged a branch trim only at the purge
 of an archive the trim itself had made, plus a crash queue
 seeded from archive manifests. Branches pushed to origin
 by lanes whose worktrees never stood in the local census
-(venue/session clones) were never trimmed: steampowernj
+(venue/session clones) were never trimmed: a tenant repo
 accumulated 144 origin branches, 111 fully contained in
 main. The owner's ruling: the hourly pass takes no
 exemptions when it comes to trimming. The sweep censuses
@@ -310,7 +310,7 @@ class TestBranchCap(Fixture):
         # phase; the excess is taken from the selectable
         # population instead. Detaching a worktree's HEAD to
         # free its branch can fail against a tree held as
-        # unlanded — the steampowernj form/df-next-121
+        # unlanded — the tenant-repo form
         # specimen (BRANCH-LOCAL-FAIL
         # reason=detach-failed) — and leave the pass over
         # cap on both sides. Same fixture as (h'): per-slug

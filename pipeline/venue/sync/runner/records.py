@@ -75,7 +75,7 @@ def save_record(rec: dict) -> None:
 # a 0-byte or torn file AT the claimed name: the id stayed
 # consumed, the record read as a phantom run, and a
 # dispositioned record zeroed this way had to be
-# reconstructed by hand (specimens: steampower-df109-gate
+# reconstructed by hand (specimens: specimen-gate
 # …T072747Z born 0-byte; this seat's clone-probe …T092512Z
 # likewise). The claim now stages the complete bytes beside
 # the target through the unified writer, then claims the

@@ -44,14 +44,14 @@ fi
 # content, every listed path is absent. Empty lists assert
 # nothing beyond the HEAD sha.
 declare -A EXPECTED_SHA256=(
-  ["edgar_sec/engine/forms/sections/items/legal_proceedings.py"]="483c77a4fedcbdfc900ca75f64f9231c7094e4fe87cdd32233d074b7b5d78a7d"
-  ["edgar_sec/engine/forms/sections/models.py"]="329ec5387a17652410d3ed017efc6ebc26ccf885e58e86bac7b077e977a69e63"
+  ["specimen_sec/engine/forms/sections/items/legal_proceedings.py"]="483c77a4fedcbdfc900ca75f64f9231c7094e4fe87cdd32233d074b7b5d78a7d"
+  ["specimen_sec/engine/forms/sections/models.py"]="329ec5387a17652410d3ed017efc6ebc26ccf885e58e86bac7b077e977a69e63"
   ["tests/engine/forms/sections/items/test_legal_proceedings.py"]="5ecd67469d1a5c5732219362d32c0df37609d4040a857dddd05bea1e47f97dbe"
-  ["edgar_sec/engine/forms/sections/README.md"]="31a47c2bb090a97465f5eb9aa973ea21c5ef7b90721185201c65dd5bee3b28ae"
+  ["specimen_sec/engine/forms/sections/README.md"]="31a47c2bb090a97465f5eb9aa973ea21c5ef7b90721185201c65dd5bee3b28ae"
 )
 EXPECTED_ABSENT=(
-  "edgar_sec/engine/forms/sections/items/legal.py"
-  "edgar_sec/engine/forms/schedules/legal.py"
+  "specimen_sec/engine/forms/sections/items/legal.py"
+  "specimen_sec/engine/forms/schedules/legal.py"
 )
 
 write_result() {

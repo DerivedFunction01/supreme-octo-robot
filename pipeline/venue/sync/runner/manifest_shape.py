@@ -22,7 +22,7 @@ fire time in BOTH fire forms — the attached flow in dispatch
 and the daemonize parent in claims, before its claim — so a
 shape-invalid manifest refuses named, with no run record
 written, instead of claiming a run whose daemon child then
-dies at its own load (the steampower-criticjd-gate specimen:
+dies at its own load (the specimen-critic-gate specimen:
 a dict-form uploads entry claimed a run that
 never launched). The module imports nothing from the
 package, so the standalone module loaders in the test suite

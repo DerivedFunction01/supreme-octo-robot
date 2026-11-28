@@ -302,7 +302,7 @@ def chunked_upload(session: str, local: Path, remote_name: str, progress=None, s
 
     Part-0 retry (launch-path plan, Step 5): a pass that
     fails at part 0 with zero parts landed — the
-    steampower-df-union-gate T161748Z specimen, 3 attempts,
+    specimen-union-gate T161748Z specimen, 3 attempts,
     0 parts, nothing resumed — retries the whole transfer
     once inside this call. Nothing exists on the far side
     to poison, and the failure's class is a saturated

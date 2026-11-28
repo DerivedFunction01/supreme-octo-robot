@@ -88,7 +88,7 @@
 #      ALL branches — not only the archives' own. Branches
 #      pushed by lanes whose trees never stood in the local
 #      census (venue/session clones) otherwise accumulate
-#      forever (steampowernj: 144 origin branches, 111 of
+#      forever (a tenant repo: 144 origin branches, 111 of
 #      them fully contained in main). One fetch --prune
 #      refreshes origin truth (an unreachable origin fails
 #      the origin half only; the local half still runs);

@@ -40,7 +40,7 @@ KEYS = {
     # can never name a root in a request.
     "ops_extra_write_roots": (None, "SCHEDULER_OPS_EXTRA_WRITE_ROOTS", _root_list),
     "tick_secs": (20, "SCHEDULER_TICK_SECS", int),
-    "default_timezone": ("America/New_York", "SCHEDULER_DEFAULT_TIMEZONE", str),
+    "default_timezone": ("UTC", "SCHEDULER_DEFAULT_TIMEZONE", str),
     "outbox_ack_timeout_secs": (3600, "SCHEDULER_OUTBOX_ACK_TIMEOUT_SECS", int),
     "ledger_retention_days": (90, "SCHEDULER_LEDGER_RETENTION_DAYS", int),
     "capture_cap_bytes": (65536, "SCHEDULER_CAPTURE_CAP_BYTES", int),

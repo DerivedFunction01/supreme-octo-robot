@@ -5,8 +5,8 @@ container, never the Colab census.
 The defect's shape: a local run's session ("local-main")
 never appears in the Colab live list, so the census branch
 orphaned every local run by construction — the specimens
-are steampower-df-u1-gate-local-20261124T171326Z and
-steampower-df124-probe3-local-20261124T171607Z, whose run
+are specimen-u1-gate-local-20261124T171326Z and
+specimen-probe3-local-20261124T171607Z, whose run
 dirs completed with exit files (17:16Z / 17:20Z) while
 their records froze at "running" and flipped to "orphaned"
 at 17:35:41Z carrying neither exit code nor completion
@@ -117,23 +117,23 @@ def _read(runs: Path, run_id: str) -> dict:
 def _local_rec(run_id: str, job: str, started_at: str, **over) -> dict:
     rec = {"run_id": run_id, "job": job, "venue": "local", "session": "local-main",
            "state": "running", "started_at": started_at, "last_evidence_at": started_at,
-           "timeout_s": 18000, "caller": "steampower"}
+           "timeout_s": 18000, "caller": "specimen"}
     rec.update(over)
     return rec
 
 
 def test_u1_specimen_finalizes_from_exit_file(tmp_path):
-    """steampower-df-u1-gate: run dir complete at 17:16Z
+    """specimen-u1-gate: run dir complete at 17:16Z
     with exit 0, record frozen at "running", session absent
     from the live census — the old sweep's orphan condition.
     The cure finalizes it complete in one pass, stamping the
     exit code and the exit file's mtime (17:16Z), not the
     sweep's clock."""
     runs = tmp_path / "runs"
-    rid = "steampower-df-u1-gate-local-20261124T171326Z"
+    rid = "specimen-u1-gate-local-20261124T171326Z"
     readings = {rid: {"reading": "exit", "exit_code": 0, "finished_at": "2026-11-24T17:16:00+00:00", "output_tail": "gate ok\n"}}
     sweep = load_sweep(runs, tmp_path / "var", {"some-colab-session"}, readings)
-    _plant(runs, _local_rec(rid, "steampower-df-u1-gate", "2026-11-24T17:13:26+00:00"))
+    _plant(runs, _local_rec(rid, "specimen-u1-gate", "2026-11-24T17:13:26+00:00"))
     findings, live_ok = sweep.orphan_sweep()
     assert live_ok
     rec = _read(runs, rid)
@@ -145,14 +145,14 @@ def test_u1_specimen_finalizes_from_exit_file(tmp_path):
 
 
 def test_probe3_specimen_finalizes_failed_with_code(tmp_path):
-    """steampower-df124-probe3: same freeze, exit 1 in the
+    """specimen-probe3: same freeze, exit 1 in the
     run dir at 17:20Z. The cure finalizes it failed with
     its exit code and completion time — never orphaned."""
     runs = tmp_path / "runs"
-    rid = "steampower-df124-probe3-local-20261124T171607Z"
+    rid = "specimen-probe3-local-20261124T171607Z"
     readings = {rid: {"reading": "exit", "exit_code": 1, "finished_at": "2026-11-24T17:20:00+00:00", "output_tail": "probe failed\n"}}
     sweep = load_sweep(runs, tmp_path / "var", {"some-colab-session"}, readings)
-    _plant(runs, _local_rec(rid, "steampower-df124-probe3", "2026-11-24T17:16:07+00:00"))
+    _plant(runs, _local_rec(rid, "specimen-probe3", "2026-11-24T17:16:07+00:00"))
     findings, _ = sweep.orphan_sweep()
     rec = _read(runs, rid)
     assert rec["state"] == "failed"

@@ -610,7 +610,7 @@ class ProbeCounter:
 
 
 def test_upload_part0_exhaustion_retries_the_whole_transfer_once(tmp_path, monkeypatch):
-    """Step 5's specimen (steampower-df-union-gate
+    """Step 5's specimen (specimen-union-gate
     T161748Z): part 0 exhausts its attempts with zero parts
     landed — 3 attempts, 0 parts, and the old shape resumed
     nothing because the launch itself was over. The whole

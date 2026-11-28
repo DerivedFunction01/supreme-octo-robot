@@ -41,7 +41,7 @@ check's `print-schedule`).
 Freshness (the stale-measure cure): a
 served measure is a snapshot, and a consumer holding
 one must never mistake it for the records' current
-state — the Edgar Step 6 lane was steered three times
+state — a tenant programme's Step 6 lane was steered three times
 off a snapshot hours old whose cited records had long
 since advanced. Every measure this module serves
 therefore carries a `freshness` block — its as-of
