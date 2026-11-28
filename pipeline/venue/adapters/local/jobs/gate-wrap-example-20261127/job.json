@@ -1,1 +1,1 @@
-{"caller":"edgar-successor","script":"run.sh","shape":"local","timeout_s":3600,"uploads":["adapters/local/jobs/gate-wrap-example-20261127/repo-url.txt"],"venue":"local"}
+{"caller":"specimen-successor","script":"run.sh","shape":"local","timeout_s":3600,"uploads":["adapters/local/jobs/gate-wrap-example-20261127/repo-url.txt"],"venue":"local"}

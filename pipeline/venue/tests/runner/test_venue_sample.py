@@ -259,10 +259,10 @@ def test_carried_jobs_block_holds_jobs_at_unreachable():
         "state": "advancing",
         "sampled_at": AT,
         "jobs": [
-            {"run_id": "run-a", "caller": "edgar", "root_pid": 4242,
+            {"run_id": "run-a", "caller": "specimen", "root_pid": 4242,
              "tree_alive": True, "cpu_s": 12.0, "cpu_delta_s": 3.0,
              "verdict": "advancing"},
-            {"run_id": "run-b", "caller": "edgar", "root_pid": 4343,
+            {"run_id": "run-b", "caller": "specimen", "root_pid": 4343,
              "tree_alive": True, "cpu_s": 9.0, "cpu_delta_s": 0.0,
              "verdict": "wedged"},
         ],

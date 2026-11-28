@@ -100,7 +100,7 @@ const shapes = [
   longLine,
   manyShort,
   mixed,
-  "exec bash -c echo \"base staged_by_name: $(git grep -c staged_by_name b3aff8a9 -- packages/services/src/catalog/admin/catalog-admin-view.ts 2>/dev/null || echo 0)\"; echo \"form staged_by_name: $(git grep -c staged_by_name 0ffd980a -- packages/services/src/catalog/admin/catalog-admin-view.ts 2>/dev/null || echo 0)\" by steampower — ok exit 0",
+  "exec bash -c echo \"base staged_by_name: $(git grep -c staged_by_name b3aff8a9 -- packages/services/src/catalog/admin/catalog-admin-view.ts 2>/dev/null || echo 0)\"; echo \"form staged_by_name: $(git grep -c staged_by_name 0ffd980a -- packages/services/src/catalog/admin/catalog-admin-view.ts 2>/dev/null || echo 0)\" by specimen — ok exit 0",
 ];
 for (const [i, s] of shapes.entries()) {
   const c = clampLogPayload(s);

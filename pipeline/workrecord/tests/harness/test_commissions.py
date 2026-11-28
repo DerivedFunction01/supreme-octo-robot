@@ -2,7 +2,7 @@
 cure): a claimed commission resolves
 against the wb record or it is not a commission.
 
-The incident's shape: the Edgar Step 6 lane was
+The incident's shape: a tenant programme's Step 6 lane was
 steered three times by watch traffic it could not
 distinguish from a genuine commission, because nothing
 in the channel itself separates a commission from a

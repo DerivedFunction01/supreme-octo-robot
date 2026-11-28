@@ -20,7 +20,7 @@ from tests.test_worktree_trim import NOW, Fixture, _git
 class TestPrincipalBranches(Fixture):
     """Principal-branch and checkout exclusions.
     In the specimen failure, an hourly pass under drain
-    re-verification cap-archived steampowernj's main,
+    re-verification cap-archived the tenant repo's main,
     attempted its origin deletion twice, and left a
     standing cap charge for it: in that repo the base
     (containment's reference, the main worktree's
@@ -38,7 +38,7 @@ class TestPrincipalBranches(Fixture):
     exemption registry."""
 
     def add_dev_flow(self):
-        """steampowernj's shape: the base is dev (the
+        """a tenant repo's shape: the base is dev (the
         main worktree checks it out), the remote default
         is main, and main is strictly contained in dev."""
         origin = self.add_origin()
@@ -181,7 +181,7 @@ class TestPrincipalBranches(Fixture):
 
 
 class TestDeclaredPrincipals(Fixture):
-    """Declared principals: steampowernj's
+    """Declared principals: a tenant repo's
     shape — the base and the remote's default both resolve
     to main, while the programme lands through dev, its
     standing integration branch. No derivation sees dev,

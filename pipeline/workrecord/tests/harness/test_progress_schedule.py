@@ -286,7 +286,7 @@ class TestCheck(SeamCase):
         self.assertIn(todo["id"], line)
 
     def test_opt_out_gap_reads_opted_out_not_stalled(self):
-        # The Edgar greenfield Step 3 shape
+        # A tenant programme's Step 3 shape
         # as a fixture: an opted-out todo, deliberately
         # held, with historical conforming checkpoints
         # on file. The check once derived a verdict from

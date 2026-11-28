@@ -52,12 +52,12 @@
 #        Declared principals (2026-11-24 cure) stand in
 #        the same set: a repo whose standing integration
 #        branch is neither the base nor the remote's
-#        default — steampowernj lands through dev while
+#        default — a tenant repo lands through dev while
 #        both derivations resolve to main — declares it
 #        in repos.conf's optional 4th field, and it is
 #        principal in every phase (sweep, cap census,
 #        seed, drain). The 2026-11-24 hourly pass
-#        cap-archived steampowernj's origin dev at
+#        cap-archived a tenant repo's origin dev at
 #        00fb3e09 and deleted the ref: the cap ranked it
 #        as an ordinary lane branch because no derivation
 #        could see it. The declaration is deployment data
@@ -66,7 +66,7 @@
 #        carries no name literals, and an undeclared repo
 #        behaves exactly as before.
 #        The 2026-11-23 hourly pass cap-archived
-#        steampowernj's main — strictly contained in its
+#        the tenant repo's main — strictly contained in its
 #        base, dev — attempted its origin deletion
 #        twice, and left a standing cap charge for it;
 #        only the remote's own default-branch refusal

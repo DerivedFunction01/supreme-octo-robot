@@ -26,7 +26,7 @@ class ConfigTests(unittest.TestCase):
         values, sources = self._resolve("{}")
         self.assertEqual(values["port"], 8796)
         self.assertEqual(values["tick_secs"], 20)
-        self.assertEqual(values["default_timezone"], "America/New_York")
+        self.assertEqual(values["default_timezone"], "UTC")
         self.assertEqual(values["outbox_ack_timeout_secs"], 3600)
         self.assertEqual(values["ledger_retention_days"], 90)
         self.assertEqual(values["capture_cap_bytes"], 65536)
@@ -103,7 +103,7 @@ class HealthTests(unittest.TestCase):
         self.assertEqual(health["registry_count"], 1)
         self.assertEqual(health["outbox_depth"], 0)
         self.assertEqual(health["config"]["port"], {"value": 8796, "source": "default"})
-        self.assertEqual(health["config"]["default_timezone"]["value"], "America/New_York")
+        self.assertEqual(health["config"]["default_timezone"]["value"], "UTC")
         self.assertEqual(pings, {"pings": []})
 
 

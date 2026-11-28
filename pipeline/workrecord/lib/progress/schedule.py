@@ -306,7 +306,7 @@ def check_todo(plans_dir, todo_id, *, now=None):
     the check names the opt-out and exits 0, deriving
     nothing from the file's checkpoint lines. Deriving
     a verdict from those lines read a deliberate,
-    recorded hold as a stall — the Edgar greenfield
+    recorded hold as a stall — a tenant programme's
     Step 3 hold (progress_check: off, a HOLD RECORD on
     the body, one pre-hold checkpoint) drew repeated
     STALLED escalations from that derivation.

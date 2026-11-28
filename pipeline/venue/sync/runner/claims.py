@@ -205,7 +205,7 @@ def spawn_daemon(job_name: str, args: list, manifest_path) -> tuple[str, str]:
     shape-invalid one dooms it at the child's shape check —
     either death, claimed first, leaves a record reading
     launch-lost over a run that never launched (the
-    steampower-criticjd-gate specimen: a dict-form uploads
+    specimen-critic-gate specimen: a dict-form uploads
     entry). Refusing here — named, with no record written —
     is the honest fire-time form of both deaths. The validation
     is the one pre-dispatch pass (manifest_shape.preflight_error):

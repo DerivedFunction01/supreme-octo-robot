@@ -301,11 +301,7 @@
      "path": "pipeline/scheduling/tests/test_outbox.py",
      "root": "dispatch"
     },
-    {
-     "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
-     "path": "pipeline/venue/adapters/colab/jobs/edgar-rollover-touch/hello.py",
-     "root": "platform"
-    },
+    
     {
      "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
      "path": "pipeline/venue/adapters/colab/jobs/greenfield-ci-freshverdict-hello/hello-wrap.py",
@@ -356,11 +352,7 @@
      "path": "pipeline/venue/adapters/colab/jobs/greenfield-ci-valuation-hello/valuation-hello-wrap.py",
      "root": "platform"
     },
-    {
-     "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
-     "path": "pipeline/venue/adapters/colab/jobs/steampower-rollover-touch/hello.py",
-     "root": "platform"
-    },
+    
     {
      "kind": "stdlib platform module \u2014 the venue payload's own system probe; not the pipeline package (the component's stated name-collision limit)",
      "path": "pipeline/venue/adapters/colab/jobs/workhorse-rollover-touch/hello.py",

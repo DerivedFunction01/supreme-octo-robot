@@ -592,7 +592,7 @@ def stamp_transport_span(rec) -> None:
 # a server an early leg starts for the job's own later legs
 # is still holding its port after the payload exits, and the
 # next run on the session inherits the collision (specimen:
-# steampower-criticjv-scenes-20261123T071153Z — the scenes
+# specimen-scenes-20261123T071153Z — the scenes
 # server survived its job's cleanup and the port-after leg
 # failed on the held port; a predecessor lane hit the same
 # zombie-port class). The launch stamp wrapper

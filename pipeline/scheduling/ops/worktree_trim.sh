@@ -205,7 +205,7 @@ run_worker() {
   # Declared principals (2026-11-24 cure): the derived
   # pair above cannot see a standing integration branch
   # that is neither the base nor the remote's default —
-  # steampowernj lands through dev while both derivations
+  # a tenant repo lands through dev while both derivations
   # resolve to main, and the 2026-11-24 hourly pass
   # cap-archived origin dev at 00fb3e09 and deleted the
   # ref. The deployment declares such branches in

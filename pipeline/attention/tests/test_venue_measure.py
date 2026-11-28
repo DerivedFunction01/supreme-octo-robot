@@ -664,7 +664,7 @@ class TerminalUnconsumed(unittest.TestCase):
     """The terminal-unconsumed class: a terminal failed
     run the owning programme's own records never cite
     in that state.
-    The specimen shape is steampower-reformed-gate-
+    The specimen shape is specimen-reformed-gate-
     20261121T005537Z — terminal FAILED, recorded by
     the collector within seconds, unconsumed for
     90+ minutes while its seat reported it in flight."""
