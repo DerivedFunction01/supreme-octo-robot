@@ -457,20 +457,15 @@ class LandedRegistryTests(unittest.TestCase):
             os.path.join(self.tmp, "jobs"), self.tmp)
 
     def test_registry_loads_clean(self):
-        # The tracked fleet loads clean but for the one
-        # refusal the agent-admission census found:
-        # declaration-reconcile is an agent job with no
-        # designated executing surface in evidence, so the
-        # admission rule holds it out of the live registry
-        # by name (the census pin lives in
-        # test_agent_admission). Every other tracked entry
-        # stands loaded.
-        self.assertEqual(len(self.errors), 1)
-        self.assertIn("declaration-reconcile", self.errors[0])
-        self.assertIn("executor", self.errors[0])
-        self.assertEqual(sorted(self.entries),
-                         [i for i in self.tracked_ids
-                          if i != "declaration-reconcile"])
+        # The tracked fleet loads clean: the one refusal
+        # the agent-admission census found
+        # (declaration-reconcile, an agent job with no
+        # designated executing surface) is resolved by
+        # retiring that entry to its Muse cron twin, so
+        # no tracked entry stands refused and every
+        # tracked entry stands loaded.
+        self.assertEqual(self.errors, [])
+        self.assertEqual(sorted(self.entries), self.tracked_ids)
 
     def test_every_entry_classifies(self):
         for job_id in self.entries:

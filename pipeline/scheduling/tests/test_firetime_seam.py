@@ -108,15 +108,13 @@ class DeclarationTests(unittest.TestCase):
 
     def test_landed_blocks_declare_the_scripts_variables(self):
         entries, errors = self._landed_entries()
-        # The tracked fleet's one standing refusal is the
-        # agent-admission census's finding: declaration-
-        # reconcile carries no executor, so the admission
-        # rule holds it out (pinned by name in
-        # test_agent_admission). Every other tracked entry
-        # loads, the knob-bearing pair included.
-        self.assertEqual(len(errors), 1)
-        self.assertIn("declaration-reconcile", errors[0])
-        self.assertIn("executor", errors[0])
+        # The tracked fleet loads with no refusal: the
+        # agent-admission census's one finding
+        # (declaration-reconcile, no designated executor)
+        # is resolved by retiring that entry to its Muse
+        # cron twin. Every tracked entry loads, the
+        # knob-bearing pair included.
+        self.assertEqual(errors, [])
         self.assertEqual(
             registry.config_env(entries["storage-watch"]),
             {"STORAGE_WATCH_HOME_LOW_GB": "50",

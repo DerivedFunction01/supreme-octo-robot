@@ -189,39 +189,40 @@ class LivenessCase(unittest.TestCase):
 
 class LiveCensusCase(unittest.TestCase):
     """The tracked fleet's post-census state, as the census
-    of the two live agent jobs found it (evidence in the
+    of the two live agent jobs resolved it (evidence in the
     commissioning record): bridge-drain's pings are
     addressed by the bridge minter to a designated drain
     home — the main chat, registered as `drain` in the
     bridge-wake owners config — and that surface claimed
-    and acked them; declaration-reconcile has no designated
-    executing surface anywhere in evidence, so it carries
-    no executor and the rule holds it out by name."""
+    and acked them, so the entry names it and arms;
+    declaration-reconcile had no designated executing
+    surface anywhere in evidence and was retired to its
+    Muse cron twin (the register records it in
+    jobs/RETIRED.md), so it stands in neither the fleet
+    nor the refusals."""
 
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.tracked_ids = seed_tracked_fleet(self.tmp, PKG_ROOT)
         self.entries, self.errors = _load(self.tmp)
 
-    def test_tracked_agent_set_is_exactly_the_census_pair(self):
+    def test_tracked_agent_set_is_exactly_bridge_drain(self):
         agents = set()
         for job_id in self.tracked_ids:
             path = os.path.join(self.tmp, "jobs", f"{job_id}.yaml")
             with open(path, encoding="utf-8") as fh:
                 if "\nkind: agent\n" in "\n" + fh.read():
                     agents.add(job_id)
-        self.assertEqual(agents, {"bridge-drain", "declaration-reconcile"})
+        self.assertEqual(agents, {"bridge-drain"})
 
     def test_bridge_drain_arms_with_its_designated_executor(self):
         entry = self.entries["bridge-drain"]
         self.assertEqual(entry.executor,
                          "main chat (bridge-wake owners drain)")
 
-    def test_declaration_reconcile_is_refused_by_name(self):
+    def test_no_tracked_entry_stands_refused(self):
         self.assertNotIn("declaration-reconcile", self.entries)
-        self.assertEqual(len(self.errors), 1)
-        self.assertIn("declaration-reconcile.yaml", self.errors[0])
-        self.assertIn("executor", self.errors[0])
+        self.assertEqual(self.errors, [])
 
 
 if __name__ == "__main__":

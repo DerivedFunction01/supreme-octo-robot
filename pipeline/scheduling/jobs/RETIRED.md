@@ -108,3 +108,15 @@ active jobs only; nothing here runs.
   disk as the text both forms read. The coalesced
   backlog ping is written off with the retirement,
   not drained.
+- **declaration-reconcile** — the scheduler-registry
+  form of the declaration reconcile, retired under the
+  agent-job admission rule: its agent-due pings had no
+  designated executing surface (its standing ping
+  coalesced 43 occurrences unacked), so the entry could
+  not name an executor and does not arm. The executing
+  home is its Muse cron twin (hourly), which runs the
+  registry body text and reports the pass's output to
+  main. Its registry entry is deleted; the body file
+  remains on disk as the text the cron reads. The
+  standing ping is written off with the retirement,
+  not drained.
