@@ -17,7 +17,7 @@ stall events and the launch-lost orphan the fleet
 actually produced in the window.
 
 What this harness does NOT cover (named, not hidden):
-the greenfield watch's edgar-programme content
+the greenfield watch's specimen-programme content
 clauses (open-set coverage, imposter census,
 elimination cascade, discoveries, combination
 pricing, fresh-discovery delegate) are not generic
@@ -223,14 +223,14 @@ def cron_orphans(now):
 # App side: the served view over the same specimens.
 # ----------------------------------------------------------------
 
-def edgar_records(now):
+def specimen_records(now):
     records = venue.read_run_store(FIXTURES / "runs", now)
     declarations = registry.active_declarations()
     return [
         r
         for r in records
         if venue.attribute_slug(r["caller"], declarations)
-        == "edgar-specimen"
+        == "specimen"
     ]
 
 
@@ -241,7 +241,7 @@ def specimen_state(now, idle_minutes=52):
     programme's open work armed. Built on the store's
     empty state, so the actuation legs find the sends
     ledger, templates, and presence they write."""
-    facts = venue.families_at(edgar_records(now), now, 30)
+    facts = venue.families_at(specimen_records(now), now, 30)
     armed = [
         {
             "project": "specimen-repo",
@@ -272,9 +272,9 @@ def specimen_state(now, idle_minutes=52):
         "specs": [],
     }
     state["venue_snapshot"] = {
-        "edgar-specimen": {
+        "specimen": {
             "at": now,
-            "jobs": len(edgar_records(now)),
+            "jobs": len(specimen_records(now)),
             **facts,
         }
     }
@@ -285,8 +285,8 @@ def orphan_state(now):
     """The specimen state with the venue collector's
     orphan facts attached, as venue.collect does."""
     state = specimen_state(now)
-    state["venue_snapshot"]["edgar-specimen"]["orphans"] = \
-        venue.orphans_at(edgar_records(now), now, 30)
+    state["venue_snapshot"]["specimen"]["orphans"] = \
+        venue.orphans_at(specimen_records(now), now, 30)
     return state
 
 
@@ -297,11 +297,11 @@ def stall_state(now, lane, checkpoint_at):
     `checkpoint_at`."""
     declaration = next(
         d for d in registry.active_declarations()
-        if d["slug"] == "edgar-specimen")
+        if d["slug"] == "specimen")
     state = store_mod.empty_state()
     state["programmes"] = [declaration]
     state["record_snapshot"] = {
-        "edgar-specimen": {
+        "specimen": {
             "at": now,
             "records": {
                 lane: {

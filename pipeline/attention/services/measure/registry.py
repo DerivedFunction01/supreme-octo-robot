@@ -492,7 +492,7 @@ def drain_tail_for(slug: str) -> list:
 
 def staffing_contract_for(slug: str) -> dict | None:
     """The programme's ruled staffing contract (the
-    edgar family-concurrency measure), or None where
+    family-concurrency measure), or None where
     no contract is ruled."""
     row = for_slug(slug)
     if row and row.get("staffing_contract"):

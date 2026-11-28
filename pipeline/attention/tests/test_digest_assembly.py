@@ -71,7 +71,7 @@ def _fake_records(tmp):
         json.dumps(
             {
                 "id": "r2",
-                "caller": "edgar-lane",
+                "caller": "specimen-lane",
                 "session": "solar-2",
                 "state": "finished",
                 "started_at": "2026-11-16T16:00:00+00:00",
@@ -229,7 +229,7 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
 
     def _topic(self, plan_modified):
         return {
-            "edgar-specimen": {
+            "specimen": {
                 "todos_total": 5,
                 "todos_done": 2,
                 "plan_modified": plan_modified,
@@ -254,9 +254,9 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
             loaded, NOW
         )
         self.assertEqual(modified, {"specimen-repo": self.STAMP})
-        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
-        self.assertEqual(topics["edgar-specimen"]["todos_total"], 5)
-        self.assertEqual(topics["edgar-specimen"]["todos_done"], 2)
+        self.assertEqual(topics["specimen"]["plan_modified"], self.STAMP)
+        self.assertEqual(topics["specimen"]["todos_total"], 5)
+        self.assertEqual(topics["specimen"]["todos_done"], 2)
         self.assertEqual(counts, {"specimen-repo": 1})
         self.assertEqual(parked["plans"][0]["age_days"], 14)
 
@@ -267,7 +267,7 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
         )
         _, _, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
         self.assertEqual(modified, {"specimen-repo": self.STAMP})
-        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
+        self.assertEqual(topics["specimen"]["plan_modified"], self.STAMP)
 
     def test_space_separated_string_stamps_read_the_same(self):
         # The form that survives the store's decode as a
@@ -276,17 +276,17 @@ class WbFactsFromSnapshotTests(unittest.TestCase):
         state = self._state({"specimen-repo": space_form}, self._topic(space_form))
         _, _, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
         self.assertEqual(modified, {"specimen-repo": self.STAMP})
-        self.assertEqual(topics["edgar-specimen"]["plan_modified"], self.STAMP)
+        self.assertEqual(topics["specimen"]["plan_modified"], self.STAMP)
 
     def test_empty_and_missing_shapes(self):
         state = self._state({}, self._topic(None))
         _, counts, modified, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
         self.assertEqual(modified, {})
         self.assertEqual(counts, {"specimen-repo": 1})
-        self.assertIsNone(topics["edgar-specimen"]["plan_modified"])
+        self.assertIsNone(topics["specimen"]["plan_modified"])
         state = self._state({}, self._topic(""))
         _, _, _, topics = digest_mod._wb_facts_from_snapshot(state, NOW)
-        self.assertIsNone(topics["edgar-specimen"]["plan_modified"])
+        self.assertIsNone(topics["specimen"]["plan_modified"])
         bare = self._state({}, {})
         del bare["digest_wb_snapshot"]["modified"]
         del bare["digest_wb_snapshot"]["wb_topics"]

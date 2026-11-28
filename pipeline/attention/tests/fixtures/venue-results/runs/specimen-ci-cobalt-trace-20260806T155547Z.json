@@ -5,7 +5,7 @@
   "state": "failed",
   "started_at": "2026-08-06T15:55:47.494489+00:00",
   "resumed": false,
-  "caller": "edgar-specimen:specimen-lane",
+  "caller": "specimen:specimen-lane",
   "last_evidence_at": "2026-08-06T16:01:53.091699+00:00",
   "venue": "colab",
   "session_pin": "amber-cliff-23",
@@ -17,7 +17,7 @@
   "launch_at": "2026-08-06T16:01:00.994439+00:00",
   "launch_confirmed_at": "2026-08-06T16:01:16.491213+00:00",
   "collector_at": "2026-08-06T16:02:28.917944+00:00",
-  "collector": "edgar-specimen:specimen-lane",
+  "collector": "specimen:specimen-lane",
   "measured_shape": {
     "nproc": 8,
     "mem_total_bytes": 54750392320,

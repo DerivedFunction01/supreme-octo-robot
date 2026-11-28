@@ -45,13 +45,13 @@ def settings():
     return Settings(run_records_dir=FIXTURES / "detached")
 
 
-def edgar_records(now):
+def specimen_records(now):
     records = venue.read_run_store(FIXTURES / "runs", now)
     declarations = registry.active_declarations()
     return [
         r
         for r in records
-        if venue.attribute_slug(r["caller"], declarations) == "edgar-specimen"
+        if venue.attribute_slug(r["caller"], declarations) == "specimen"
     ]
 
 
@@ -59,7 +59,7 @@ def defect_state(now, frontier=None):
     """The served-view state at a defect instant: the
     14:00Z specimen (one family on one session,
     the other idle) with the programme's open work armed."""
-    facts = venue.families_at(edgar_records(now), now, 30)
+    facts = venue.families_at(specimen_records(now), now, 30)
     armed = [
         {
             "project": "specimen-repo",
@@ -88,7 +88,7 @@ def defect_state(now, frontier=None):
         "specs": [],
     }
     state["venue_snapshot"] = {
-        "edgar-specimen": {"at": now, "jobs": len(edgar_records(now)), **facts}
+        "specimen": {"at": now, "jobs": len(specimen_records(now)), **facts}
     }
     if frontier is not None:
         state["frontier_snapshot"] = {BUNDLE: frontier}
@@ -220,7 +220,7 @@ class StaffingActuationTests(unittest.TestCase):
         # pass still reports the ledger clear as a
         # change).
         staffed = defect_state(at(11))
-        families = staffed["venue_snapshot"]["edgar-specimen"]["families"]
+        families = staffed["venue_snapshot"]["specimen"]["families"]
         for name in ("fam-a", "fam-b", "fam-c"):
             families[name] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
         state["venue_snapshot"] = staffed["venue_snapshot"]
@@ -255,7 +255,7 @@ class StaffingActuationTests(unittest.TestCase):
         self.assertIn("@specimen-field has not responded", escalated["text"])
 
     def test_frontier_shortfall_steers_naming_prerequisite_due(self):
-        state = defect_state(at(14), frontier=frontier_entry("edgar-specimen"))
+        state = defect_state(at(14), frontier=frontier_entry("specimen"))
         continuation.run_staffing_pass(state, settings(), at(14))
         sends = staffing_sends(state)
         # One steer per standing row: the serial row and
@@ -320,7 +320,7 @@ class StaffingActuationTests(unittest.TestCase):
     def test_todo_route_targets_the_bundle(self):
         row = {
             "kind": "serial_staffing",
-            "topic": "edgar-specimen",
+            "topic": "specimen",
             "handle": "@specimen-field",
             "handler_label": "Specimen — field extractor",
         }
@@ -328,7 +328,7 @@ class StaffingActuationTests(unittest.TestCase):
         with mock.patch.object(
             registry, "coordinator_route_for", return_value=route
         ):
-            handle, target = continuation._staffing_route(row, "edgar-specimen")
+            handle, target = continuation._staffing_route(row, "specimen")
         self.assertEqual(handle, "@specimen-field")
         self.assertEqual(target, "b-1")
 
@@ -455,7 +455,7 @@ class CommissionSteerTests(unittest.TestCase):
             # flight, bands met, clears it: no third
             # steer, and the ledger entry leaves.
             staffed = defect_state(at(11))
-            families = staffed["venue_snapshot"]["edgar-specimen"]["families"]
+            families = staffed["venue_snapshot"]["specimen"]["families"]
             families["tracefam"] = {"sessions": [CALM], "runs": 1, "child_runs": 1}
             # Topped up to the cured floor of 8: the
             # specimen's five families plus tracefam

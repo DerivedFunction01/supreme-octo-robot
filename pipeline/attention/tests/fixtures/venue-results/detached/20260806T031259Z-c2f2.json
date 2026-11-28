@@ -1,7 +1,7 @@
 {
   "id": "20260806T031259Z-c2f2",
   "session": "mild-butte-41",
-  "caller": "edgar-specimen:specimen-lane",
+  "caller": "specimen:specimen-lane",
   "state": "failed",
   "exit_code": null,
   "started_at": "2026-08-06T03:12:59.931731+00:00",

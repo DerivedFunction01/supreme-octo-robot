@@ -32,7 +32,7 @@ session.
 
 Seeding: a programme's registry declaration may
 carry lane declarations in the registry-contract
-form (the migration form — the edgar declaration is
+form (the migration form — one programme's declaration is
 seeded so); the collector merges them with record
 blocks by key, the record block winning. The
 measure reads lane records as its primary staffing

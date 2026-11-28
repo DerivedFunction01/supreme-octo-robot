@@ -72,7 +72,7 @@ EXPECTED_SPECIMEN_CONTRACT = {
 }
 
 EXPECTED_SLUGS = {
-    "edgar-specimen",
+    "specimen",
     "specimen-classifier",
     "specimen-tenant",
     "specimen-platform",
@@ -89,14 +89,14 @@ class SeedLoads(unittest.TestCase):
     def test_active_declarations_exclude_the_retired_row(self):
         active = {r["slug"] for r in registry.active_declarations()}
         self.assertEqual(
-            active, {"edgar-specimen", "specimen-tenant", "specimen-platform"}
+            active, {"specimen", "specimen-tenant", "specimen-platform"}
         )
 
     def test_returned_rows_are_copies(self):
-        row = registry.for_slug("edgar-specimen")
+        row = registry.for_slug("specimen")
         row["cadence_minutes"] = 999
         row["measure_classes"].append("register_seam")
-        fresh = registry.for_slug("edgar-specimen")
+        fresh = registry.for_slug("specimen")
         self.assertEqual(fresh["cadence_minutes"], 15)
         self.assertNotIn("register_seam", fresh["measure_classes"])
 
@@ -162,7 +162,7 @@ class LoudRefusal(unittest.TestCase):
 
 class SpecimenContract(unittest.TestCase):
     def test_field_row_reproduces_the_contract_verbatim(self):
-        contract = registry.staffing_contract_for("edgar-specimen")
+        contract = registry.staffing_contract_for("specimen")
         self.assertEqual(contract, EXPECTED_SPECIMEN_CONTRACT)
 
     def test_no_other_programme_carries_a_staffing_contract(self):
@@ -172,13 +172,13 @@ class SpecimenContract(unittest.TestCase):
 
 class StaffableQueue(unittest.TestCase):
     def _row(self):
-        return copy.deepcopy(registry.for_slug("edgar-specimen"))
+        return copy.deepcopy(registry.for_slug("specimen"))
 
     def _queue(self, row):
         return row["staffing_contract"]["staffable_queue"]
 
     def test_seeded_queue_loads_in_order(self):
-        contract = registry.staffing_contract_for("edgar-specimen")
+        contract = registry.staffing_contract_for("specimen")
         queue = contract["staffable_queue"]
         # The specimen queue in full: the two
         # precondition markers and the instrument
@@ -300,7 +300,7 @@ class SweepClassesAndRoutes(unittest.TestCase):
 
     def test_register_seam_is_the_tenants_alone(self):
         self.assertIn("register_seam", registry.measure_classes_for("specimen-tenant"))
-        for slug in ("edgar-specimen", "specimen-classifier", "specimen-platform"):
+        for slug in ("specimen", "specimen-classifier", "specimen-platform"):
             self.assertNotIn("register_seam", registry.measure_classes_for(slug))
 
     def test_coordinator_routes_are_wb_sent_chat_routes(self):
@@ -322,14 +322,14 @@ class DrainTail(unittest.TestCase):
     def test_tenants_baked_in_extra_is_declared(self):
         keys = {item["key"] for item in registry.drain_tail_for("specimen-tenant")}
         self.assertIn("specimen-debt-paydown", keys)
-        for slug in ("edgar-specimen", "specimen-classifier", "specimen-platform"):
+        for slug in ("specimen", "specimen-classifier", "specimen-platform"):
             keys = {item["key"] for item in registry.drain_tail_for(slug)}
             self.assertNotIn("specimen-debt-paydown", keys)
 
 
 class Accessors(unittest.TestCase):
     def test_for_handle_prefers_the_active_programme(self):
-        self.assertEqual(registry.for_handle("@specimen-field")["slug"], "edgar-specimen")
+        self.assertEqual(registry.for_handle("@specimen-field")["slug"], "specimen")
         self.assertEqual(
             registry.for_handle("@specimen-platform")["slug"], "specimen-platform"
         )
@@ -343,7 +343,7 @@ class Accessors(unittest.TestCase):
         self.assertEqual(registry.escalation_for(None, 7), 7)
 
     def test_wb_projects_linkage(self):
-        row = registry.for_slug("edgar-specimen")
+        row = registry.for_slug("specimen")
         self.assertEqual(registry.wb_projects_for(row), ["specimen-repo"])
         # An undeclared list falls back to the slug, the
         # harness's own keying (programmes.wb_projects).

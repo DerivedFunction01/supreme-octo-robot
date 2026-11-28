@@ -1,6 +1,6 @@
 [
  {
-  "slug": "edgar-specimen",
+  "slug": "specimen",
   "label": "Specimen — field extractor",
   "handles": [
    "@specimen-field"

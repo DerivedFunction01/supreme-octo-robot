@@ -12,8 +12,8 @@ by hand. The scheduler ledger (state/scheduler.db, events
 kind 'op') is the discriminating record: an op's record
 carries its caller and its full command target.
 
-Locator, pinned (Edgar coordinator's Instance 14
-disposition): the discriminating store is
+Locator, pinned (a coordinator disposition of
+record): the discriminating store is
 state/scheduler.db, table events — the state/ledger.db
 beside it is a 0-byte stub that answers nothing, and a
 check pointed there reads empty and misreads as
@@ -30,7 +30,7 @@ scheduler's own automation surface (a script under a repo's
 ops/ or bin/ directory). The surface condition is the
 discriminator the first cut lacked: every kind-'op' entry
 is an agent-initiated sched call (the callers on record are
-repo identities — venue, edgar-sec, workhorse, a programme
+repo identities — venue, a tenant repo, workhorse, a programme
 slug), so an op's mere existence proves only that the work
 was ledgered, never that it was sanctioned machinery. An
 agent's ad-hoc command routed through sched exec — a

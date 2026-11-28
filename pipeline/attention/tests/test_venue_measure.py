@@ -45,13 +45,13 @@ def at(hour, minute=0):
     return datetime(2026, 8, 6, hour, minute, tzinfo=UTC)
 
 
-def edgar_records(now):
+def specimen_records(now):
     records = venue.read_run_store(FIXTURES / "runs", now)
     declarations = registry.active_declarations()
     return [
         r
         for r in records
-        if venue.attribute_slug(r["caller"], declarations) == "edgar-specimen"
+        if venue.attribute_slug(r["caller"], declarations) == "specimen"
     ]
 
 
@@ -62,7 +62,7 @@ def specimen_state(now, idle_minutes=52):
     the programme's open work armed — including a
     research-delegate-only todo, which fires no venue
     runs and so must not count toward concurrency."""
-    facts = venue.families_at(edgar_records(now), now, 30)
+    facts = venue.families_at(specimen_records(now), now, 30)
     armed = [
         {
             "project": "specimen-repo",
@@ -98,7 +98,7 @@ def specimen_state(now, idle_minutes=52):
             "specs": [],
         },
         "venue_snapshot": {
-            "edgar-specimen": {"at": now, "jobs": len(edgar_records(now)), **facts}
+            "specimen": {"at": now, "jobs": len(specimen_records(now)), **facts}
         },
     }
 
@@ -136,7 +136,7 @@ class SpecimenWindows(unittest.TestCase):
                     rows[0]["conditions"],
                     ["fewer_than_min_families_in_flight"],
                     f"at {now}")
-                facts = venue.families_at(edgar_records(now), now, 30)
+                facts = venue.families_at(specimen_records(now), now, 30)
                 self.assertGreaterEqual(len(facts["families"]), 2, f"at {now}")
                 carrying = {
                     s for e in facts["families"].values() for s in e["sessions"]
@@ -178,10 +178,10 @@ class SpecimenWindows(unittest.TestCase):
         # toward family concurrency, and the delegate
         # fires no venue runs — the defect stands on
         # the one measured family.
-        contract = registry.staffing_contract_for("edgar-specimen")
+        contract = registry.staffing_contract_for("specimen")
         self.assertFalse(contract["delegate_counts_toward_concurrency"])
         now = at(15, 22)
-        facts = venue.families_at(edgar_records(now), now, 30)
+        facts = venue.families_at(specimen_records(now), now, 30)
         self.assertEqual(list(facts["families"]), ["cobalt"])
         view = staffing.build_staffing(specimen_state(now), settings(), now)
         self.assertEqual(len(serial_rows(view)), 1)
@@ -208,13 +208,13 @@ class FamilyDerivation(unittest.TestCase):
         declarations = registry.active_declarations()
         self.assertEqual(
             venue.attribute_slug(
-                "edgar-lane:specimen-lane", declarations
+                "specimen-lane:specimen-lane", declarations
             ),
-            "edgar-specimen",
+            "specimen",
         )
         self.assertEqual(
-            venue.attribute_slug("edgar-lane", declarations),
-            "edgar-specimen",
+            venue.attribute_slug("specimen-lane", declarations),
+            "specimen",
         )
         # Declared caller stems: a programme whose
         # runs ride a caller that is not its slug stem
@@ -235,7 +235,7 @@ class FamilyDerivation(unittest.TestCase):
 
 
 def queue_state(families):
-    """A synthetic venue snapshot for the edgar
+    """A synthetic venue snapshot for the specimen
     programme, in the served shape: the named
     families in flight on the named sessions, the
     programme's open work armed."""
@@ -249,7 +249,7 @@ def queue_state(families):
             }
         ],
         "venue_snapshot": {
-            "edgar-specimen": {
+            "specimen": {
                 "at": now,
                 "jobs": 4,
                 "families": {
@@ -258,7 +258,7 @@ def queue_state(families):
                 },
                 "workers": len(families),
                 "child_workers": 0,
-                "coordinator_caller": "edgar-specimen",
+                "coordinator_caller": "specimen",
             }
         },
     }
@@ -511,7 +511,7 @@ class FrontierComparison(unittest.TestCase):
             "fixture-bundle": {
                 "bundle": "fixture-bundle",
                 "project": "specimen-repo",
-                "slug": "edgar-specimen",
+                "slug": "specimen",
                 "at": now,
                 "expected": ["lane-a", "lane-b"],
                 "actual": ["lane-a"],
@@ -559,7 +559,7 @@ class FrontierComparison(unittest.TestCase):
             try:
                 state = {
                     "programmes": [
-                        {"slug": "edgar-specimen", "worktree_roots": [tmp]}
+                        {"slug": "specimen", "worktree_roots": [tmp]}
                     ],
                     "armed_rows": [
                         {
@@ -577,7 +577,7 @@ class FrontierComparison(unittest.TestCase):
                 )
             self.assertTrue(changed)
             entry = state["frontier_snapshot"]["fixture-bundle"]
-            self.assertEqual(entry["slug"], "edgar-specimen")
+            self.assertEqual(entry["slug"], "specimen")
             self.assertEqual(entry["missing"], ["lane-b"])
             self.assertEqual(entry["serial_excluded"], ["shared-step"])
 
