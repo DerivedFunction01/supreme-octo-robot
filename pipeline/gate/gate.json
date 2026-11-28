@@ -218,6 +218,16 @@
     },
     {
      "kind": "ledger/outbox composition \u2014 scheduling consumes the dispatch ledger and outbox by design; dispatch is their one home (tests mirror the seam)",
+     "path": "pipeline/scheduling/cli/registry_cmds.py",
+     "root": "dispatch"
+    },
+    {
+     "kind": "ledger/outbox composition \u2014 scheduling consumes the dispatch ledger and outbox by design; dispatch is their one home (tests mirror the seam)",
+     "path": "pipeline/scheduling/tests/test_agent_admission.py",
+     "root": "dispatch"
+    },
+    {
+     "kind": "ledger/outbox composition \u2014 scheduling consumes the dispatch ledger and outbox by design; dispatch is their one home (tests mirror the seam)",
      "path": "pipeline/scheduling/ops/bridge/bridge_wake.py",
      "root": "dispatch"
     },
