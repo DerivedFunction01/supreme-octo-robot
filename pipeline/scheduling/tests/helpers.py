@@ -121,6 +121,62 @@ def write_entry(root, job_id, text):
     return path
 
 
+# A specimen knob-bearing entry: the config-block shape
+# (two integer knobs carrying env names, no constraints)
+# in generic form. The deployment's own knob-bearing
+# instance entry lives in the untracked overlay, so the
+# landed-fleet tests seed this specimen into the fixture
+# home instead of reading instance data.
+SPECIMEN_KNOB_ENTRY = """\
+id: specimen-knob-watchdog
+title: Specimen knob watchdog
+kind: scripted
+status: active
+cadence:
+  type: interval
+  every: 1h
+timezone: America/New_York
+owner: goal:specimen-knob-watchdog
+run:
+  argv:
+    - bash
+    - ${REPO}/ops/watches/specimen_knob_check.sh
+timeout_secs: 300
+report:
+  when: on_failure
+  ok_exit_codes:
+    - 0
+classification: scripted detection (specimen entry for the config-block shape)
+lifetime: permanent
+config:
+  version: 1
+  knobs:
+    topic_file_max_bytes:
+      label: Topic file cap
+      type: integer
+      unit: bytes
+      value: 40000
+      min: 1024
+      max: 1048576
+      env: SPECIMEN_TOPIC_FILE_MAX_BYTES
+    topic_per_file_bytes:
+      label: Topic set register — per-topic allowance
+      type: integer
+      unit: bytes
+      value: 12000
+      min: 128
+      max: 1048576
+      env: SPECIMEN_TOPIC_PER_FILE_BYTES
+"""
+
+
+def seed_specimen_knob_entry(root):
+    """Write the specimen knob-bearing entry into a
+    fixture home's jobs dir; returns its id."""
+    write_entry(root, "specimen-knob-watchdog", SPECIMEN_KNOB_ENTRY)
+    return "specimen-knob-watchdog"
+
+
 class Clock:
     def __init__(self, start):
         self.t = start

@@ -323,8 +323,8 @@ def run_root_portability(repo_root: Path,
 from .repolegs import (  # noqa: F401 — re-exported for check.py
     linecap_config, repo_leg_config, run_folder_census,
     run_repo_argvidioms, run_repo_importisolation,
-    run_repo_linecap, run_repo_scanners,
-    run_repo_writeruniqueness)
+    run_repo_linecap, run_repo_registerrequired,
+    run_repo_scanners, run_repo_writeruniqueness)
 
 
 def _run_argv(argv: list[str], cwd: Path) -> int:
@@ -658,7 +658,8 @@ def run_package(pkg: Package, *, repo_root: Path,
         name = leg.get("name", kind)
         if kind in ("foldercensus", "rootportability", "repolinecap",
                     "repowriteruniqueness", "repoargvidioms",
-                    "repoimportisolation", "reposcanners"):
+                    "repoimportisolation", "reposcanners",
+                    "registerrequired"):
             # Repo-scoped: executed once per run by the
             # root check, never per package.
             result.skipped.append(name)

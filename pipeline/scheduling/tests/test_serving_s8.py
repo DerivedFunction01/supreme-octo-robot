@@ -17,7 +17,8 @@ from server.serving import api
 from server.serving import classification as classification_mod
 from server.serving import http as http_mod
 from tests.helpers import (T0, Clock, agent_yaml, make_home, scripted_yaml,
-                           seed_tracked_fleet, write_body, write_entry)
+                           seed_specimen_knob_entry, seed_tracked_fleet,
+                           write_body, write_entry)
 
 PKG_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -443,8 +444,10 @@ class LandedRegistryTests(unittest.TestCase):
     """The landed fleet itself, seeded into a fixture home:
     the registry loads but for the one agent-admission
     refusal the census found, every entry classifies, and the
-    two knob-bearing entries serve the blocks contract 09's
-    amendment evidenced. The fleet expectation derives from
+    knob-bearing entries serve the blocks contract 09's
+    amendment evidenced (the tracked storage watch, and a
+    seeded specimen standing for the overlay's instance
+    entry of the same shape). The fleet expectation derives from
     the tracked set (git's index) — provisioned per-deployment
     entries are untracked and never enter, and the bodies the
     entries reference are instance data, stubbed by the seed."""
@@ -482,12 +485,20 @@ class LandedRegistryTests(unittest.TestCase):
         self.assertEqual(by_key["home_critical_free_gb"]["value"], 45)
         self.assertEqual(view["constraints"][0]["kind"], "lt")
 
-    def test_memory_watchdog_block(self):
-        view = configblocks.view_of(
-            self.entries["memory-index-watchdog"])
+    def test_specimen_knob_block(self):
+        # The knob-bearing shape's second specimen: the
+        # deployment's own knob-bearing instance entry
+        # lives in the untracked overlay, so the fixture
+        # home gains the specimen entry (same block shape,
+        # generic values) and the view is read from it.
+        seed_specimen_knob_entry(self.tmp)
+        entries, errors = registry.load_dir(
+            os.path.join(self.tmp, "jobs"), self.tmp)
+        self.assertEqual(errors, [])
+        view = configblocks.view_of(entries["specimen-knob-watchdog"])
         by_key = {k["key"]: k for k in view["knobs"]}
-        self.assertEqual(by_key["topic_file_max_bytes"]["value"], 40960)
-        self.assertEqual(by_key["topic_per_file_bytes"]["value"], 12800)
+        self.assertEqual(by_key["topic_file_max_bytes"]["value"], 40000)
+        self.assertEqual(by_key["topic_per_file_bytes"]["value"], 12000)
         self.assertEqual(view["constraints"], [])
 
     def test_fleet_carries_the_projected_data(self):

@@ -32,8 +32,8 @@ class LoadCase(unittest.TestCase):
         cat, errors = catalog.load_catalog(REPO)
         self.assertEqual(errors, [])
         self.assertEqual(cat["version"], 1)
-        self.assertEqual(len(cat["rows"]), 20)
-        self.assertEqual(len(cat["entries"]), 13)
+        self.assertEqual(len(cat["rows"]), 21)
+        self.assertEqual(len(cat["entries"]), 14)
         config_rows = [r for r in cat["rows"].values() if r["class"] == "config-example"]
         self.assertEqual(len(config_rows), 7)
         for row in config_rows:

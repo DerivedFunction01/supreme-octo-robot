@@ -357,6 +357,11 @@ def main() -> int:
         outcome = runner.run_repo_scanners(REPO_ROOT, packages)
         verdicts["repo-scanners"] = outcome.ok
 
+    if not args.legs or "registerrequired" in args.legs.split(","):
+        print("\n##### repo (register-required)")
+        outcome = runner.run_repo_registerrequired(REPO_ROOT, packages)
+        verdicts["repo-registerrequired"] = outcome.ok
+
     print("\n== gate summary")
     for name, ok in verdicts.items():
         print(f"{name:<16} {'green' if ok else 'RED'}")
