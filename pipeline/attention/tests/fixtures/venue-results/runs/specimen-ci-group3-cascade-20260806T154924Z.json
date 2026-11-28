@@ -5,7 +5,7 @@
   "state": "complete",
   "started_at": "2026-08-06T15:49:24.936609+00:00",
   "resumed": false,
-  "caller": "edgar-specimen:specimen-lane",
+  "caller": "specimen:specimen-lane",
   "last_evidence_at": "2026-08-06T15:53:06.419696+00:00",
   "venue": "colab",
   "session_pin": "quiet-ridge-11",
@@ -17,7 +17,7 @@
   "launch_at": "2026-08-06T15:51:14.279338+00:00",
   "launch_confirmed_at": "2026-08-06T15:51:33.480022+00:00",
   "collector_at": "2026-08-06T15:53:36.577049+00:00",
-  "collector": "edgar-specimen:specimen-lane",
+  "collector": "specimen:specimen-lane",
   "measured_shape": {
     "nproc": 8,
     "mem_total_bytes": 54750392320,

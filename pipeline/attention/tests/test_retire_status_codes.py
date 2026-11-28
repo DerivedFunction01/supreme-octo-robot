@@ -24,7 +24,7 @@ from attention.settings import Settings  # noqa: E402
 NOW = datetime(2026, 11, 19, 18, 0, tzinfo=UTC)
 
 PROGRAMME = {
-    "slug": "edgar-specimen",
+    "slug": "specimen",
     "label": "Specimen — field extractor",
     "handles": ["@specimen-field"],
     "cadence_minutes": 15,
@@ -112,7 +112,7 @@ class NonPostingThreadTests(unittest.TestCase):
                 [
                     {
                         "id": "run-1",
-                        "caller": "edgar-specimen",
+                        "caller": "specimen",
                         "session": "oak-reef-65",
                         "state": "running",
                         "started_at": (NOW - timedelta(minutes=10)).isoformat(),
@@ -123,7 +123,7 @@ class NonPostingThreadTests(unittest.TestCase):
             state = _state(
                 armed=[_armed("ci-corefin-coci-build")],
                 stamp_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "stamps": {"ci-corefin-coci-build": NOW.isoformat()},
                     }
@@ -133,7 +133,7 @@ class NonPostingThreadTests(unittest.TestCase):
             rows = [r for r in view["rows"] if r["kind"] == "understaffed"]
             self.assertEqual(len(rows), 1)
             row = rows[0]
-            self.assertEqual(row["topic"], "edgar-specimen")
+            self.assertEqual(row["topic"], "specimen")
             self.assertEqual(row["workers"], 1)
             self.assertEqual(row["sessions_used"], 1)
             self.assertEqual(row["sessions_live"], 2)
@@ -147,7 +147,7 @@ class NonPostingThreadTests(unittest.TestCase):
                 [
                     {
                         "id": "run-1",
-                        "caller": "edgar-specimen",
+                        "caller": "specimen",
                         "session": "oak-reef-65",
                         "state": "finished",
                         "started_at": (NOW - timedelta(minutes=20)).isoformat(),
@@ -158,7 +158,7 @@ class NonPostingThreadTests(unittest.TestCase):
             state = _state(
                 armed=[_armed("ci-corefin-coci-build")],
                 stamp_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "stamps": {
                             "ci-corefin-coci-build": (
@@ -186,7 +186,7 @@ class NonPostingThreadTests(unittest.TestCase):
                 [
                     {
                         "id": "run-1",
-                        "caller": "edgar-specimen",
+                        "caller": "specimen",
                         "session": "oak-reef-65",
                         "state": "finished",
                         "started_at": (NOW - timedelta(minutes=20)).isoformat(),
@@ -219,7 +219,7 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 blocked_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "blocked": [
                             {
@@ -251,7 +251,7 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 blocked_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "blocked": [
                             {
@@ -280,7 +280,7 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 blocked_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "blocked": [
                             {
@@ -307,11 +307,11 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 goal_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "owner_waiting": [
                             {
-                                "goal": "edgar-specimen",
+                                "goal": "specimen",
                                 "label": "Greenfield verdict",
                                 "commissioned_at": (
                                     NOW - timedelta(hours=2)
@@ -337,7 +337,7 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 worktree_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "trees": [
                             {
@@ -355,7 +355,7 @@ class NonPostingThreadTests(unittest.TestCase):
                 _settings(tmp),
                 NOW,
                 wb_topics={
-                    "edgar-specimen": {
+                    "specimen": {
                         "todos_total": 2,
                         "todos_done": 2,
                         "plan_modified": None,
@@ -369,7 +369,7 @@ class NonPostingThreadTests(unittest.TestCase):
             Path(tmp, "records").mkdir()
             state = _state(
                 worktree_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "trees": [
                             {
@@ -395,7 +395,7 @@ class ContinuationFromRecordsTests(unittest.TestCase):
         self.assertFalse(continuation._is_complete(state, programme))
         state = _state(
             worktree_snapshot={
-                "edgar-specimen": {
+                "specimen": {
                     "at": NOW,
                     "trees": [{"name": "form/x", "landed": False}],
                 }
@@ -410,7 +410,7 @@ class ContinuationFromRecordsTests(unittest.TestCase):
             _state(
                 armed=[_armed("ci-corefin-coci-build")],
                 stamp_snapshot={
-                    "edgar-specimen": {
+                    "specimen": {
                         "at": NOW,
                         "stamps": {"ci-corefin-coci-build": NOW.isoformat()},
                     }

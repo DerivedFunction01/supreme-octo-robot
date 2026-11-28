@@ -72,8 +72,8 @@ def write_record(path: Path, text: str, mtime: datetime) -> None:
 
 
 class SeedDeclaration(unittest.TestCase):
-    def test_edgar_seed_carries_the_declaration(self):
-        count, entries = registry.lane_declarations_for("edgar-specimen")
+    def test_specimen_seed_carries_the_declaration(self):
+        count, entries = registry.lane_declarations_for("specimen")
         self.assertEqual(count, 11)
         self.assertEqual(len(entries), 11)
         self.assertEqual(len({e["key"] for e in entries}), 11)
@@ -328,11 +328,11 @@ class CollectorLifecycle(unittest.TestCase):
         write_record(path, text, NOW)
         state = {
             "programmes": [
-                programme("edgar-specimen", [str(path)])
+                programme("specimen", [str(path)])
             ]
         }
         lanes.collect(state, NOW)
-        entry = state["lane_snapshot"]["edgar-specimen"]
+        entry = state["lane_snapshot"]["specimen"]
         self.assertEqual(entry["declared"], 11)
         lane = [
             lane for lane in entry["lanes"]
@@ -356,7 +356,7 @@ def queue_state(families: dict) -> tuple:
             }
         ],
         "venue_snapshot": {
-            "edgar-specimen": {
+            "specimen": {
                 "at": NOW,
                 "jobs": 4,
                 "families": {
@@ -365,7 +365,7 @@ def queue_state(families: dict) -> tuple:
                 },
                 "workers": len(families),
                 "child_workers": 0,
-                "coordinator_caller": "edgar-specimen",
+                "coordinator_caller": "specimen",
             }
         },
     }
@@ -375,7 +375,7 @@ def queue_state(families: dict) -> tuple:
 
 def lane_snapshot_entry(lanes_facts: list) -> dict:
     return {
-        "edgar-specimen": {
+        "specimen": {
             "at": NOW,
             "declared": 20,
             "lanes": lanes_facts,
@@ -507,7 +507,7 @@ class MeasureReconciliation(unittest.TestCase):
         self.assertNotIn("lane_records", rows[0])
         self.assertNotIn("lane_shortfall", rows[0]["conditions"])
         self.assertEqual(lanes._lane_rows(state, NOW), [])
-        self.assertIsNone(lanes.record_facts(state, "edgar-specimen"))
+        self.assertIsNone(lanes.record_facts(state, "specimen"))
 
 
 TWO_ITEM_QUEUE = [
@@ -560,8 +560,8 @@ class LaneServeShape(unittest.TestCase):
         # The defect row clears at full staffing; the
         # block the standing row renders from stands.
         self.assertEqual(rows, [])
-        block = blocks["edgar-specimen"]
-        self.assertEqual(block["slug"], "edgar-specimen")
+        block = blocks["specimen"]
+        self.assertEqual(block["slug"], "specimen")
         self.assertEqual(block["label"], "Specimen — field extractor")
         self.assertEqual(block["declared"], 20)
         self.assertEqual(block["expected"], 2)
@@ -577,7 +577,7 @@ class LaneServeShape(unittest.TestCase):
         blocks = staffing_venue.lane_blocks(state)
         # Only the field programme's contract names a
         # queue; every other programme is absent.
-        self.assertEqual(sorted(blocks), ["edgar-specimen"])
+        self.assertEqual(sorted(blocks), ["specimen"])
 
         def no_queue_contract(slug):
             contract = _REAL_CONTRACT_FOR(slug)
@@ -598,7 +598,7 @@ class LaneServeShape(unittest.TestCase):
         with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
             blocks = staffing_venue.lane_blocks(state)
             rows = staffing_venue._family_rows(state, NOW, live, idle)
-        block = blocks["edgar-specimen"]
+        block = blocks["specimen"]
         self.assertEqual(block["expected"], 2)
         self.assertEqual(block["actual"], 1)
         self.assertEqual(
@@ -628,7 +628,7 @@ class LaneServeShape(unittest.TestCase):
         )
         with mock.patch.object(registry, "staffing_contract_for", two_item_contract):
             blocks = staffing_venue.lane_blocks(state)
-        block = blocks["edgar-specimen"]
+        block = blocks["specimen"]
         by_key = {lane["key"]: lane for lane in block["lanes"]}
         self.assertEqual(sorted(by_key), ["fama-lane", "famb-lane"])
         self.assertTrue(by_key["fama-lane"]["stale"])
@@ -670,7 +670,7 @@ class LaneServeShape(unittest.TestCase):
             ):
                 payload = digest_mod.build_digest(state, settings, NOW)
         entries = {p["slug"]: p for p in payload["programmes"]}
-        block = entries["edgar-specimen"]["lane_block"]
+        block = entries["specimen"]["lane_block"]
         self.assertEqual(block["actual"], 2)
         self.assertEqual(block["expected"], 2)
         self.assertEqual(block["queue_unstaffed"], [])

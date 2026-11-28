@@ -30,7 +30,7 @@ scheduler's own automation surface (a script under a repo's
 ops/ or bin/ directory). The surface condition is the
 discriminator the first cut lacked: every kind-'op' entry
 is an agent-initiated sched call (the callers on record are
-repo identities — venue, edgar-sec, workhorse, a programme
+repo identities — venue, a tenant repo, workhorse, a programme
 slug), so an op's mere existence proves only that the work
 was ledgered, never that it was sanctioned machinery. An
 agent's ad-hoc command routed through sched exec — a

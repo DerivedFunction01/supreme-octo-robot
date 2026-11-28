@@ -5,7 +5,7 @@
   "state": "failed",
   "started_at": "2026-08-06T12:00:33.763105+00:00",
   "resumed": true,
-  "caller": "edgar-specimen:specimen-lane",
+  "caller": "specimen:specimen-lane",
   "last_evidence_at": "2026-08-06T12:14:40.809903+00:00",
   "venue": "colab",
   "session_pin": "quiet-ridge-11",
@@ -20,7 +20,7 @@
   "launch_unconfirmed_at": "2026-08-06T12:13:51.383781+00:00",
   "last_poll_error": "checkpoint poll timed out at 2026-08-06T12:13:51.383734+00:00",
   "collector_at": "2026-08-06T12:14:57.540101+00:00",
-  "collector": "edgar-specimen:specimen-lane",
+  "collector": "specimen:specimen-lane",
   "detached_launch": true,
   "usage_before": "Current balance: 403.33 compute units\nUsage rate: 0.78/hr\nActive assignments: 3",
   "output_name_warnings": [

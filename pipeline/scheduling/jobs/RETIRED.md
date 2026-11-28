@@ -83,7 +83,7 @@ active jobs only; nothing here runs.
   retired (supervision plan Step 6), the lingering
   entries are deleted, and the app tick carries the
   supervision measures the entries armed (the three
-  Muse supervision crons — edgar-parallel-staffing-
+  Muse supervision crons — specimen-parallel-staffing-
   reminder, gap-closure-sweep, greenfield-progress-
   watch — stand disabled with them). The todo files
   remain the record of truth for the work the entries

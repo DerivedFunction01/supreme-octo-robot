@@ -15,8 +15,8 @@ and the bands; nothing here hardcodes a programme.
 Runs attribute to a programme by caller: a caller
 base (the part before an optional :lane suffix)
 belongs to the active programme whose slug it names
-or whose slug stem it carries — edgar-lane and
-its lanes belong to the edgar programme. A todo
+or whose slug stem it carries — a specimen-lane caller
+and its lanes belong to the specimen programme. A todo
 staffed only by a research delegate fires no venue
 runs, so it never enters the family count — the
 contract's delegate rule holds by construction.

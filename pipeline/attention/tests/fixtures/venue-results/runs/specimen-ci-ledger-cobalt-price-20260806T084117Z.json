@@ -5,7 +5,7 @@
   "state": "failed",
   "started_at": "2026-08-06T08:41:17.026243+00:00",
   "resumed": true,
-  "caller": "edgar-specimen:specimen-lane",
+  "caller": "specimen:specimen-lane",
   "last_evidence_at": "2026-08-06T10:32:27.014091+00:00",
   "venue": "colab",
   "session_pin": "brisk-dune-37",

@@ -247,7 +247,7 @@ class MigrationTests(unittest.TestCase):
         genuine = _meta_power_item()
         state["items"].extend([shadow, genuine])
         state["programmes"] = [
-            {"slug": "edgar-specimen", "venue": "colab",
+            {"slug": "specimen", "venue": "colab",
              "handles": ["@specimen-field"]}
         ]
         attstore.backfill(state)
