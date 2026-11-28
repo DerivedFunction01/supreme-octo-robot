@@ -22,9 +22,25 @@ DOWS = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 TOP_FIELDS = {
     "id", "title", "kind", "status", "suspend_reason", "suspended_on",
     "cadence", "timezone", "owner", "owner_reason", "run", "body",
-    "escalate_body", "timeout_secs", "report", "state_paths",
+    "executor", "escalate_body", "timeout_secs", "report", "state_paths",
     "classification", "lifetime", "self_removal",
     "catalog", "source", "config",
+}
+# An agent job's executor names the surface that claims and
+# works its pings — a cron id, a named worker, a seat, a
+# thread's registered name. The field is the admission
+# contract for the agent kind: the server never runs an
+# agent job, it only mints pings, so an agent entry with no
+# designated executing surface is a job whose pings no one
+# is charged with working (the gap-closure-sweep twin stood
+# exactly so, its occurrences coalescing unworked). A value
+# that is only a gesture at a surface — a lone generic word
+# or a to-be-decided marker — is a placeholder, not a
+# designation, and fails the same way an absent field does.
+EXECUTOR_PLACEHOLDERS = {
+    "tbd", "todo", "none", "unknown", "n/a", "na", "placeholder",
+    "example", "agent", "worker", "seat", "cron", "surface",
+    "executor", "operator", "main", "keeper",
 }
 # The entry config block (contract 09, as amended):
 # a knob-bearing entry carries its knobs on the entry record
@@ -298,6 +314,10 @@ class Entry:
         return self.data["kind"]
 
     @property
+    def executor(self):
+        return self.data.get("executor")
+
+    @property
     def status(self):
         return self.data.get("status", "active")
 
@@ -568,6 +588,19 @@ def validate(job_id, data, home, where=None, anchors=None, require_bodies=False)
             raise EntryError(f"{where}: agent entries need body: bodies/<id>.md")
         if data.get("run"):
             raise EntryError(f"{where}: agent entries use body, not run")
+        executor = data.get("executor")
+        if not isinstance(executor, str) or not executor.strip():
+            raise EntryError(
+                f"{where}: agent entries need executor: the registered "
+                "name of the surface that claims and works their pings "
+                "(a cron id, a named worker, a seat) — the server mints "
+                "pings and never works them, so an agent job with no "
+                "designated executor does not arm")
+        if executor.strip().casefold() in EXECUTOR_PLACEHOLDERS:
+            raise EntryError(
+                f"{where}: executor {executor!r} is a placeholder, not "
+                "an executing surface — name the surface that claims "
+                "and works this job's pings")
     absent_bodies = []
     for field in ("body", "escalate_body"):
         rel = data.get(field)

@@ -7,6 +7,7 @@ cadence:
   at: "09:00"
 owner: goal:example
 body: bodies/example-agent-review.md
+executor: operator agent surface
 timeout_secs: 1800
 state_paths: []
 classification: the work is reading the day's run record and judging what deserves the operator's attention - judgment over content, so agent

@@ -108,6 +108,12 @@ class DeclarationTests(unittest.TestCase):
 
     def test_landed_blocks_declare_the_scripts_variables(self):
         entries, errors = self._landed_entries()
+        # The tracked fleet loads with no refusal: the
+        # agent-admission census's one finding
+        # (declaration-reconcile, no designated executor)
+        # is resolved by retiring that entry to its Muse
+        # cron twin. Every tracked entry loads, the
+        # knob-bearing pair included.
         self.assertEqual(errors, [])
         self.assertEqual(
             registry.config_env(entries["storage-watch"]),

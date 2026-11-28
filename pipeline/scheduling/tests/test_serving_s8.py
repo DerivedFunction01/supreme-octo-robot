@@ -441,7 +441,8 @@ LIVENESS_FIXTURE = (
 
 class LandedRegistryTests(unittest.TestCase):
     """The landed fleet itself, seeded into a fixture home:
-    the registry loads clean, every entry classifies, and the
+    the registry loads but for the one agent-admission
+    refusal the census found, every entry classifies, and the
     two knob-bearing entries serve the blocks contract 09's
     amendment evidenced. The fleet expectation derives from
     the tracked set (git's index) — provisioned per-deployment
@@ -456,6 +457,13 @@ class LandedRegistryTests(unittest.TestCase):
             os.path.join(self.tmp, "jobs"), self.tmp)
 
     def test_registry_loads_clean(self):
+        # The tracked fleet loads clean: the one refusal
+        # the agent-admission census found
+        # (declaration-reconcile, an agent job with no
+        # designated executing surface) is resolved by
+        # retiring that entry to its Muse cron twin, so
+        # no tracked entry stands refused and every
+        # tracked entry stands loaded.
         self.assertEqual(self.errors, [])
         self.assertEqual(sorted(self.entries), self.tracked_ids)
 
